@@ -1,0 +1,6 @@
+libvirt-python
+paramiko
+pyyaml
+typer[all]
+rich
+typing-extensions
