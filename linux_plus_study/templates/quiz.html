@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div id="quiz-card" class="card bg-secondary" style="display: none;">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col">
+                        <h4 class="mb-0">Quiz Session</h4>
+                        <small class="text-muted" id="category-display">Category: All</small>
+                    </div>
+                    <div class="col-auto" id="timer-display-container">
+                        </div>
+                    <div class="col-auto">
+                        <span class="badge bg-info" id="question-counter">Question 1 of 10</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="question-container" class="mb-4">
+                    </div>
+
+                <div id="options-container" class="mb-4">
+                    </div>
+
+                <div id="feedback-container" class="mb-3" style="display: none;">
+                    </div>
+
+                <div id="quiz-controls" class="d-flex justify-content-between">
+                    <button class="btn btn-outline-light" onclick="endQuiz()">End Quiz</button>
+                    <div>
+                        <button class="btn btn-success" id="submit-btn" onclick="submitAnswer()" disabled>Submit Answer</button>
+                        <button class="btn btn-primary" id="next-btn" onclick="nextQuestion()" style="display: none;">Next Question</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="initial-state-container" class="text-center p-5 rounded bg-secondary">
+            <h5 id="initial-message">Loading Quiz...</h5>
+            <p id="initial-subtext"></p>
+            <button id="enter-focus-btn" class="btn btn-primary btn-lg" style="display: none;">Begin</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentQuestion = null;
+let selectedAnswer = null;
+let currentMode = 'standard';
+let quickFireTimer = null;
+let isSingleQuestionMode = false;
+
+function showBreakReminder(questionsSinceBreak, breakInterval) {
+    const modalHtml = `
+        <div class="modal fade" id="breakReminderModal" tabindex="-1" aria-labelledby="breakReminderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header border-secondary">
+                        <h5 class="modal-title text-info" id="breakReminderModalLabel">
+                            <i class="fas fa-coffee"></i> Time for a Break!
+                        </h5>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="mb-3">
+                            <i class="fas fa-clock text-warning" style="font-size: 3rem;"></i>
+                        </div>
+                        <p class="mb-3">You've answered <strong>${questionsSinceBreak}</strong> questions.</p>
+                        <p class="mb-3">Take a moment to rest your eyes and stretch!</p>
+                        <div id="breakTimer" class="mb-3" style="display: none;">
+                            <div class="h4 text-info" id="timerDisplay">02:00</div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: 100%" id="timerProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-secondary justify-content-center">
+                        <button type="button" class="btn btn-primary" onclick="skipBreak()">
+                            <i class="fas fa-forward"></i> Skip Break
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="takeBreak()" id="takeBreakBtn">
+                            <i class="fas fa-play"></i> Start Break (2 min)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const existingModal = document.getElementById('breakReminderModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('breakReminderModal'));
+    modal.show();
+}
+
+function takeBreak() {
+    const takeBreakBtn = document.getElementById('takeBreakBtn');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const timerProgress = document.getElementById('timerProgress');
+    const breakTimer = document.getElementById('breakTimer');
+    
+    takeBreakBtn.disabled = true;
+    takeBreakBtn.innerHTML = '<i class="fas fa-pause"></i> Taking Break...';
+    breakTimer.style.display = 'block';
+    
+    let breakDuration = 120; // 2 minutes
+    let remainingTime = breakDuration;
+    
+    const countdown = setInterval(() => {
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = remainingTime % 60;
+        
+        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        const progress = ((breakDuration - remainingTime) / breakDuration) * 100;
+        timerProgress.style.width = progress + '%';
+        
+        remainingTime--;
+        
+        if (remainingTime < 0) {
+            clearInterval(countdown);
+            endBreak();
+        }
+    }, 1000);
+}
+
+function skipBreak() {
+    acknowledgeBreak();
+}
+
+function endBreak() {
+    showAlert('Break time is over! Ready to continue?', 'success');
+    acknowledgeBreak();
+}
+
+function acknowledgeBreak() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('breakReminderModal'));
+    if (modal) {
+        modal.hide();
+    }
+    
+    setTimeout(() => {
+        const modalElement = document.getElementById('breakReminderModal');
+        if (modalElement) {
+            modalElement.remove();
+        }
+    }, 300);
+    
+    fetch('/api/acknowledge_break', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNextQuestion();
+        } else {
+            showAlert('Error acknowledging break', 'danger');
+            loadNextQuestion();
+        }
+    })
+    .catch(error => {
+        console.error('Error acknowledging break:', error);
+        loadNextQuestion();
+    });
+}
+// Load first question on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkQuizStatus();
+
+    // Listen for fullscreen changes to restore UI
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+});
+
+function checkQuizStatus() {
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.quiz_active) {
+                currentMode = data.quiz_mode || 'standard';
+                checkAndApplyFullscreen();
+            } else {
+                showInitialMessage('No Active Quiz', 'Please start a quiz from the <a href="/">home page</a>.');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking quiz status:', error);
+            showInitialMessage('Error', 'Could not check quiz status. Please <a href="/">try again</a>.');
+        });
+}
+
+function checkAndApplyFullscreen() {
+    fetch('/api/load_settings')
+        .then(response => response.json())
+        .then(settingsData => {
+            if (settingsData.success && settingsData.settings && settingsData.settings.focusMode) {
+                // Show focus mode prompt
+                document.getElementById('initial-state-container').style.display = 'block';
+                document.getElementById('quiz-card').style.display = 'none';
+                showInitialMessage('Focus Mode Enabled', 'The quiz will start in fullscreen. Are you ready?');
+                const focusBtn = document.getElementById('enter-focus-btn');
+                focusBtn.style.display = 'inline-block';
+                focusBtn.onclick = () => {
+                    enterQuizFullscreen();
+                    startQuiz();
+                };
+            } else {
+                // No focus mode, start quiz directly
+                startQuiz();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading settings:', error);
+            startQuiz(); // Fallback to starting quiz directly
+        });
+}
+
+function startQuiz() {
+    document.getElementById('initial-state-container').style.display = 'none';
+    document.getElementById('quiz-card').style.display = 'block';
+    loadNextQuestion();
+}
+
+
+function loadNextQuestion() {
+    fetch('/api/get_question')
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            if (data.quiz_complete) {
+                showQuizComplete();
+                return;
+            }
+
+            // Check for break reminder
+            if (data.break_reminder) {
+                showBreakReminder(data.questions_since_break, data.break_interval);
+                return;
+            }
+
+            currentQuestion = data;
+            currentMode = data.mode || 'standard';
+            isSingleQuestionMode = data.is_single_question || false;
+
+            displayQuestion(data);
+
+            // Start Quick Fire timer if it's the right mode and not already running
+            if (currentMode === 'quick_fire' && !quickFireTimer) {
+                startQuickFireTimer();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading question:', error);
+            showError('Failed to load question. Please try again.');
+        });
+}
+
+function displayQuestion(data) {
+    // Update header based on mode
+    let headerText = 'Quiz Session';
+    let categoryText = `Category: ${data.category}`;
+
+    switch (currentMode) {
+        case 'quick_fire':
+            headerText = '⚡ Quick Fire Mode';
+            categoryText = `${data.category} | Time Challenge!`;
+            break;
+        case 'daily_challenge':
+            headerText = '🗓️ Daily Challenge';
+            categoryText = `Special Question of the Day | ${data.category}`;
+            break;
+        case 'pop_quiz':
+            headerText = '📊 Pop Quiz';
+            categoryText = `Random Question | ${data.category}`;
+            break;
+        case 'mini_quiz':
+            headerText = '⚡ Mini Quiz';
+            categoryText = `${data.category} | Quick Test`;
+            break;
+        case 'verify':
+            headerText = '🔍 Verify Knowledge';
+            categoryText = `Assessment Mode | ${data.category}`;
+            break;
+    }
+
+    document.querySelector('.card-header h4').textContent = headerText;
+    document.getElementById('category-display').textContent = categoryText;
+
+    // Display question text
+    document.getElementById('question-container').innerHTML = `
+        <h5 class="text-warning">${data.question}</h5>
+    `;
+
+    // Display question counter
+    document.getElementById('question-counter').textContent = `Question ${data.question_number}`;
+
+    // Display options
+    let optionsHtml = '';
+    data.options.forEach((option, index) => {
+        optionsHtml += `
+            <div class="form-check mb-2">
+                <input class="form-check-input" type="radio" name="answer" id="option${index}" value="${index}" onchange="selectAnswer(${index})">
+                <label class="form-check-label" for="option${index}">
+                    ${option}
+                </label>
+            </div>
+        `;
+    });
+    document.getElementById('options-container').innerHTML = optionsHtml;
+
+    // Reset controls
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').style.display = 'inline-block';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('feedback-container').style.display = 'none';
+    document.getElementById('quiz-controls').style.display = 'flex';
+    selectedAnswer = null;
+}
+
+
+function selectAnswer(index) {
+    selectedAnswer = index;
+    document.getElementById('submit-btn').disabled = false;
+}
+
+function submitAnswer() {
+    if (selectedAnswer === null) return;
+
+    fetch('/api/submit_answer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                answer_index: selectedAnswer
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            showFeedback(data);
+
+            if (data.session_complete || isSingleQuestionMode) {
+                clearInterval(quickFireTimer);
+                setTimeout(() => {
+                    showQuizComplete(data);
+                }, isSingleQuestionMode ? 3000 : 2000); // Longer delay for single question feedback
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting answer:', error);
+            showError('Failed to submit answer');
+        });
+}
+
+function showFeedback(data) {
+    let feedbackClass = data.is_correct ? 'alert-success' : 'alert-danger';
+    let feedbackText = '';
+
+    if (currentMode === 'verify') {
+        feedbackText = 'Answer recorded.';
+        feedbackClass = 'alert-info';
+    } else {
+        feedbackText = data.is_correct ?
+            '✅ Correct!' :
+            `❌ Incorrect. The correct answer was: ${currentQuestion.options[data.correct_answer_index]}`;
+        if (currentMode === 'quick_fire') {
+            feedbackText += data.is_correct ? ' Keep going! 🔥' : ' Keep pushing! ⚡';
+        }
+    }
+
+    let feedbackHtml = `
+        <div class="alert ${feedbackClass}">
+            <strong>${feedbackText}</strong>
+            ${data.explanation && currentMode !== 'verify' ? `<br><small><strong>Explanation:</strong> ${data.explanation}</small>` : ''}
+            ${data.points_earned ? `<br><small>Points earned: ${data.points_earned}</small>` : ''}
+        </div>
+    `;
+
+    if (data.new_badges && data.new_badges.length > 0) {
+        feedbackHtml += `
+            <div class="alert alert-info">
+                <strong>🎉 Achievement Unlocked!</strong><br>
+                ${data.new_badges.join('<br>')}
+            </div>
+        `;
+    }
+
+    document.getElementById('feedback-container').innerHTML = feedbackHtml;
+    document.getElementById('feedback-container').style.display = 'block';
+
+    document.querySelectorAll('input[name="answer"]').forEach(input => input.disabled = true);
+    document.getElementById('submit-btn').style.display = 'none';
+
+    if (!isSingleQuestionMode && !data.session_complete) {
+        document.getElementById('next-btn').style.display = 'inline-block';
+        document.getElementById('next-btn').disabled = false;
+    }
+}
+
+
+function nextQuestion() {
+    loadNextQuestion();
+}
+
+function endQuiz() {
+    if (confirm('Are you sure you want to end the quiz?')) {
+        clearInterval(quickFireTimer);
+        fetch('/api/end_quiz', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showQuizResults(data);
+                } else {
+                    showError(data.error || 'Failed to end quiz');
+                }
+            })
+            .catch(error => {
+                console.error('Error ending quiz:', error);
+                showError('Failed to end quiz');
+            });
+    }
+}
+
+function showQuizComplete(data = null) {
+    clearInterval(quickFireTimer);
+
+    if (data) {
+        showQuizResults(data);
+    } else {
+        fetch('/api/end_quiz', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(resultsData => {
+                showQuizResults(resultsData);
+            })
+            .catch(error => {
+                console.error('Error getting quiz results:', error);
+                showError('Failed to get quiz results');
+            });
+    }
+}
+
+function showQuizResults(data) {
+    exitQuizFullscreen();
+    let modeTitle = 'Quiz Complete!';
+    let modeEmoji = '🎉';
+
+    switch (currentMode) {
+        case 'quick_fire':
+            modeTitle = 'Quick Fire Complete!';
+            modeEmoji = '⚡';
+            break;
+        case 'daily_challenge':
+            modeTitle = 'Daily Challenge Complete!';
+            modeEmoji = '🗓️';
+            break;
+        case 'verify':
+            modeTitle = 'Knowledge Verification Complete!';
+            modeEmoji = '🔍';
+            break;
+    }
+
+    const resultsHtml = `
+        <div class="alert alert-info text-center">
+            <h4>${modeEmoji} ${modeTitle}</h4>
+            <p>Final Score: ${data.session_score} / ${data.session_total} (${data.accuracy.toFixed(1)}%)</p>
+            <p>Points Earned: ${data.session_points}</p>
+            <button class="btn btn-primary" onclick="window.location.href='/'">Return to Home</button>
+        </div>
+    `;
+
+    document.getElementById('question-container').innerHTML = resultsHtml;
+    document.getElementById('options-container').innerHTML = '';
+    document.getElementById('feedback-container').style.display = 'none';
+    document.getElementById('quiz-controls').style.display = 'none';
+}
+
+
+function startQuickFireTimer() {
+    const timerContainer = document.getElementById('timer-display-container');
+    timerContainer.innerHTML = '<span class="badge bg-danger" id="timer-badge">3:00</span>';
+
+    quickFireTimer = setInterval(() => {
+        fetch('/api/quick_fire_status')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.active) {
+                    clearInterval(quickFireTimer);
+                    return;
+                }
+
+                if (data.should_end) {
+                    clearInterval(quickFireTimer);
+                    showQuizComplete();
+                    return;
+                }
+
+                const timeRemaining = Math.max(0, data.time_remaining || 0);
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = Math.floor(timeRemaining % 60);
+                const timerBadge = document.getElementById('timer-badge');
+
+                if (timerBadge) {
+                    timerBadge.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                    if (timeRemaining <= 30) timerBadge.className = 'badge bg-danger';
+                    else if (timeRemaining <= 60) timerBadge.className = 'badge bg-warning';
+                    else timerBadge.className = 'badge bg-info';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking Quick Fire status:', error);
+            });
+    }, 1000);
+}
+
+function showInitialMessage(message, subtext) {
+    document.getElementById('initial-message').textContent = message;
+    document.getElementById('initial-subtext').innerHTML = subtext;
+}
+
+function showError(message) {
+    exitQuizFullscreen();
+    document.getElementById('quiz-card').style.display = 'none';
+    const container = document.getElementById('initial-state-container');
+    container.style.display = 'block';
+    container.innerHTML = `
+        <div class="alert alert-danger text-center">
+            <h5>Error</h5>
+            <p>${message}</p>
+            <button class="btn btn-primary" onclick="window.location.href='/'">Return to Home</button>
+        </div>`;
+}
+
+// --- Fullscreen and UI Functions ---
+function enterQuizFullscreen() {
+    const elem = document.documentElement;
+    if (elem.requestFullscreen) elem.requestFullscreen();
+    else if (elem.mozRequestFullScreen) elem.mozRequestFullScreen();
+    else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+}
+
+function exitQuizFullscreen() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) document.msExitFullscreen();
+    }
+}
+
+function handleFullscreenChange() {
+    const isFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    const navbar = document.querySelector('.navbar');
+    const statusBar = document.querySelector('.fixed-bottom'); // Assuming you have a status bar in base.html
+
+    if (isFullscreen) {
+        if (navbar) navbar.style.display = 'none';
+        if (statusBar) statusBar.style.display = 'none';
+    } else {
+        // User exited fullscreen (e.g., with Esc key)
+        if (navbar) navbar.style.display = '';
+        if (statusBar) statusBar.style.display = '';
+    }
+}
+</script>
+{% endblock %}

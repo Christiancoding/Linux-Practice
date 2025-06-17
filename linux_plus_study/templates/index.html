@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h2 class="text-center text-warning mb-0">
+                    <i class="fas fa-graduation-cap"></i> Welcome to Linux+ Study Game
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <p class="lead">Prepare for your CompTIA Linux+ certification with interactive quizzes!</p>
+                    <p>Test your knowledge with multiple-choice questions and track your progress.</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-primary">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">
+                                    <i class="fas fa-play-circle text-success"></i> Start Quiz
+                                </h5>
+                                <p class="card-text">Begin a standard quiz session with immediate feedback.</p>
+                                <button class="btn btn-success" onclick="startQuiz('standard')">Start Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-dark border-info">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">
+                                    <i class="fas fa-check-circle text-info"></i> Verify Knowledge
+                                </h5>
+                                <p class="card-text">Test yourself and see results at the end.</p>
+                                <button class="btn btn-info" onclick="startQuiz('verify')">Verify Knowledge</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-3">
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-warning">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">
+                                    <i class="fas fa-bolt text-warning"></i> Quick Fire
+                                </h6>
+                                <p class="card-text small">5 questions, 3 minutes!</p>
+                                <button class="btn btn-warning btn-sm" onclick="startQuickFire()">Quick Fire</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-primary">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">
+                                    <i class="fas fa-calendar text-primary"></i> Daily Challenge
+                                </h6>
+                                <p class="card-text small">One question per day</p>
+                                <button class="btn btn-primary btn-sm" onclick="startDailyChallenge()">Daily Challenge</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-success">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">
+                                    <i class="fas fa-random text-success"></i> Pop Quiz
+                                </h6>
+                                <p class="card-text small">Single random question</p>
+                                <button class="btn btn-success btn-sm" onclick="startPopQuiz()">Pop Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark border-info">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">
+                                    <i class="fas fa-lightning text-info"></i> Mini Quiz
+                                </h6>
+                                <p class="card-text small">3 quick questions</p>
+                                <button class="btn btn-info btn-sm" onclick="startMiniQuiz()">Mini Quiz</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Game Status -->
+                <div class="mt-4">
+                    <h5>Game Status</h5>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-warning" id="total-questions">-</div>
+                                <div class="small text-muted">Total Questions</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-info" id="total-categories">-</div>
+                                <div class="small text-muted">Categories</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-success" id="session-score">0/0</div>
+                                <div class="small text-muted">Session Score</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <div class="h4 text-primary" id="total-points">0</div>
+                                <div class="small text-muted">Total Points</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Export/Import Section -->
+                <div class="mt-4">
+                    <h5>
+                        <i class="fas fa-download text-info"></i> Data Management
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <div class="card bg-dark border-success">
+                                <div class="card-body text-center p-2">
+                                    <h6 class="card-title small">
+                                        <i class="fas fa-file-download text-success"></i> Export MD
+                                    </h6>
+                                    <button class="btn btn-success btn-sm w-100" onclick="exportQuestionsMarkdown()">
+                                        <i class="fas fa-markdown"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-dark border-info">
+                                <div class="card-body text-center p-2">
+                                    <h6 class="card-title small">
+                                        <i class="fas fa-file-code text-info"></i> Export JSON
+                                    </h6>
+                                    <button class="btn btn-info btn-sm w-100" onclick="exportQuestionsJSON()">
+                                        <i class="fas fa-code"></i> Download
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card bg-dark border-warning">
+                                <div class="card-body text-center p-2">
+                                    <h6 class="card-title small">
+                                        <i class="fas fa-file-upload text-warning"></i> Import
+                                    </h6>
+                                    <button class="btn btn-warning btn-sm w-100" onclick="window.location.href='/import/questions'">
+                                        <i class="fas fa-upload"></i> Add Q&A
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title small text-muted">
+                                        <i class="fas fa-info-circle"></i> Quick Actions
+                                    </h6>
+                                    <div class="text-center">
+                                        <small class="text-muted">Export your progress or add new questions</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-dark border-secondary">
+                                <div class="card-body text-center p-2">
+                                    <div id="export-status" class="small text-muted">
+                                        <i class="fas fa-database"></i> 
+                                        <span id="question-count">Loading...</span> questions available
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+<!-- Quiz Start Modal -->
+<div class="modal fade" id="quizStartModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Start Quiz</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="categorySelect" class="form-label">Select Category:</label>
+                    <select class="form-select bg-dark text-light" id="categorySelect">
+                        <option value="All Categories">All Categories</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="confirmStartQuiz()">Start Quiz</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentQuizMode = 'standard';
+
+// Load status on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateGameStatus();
+    checkDailyChallengeStatus();
+});
+
+function updateGameStatus() {
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-questions').textContent = data.total_questions;
+            document.getElementById('total-categories').textContent = data.categories.length;
+            document.getElementById('session-score').textContent = `${data.session_score}/${data.session_total}`;
+            document.getElementById('total-points').textContent = data.total_points;
+            document.getElementById('points-display').textContent = `Points: ${data.total_points}`;
+            document.getElementById('streak-display').textContent = `Streak: ${data.current_streak}`;
+            
+            // Populate category select
+            const categorySelect = document.getElementById('categorySelect');
+            categorySelect.innerHTML = '<option value="All Categories">All Categories</option>';
+            data.categories.forEach(cat => {
+                categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            });
+        });
+}
+
+function checkDailyChallengeStatus() {
+    // You could add an API endpoint to check if daily challenge is completed
+    // For now, we'll just enable the button
+}
+
+function startQuiz(mode) {
+    currentQuizMode = mode;
+    const modal = new bootstrap.Modal(document.getElementById('quizStartModal'));
+    modal.show();
+}
+
+function confirmStartQuiz() {
+    const category = document.getElementById('categorySelect').value;
+    
+    fetch('/api/start_quiz', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            mode: currentQuizMode,
+            category: category
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/quiz';
+        } else {
+            showAlert(data.error || 'Failed to start quiz', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error starting quiz', 'danger');
+    });
+}
+
+function startQuickFire() {
+    if (confirm('Ready for Quick Fire?\n\nAnswer 5 questions in 3 minutes!\n\nAre you ready?')) {
+        fetch('/api/start_quick_fire', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/quiz';
+            } else {
+                showAlert(data.error || 'Failed to start Quick Fire', 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error starting Quick Fire', 'danger');
+        });
+    }
+}
+
+function startDailyChallenge() {
+    fetch('/api/start_daily_challenge', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/quiz';
+        } else {
+            if (data.error.includes('already completed')) {
+                showAlert('You\'ve already completed today\'s daily challenge!\nCome back tomorrow for a new challenge.', 'info');
+            } else {
+                showAlert(data.error || 'Failed to start Daily Challenge', 'danger');
+            }
+        }
+    })
+    .catch(error => {
+        showAlert('Error starting Daily Challenge', 'danger');
+    });
+}
+
+function startPopQuiz() {
+    fetch('/api/start_pop_quiz', {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = '/quiz';
+        } else {
+            showAlert(data.error || 'Failed to start Pop Quiz', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error starting Pop Quiz', 'danger');
+    });
+}
+
+function startMiniQuiz() {
+    if (confirm('Ready for a Mini Quiz?\n\n3 quick questions to test your knowledge!\n\nLet\'s go?')) {
+        fetch('/api/start_mini_quiz', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/quiz';
+            } else {
+                showAlert(data.error || 'Failed to start Mini Quiz', 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error starting Mini Quiz', 'danger');
+        });
+    }
+}
+
+// Utility function for showing alerts
+function showAlert(message, type = 'info') {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.style.maxWidth = '400px';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

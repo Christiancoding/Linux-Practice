@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h2 class="text-center text-info mb-0">
+                    <i class="fas fa-chart-bar"></i> Study Statistics
+                </h2>
+            </div>
+            <div class="card-body">
+                <!-- Overall Performance -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-warning border-bottom pb-2">Overall Performance</h4>
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h3 class="text-primary" id="total-attempts">-</h3>
+                                        <p class="mb-0">Total Attempts</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h3 class="text-success" id="total-correct">-</h3>
+                                        <p class="mb-0">Total Correct</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h3 id="overall-accuracy">-</h3>
+                                        <p class="mb-0">Overall Accuracy</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card bg-dark">
+                                    <div class="card-body">
+                                        <h3 class="text-warning" id="categories-attempted">-</h3>
+                                        <p class="mb-0">Categories Studied</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Performance -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-warning border-bottom pb-2">Performance by Category</h4>
+                        <div id="category-stats" class="table-responsive">
+                            <table class="table table-dark table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th class="text-center">Correct</th>
+                                        <th class="text-center">Attempts</th>
+                                        <th class="text-center">Accuracy</th>
+                                        <th class="text-center">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="category-stats-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Performance -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-warning border-bottom pb-2">Question Performance</h4>
+                        <p class="text-muted">Questions with the lowest accuracy (need more practice)</p>
+                        <div id="question-stats" class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-dark table-striped">
+                                <thead class="sticky-top">
+                                    <tr>
+                                        <th width="5%">Rank</th>
+                                        <th width="60%">Question</th>
+                                        <th class="text-center" width="10%">Correct</th>
+                                        <th class="text-center" width="10%">Attempts</th>
+                                        <th class="text-center" width="15%">Accuracy</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="question-stats-body">
+                                    <tr>
+                                        <td colspan="5" class="text-center">Loading...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="text-center">
+                    <button class="btn btn-outline-warning" onclick="refreshStats()">
+                        <i class="fas fa-sync"></i> Refresh Statistics
+                    </button>
+                    <button class="btn btn-outline-danger ms-2" onclick="clearStats()">
+                        <i class="fas fa-trash"></i> Clear All Statistics
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load statistics on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatistics();
+});
+
+function loadStatistics() {
+    fetch('/api/statistics')
+        .then(response => response.json())
+        .then(data => {
+            displayOverallStats(data.overall);
+            displayCategoryStats(data.categories);
+            displayQuestionStats(data.questions);
+        })
+        .catch(error => {
+            console.error('Error loading statistics:', error);
+        });
+}
+
+function displayOverallStats(overall) {
+    document.getElementById('total-attempts').textContent = overall.total_attempts || 0;
+    document.getElementById('total-correct').textContent = overall.total_correct || 0;
+    
+    const accuracy = overall.overall_accuracy || 0;
+    const accuracyElement = document.getElementById('overall-accuracy');
+    accuracyElement.textContent = accuracy.toFixed(1) + '%';
+    
+    // Color code accuracy
+    if (accuracy >= 75) {
+        accuracyElement.className = 'text-success';
+    } else if (accuracy >= 50) {
+        accuracyElement.className = 'text-warning';
+    } else {
+        accuracyElement.className = 'text-danger';
+    }
+    
+    document.getElementById('categories-attempted').textContent = overall.categories_attempted || 0;
+}
+
+function displayCategoryStats(categories) {
+    const tbody = document.getElementById('category-stats-body');
+    
+    if (!categories || categories.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No category data available</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    categories.forEach(cat => {
+        const accuracy = cat.accuracy || 0;
+        let accuracyClass = 'text-muted';
+        let statusBadge = 'secondary';
+        let statusText = 'Not Started';
+        
+        if (accuracy >= 75) {
+            accuracyClass = 'text-success';
+            statusBadge = 'success';
+            statusText = 'Good';
+        } else if (accuracy >= 50) {
+            accuracyClass = 'text-warning';
+            statusBadge = 'warning';
+            statusText = 'Average';
+        } else if (accuracy > 0) {
+            accuracyClass = 'text-danger';
+            statusBadge = 'danger';
+            statusText = 'Needs Work';
+        }
+        
+        const row = `
+            <tr>
+                <td>${cat.category}</td>
+                <td class="text-center">${cat.correct || 0}</td>
+                <td class="text-center">${cat.attempts || 0}</td>
+                <td class="text-center ${accuracyClass}">${accuracy.toFixed(1)}%</td>
+                <td class="text-center">
+                    <span class="badge bg-${statusBadge}">${statusText}</span>
+                </td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function displayQuestionStats(questions) {
+    const tbody = document.getElementById('question-stats-body');
+    
+    if (!questions || questions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No question data available</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    questions.slice(0, 20).forEach(q => { // Show top 20 worst performing
+        const accuracy = q.accuracy || 0;
+        let accuracyClass = 'text-muted';
+        
+        if (accuracy >= 75) {
+            accuracyClass = 'text-success';
+        } else if (accuracy >= 50) {
+            accuracyClass = 'text-warning';
+        } else {
+            accuracyClass = 'text-danger';
+        }
+        
+        const row = `
+            <tr>
+                <td class="text-center">${q.rank}</td>
+                <td>
+                    <small>${q.question_display}</small>
+                </td>
+                <td class="text-center">${q.correct || 0}</td>
+                <td class="text-center">${q.attempts || 0}</td>
+                <td class="text-center ${accuracyClass}">${accuracy.toFixed(1)}%</td>
+            </tr>
+        `;
+        tbody.innerHTML += row;
+    });
+}
+
+function refreshStats() {
+    // Show loading state
+    document.getElementById('category-stats-body').innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+    document.getElementById('question-stats-body').innerHTML = '<tr><td colspan="5" class="text-center">Loading...</td></tr>';
+    
+    // Reload data
+    loadStatistics();
+    showAlert('Statistics refreshed!', 'success');
+}
+
+function clearStats() {
+    if (confirm('Are you sure you want to clear ALL statistics? This action cannot be undone.')) {
+        fetch('/api/clear_statistics', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showAlert('Statistics cleared successfully!', 'success');
+                loadStatistics();
+            } else {
+                showAlert('Error clearing statistics: ' + data.error, 'danger');
+            }
+        })
+        .catch(error => {
+            showAlert('Error clearing statistics', 'danger');
+        });
+    }
+}
+</script>
+{% endblock %}
