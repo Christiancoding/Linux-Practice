@@ -1,272 +1,461 @@
-# --- Part 1: Standard Library Imports ---
-import json
-import os
-import re
-import shlex
-import socket
-import stat  # For checking file permissions
+#!/usr/bin/env python3
+"""
+SSH Connection and Command Execution Manager
+
+Comprehensive SSH session management with robust error handling,
+security validation, and user-friendly output formatting for
+remote Linux system administration and practice environments.
+"""
+
 import sys
 import time
-import traceback
-import xml.etree.ElementTree as ET
+import logging
+import socket
+import stat
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-# --- Part 8: Core VM Lifecycle Functions ---
-def list_vms(conn: libvirt.virConnect):
-    """Lists all defined VMs (active and inactive) using Rich Table."""
-    if not conn:
-        console.print("[bold red]:x: Error: Invalid libvirt connection passed to list_vms.[/]", style="red")
-        return
+from typing import Dict, Optional, Any, Union, List
 
-    table = Table(title="[bold blue]Available Libvirt VMs[/]", show_header=True, header_style="bold magenta")
-    table.add_column("Name", style="cyan", no_wrap=True)
-    table.add_column("State", justify="center")
-    table.add_column("ID", justify="right")
+# Ensure Python 3.8+ compatibility
+if sys.version_info < (3, 8):
+    print("SSH Manager requires Python 3.8+. Please upgrade.")
+    sys.exit(1)
 
-    try:
-        # Active VMs
-        active_domains_ids = conn.listDomainsID()
-        active_domains = [conn.lookupByID(dom_id) for dom_id in active_domains_ids] if active_domains_ids else []
-        for domain in active_domains:
-             table.add_row(domain.name(), "[green]Running[/]", str(domain.ID()))
+# Import required SSH library
+try:
+    import paramiko
+except ImportError:
+    print("Error: Missing required library 'paramiko'.\n"
+          "Please install it (e.g., 'pip install paramiko') and try again.", 
+          file=sys.stderr)
+    sys.exit(1)
 
-        # Inactive VMs
-        inactive_domains_names = conn.listDefinedDomains()
-        if inactive_domains_names:
-            for name in inactive_domains_names:
-                # Avoid listing active VMs again if listDefinedDomains includes them
-                if name not in [d.name() for d in active_domains]:
-                    table.add_row(name, "[yellow]Shut off[/]", "[dim]N/A[/]")
-
-        if not active_domains and not inactive_domains_names:
-             console.print("  [i]No VMs found.[/]")
-             return
-
-        console.print(table)
-
-    except libvirt.libvirtError as e:
-        raise PracticeToolError(f"Error listing VMs from libvirt: {e}") from e
-
-def start_vm(domain: libvirt.virDomain) -> bool:
-    """Starts the specified VM domain."""
-    if not domain:
-        raise PracticeToolError("Invalid VM domain provided to start_vm.")
-    try:
-        if domain.isActive():
-            console.print(f":information_source: VM '[bold cyan]{domain.name()}[/]' is already running.")
-            return True
-        else:
-            console.print(f":rocket: Starting VM '[bold cyan]{domain.name()}[/]'...")
-            if domain.create() < 0:
-                 # create() returns -1 on failure and raises libvirtError sometimes
-                 raise PracticeToolError(f"Libvirt failed to start VM '{domain.name()}' (check libvirt logs).")
-
-            # Wait briefly for state change using Rich spinner
-            with Progress(
-                SpinnerColumn(spinner_name="dots"),
-                TextColumn("[progress.description]{task.description}"),
-                transient=True, # Clear spinner on exit
-                console=console # Ensure it uses the same console
-            ) as progress:
-                progress.add_task(f"Waiting for '{domain.name()}' state...", total=None)
-                time.sleep(4) # Give it a moment
-
-            # Re-check state more definitively
-            state, _ = domain.state()
-            if state == libvirt.VIR_DOMAIN_RUNNING:
-                console.print(f"[green]:heavy_check_mark: VM '[bold cyan]{domain.name()}[/]' appears to be running (ID: {domain.ID()}).[/]")
-                return True
-            else:
-                 # This is unlikely if domain.create() succeeded, but good to check
-                 console.print(f"[yellow]:warning: VM '[bold cyan]{domain.name()}[/] state is {state} shortly after start command. Proceeding, but check VM status.[/]", style="yellow")
-                 return True # Still return True as the start command likely succeeded
-
-    except libvirt.libvirtError as e:
-        raise PracticeToolError(f"Error starting VM '{domain.name()}': {e}") from e
-    except Exception as e:
-        raise PracticeToolError(f"An unexpected error occurred while starting VM '{domain.name()}': {e}") from e
+# Import local modules
+from .config import SSHConfiguration
+from .exceptions import SSHCommandError, NetworkError, format_exception_for_user
+from .console_helper import console, Panel, Table, RICH_AVAILABLE
 
 
-def shutdown_vm(domain: libvirt.virDomain) -> bool:
-    """Shuts down the specified VM domain using ACPI, falling back to destroy."""
-    if not domain:
-        raise PracticeToolError("Invalid VM domain provided to shutdown_vm.")
-    try:
-        if not domain.isActive():
-            console.print(f":information_source: VM '[bold cyan]{domain.name()}[/]' is already shut down.")
-            return True
-        else:
-            console.print(f":stop_button: Attempting graceful shutdown for VM '[bold cyan]{domain.name()}[/]' (ACPI)...")
-            shutdown_failed = False
-            try:
-                # shutdown() returns 0 on success, -1 on error
-                if domain.shutdown() < 0:
-                    shutdown_failed = True
-                    console.print(f"  [yellow]:warning: ACPI shutdown command failed for VM '{domain.name()}'. Will try destroy later if needed.[/]", style="yellow")
-                else:
-                    console.print("  [dim]ACPI shutdown signal sent.[/]")
-            except libvirt.libvirtError as e:
-                 # Sometimes shutdown() raises error instead of returning -1
-                 shutdown_failed = True
-                 console.print(f"  [yellow]:warning: Error sending ACPI shutdown signal for VM '{domain.name()}': {e}. Will try destroy later if needed.[/]", style="yellow")
-
-            # Wait for shutdown with Rich Progress bar only if ACPI signal was sent (or seemed to be)
-            if not shutdown_failed:
-                max_wait_sec = Config.VM_SHUTDOWN_TIMEOUT_SECONDS
-                wait_interval = 3
-                console.print(f"  [dim]Waiting up to {max_wait_sec}s for graceful shutdown...[/]")
-                with Progress(
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-                    TimeElapsedColumn(),
-                    transient=False, # Keep progress bar visible after completion
-                    console=console
-                ) as progress:
-                    task = progress.add_task(f"Shutting down '{domain.name()}'...", total=max_wait_sec)
-                    start_time = time.time()
-                    while (time.time() - start_time) < max_wait_sec:
-                        try:
-                            if not domain.isActive():
-                                progress.update(task, completed=max_wait_sec, description=f"VM '{domain.name()}' shut down.")
-                                break # Exit loop early
-                            current_state, _ = domain.state()
-                            progress.update(task, advance=wait_interval, description=f"Shutting down '{domain.name()}'... State: {current_state}")
-                            time.sleep(wait_interval)
-                        except libvirt.libvirtError as e:
-                            # Handle case where VM disappears during wait
-                            if e.get_error_code() == VIR_ERR_NO_DOMAIN and VIR_ERR_NO_DOMAIN != -1:
-                                progress.update(task, completed=max_wait_sec, description=f"VM '{domain.name()}' disappeared (assumed shut down)")
-                                console.print("\n  [yellow]VM disappeared during shutdown wait.[/]", style="yellow")
-                                return True # Treat as success
-                            # If it's not a "no domain" error, re-raise to outer handler
-                            raise
-                    else: # Loop finished without breaking (timeout)
-                        progress.update(task, description=f"VM '{domain.name()}' still active after timeout.")
-
-            # Check final state and force destroy if needed
-            if domain.isActive():
-                console.print(f"[yellow]:warning: VM '[bold cyan]{domain.name()}[/]' did not shut down gracefully. Forcing power off (destroy)...[/]", style="yellow")
-                if domain.destroy() < 0:
-                    raise PracticeToolError(f"Failed to destroy (force power off) VM '{domain.name()}' after timeout/failure.")
-                else:
-                    console.print(f"  [green]:heavy_check_mark: VM '[bold cyan]{domain.name()}[/] destroyed (forced power off).[/]")
-                    time.sleep(2) # Brief pause after destroy
-                    return True # Destroy succeeded
-            else:
-                console.print(f"[green]:heavy_check_mark: VM '[bold cyan]{domain.name()}[/] shut down successfully.[/]")
-                return True # Graceful shutdown succeeded
-
-    except libvirt.libvirtError as e:
-        err_code = e.get_error_code()
-        # Handle cases where the VM is already gone or shutdown fails due to invalid state
-        if err_code == VIR_ERR_NO_DOMAIN and VIR_ERR_NO_DOMAIN != -1:
-             console.print(f"[yellow]:information_source: VM '{domain.name()}' disappeared or is already shut down.[/]", style="yellow")
-             return True
-        if err_code == VIR_ERR_OPERATION_INVALID and VIR_ERR_OPERATION_INVALID != -1:
-            try:
-                # Double-check if it's really inactive
-                if not domain.isActive():
-                    console.print(f"[yellow]:information_source: VM '{domain.name()}' is already shut down (operation invalid).[/]", style="yellow")
-                    return True
-            except libvirt.libvirtError: # If check fails, assume gone
-                 console.print(f"[yellow]:information_source: VM '{domain.name()}' disappeared or is already shut down.[/]", style="yellow")
-                 return True
-        # If it wasn't an expected "already off" error, raise it
-        raise PracticeToolError(f"Error during shutdown process for VM '{domain.name()}': {e}") from e
-    except Exception as e:
-        raise PracticeToolError(f"An unexpected error occurred while shutting down VM '{domain.name()}': {e}") from e
-
-# --- Part 9: QEMU Guest Agent Functions ---
-def qemu_agent_command(domain: libvirt.virDomain, command_json_str: str, timeout_sec: int = 10) -> Optional[Any]:
-    """Sends a command to the QEMU guest agent and returns the parsed JSON response."""
-    if not domain: return None # Should not happen if called correctly
-    if not domain.isActive():
-        # console.print("[yellow]QEMU Agent:[/yellow] VM is not running.", style="yellow") # Less verbose
-        return None
-
-    try:
-        if not hasattr(domain, 'qemuAgentCommand'):
-            # console.print("[yellow]QEMU Agent:[/yellow] qemuAgentCommand not supported by this libvirt version or setup.", style="yellow")
-            return None # Treat as agent unavailable
-
-        # console.print(f"[dim]QEMU Agent Command: {command_json_str}[/]") # Debug
-        response_str = domain.qemuAgentCommand(command_json_str, timeout_sec, 0)
-        # console.print(f"[dim]QEMU Agent Response: {response_str}[/]") # Debug
-
-        if response_str is None:
-            # Sometimes None indicates success for commands with no return value (like fsfreeze)
-            # We will treat None as potential success but log if unexpected.
-            # console.print("[dim]QEMU Agent: Received None response (might be OK).[/]")
-            return {} # Return empty dict to signify command sent, no error, no data
-
-        # Attempt to parse JSON response
+class SSHManager:
+    """
+    Advanced SSH connection and command execution management system.
+    
+    Provides secure, reliable SSH operations with comprehensive error handling,
+    connection pooling, and detailed output formatting for remote Linux
+    system administration tasks.
+    """
+    
+    def __init__(self, default_timeout: int = SSHConfiguration.COMMAND_TIMEOUT_SECONDS):
+        """
+        Initialize SSH manager with security validation and logging setup.
+        
+        Args:
+            default_timeout: Default command execution timeout in seconds
+        """
+        self._setup_logging()
+        self.default_timeout = default_timeout
+        self.active_connections = {}
+        self.logger = logging.getLogger(__name__)
+        
+        # Configure paramiko logging to reduce noise
+        paramiko.util.log_to_file('/dev/null')
+        logging.getLogger("paramiko").setLevel(logging.WARNING)
+    
+    def _setup_logging(self) -> None:
+        """Configure comprehensive logging infrastructure for SSH operations."""
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+            handlers=[
+                logging.StreamHandler(),
+                logging.FileHandler('ssh_manager.log')
+            ]
+        )
+    
+    def validate_ssh_key_security(self, key_path: Path) -> bool:
+        """
+        Validate SSH private key file permissions for security compliance.
+        
+        Args:
+            key_path: Path to SSH private key file
+            
+        Returns:
+            bool: True if key permissions are secure, False otherwise
+        """
         try:
-            response_json = json.loads(response_str)
-            if isinstance(response_json, dict) and response_json.get("error"):
-                 error_details = response_json["error"].get("desc", "Unknown error")
-                 error_class = response_json["error"].get("class", "GenericError")
-                 console.print(f"[yellow]QEMU Agent:[/yellow] Guest agent reported error: {error_class} - {error_details}", style="yellow")
-                 return None # Indicate agent-level error
-            return response_json
-        except json.JSONDecodeError:
-            console.print(f"[yellow]QEMU Agent:[/yellow] Could not decode JSON response: {response_str}", style="yellow")
-            return None # Indicate communication/format error
+            if not key_path.exists():
+                self.logger.error(f"SSH key file does not exist: {key_path}")
+                return False
+            
+            # Check file permissions - should be readable only by owner
+            file_stat = key_path.stat()
+            file_mode = file_stat.st_mode
+            permissions = stat.filemode(file_mode)
+            
+            # Check for group/other read permissions (security risk)
+            if file_mode & SSHConfiguration.KEY_PERMISSIONS_MASK:
+                self.logger.warning(
+                    f"SSH key {key_path} has insecure permissions: {permissions}. "
+                    "Key should be readable only by owner (600 or 400)."
+                )
+                return False
+            
+            self.logger.debug(f"SSH key {key_path} has secure permissions: {permissions}")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error validating SSH key permissions: {e}")
+            return False
+    
+    def test_connection(self, host: str, username: str, key_path: Path, 
+                       port: int = 22, timeout: int = SSHConfiguration.CONNECT_TIMEOUT_SECONDS) -> bool:
+        """
+        Test SSH connectivity without establishing persistent connection.
+        
+        Args:
+            host: Target hostname or IP address
+            username: SSH username for authentication
+            key_path: Path to SSH private key
+            port: SSH port number (default: 22)
+            timeout: Connection timeout in seconds
+            
+        Returns:
+            bool: True if connection test succeeds, False otherwise
+        """
+        try:
+            self.logger.debug(f"Testing SSH connection to {username}@{host}:{port}")
+            
+            # Validate key file security
+            if not self.validate_ssh_key_security(key_path):
+                return False
+            
+            # Create temporary SSH client for testing
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddHostKeyPolicy())
+            
+            try:
+                # Attempt connection
+                ssh_client.connect(
+                    hostname=host,
+                    port=port,
+                    username=username,
+                    key_filename=str(key_path),
+                    timeout=timeout,
+                    banner_timeout=timeout,
+                    auth_timeout=timeout
+                )
+                
+                # Quick command test to verify full functionality
+                _, stdout, stderr = ssh_client.exec_command('echo "connection_test"', timeout=5)
+                output = stdout.read().decode('utf-8').strip()
+                
+                if output == "connection_test":
+                    self.logger.debug(f"SSH connection test successful to {host}")
+                    return True
+                else:
+                    self.logger.warning(f"SSH connection established but command test failed to {host}")
+                    return False
+                    
+            finally:
+                ssh_client.close()
+                
+        except paramiko.AuthenticationException:
+            self.logger.debug(f"SSH authentication failed to {host}")
+            return False
+        except paramiko.SSHException as e:
+            self.logger.debug(f"SSH connection error to {host}: {e}")
+            return False
+        except socket.timeout:
+            self.logger.debug(f"SSH connection timeout to {host}")
+            return False
+        except Exception as e:
+            self.logger.debug(f"Unexpected error testing SSH connection to {host}: {e}")
+            return False
+    
+    def run_ssh_command(self, host: str, username: str, key_path: Path, command: str,
+                       timeout: Optional[int] = None, verbose: bool = False) -> Dict[str, Any]:
+        """
+        Execute command via SSH with comprehensive error handling and output capture.
+        
+        Args:
+            host: Target hostname or IP address
+            username: SSH username for authentication
+            key_path: Path to SSH private key
+            command: Command to execute on remote system
+            timeout: Command execution timeout (uses default if None)
+            verbose: Enable verbose output logging
+            
+        Returns:
+            Dict containing execution results with keys:
+            - 'success': bool indicating overall success
+            - 'exit_status': int command exit code
+            - 'stdout': str standard output
+            - 'stderr': str standard error output
+            - 'error': Optional[str] error description if command failed
+            - 'execution_time': float command execution time in seconds
+            
+        Raises:
+            SSHCommandError: If SSH connection or command execution fails
+        """
+        effective_timeout = timeout or self.default_timeout
+        start_time = time.time()
+        
+        try:
+            self.logger.info(f"Executing SSH command on {host}: {command}")
+            
+            # Validate SSH key security
+            if not self.validate_ssh_key_security(key_path):
+                raise SSHCommandError(
+                    command=command,
+                    ssh_error="SSH key file has insecure permissions or is inaccessible",
+                    host=host
+                )
+            
+            # Establish SSH connection
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddHostKeyPolicy())
+            
+            try:
+                # Connect with comprehensive timeout handling
+                ssh_client.connect(
+                    hostname=host,
+                    username=username,
+                    key_filename=str(key_path),
+                    timeout=SSHConfiguration.CONNECT_TIMEOUT_SECONDS,
+                    banner_timeout=SSHConfiguration.CONNECT_TIMEOUT_SECONDS,
+                    auth_timeout=SSHConfiguration.CONNECT_TIMEOUT_SECONDS
+                )
+                
+                # Execute command with timeout
+                stdin, stdout, stderr = ssh_client.exec_command(command, timeout=effective_timeout)
+                
+                # Collect output and exit status
+                stdout_data = stdout.read().decode('utf-8', errors='replace')
+                stderr_data = stderr.read().decode('utf-8', errors='replace')
+                exit_status = stdout.channel.recv_exit_status()
+                
+                execution_time = time.time() - start_time
+                
+                # Prepare result dictionary
+                result = {
+                    'success': exit_status == 0,
+                    'exit_status': exit_status,
+                    'stdout': stdout_data,
+                    'stderr': stderr_data,
+                    'error': None if exit_status == 0 else f"Command exited with status {exit_status}",
+                    'execution_time': execution_time
+                }
+                
+                if verbose:
+                    self.logger.info(f"Command completed in {execution_time:.2f}s with exit status {exit_status}")
+                    if stdout_data:
+                        self.logger.debug(f"STDOUT: {stdout_data[:200]}...")
+                    if stderr_data:
+                        self.logger.debug(f"STDERR: {stderr_data[:200]}...")
+                
+                return result
+                
+            finally:
+                ssh_client.close()
+                
+        except paramiko.AuthenticationException as e:
+            execution_time = time.time() - start_time
+            error_msg = f"SSH authentication failed for {username}@{host}"
+            self.logger.error(error_msg)
+            raise SSHCommandError(
+                command=command,
+                ssh_error=error_msg,
+                host=host
+            ) from e
+            
+        except paramiko.SSHException as e:
+            execution_time = time.time() - start_time
+            error_msg = f"SSH connection error: {e}"
+            self.logger.error(error_msg)
+            raise SSHCommandError(
+                command=command,
+                ssh_error=error_msg,
+                host=host
+            ) from e
+            
+        except socket.timeout as e:
+            execution_time = time.time() - start_time
+            error_msg = f"SSH command timeout after {effective_timeout}s"
+            self.logger.error(error_msg)
+            raise SSHCommandError(
+                command=command,
+                ssh_error=error_msg,
+                host=host
+            ) from e
+            
+        except Exception as e:
+            execution_time = time.time() - start_time
+            error_msg = f"Unexpected SSH error: {e}"
+            self.logger.error(error_msg, exc_info=True)
+            raise SSHCommandError(
+                command=command,
+                ssh_error=error_msg,
+                host=host
+            ) from e
+    
+    def format_ssh_output(self, result: Dict[str, Any], command: str, 
+                         show_command: bool = True) -> str:
+        """
+        Format SSH command execution results for user-friendly display.
+        
+        Args:
+            result: SSH command execution result dictionary
+            command: Original command that was executed
+            show_command: Whether to include the command in output
+            
+        Returns:
+            str: Formatted output string for console display
+        """
+        try:
+            # Prepare formatted output sections
+            output_sections = []
+            
+            if show_command:
+                if RICH_AVAILABLE:
+                    output_sections.append(f"[bold cyan]Command:[/] [dim]{command}[/]")
+                else:
+                    output_sections.append(f"Command: {command}")
+            
+            # Format execution status
+            exit_status = result.get('exit_status', -1)
+            execution_time = result.get('execution_time', 0)
+            success = result.get('success', False)
+            
+            if RICH_AVAILABLE:
+                status_color = "green" if success else "red"
+                status_text = "SUCCESS" if success else "FAILED"
+                status_line = f"[bold {status_color}]Status:[/] {status_text} (exit: {exit_status}, time: {execution_time:.2f}s)"
+            else:
+                status_text = "SUCCESS" if success else "FAILED"
+                status_line = f"Status: {status_text} (exit: {exit_status}, time: {execution_time:.2f}s)"
+            
+            output_sections.append(status_line)
+            
+            # Format stdout if present
+            stdout = result.get('stdout', '').strip()
+            if stdout:
+                if RICH_AVAILABLE:
+                    output_sections.append(f"[bold green]Output:[/]\n{stdout}")
+                else:
+                    output_sections.append(f"Output:\n{stdout}")
+            
+            # Format stderr if present
+            stderr = result.get('stderr', '').strip()
+            if stderr:
+                if RICH_AVAILABLE:
+                    output_sections.append(f"[bold red]Error Output:[/]\n{stderr}")
+                else:
+                    output_sections.append(f"Error Output:\n{stderr}")
+            
+            # Format SSH-specific errors
+            ssh_error = result.get('error')
+            if ssh_error and not success:
+                if RICH_AVAILABLE:
+                    output_sections.append(f"[bold red]Error:[/] {ssh_error}")
+                else:
+                    output_sections.append(f"Error: {ssh_error}")
+            
+            return '\n'.join(output_sections)
+            
+        except Exception as e:
+            self.logger.error(f"Error formatting SSH output: {e}")
+            return f"Error formatting command output: {e}"
+    
+    def run_multiple_commands(self, host: str, username: str, key_path: Path,
+                            commands: List[str], stop_on_failure: bool = True,
+                            verbose: bool = False) -> List[Dict[str, Any]]:
+        """
+        Execute multiple SSH commands in sequence with failure handling options.
+        
+        Args:
+            host: Target hostname or IP address
+            username: SSH username for authentication
+            key_path: Path to SSH private key
+            commands: List of commands to execute in order
+            stop_on_failure: Stop execution if any command fails
+            verbose: Enable verbose output logging
+            
+        Returns:
+            List[Dict]: Results for each command execution
+            
+        Raises:
+            SSHCommandError: If any command fails and stop_on_failure is True
+        """
+        results = []
+        
+        for i, command in enumerate(commands, 1):
+            try:
+                if verbose:
+                    console.print(f"[cyan]Executing command {i}/{len(commands)}:[/] {command}")
+                
+                result = self.run_ssh_command(host, username, key_path, command, verbose=verbose)
+                results.append(result)
+                
+                # Check for failure and stop_on_failure setting
+                if not result['success'] and stop_on_failure:
+                    error_msg = f"Command {i} failed, stopping execution: {command}"
+                    self.logger.error(error_msg)
+                    raise SSHCommandError(
+                        command=command,
+                        exit_status=result['exit_status'],
+                        stderr=result.get('stderr'),
+                        host=host
+                    )
+                    
+            except SSHCommandError:
+                if stop_on_failure:
+                    raise
+                # Add error result and continue
+                error_result = {
+                    'success': False,
+                    'exit_status': -1,
+                    'stdout': '',
+                    'stderr': f"Command execution failed: {command}",
+                    'error': f"SSH execution error for command: {command}",
+                    'execution_time': 0.0
+                }
+                results.append(error_result)
+        
+        return results
 
-    except libvirt.libvirtError as e:
-        err_code = e.get_error_code()
-        # Be less verbose for common/expected failures during startup etc.
-        if err_code in (VIR_ERR_AGENT_UNRESPONSIVE, VIR_ERR_OPERATION_TIMEOUT, VIR_ERR_OPERATION_INVALID, VIR_ERR_ARGUMENT_UNSUPPORTED):
-            # console.print(f"[dim]QEMU Agent: Command failed (Code {err_code}, Reason: {e}). Expected during boot/setup sometimes.[/]")
-            pass # Silently fail if common error code
-        else:
-            console.print(f"[yellow]QEMU Agent:[/yellow] Libvirt error running agent command (Code {err_code}): {e}", style="yellow")
-        return None # Indicate libvirt-level error
-    except Exception as e:
-        console.print(f"[red]QEMU Agent:[/red] An unexpected error occurred running agent command: {e}", style="red")
-        return None
 
-def qemu_agent_fsfreeze(domain: libvirt.virDomain) -> bool:
-    """Attempts to freeze VM filesystems using the QEMU guest agent."""
-    console.print(":snowflake: Attempting filesystem freeze via QEMU agent...")
-    response = qemu_agent_command(domain, '{"execute": "guest-fsfreeze-freeze"}')
+# Convenience functions for backward compatibility with ww.py
+def run_ssh_command(host: str, username: str, key_path: Path, command: str,
+                   timeout: Optional[int] = None, verbose: bool = False) -> Dict[str, Any]:
+    """Backward compatibility function for SSH command execution."""
+    manager = SSHManager()
+    return manager.run_ssh_command(host, username, key_path, command, timeout, verbose)
 
-    # Check response: None means communication error or agent error.
-    # An empty dict {} means command sent, no error reported, no data returned (often success for fsfreeze).
-    # A dict with {'return': X} is explicit success.
-    if response is None:
-        console.print("  [yellow]:warning: QEMU Agent: Filesystem freeze command failed or agent unresponsive/error.[/]", style="yellow")
-        return False
-    elif isinstance(response, dict): # Includes {} or {'return': ...}
-        frozen_count = response.get('return', 0) # Default to 0 if 'return' key is missing (like in {})
-        if frozen_count >= 0:
-             console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems frozen successfully (Count: {frozen_count}).[/]")
-             return True
-        else:
-             # Should not happen if response is a dict unless agent returns negative count?
-             console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected dict response: {response}[/]", style="yellow")
-             return False
-    else: # Unexpected response type
-        console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected response type: {type(response)} {response}[/]", style="yellow")
-        return False
+def format_ssh_output(result: Dict[str, Any], command: str, show_command: bool = True) -> str:
+    """Backward compatibility function for SSH output formatting."""
+    manager = SSHManager()
+    return manager.format_ssh_output(result, command, show_command)
 
-def qemu_agent_fsthaw(domain: libvirt.virDomain) -> bool:
-    """Attempts to thaw VM filesystems using the QEMU guest agent."""
-    console.print(":fire: Attempting filesystem thaw via QEMU agent...")
-    response = qemu_agent_command(domain, '{"execute": "guest-fsfreeze-thaw"}')
+def wait_for_vm_ready(vm_ip: str, ssh_user: str, ssh_key_path: Path, 
+                     timeout: int = SSHConfiguration.CONNECT_TIMEOUT_SECONDS) -> None:
+    """
+    Backward compatibility function for VM readiness checking.
+    
+    Note: This function has been moved to vm_manager.py for better organization.
+    This is provided for compatibility but should use vm_manager.wait_for_vm_ready().
+    """
+    manager = SSHManager()
+    start_time = time.time()
+    
+    while (time.time() - start_time) < timeout:
+        if manager.test_connection(vm_ip, ssh_user, ssh_key_path):
+            return
+        time.sleep(5)
+    
+    raise NetworkError(f"VM at {vm_ip} did not become ready within {timeout} seconds", host=vm_ip, timeout=timeout)
 
-    # Similar response interpretation as fsfreeze
-    if response is None:
-        console.print("  [yellow]:warning: QEMU Agent: Filesystem thaw command failed or agent unresponsive/error.[/]", style="yellow")
-        return False
-    elif isinstance(response, dict):
-        thawed_count = response.get('return', 0)
-        if thawed_count >= 0:
-             console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems thawed successfully (Count: {thawed_count}).[/]")
-             return True
-        else:
-             console.print(f"  [yellow]:warning: QEMU Agent: Filesystem thaw returned unexpected dict response: {response}[/]", style="yellow")
-             return False
-    else: # Unexpected response type
-        console.print(f"  [yellow]:warning: QEMU Agent: Filesystem thaw returned unexpected response type: {type(response)} {response}[/]", style="yellow")
-        return False
+
+# Export all public components
+__all__ = [
+    'SSHManager',
+    'run_ssh_command', 'format_ssh_output', 'wait_for_vm_ready'
+]
