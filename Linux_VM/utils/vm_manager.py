@@ -1,0 +1,161 @@
+# --- Part 1: Standard Library Imports ---
+import json
+import os
+import re
+import shlex
+import socket
+import stat  # For checking file permissions
+import sys
+import time
+import traceback
+import xml.etree.ElementTree as ET
+from pathlib import Path
+from typing import Dict, List, Any, Optional, Tuple
+# --- Part 6: Challenge Template Definition ---
+# (Keep the existing CHALLENGE_TEMPLATE string here - it's large and static)
+CHALLENGE_TEMPLATE = """
+# --- Challenge Definition File ---
+# See documentation or existing challenges for examples.
+# SECURITY WARNING: 'run_command' executes commands via SSH on the target VM.
+# Do not load challenges from untrusted sources without understanding the commands.
+
+# Unique identifier for the challenge (e.g., configure-ssh-keys)
+id: my-new-challenge
+
+# Human-readable name for the challenge
+name: "My New Challenge Title"
+
+# Detailed description of the objective for the user (Markdown supported)
+description: |
+  Explain what the user needs to accomplish here.
+  * Use lists.
+  * Use `code`.
+  * **Bold** and _italics_.
+
+# Category for grouping challenges (e.g., Networking, Security, File Management)
+category: "Uncategorized"
+
+# Difficulty level (e.g., Easy, Medium, Hard, Expert)
+difficulty: "Medium"
+
+# Potential score for completing the challenge successfully (before hint costs)
+score: 100
+
+# List of relevant Linux concepts or commands involved
+# concepts:
+#   - ssh
+#   - ssh-keygen
+#   - systemctl
+
+# Optional: Setup steps executed *before* the user interacts with the VM.
+# Used to put the VM into the correct starting state for the challenge.
+# WARNING: Commands run here execute on the VM via SSH. Use with extreme caution.
+#          Prefer declarative steps (copy_file, ensure_service_status) if possible.
+setup:
+  - type: run_command
+    # Example: Ensure a package needed for the challenge is installed
+    # command: "sudo apt-get update && sudo apt-get install -y --no-install-recommends some-package"
+    command: "echo 'Setup step 1: Placeholder command executed on VM'"
+  # - type: copy_file # Needs implementation using Paramiko SFTP
+  #   source: "files/needed_config.txt" # Path relative to challenge file
+  #   destination: "/etc/needed_config.txt" # Absolute path on VM
+  #   owner: "root" # Optional: user name or uid
+  #   group: "root" # Optional: group name or gid
+  #   mode: "0644" # Optional: octal mode string
+  # - type: ensure_service_status
+  #   service: "nginx"
+  #   state: "stopped" # 'started', 'stopped', 'restarted'
+  #   enabled: false # Optional: true, false
+
+# Optional: A command that simulates the user performing the correct action.
+# Useful for testing validation logic with the --simulate flag.
+# WARNING: Command runs on the VM via SSH.
+user_action_simulation: "echo 'User action simulation: Placeholder command executed on VM'"
+
+# Required: Validation steps executed *after* the user performs the action.
+# These determine if the challenge objective was met.
+validation:
+  - type: run_command # Check command output/exit status
+    command: "hostname" # Example: check hostname
+    success_criteria:
+      exit_status: 0 # Default is 0 if success_criteria is omitted
+      # stdout_contains: "practice-vm" # Check if stdout includes this string
+      # stdout_equals: "expected_exact_output" # Check for exact stdout match
+      # stdout_matches_regex: "^Welcome to .*$" # Check if stdout matches regex
+      # stderr_empty: true # Check if stderr is empty
+      # stderr_contains: "Warning:" # Check if stderr contains string
+  - type: check_service_status
+    service: "ssh"
+    expected_status: "active" # active | inactive | failed
+    # check_enabled: true # Optional: Check if service is enabled at boot
+  - type: check_port_listening
+    port: 22
+    protocol: "tcp" # tcp | udp
+    expected_state: true # true (listening) | false (not listening)
+  - type: check_file_exists
+    path: "/home/roo/.ssh/authorized_keys"
+    expected_state: true # true (exists) | false (does not exist)
+    file_type: "file" # any | file | directory
+    # owner: "roo" # Optional: Check owner username or uid
+    # group: "roo" # Optional: Check group name or gid
+    # permissions: "0600" # Optional: Check exact octal permissions
+  - type: check_file_contains
+    path: "/etc/motd"
+    text: "Welcome" # Mutually exclusive with matches_regex
+    # matches_regex: "^Welcome to .*$" # Mutually exclusive with text
+    expected_state: true # true (contains) | false (does not contain)
+
+# Optional: Hints displayed to the user upon request.
+hints:
+  - text: "First hint: Point towards a general concept or tool."
+    cost: 0 # Score cost for viewing this hint
+  - text: "Second hint: Suggest a specific command or file to look at."
+    cost: 10
+  - text: "Third hint: Give more specific guidance or mention a common mistake."
+    cost: 20
+
+# Optional: A 'flag' string displayed upon successful completion.
+# If omitted, a generic success message is shown.
+# flag: "CTF{My_Challenge_Completed_Successfully}"
+"""
+
+# --- Part 7: Libvirt Helper Functions ---
+def connect_libvirt() -> libvirt.virConnect:
+    """Connects to libvirt specified by Config.LIBVIRT_URI."""
+    try:
+        conn = libvirt.open(Config.LIBVIRT_URI)
+        if conn is None:
+            raise LibvirtConnectionError(f'Failed to open connection to {Config.LIBVIRT_URI}')
+        console.print(f"[bold green]:heavy_check_mark: Successfully connected to libvirt ({Config.LIBVIRT_URI})[/]")
+        return conn
+    except libvirt.libvirtError as e:
+        raise LibvirtConnectionError(f'Error connecting to libvirt ({Config.LIBVIRT_URI}): {e}') from e
+
+def find_vm(conn: libvirt.virConnect, vm_name: str) -> libvirt.virDomain:
+    """Finds a VM domain by name."""
+    if not conn:
+        raise LibvirtConnectionError("Libvirt connection is not valid.")
+    try:
+        domain = conn.lookupByName(vm_name)
+        state, _ = domain.state()
+        state_str = "[green]Running[/]" if state == libvirt.VIR_DOMAIN_RUNNING else "[yellow]Inactive[/]"
+        id_str = f"(ID: {domain.ID()})" if state == libvirt.VIR_DOMAIN_RUNNING else ""
+        console.print(f":mag: Found VM: [bold cyan]{vm_name}[/] {id_str} - State: {state_str}")
+        return domain
+    except libvirt.libvirtError as e:
+        if e.get_error_code() == VIR_ERR_NO_DOMAIN and VIR_ERR_NO_DOMAIN != -1:
+             raise VMNotFoundError(f"VM '{vm_name}' not found. Please ensure it is defined in libvirt.") from e
+        raise PracticeToolError(f"Error finding VM '{vm_name}': {e}") from e
+    except Exception as e: # Catch unexpected errors
+        raise PracticeToolError(f"An unexpected error occurred while finding VM '{vm_name}': {e}") from e
+
+def close_libvirt(conn: Optional[libvirt.virConnect]):
+    """Safely closes the libvirt connection."""
+    if conn:
+        try:
+            conn.close()
+            console.print("[dim]Libvirt connection closed.[/]")
+        except libvirt.libvirtError as e:
+            # Non-critical, just print a warning
+            console.print(f"[yellow]:warning: Error closing libvirt connection:[/yellow] {e}", style="yellow")
+
