@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+"""
+Linux+ Practice Environment Manager (LPEM) - Main Entry Point
+"""
 # --- Part 1: Standard Library Imports ---
 import json
 import os
@@ -27,3 +31,7 @@ def vm_start():
     from utils.vm_manager import VMManager
     vm_manager = VMManager()
     vm_manager.start_session()
+
+if __name__ == "__main__":
+    from controllers.vm_controller import app
+    app()
