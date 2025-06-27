@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 import logging
+import json
 
 # Third-party imports
 try:
@@ -20,10 +21,13 @@ except ImportError:
 
 # Local imports
 from .console_helper import console, RICH_AVAILABLE
+
+from rich.console import Console  # Add this import for type hinting
+
+console: 'Console'  # Type annotation for static analysis
 from .exceptions import (
     PracticeToolError, 
-    SnapshotOperationError, 
-    AgentCommandError
+    SnapshotOperationError
 )
 from .config import config
 
@@ -32,21 +36,26 @@ logger = logging.getLogger(__name__)
 
 # Libvirt error codes for specific error handling
 try:
-    VIR_ERR_CONFIG_EXIST = libvirt.VIR_ERR_CONFIG_EXIST
-    VIR_ERR_AGENT_UNRESPONSIVE = libvirt.VIR_ERR_AGENT_UNRESPONSIVE  
-    VIR_ERR_OPERATION_INVALID = libvirt.VIR_ERR_OPERATION_INVALID
-    VIR_ERR_NO_DOMAIN_SNAPSHOT = libvirt.VIR_ERR_NO_DOMAIN_SNAPSHOT
+    VIR_ERR_CONFIG_EXIST = getattr(libvirt, "VIR_ERR_CONFIG_EXIST", -1)
+    VIR_ERR_AGENT_UNRESPONSIVE = getattr(libvirt, "VIR_ERR_AGENT_UNRESPONSIVE", -1)
+    VIR_ERR_OPERATION_INVALID = getattr(libvirt, "VIR_ERR_OPERATION_INVALID", -1)
+    VIR_ERR_NO_DOMAIN_SNAPSHOT = getattr(libvirt, "VIR_ERR_NO_DOMAIN_SNAPSHOT", -1)
 except AttributeError:
     # Fallback for older libvirt versions
-    VIR_ERR_CONFIG_EXIST = -1
-    VIR_ERR_AGENT_UNRESPONSIVE = -1
-    VIR_ERR_OPERATION_INVALID = -1
-    VIR_ERR_NO_DOMAIN_SNAPSHOT = -1
+    if 'VIR_ERR_CONFIG_EXIST' not in globals():
+        VIR_ERR_CONFIG_EXIST = -1
+    if 'VIR_ERR_AGENT_UNRESPONSIVE' not in globals():
+        VIR_ERR_AGENT_UNRESPONSIVE = -1
+    if 'VIR_ERR_OPERATION_INVALID' not in globals():
+        VIR_ERR_OPERATION_INVALID = -1
+    if 'VIR_ERR_NO_DOMAIN_SNAPSHOT' not in globals():
+        VIR_ERR_NO_DOMAIN_SNAPSHOT = -1
 
 if RICH_AVAILABLE:
     from rich.panel import Panel
     from rich.table import Table
-    from rich.syntax import Syntax
+else:
+    Panel = None  # Prevent unbound errors if RICH_AVAILABLE is False
 
 
 class SnapshotManager:
@@ -79,7 +88,12 @@ class SnapshotManager:
             console.print("  :ice_cube: Attempting QEMU Agent filesystem freeze...")
             
             # Execute guest agent filesystem freeze command
-            response = domain.qemuAgentCommand(
+            qemu_agent_cmd = getattr(domain, "qemuAgentCommand", None)
+            if not callable(qemu_agent_cmd):
+                console.print("[red]QEMU Agent command not available on this libvirt domain object.[/]", style="red")
+                self.logger.error("qemuAgentCommand is not available on the domain object.")
+                return False
+            response = qemu_agent_cmd(
                 '{"execute":"guest-fsfreeze-freeze"}',
                 timeout=10,  # 10 second timeout
                 flags=0
@@ -106,7 +120,7 @@ class SnapshotManager:
                     console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected string response: {response}[/]", style="yellow")
                     return False
             elif isinstance(response, dict):
-                frozen_count = response.get('return', 0)
+                frozen_count: int = response.get('return', 0)
                 if frozen_count > 0:
                     console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems frozen successfully (Count: {frozen_count}).[/]")
                     return True
@@ -175,7 +189,7 @@ class SnapshotManager:
                     console.print(f"  [yellow]:warning: QEMU Agent: Filesystem thaw returned unparseable string response: {response}[/]", style="yellow")
                     return False
             elif isinstance(response, dict):
-                thawed_count = response.get('return', 0)
+                thawed_count: int = response.get('return', 0)
                 if thawed_count >= 0:
                     console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems thawed successfully (Count: {thawed_count}).[/]")
                     return True
@@ -216,20 +230,24 @@ class SnapshotManager:
         Raises:
             SnapshotOperationError: If XML generation fails
         """
-        snapshot_disk_files = []
+        snapshot_disk_files: List[str] = []
         
         try:
-            raw_xml = domain.XMLDesc(0)
+            raw_xml: str = domain.XMLDesc(0)
             tree = ET.fromstring(raw_xml)
             disks_xml = ""
             disk_count = 0
             
             # Create table for disk planning display
+            disk_table = None
             if RICH_AVAILABLE:
-                disk_table = Table(title="Snapshot Disk Planning", show_header=True, header_style="magenta")
-                disk_table.add_column("Target Dev")
-                disk_table.add_column("Original Disk") 
-                disk_table.add_column("Snapshot Disk")
+                if RICH_AVAILABLE:
+                    disk_table = Table(title="Snapshot Disk Planning", show_header=True, header_style="magenta")
+                    disk_table.add_column("Target Dev")
+                    disk_table.add_column("Original Disk") 
+                    disk_table.add_column("Snapshot Disk")
+                else:
+                    disk_table = None
             
             for device in tree.findall('devices/disk'):
                 disk_type = device.get('type')
@@ -251,6 +269,9 @@ class SnapshotManager:
                         continue
                     
                     original_disk_path_str = source_file_node.get('file')
+                    if original_disk_path_str is None:
+                        console.print(f"[yellow]Warning:[/yellow] Disk '{target_dev}' source file attribute is missing, skipping snapshot for this disk.", style="yellow")
+                        continue
                     original_disk_path = Path(original_disk_path_str).resolve()
                     original_disk_dir = original_disk_path.parent
                     
@@ -272,7 +293,7 @@ class SnapshotManager:
                     disk_count += 1
                     
                     # Add to table display
-                    if RICH_AVAILABLE:
+                    if disk_table is not None:
                         disk_table.add_row(
                             target_dev,
                             original_disk_path.name,
@@ -280,7 +301,7 @@ class SnapshotManager:
                         )
             
             # Display disk planning table
-            if RICH_AVAILABLE and disk_count > 0:
+            if disk_table is not None and disk_count > 0:
                 console.print(disk_table)
             
             if disk_count == 0:
@@ -327,7 +348,6 @@ class SnapshotManager:
         console.rule(f"[bold]Creating EXTERNAL Snapshot: [cyan]{snapshot_name}[/][/]", style="blue")
         
         was_frozen_by_agent = False
-        snapshot_files_to_check = []
         
         try:
             # 1. Filesystem Freeze (if VM is running)
@@ -341,7 +361,7 @@ class SnapshotManager:
                 console.print("[dim]VM not running, skipping agent filesystem freeze.[/]")
             
             # 2. Generate Snapshot XML
-            snapshot_xml, snapshot_files_to_check = self._generate_snapshot_xml(domain, snapshot_name, was_frozen_by_agent)
+            snapshot_xml, _ = self._generate_snapshot_xml(domain, snapshot_name, was_frozen_by_agent)
             
             # 3. Determine Snapshot Flags
             flags = libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_DISK_ONLY | libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_ATOMIC
@@ -358,7 +378,7 @@ class SnapshotManager:
             
             # 4. Create Snapshot via Libvirt
             console.print(f"  Attempting snapshot creation (Flags: {flags})...")
-            snapshot = domain.snapshotCreateXML(snapshot_xml, flags)
+            snapshot = domain.snapshotCreateXML(str(snapshot_xml), flags)
             
             if snapshot:
                 console.print(f"[green]:camera_with_flash: Successfully created external snapshot metadata: '{snapshot.getName()}'[/]")
@@ -413,7 +433,7 @@ class SnapshotManager:
         
         try:
             # 1. Look up the snapshot
-            snapshot = domain.snapshotLookupByName(snapshot_name, 0)
+            snapshot: libvirt.virDomainSnapshot = domain.snapshotLookupByName(snapshot_name, 0)
             console.print(f"  :mag_right: Found snapshot '{snapshot_name}', attempting revert...")
             
             # 2. Perform the revert
@@ -490,16 +510,17 @@ class SnapshotManager:
             PracticeToolError: If listing snapshots fails
         """
         try:
-            snapshot_names = domain.listSnapshotNames(0)
+            snapshot_names: List[str] = domain.listSnapshotNames(0)  # type: ignore
             
             if not snapshot_names:
-                if RICH_AVAILABLE:
+                if RICH_AVAILABLE and Panel is not None:
                     console.print(Panel("[dim]No snapshots found.[/]", title=f"Snapshots for {domain.name()}", border_style="dim", style="dim"))
                 else:
                     console.print(f"No snapshots found for {domain.name()}")
                 return
             
-            if RICH_AVAILABLE:
+            table = None
+            if RICH_AVAILABLE and 'Table' in globals():
                 table = Table(title=f"Snapshots for {domain.name()}", show_header=True, header_style="bold blue")
                 table.add_column("Name", style="cyan")
                 table.add_column("Created", style="green")
@@ -507,15 +528,15 @@ class SnapshotManager:
                 table.add_column("Type", style="magenta")
                 table.add_column("Description", style="white")
             
-            for name in snapshot_names:
+            for name in map(str, list(snapshot_names) if snapshot_names is not None else []):
                 details = "[dim]N/A[/]"
                 creation_time_str = "[dim]N/A[/]"
                 state_str = "[dim]N/A[/]"
                 type_str = "[dim]Unknown[/]"
                 
                 try:
-                    snapshot = domain.snapshotLookupByName(name, 0)
-                    xml_desc = snapshot.getXMLDesc(0)
+                    snapshot = domain.snapshotLookupByName(str(name), 0)
+                    xml_desc: str = snapshot.getXMLDesc(0)
                     snap_tree = ET.fromstring(xml_desc)
                     
                     creation_time_node = snap_tree.find('creationTime')
@@ -553,8 +574,8 @@ class SnapshotManager:
                         table.add_row(name, creation_time_str, state_str, type_str, details)
                     else:
                         console.print(f"{name}: {creation_time_str} | {state_str} | {type_str} | {details}")
-            
-            if RICH_AVAILABLE:
+            if RICH_AVAILABLE and table is not None:
+                console.print(table)
                 console.print(table)
                 
         except libvirt.libvirtError as e:

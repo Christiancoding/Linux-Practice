@@ -31,10 +31,14 @@ except ImportError:
 # Import local modules
 from .config import VMConfiguration, LibvirtErrorCodes
 from .exceptions import (
-    PracticeToolError, VMNotFoundError, NetworkError, 
-    SnapshotOperationError, format_exception_for_user
+    PracticeToolError, VMNotFoundError, NetworkError
 )
 from .console_helper import console, Table, RICH_AVAILABLE
+
+from typing import Any
+from rich.console import Console
+
+console: Console  # type annotation for static analysis
 
 
 class VMManager:
@@ -83,13 +87,14 @@ class VMManager:
             self.logger.info(f"Connecting to libvirt at: {self.libvirt_uri}")
             
             # Attempt connection to libvirt daemon
-            conn = libvirt.open(self.libvirt_uri)
-            if conn is None:
+            raw_conn = libvirt.open(self.libvirt_uri)  # type: ignore
+            if raw_conn is None:
                 raise PracticeToolError(
                     f"Failed to establish libvirt connection to '{self.libvirt_uri}'",
                     error_code="LIBVIRT_CONNECTION_FAILED",
                     context={"uri": self.libvirt_uri}
                 )
+            conn = raw_conn
             
             # Verify connection functionality
             try:
@@ -191,7 +196,7 @@ class VMManager:
             
             # Get all domains (running and defined)
             active_domains = conn.listDomainsID()
-            defined_domains = conn.listDefinedDomains()
+            defined_domains: List[str] = conn.listDefinedDomains()
             
             if not active_domains and not defined_domains:
                 console.print("[yellow]No virtual machines found in libvirt.[/]")
@@ -200,20 +205,20 @@ class VMManager:
             # Create comprehensive VM status table
             if RICH_AVAILABLE:
                 table = Table(title="Available Virtual Machines", show_header=True, header_style="bold cyan")
-                table.add_column("Name", style="bold", width=20)
-                table.add_column("State", justify="center", width=12)
-                table.add_column("CPU(s)", justify="center", width=8)
-                table.add_column("Memory", justify="center", width=12)
-                table.add_column("ID", justify="center", width=8)
+                table.add_column("Name", style="bold", min_width=20)
+                table.add_column("State", width=12)
+                table.add_column("CPU(s)", width=8)
+                table.add_column("Memory", width=12)
+                table.add_column("ID", min_width=8)
             else:
                 console.print("--- Available Virtual Machines ---")
                 console.print(f"{'Name':<20} {'State':<12} {'CPU(s)':<8} {'Memory':<12} {'ID':<8}")
                 console.print("-" * 70)
             
             # Process active (running) domains
-            for domain_id in active_domains:
+            for domain_id in (int(x) for x in active_domains):
                 try:
-                    domain = conn.lookupByID(domain_id)
+                    domain = conn.lookupByID(int(domain_id))
                     self._add_vm_to_display(domain, table if RICH_AVAILABLE else None, domain_id)
                 except libvirt.libvirtError as e:
                     self.logger.warning(f"Error accessing active domain ID {domain_id}: {e}")
@@ -246,7 +251,7 @@ class VMManager:
             domain_id: Optional domain ID for active domains
         """
         try:
-            name = domain.name()
+            name: str = domain.name()
             info = domain.info()
             state = self._get_domain_state_name(info[0])
             max_mem = f"{info[1] // 1024} MB"
@@ -306,7 +311,7 @@ class VMManager:
         
         try:
             # Check current VM state
-            info = domain.info()
+            info: tuple = domain.info()
             current_state = info[0]
             
             if current_state == libvirt.VIR_DOMAIN_RUNNING:
@@ -357,56 +362,57 @@ class VMManager:
         try:
             # Method 1: Try libvirt guest agent
             try:
-                interfaces = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT)
+                interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT)  # type: ignore
+                interfaces = interfaces_raw  # type: Dict[str, Any]
                 ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                 if ip_address:
                     self.logger.info(f"Got IP from guest agent for '{vm_name}': {ip_address}")
                     return ip_address
             except libvirt.libvirtError as agent_error:
                 self.logger.debug(f"Guest agent method failed for '{vm_name}': {agent_error}")
-            
+
             # Method 2: Try DHCP lease information
             try:
-                interfaces = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE)
+                interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE)  # type: ignore
+                from typing import cast
+                interfaces = cast(Dict[str, Any], interfaces_raw)
                 ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                 if ip_address:
                     self.logger.info(f"Got IP from DHCP lease for '{vm_name}': {ip_address}")
                     return ip_address
             except libvirt.libvirtError as lease_error:
                 self.logger.debug(f"DHCP lease method failed for '{vm_name}': {lease_error}")
-            
-            # Method 3: Try ARP inspection (basic implementation)
+
+            # Method 3: Try ARP information
             try:
-                interfaces = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP)
+                interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP)  # type: ignore
+                interfaces: Dict[str, Any] = interfaces_raw
                 ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                 if ip_address:
                     self.logger.info(f"Got IP from ARP for '{vm_name}': {ip_address}")
                     return ip_address
             except libvirt.libvirtError as arp_error:
                 self.logger.debug(f"ARP method failed for '{vm_name}': {arp_error}")
-            
+
             # If all methods fail
             error_msg = f"Could not determine IP address for VM '{vm_name}' using any available method"
             self.logger.error(error_msg)
-            raise NetworkError(
-                error_msg,
-                host=vm_name
-            )
-            
+            raise NetworkError(error_msg, str(vm_name))
+
         except Exception as e:
             if isinstance(e, NetworkError):
                 raise
             error_msg = f"Unexpected error getting IP for VM '{vm_name}': {e}"
             self.logger.error(error_msg, exc_info=True)
-            raise NetworkError(error_msg, host=vm_name) from e
+            raise NetworkError(error_msg, host=str(vm_name)) from e
     
-    def _extract_ip_from_interfaces(self, interfaces: Dict, vm_name: str) -> Optional[str]:
+    def _extract_ip_from_interfaces(self, interfaces: Dict[str, Any], vm_name: str) -> Optional[str]:
         """
         Extract IPv4 address from libvirt interface information.
         
         Args:
             interfaces: Interface information from libvirt
-            vm_name: VM name for logging context
+            vm_name (str): VM name for logging context
             
         Returns:
             Optional[str]: IPv4 address if found, None otherwise
@@ -467,7 +473,7 @@ class VMManager:
             
             # Wait before next attempt
             time.sleep(VMConfiguration.READINESS_POLL_INTERVAL_SECONDS)
-            console.print(".", end="", flush=True)
+            console.print(".", end="")
         
         # Timeout reached
         elapsed = int(time.time() - start_time)

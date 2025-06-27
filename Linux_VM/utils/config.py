@@ -6,10 +6,9 @@ Centralized configuration constants and settings for VM management,
 SSH connections, challenge loading, and system operation parameters.
 """
 
-import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 
 # Ensure minimum Python version compatibility
 if sys.version_info < (3, 8):
@@ -18,7 +17,7 @@ if sys.version_info < (3, 8):
 
 # Import libvirt for error code constants (with graceful fallback)
 try:
-    import libvirt
+    import libvirt  # type: ignore
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.\n"
           "Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.", 
@@ -96,7 +95,7 @@ class ChallengeConfiguration:
     CHALLENGE_FILE_EXTENSIONS = ['.yaml', '.yml']
     
     @classmethod
-    def get_challenge_files(cls, directory: Path) -> list:
+    def get_challenge_files(cls, directory: Path) -> List[Path]:
         """
         Get all valid challenge files from a directory.
         
@@ -109,7 +108,7 @@ class ChallengeConfiguration:
         if not directory.exists() or not directory.is_dir():
             return []
         
-        challenge_files = []
+        challenge_files: List[Path] = []
         for ext in cls.CHALLENGE_FILE_EXTENSIONS:
             challenge_files.extend(directory.glob(f"*{ext}"))
         

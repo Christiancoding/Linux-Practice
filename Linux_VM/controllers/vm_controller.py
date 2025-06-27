@@ -7,7 +7,6 @@ Manages libvirt VMs and executes practice challenges for CompTIA Linux+ exam pre
 """
 
 import sys
-import time
 import logging
 import traceback
 from pathlib import Path
@@ -27,26 +26,25 @@ except ImportError:
     print("Please install it: pip install typer[all]")
     sys.exit(1)
 
-try:
-    import yaml
-except ImportError:
-    print("Error: Missing required library 'PyYAML'.")
-    print("Please install it: pip install pyyaml")
-    sys.exit(1)
 
 # Local imports
-from ..utils.console_helper import console, RICH_AVAILABLE
-from ..utils.config import config
-from ..utils.exceptions import (
+from utils.console_helper import console, RICH_AVAILABLE
+
+from rich.console import Console
+from rich import print as rich_print  # For rich printing
+from rich.logging import RichHandler  # For rich logging
+console: Console
+
+if RICH_AVAILABLE:
+    pass
+from utils.config import config
+from utils.exceptions import (
     PracticeToolError,
-    LibvirtConnectionError,
-    VMNotFoundError,
     SnapshotOperationError,
     ChallengeLoadError,
-    ChallengeValidationError,
-    SSHCommandError
+    ChallengeValidationError
 )
-from ..utils.vm_manager import (
+from utils.vm_manager import (
     connect_libvirt,
     close_libvirt,
     find_vm,
@@ -55,29 +53,34 @@ from ..utils.vm_manager import (
     wait_for_vm_ready,
     get_vm_ip_address
 )
-from ..utils.ssh_manager import (
-    run_ssh_command,
-    format_ssh_output,
-    validate_ssh_key
+# ... continue changing all ..utils imports to just utils
+from utils.ssh_manager import (
+    run_ssh_command
 )
-from ..utils.snapshot_manager import (
+from utils.snapshot_manager import (
     create_external_snapshot,
     revert_to_snapshot,
     delete_snapshot,
     list_snapshots
 )
-from ..utils.challenge_manager import (
+from utils.challenge_manager import (
     load_challenges_from_dir,
-    validate_challenge_structure,
     display_challenge_details,
     execute_setup_steps,
     manage_hints,
     create_challenge_template
 )
-from ..utils.validators import (
+from utils.validators import (
     execute_validation_step,
     validate_challenge_file
 )
+def validate_ssh_key(key_path: Path):
+    # Basic fallback: just check if the file exists and is readable
+    if not key_path.exists() or not key_path.is_file():
+        raise PracticeToolError(f"SSH key file '{key_path}' does not exist or is not a file.")
+    if not key_path.stat().st_mode & 0o400:
+        raise PracticeToolError(f"SSH key file '{key_path}' is not readable.")
+    return key_path
 
 # Set up module logger
 logger = logging.getLogger(__name__)
@@ -85,8 +88,7 @@ logger = logging.getLogger(__name__)
 if RICH_AVAILABLE:
     from rich.panel import Panel
     from rich.table import Table
-    from rich.syntax import Syntax
-    from rich.prompt import Prompt, Confirm
+    from rich.prompt import Confirm
 
 
 class VMController:
@@ -146,12 +148,9 @@ vm_controller = VMController()
 
 # --- Typer Application Setup ---
 app = typer.Typer(
-    help=Panel(
-        "[bold cyan]Linux+ Practice Environment Manager (LPEM)[/]\n\n"
-        "Manages libvirt VMs and runs practice challenges for the CompTIA Linux+ exam (XK0-005).\n"
-        "Uses external snapshots for safe, revertible practice environments.",
-        title="LPEM CLI", border_style="blue"
-    ) if RICH_AVAILABLE else "Linux+ Practice Environment Manager (LPEM)",
+    help="Linux+ Practice Environment Manager (LPEM)\n\n"
+         "Manages libvirt VMs and runs practice challenges for the CompTIA Linux+ exam (XK0-005).\n"
+         "Uses external snapshots for safe, revertible practice environments.",
     rich_markup_mode="rich" if RICH_AVAILABLE else "markdown"
 )
 
@@ -187,7 +186,8 @@ def list_available_vms(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 @app.command(name="list-challenges")
@@ -207,12 +207,14 @@ def list_available_challenges(
     if not challenges:
         no_challenges_msg = "[i]No valid challenges loaded.[/]"
         if RICH_AVAILABLE:
+            from rich.panel import Panel
             console.print(Panel(no_challenges_msg, title="Available Challenges", border_style="dim"))
         else:
             console.print(no_challenges_msg)
         return
 
     if RICH_AVAILABLE:
+        from rich.table import Table
         table = Table(
             title=f"[bold blue]Available Challenges[/] ([dim]from {challenges_dir}[/])", 
             show_header=True, 
@@ -276,7 +278,7 @@ def run_challenge(
     domain: Optional[Any] = None
     vm_ip: Optional[str] = None
     snapshot_created = False
-    challenge: Optional[Dict] = None
+    challenge: Optional[Dict[str, Any]] = None
     challenge_passed = False
     current_score = 0
     hints_used_count = 0
@@ -301,12 +303,14 @@ def run_challenge(
             panel_content = (f"[bold red]Error:[/bold red] Challenge ID '[yellow]{challenge_id}[/]' not found "
                            f"among valid challenges in '{challenges_dir}'.\n\n[bold]Available valid challenges:[/]\n{ids_text}")
             if RICH_AVAILABLE:
+                from rich.panel import Panel
                 console.print(Panel(panel_content, title="[bold red]Challenge Not Found[/]", border_style="red"))
             else:
                 console.print(panel_content)
             raise typer.Exit(code=1)
 
-        current_score = challenge['score']
+        challenge = dict(challenge)  # Ensure type is Dict[str, Any]
+        current_score: int = challenge['score']
 
         # --- 1. Connect to Libvirt & Find VM ---
         conn = connect_libvirt(libvirt_uri)
@@ -315,11 +319,16 @@ def run_challenge(
         # --- 2. Snapshot Management: Ensure Clean Slate ---
         console.print(f"\n:mag_right: Checking for existing snapshot '[cyan]{snapshot_name}[/cyan]'...")
         try:
-            existing_snapshot = domain.snapshotLookupByName(snapshot_name, 0)
+            domain.snapshotLookupByName(snapshot_name, 0)
             console.print(f"  :warning: Found existing snapshot '[cyan]{snapshot_name}[/cyan]'.")
             
             if not auto_confirm:
-                delete_existing = Confirm.ask("Delete existing snapshot and create fresh one?", default=True)
+                if RICH_AVAILABLE:
+                    from rich.prompt import Confirm
+                    delete_existing = Confirm.ask("Delete existing snapshot and create fresh one?", default=True)
+                else:
+                    delete_existing_input = input("Delete existing snapshot and create fresh one? [Y/n]: ")
+                    delete_existing = delete_existing_input.strip().lower() in ("", "y", "yes")
             else:
                 delete_existing = True
                 console.print("[dim]Auto-confirming snapshot deletion.[/]")
@@ -361,7 +370,15 @@ def run_challenge(
 
         # Wait for SSH readiness
         console.print(":hourglass: Waiting for SSH service...")
-        wait_for_vm_ready(vm_ip, ssh_user, ssh_key_path)
+        wait_for_vm_ready(str(vm_ip), ssh_user, ssh_key_path)
+        
+        # Verify SSH key permissions
+        if ssh_key_path.stat().st_mode & config.ssh.KEY_PERMISSIONS_MASK != 0o400:
+            raise PracticeToolError(f"SSH key '{ssh_key_path}' permissions are too open. Set to 0400.")
+
+        # Test SSH connection
+        console.print(":unlock: Testing SSH connection...")
+        run_ssh_command(vm_ip, ssh_user, ssh_key_path, "echo 'SSH connection successful!'", timeout=config.ssh.CONNECT_TIMEOUT_SECONDS)
         console.print("[green]:heavy_check_mark: SSH connection established.[/]")
 
         # --- 4. Display Challenge Information ---
@@ -379,6 +396,7 @@ def run_challenge(
             
             if RICH_AVAILABLE:
                 from rich.markdown import Markdown
+                from rich.panel import Panel
                 console.print(Panel(Markdown(action_panel_content), 
                                   title="Perform the actions on the VM.", 
                                   border_style="green", expand=False))
@@ -389,20 +407,27 @@ def run_challenge(
             current_score, hints_used_count, total_hint_cost = manage_hints(challenge, current_score)
 
             # Wait for user confirmation to proceed
-            Prompt.ask("\n:arrow_forward: Press Enter when ready to validate your work")
+            if RICH_AVAILABLE:
+                from rich.prompt import Prompt
+                Prompt.ask("\n:arrow_forward: Press Enter when ready to validate your work")
+            else:
+                input("\n-> Press Enter when ready to validate your work")
 
         # --- 7. Validation ---
         console.rule("[bold]Challenge Validation[/]", style="blue")
-        validation_steps = challenge.get("validation")
+        validation_steps = challenge.get("validation") or []
+        # Explicitly type as list of dicts for static analysis
+        validation_steps: list[dict[str, Any]] = validation_steps
         all_validations_passed = True
 
         for i, step in enumerate(validation_steps):
+            step: Dict[str, Any]  # type annotation for static analysis
             try:
                 # Security reminder for verbose mode
                 if verbose and step.get("type") == "run_command" and "command" in step:
                     console.print(f"[dim]Executing validation command: '{step['command']}'[/]")
 
-                execute_validation_step(i + 1, step, vm_ip, ssh_user, ssh_key_path, verbose)
+                execute_validation_step(i + 1, step, vm_ip, ssh_user, str(ssh_key_path), verbose)
 
             except ChallengeValidationError:
                 # execute_validation_step already printed the failure panel
@@ -448,7 +473,8 @@ def run_challenge(
                 console.print(f"[yellow]:warning: Snapshot cleanup failed: {cleanup_err}[/]", style="yellow")
         
         # Close libvirt connection
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
         
         if challenge_passed:
             console.print(f"\n[bold green]:trophy: Congratulations! Challenge '[cyan]{challenge_id}[/cyan]' completed successfully![/]")
@@ -468,7 +494,12 @@ def create_challenge_template_cmd(
     """Creates a template YAML file for defining a new challenge."""
     try:
         if output_file.exists():
-            overwrite = Confirm.ask(f"File '[cyan]{output_file.resolve()}[/cyan]' already exists. Overwrite?", default=False)
+            if RICH_AVAILABLE:
+                from rich.prompt import Confirm
+                overwrite = Confirm.ask(f"File '[cyan]{output_file.resolve()}[/cyan]' already exists. Overwrite?", default=False)
+            else:
+                overwrite_input = input(f"File '{output_file.resolve()}' already exists. Overwrite? [y/N]: ")
+                overwrite = overwrite_input.strip().lower() in ("y", "yes")
             if not overwrite:
                 console.print("[yellow]Aborted.[/]")
                 raise typer.Exit()
@@ -478,6 +509,8 @@ def create_challenge_template_cmd(
         # Display template content using Rich Syntax if available
         if RICH_AVAILABLE:
             try:
+                from rich.syntax import Syntax  # Ensure Syntax is imported here
+                from rich.panel import Panel    # Ensure Panel is imported here
                 template_content = output_file.read_text(encoding='utf-8')
                 syntax = Syntax(template_content, "yaml", theme="default", line_numbers=True, word_wrap=False)
                 console.print(Panel(syntax, title="Template Content", border_style="green", expand=False))
@@ -485,7 +518,11 @@ def create_challenge_template_cmd(
                 console.print(f"[yellow]Could not display template content: {read_err}[/]", style="yellow")
 
         console.print("\n:pencil: Edit this file to define your challenge.")
-        console.print(Panel("[bold red]SECURITY WARNING:[/bold red] Be extremely careful with 'run_command' steps in setup/validation.", border_style="red"))
+        if RICH_AVAILABLE:
+            from rich.panel import Panel
+            console.print(Panel("[bold red]SECURITY WARNING:[/bold red] Be extremely careful with 'run_command' steps in setup/validation.", border_style="red"))
+        else:
+            console.print("[bold red]SECURITY WARNING:[/bold red] Be extremely careful with 'run_command' steps in setup/validation.")
 
     except IOError as e:
         console.print(f"[bold red]:x: Error writing template file '{output_file}': {e}[/]", style="red")
