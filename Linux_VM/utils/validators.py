@@ -168,12 +168,11 @@ class ChallengeValidator:
             errors.append(f"'{filename}': 'validation' must be a list of validation steps.")
             return errors
         
-        for i, step in enumerate(validation_steps, 1):
+        # Add type hint for static type checkers
+        validation_steps_typed: List[Dict[str, Any]] = validation_steps
+
+        for i, step in enumerate(validation_steps_typed, 1):
             step: Dict[str, Any]
-            if not isinstance(step, dict):
-                errors.append(f"'{filename}': Validation step {i} must be a dictionary.")
-                continue
-            
             # Check for required 'type' field
             if 'type' not in step:
                 errors.append(f"'{filename}': Validation step {i} missing required 'type' field.")
@@ -207,9 +206,15 @@ class ChallengeValidator:
         """
         step_type = step_data.get("type")
         step_title = f"Step {step_num}: [bold cyan]{step_type}[/]"
-        
+
         self.logger.info(f"Executing validation step {step_num}: {step_type}")
-        
+
+        # Ensure step_type is a string before using as dict key
+        if not isinstance(step_type, str):
+            error_msg = f"Validation step {step_num} missing or invalid 'type' field."
+            self.logger.error(error_msg)
+            raise ChallengeValidationError([error_msg])
+
         # Get the appropriate validation function
         validator_func = self.validation_registry.get(step_type)
         if not validator_func:

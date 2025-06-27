@@ -10,8 +10,7 @@ Provides robust error handling and user-friendly status reporting.
 import sys
 import time
 import logging
-import xml.etree.ElementTree as ET
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Tuple
 from pathlib import Path
 
 # Ensure Python 3.8+ compatibility
@@ -21,7 +20,7 @@ if sys.version_info < (3, 8):
 
 # Import required dependencies
 try:
-    import libvirt
+    import libvirt  # type: ignore
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.\n"
           "Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.", 
@@ -39,7 +38,7 @@ from typing import Any
 from rich.console import Console
 
 console: Console  # type annotation for static analysis
-
+domain_info: Tuple[int, int, int, int, int]  # type annotation for static analysis
 
 class VMManager:
     """
@@ -164,7 +163,7 @@ class VMManager:
             
             # Verify domain accessibility
             try:
-                domain_info = domain.info()
+                domain_info: Tuple[int, int, int, int, int] = domain.info()
                 self.logger.info(f"VM '{vm_name}' found with state: {self._get_domain_state_name(domain_info[0])}")
             except libvirt.libvirtError as e:
                 self.logger.warning(f"VM found but info query failed: {e}")
@@ -239,7 +238,7 @@ class VMManager:
             error_msg = f"Error retrieving VM list: {e}"
             self.logger.error(error_msg)
             console.print(f"[red]Error listing VMs: {e}[/]")
-    
+            
     def _add_vm_to_display(self, domain: libvirt.virDomain, table: Optional[Any], 
                           domain_id: Optional[int] = None) -> None:
         """
@@ -255,7 +254,7 @@ class VMManager:
             info = domain.info()
             state = self._get_domain_state_name(info[0])
             max_mem = f"{info[1] // 1024} MB"
-            cpu_count = str(info[3])
+            cpu_count = str(int(info[3]))
             vm_id = str(domain_id) if domain_id is not None else "-"
             
             # Color coding for states
@@ -405,7 +404,12 @@ class VMManager:
             error_msg = f"Unexpected error getting IP for VM '{vm_name}': {e}"
             self.logger.error(error_msg, exc_info=True)
             raise NetworkError(error_msg, host=str(vm_name)) from e
-    
+    def get_vm_ip_address(domain: libvirt.virDomain) -> str:
+        """Backward compatibility function for IP retrieval with just domain parameter."""
+        # Get the connection from the domain
+        conn = domain.connect()
+        manager = VMManager()
+        return manager.get_vm_ip(conn, domain)
     def _extract_ip_from_interfaces(self, interfaces: Dict[str, Any], vm_name: str) -> Optional[str]:
         """
         Extract IPv4 address from libvirt interface information.

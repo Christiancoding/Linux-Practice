@@ -48,8 +48,6 @@ except AttributeError:
         VIR_ERR_AGENT_UNRESPONSIVE = -1
     if 'VIR_ERR_OPERATION_INVALID' not in globals():
         VIR_ERR_OPERATION_INVALID = -1
-    if 'VIR_ERR_NO_DOMAIN_SNAPSHOT' not in globals():
-        VIR_ERR_NO_DOMAIN_SNAPSHOT = -1
 
 if RICH_AVAILABLE:
     from rich.panel import Panel
@@ -117,10 +115,11 @@ class SnapshotManager:
                         console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned no frozen filesystems: {response}[/]", style="yellow")
                         return False
                 except (json.JSONDecodeError, KeyError):
+                    # If JSON parsing fails, return as unexpected string response
                     console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected string response: {response}[/]", style="yellow")
                     return False
             elif isinstance(response, dict):
-                frozen_count: int = response.get('return', 0)
+                frozen_count = response.get('return', 0)
                 if frozen_count > 0:
                     console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems frozen successfully (Count: {frozen_count}).[/]")
                     return True
@@ -550,7 +549,7 @@ class SnapshotManager:
                     )
                     has_memory = memory_node is not None and memory_node.get('snapshot', 'no') != 'no'
                     
-                    if creation_time_node is not None and creation_time_node.text.isdigit():
+                    if creation_time_node is not None and creation_time_node.text is not None and creation_time_node.text.isdigit():
                         try:
                             creation_time_str = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(creation_time_node.text)))
                         except ValueError:
@@ -570,12 +569,11 @@ class SnapshotManager:
                 except Exception as detail_err:
                     details = f"[red](Unexpected error: {detail_err})[/]"
                 finally:
-                    if RICH_AVAILABLE:
+                    if RICH_AVAILABLE and table is not None:
                         table.add_row(name, creation_time_str, state_str, type_str, details)
                     else:
                         console.print(f"{name}: {creation_time_str} | {state_str} | {type_str} | {details}")
             if RICH_AVAILABLE and table is not None:
-                console.print(table)
                 console.print(table)
                 
         except libvirt.libvirtError as e:

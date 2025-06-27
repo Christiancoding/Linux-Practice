@@ -31,8 +31,6 @@ except ImportError:
 from utils.console_helper import console, RICH_AVAILABLE
 
 from rich.console import Console
-from rich import print as rich_print  # For rich printing
-from rich.logging import RichHandler  # For rich logging
 console: Console
 
 if RICH_AVAILABLE:
@@ -88,7 +86,6 @@ logger = logging.getLogger(__name__)
 if RICH_AVAILABLE:
     from rich.panel import Panel
     from rich.table import Table
-    from rich.prompt import Confirm
 
 
 class VMController:
@@ -362,7 +359,7 @@ def run_challenge(
             console.print(f"[dim]VM '[cyan]{vm_name}[/cyan]' is already running.[/]")
 
         console.print(":globe_with_meridians: Detecting VM IP address...")
-        vm_ip = get_vm_ip_address(domain)
+        vm_ip  = get_vm_ip_address(domain)
         if not vm_ip:
             raise PracticeToolError("Could not determine VM IP address.")
 
@@ -427,7 +424,7 @@ def run_challenge(
                 if verbose and step.get("type") == "run_command" and "command" in step:
                     console.print(f"[dim]Executing validation command: '{step['command']}'[/]")
 
-                execute_validation_step(i + 1, step, vm_ip, ssh_user, str(ssh_key_path), verbose)
+                execute_validation_step(i + 1, step, vm_ip, ssh_user, ssh_key_path, verbose)
 
             except ChallengeValidationError:
                 # execute_validation_step already printed the failure panel

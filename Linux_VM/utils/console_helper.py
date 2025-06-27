@@ -21,7 +21,6 @@ except ImportError:
 # Rich library integration with comprehensive fallback support
 _rich_available = False
 try:
-    from rich.console import Console as RichConsole
     from rich.panel import Panel
     from rich.table import Table
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
@@ -66,28 +65,21 @@ class ConsoleManager:
     def _setup_rich_components(self) -> None:
         """Initialize Rich component classes with fallback implementations."""
         if RICH_AVAILABLE:
+            from rich.panel import Panel
+            from rich.table import Table
+            from rich.progress import Progress
+            from rich.progress import SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
+            from rich.syntax import Syntax
+            from rich.markdown import Markdown
+            from rich.text import Text  # Removed unused import
+            from rich.prompt import Prompt, Confirm
             self.Panel = Panel
             self.Table = Table
             self.Progress = Progress
-            try:
-                self.SpinnerColumn = SpinnerColumn
-            except NameError:
-                self.SpinnerColumn = None
+            self.SpinnerColumn = SpinnerColumn
             self.TextColumn = TextColumn
-            if 'BarColumn' in globals():
-                try:
-                    self.BarColumn = BarColumn
-                except NameError:
-                    self.BarColumn = None
-            else:
-                self.BarColumn = None
-            if 'TimeElapsedColumn' in globals():
-                try:
-                    self.TimeElapsedColumn = TimeElapsedColumn
-                except NameError:
-                    self.TimeElapsedColumn = None
-            else:
-                self.TimeElapsedColumn = None
+            self.BarColumn = BarColumn
+            self.TimeElapsedColumn = TimeElapsedColumn
             self.Syntax = Syntax
             self.Markdown = Markdown
             self.Text = Text
@@ -128,7 +120,7 @@ class FallbackConsole:
     Rich's interface for seamless degradation.
     """
     
-    def print(self, *args: Any, **kwargs: dict[str, Any]) -> None:
+    def print(self, *args: Any, **kwargs: Any) -> None:
         """Basic print functionality with Rich markup removal."""
         # Remove Rich markup tags for clean fallback output
         clean_args: List[str] = []
@@ -144,11 +136,25 @@ class FallbackConsole:
                     clean_args.append(str(arg))
                 except Exception:
                     clean_args.append(repr(arg))
-        # Forward only supported kwargs to typer.echo
+        # Forward only supported kwargs to typer.echo, with type validation
         echo_kwargs = {}
-        for key in ("file", "nl", "err", "color"):
-            if key in kwargs:
-                echo_kwargs[key] = kwargs[key]
+        if "file" in kwargs:
+            file_obj = kwargs["file"]
+            # typer.echo expects file to be a file-like object or None
+            if file_obj is None or hasattr(file_obj, "write"):
+                echo_kwargs["file"] = file_obj
+        if "nl" in kwargs:
+            # typer.echo expects nl to be a bool
+            if isinstance(kwargs["nl"], bool):
+                echo_kwargs["nl"] = kwargs["nl"]
+        if "err" in kwargs:
+            # typer.echo expects err to be a bool
+            if isinstance(kwargs["err"], bool):
+                echo_kwargs["err"] = kwargs["err"]
+        if "color" in kwargs:
+            # typer.echo expects color to be a bool
+            if isinstance(kwargs["color"], bool):
+                echo_kwargs["color"] = kwargs["color"]
         typer.echo(" ".join(str(arg) for arg in clean_args), **echo_kwargs)
     
     def rule(self, title: str = "", style: str = "") -> None:
@@ -233,7 +239,7 @@ class FallbackProgress:
         self.tasks: dict[int, dict[str, Any]] = {}
         self.task_counter = 0
     
-    def add_task(self, description: str, total: Optional[float] = None, **kwargs):
+    def add_task(self, description: str, total: Optional[float] = None, **kwargs: Any):
         """Add a progress task."""
         task_id = self.task_counter
         self.tasks[task_id] = {
@@ -283,7 +289,7 @@ class FallbackSyntax:
     """Fallback syntax highlighting implementation."""
     
     def __init__(self, code: str, lexer: str, theme: str = "default", 
-                 line_numbers: bool = False, word_wrap: bool = False, **kwargs):
+                 line_numbers: bool = False, word_wrap: bool = False, **kwargs: dict[str, Any]):
         self.code = code
         self.lexer = lexer
         self.theme = theme
@@ -372,5 +378,9 @@ __all__ = [
     'Syntax',
     'Markdown',
     'Prompt',
-    'Confirm'
+    'Confirm',
+    'SpinnerColumn',
+    'TextColumn',
+    'BarColumn',
+    'TimeElapsedColumn'
 ]

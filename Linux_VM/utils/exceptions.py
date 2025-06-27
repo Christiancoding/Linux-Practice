@@ -49,7 +49,138 @@ class PracticeToolError(Exception):
             base_msg += f" (Context: {context_info})"
         
         return base_msg
+class LibvirtConnectionError(PracticeToolError):
+    """
+    Raised when libvirt connection establishment fails.
+    
+    This exception indicates connection issues with the libvirt daemon,
+    permission problems, or service unavailability.
+    """
+    
+    def __init__(self, libvirt_uri: str, original_error: Optional[str] = None):
+        """
+        Initialize libvirt connection exception.
+        
+        Args:
+            libvirt_uri: The libvirt URI that failed to connect
+            original_error: Optional original error message from libvirt
+        """
+        context = {"libvirt_uri": libvirt_uri}
+        if original_error:
+            context["original_error"] = original_error
+        
+        message = f"Failed to connect to libvirt at '{libvirt_uri}'"
+        if original_error:
+            message += f": {original_error}"
+        
+        super().__init__(message, error_code="LIBVIRT_CONNECTION_FAILED", context=context)
+        self.libvirt_uri = libvirt_uri
+        self.original_error = original_error
 
+
+class NetworkError(PracticeToolError):
+    """
+    Raised when network-related operations fail.
+    
+    Covers IP address discovery, connectivity testing, and network
+    interface operations that encounter errors during execution.
+    """
+    
+    def __init__(self, message: str, host: Optional[str] = None, 
+                 timeout: Optional[int] = None, port: Optional[int] = None):
+        """
+        Initialize network error exception.
+        
+        Args:
+            message: Human-readable error description
+            host: Optional hostname or IP address involved
+            timeout: Optional timeout value that was exceeded
+            port: Optional port number involved
+        """
+        context: Dict[str, Any] = {}
+        if host:
+            context["host"] = host
+        if timeout:
+            context["timeout"] = timeout
+        if port:
+            context["port"] = port
+        
+        super().__init__(message, error_code="NETWORK_ERROR", context=context)
+        self.host = host
+        self.timeout = timeout
+        self.port = port
+
+
+class SSHCommandError(PracticeToolError):
+    """
+    Raised when SSH command execution fails.
+    
+    Provides detailed information about command execution failures
+    including exit status, stderr output, and connection details.
+    """
+    
+    def __init__(self, command: str, exit_status: Optional[int] = None,
+                 stderr: Optional[str] = None, host: Optional[str] = None):
+        """
+        Initialize SSH command error exception.
+        
+        Args:
+            command: The command that failed to execute
+            exit_status: Optional exit status code from command
+            stderr: Optional stderr output from command
+            host: Optional hostname where command was executed
+        """
+        context = {"command": command}
+        if exit_status is not None:
+            context["exit_status"] = str(exit_status)
+        if stderr:
+            context["stderr"] = stderr
+        if host:
+            context["host"] = host
+        
+        message = f"SSH command failed: {command}"
+        if exit_status is not None:
+            message += f" (exit code: {exit_status})"
+        
+        super().__init__(message, error_code="SSH_COMMAND_FAILED", context=context)
+        self.command = command
+        self.exit_status = exit_status
+        self.stderr = stderr
+        self.host = host
+
+
+class AgentCommandError(PracticeToolError):
+    """
+    Raised when QEMU Guest Agent command execution fails.
+    
+    This exception indicates communication failures with the QEMU Guest Agent
+    or command execution errors within the guest system.
+    """
+    
+    def __init__(self, command: str, vm_name: Optional[str] = None, 
+                 agent_error: Optional[str] = None):
+        """
+        Initialize agent command error exception.
+        
+        Args:
+            command: The agent command that failed
+            vm_name: Optional VM name for context
+            agent_error: Optional error message from agent
+        """
+        context = {"command": command}
+        if vm_name:
+            context["vm_name"] = vm_name
+        if agent_error:
+            context["agent_error"] = agent_error
+        
+        message = f"QEMU Guest Agent command failed: {command}"
+        if vm_name:
+            message += f" on VM '{vm_name}'"
+        
+        super().__init__(message, error_code="AGENT_COMMAND_FAILED", context=context)
+        self.command = command
+        self.vm_name = vm_name
+        self.agent_error = agent_error
 
 class VMNotFoundError(PracticeToolError):
     """
@@ -113,86 +244,6 @@ class SnapshotOperationError(PracticeToolError):
         self.snapshot_name = snapshot_name
         self.vm_name = vm_name
         self.underlying_error = underlying_error
-
-
-class NetworkError(PracticeToolError):
-    """
-    Raised when network operations or SSH connectivity issues occur.
-    
-    Encompasses IP address resolution, network timeouts, connection failures,
-    and general network-related operational problems.
-    """
-    
-    def __init__(self, message: str, host: Optional[str] = None, 
-                 port: Optional[int] = None, timeout: Optional[int] = None):
-        """
-        Initialize network operation exception.
-        
-        Args:
-            message: Specific error description
-            host: Target host or IP address
-            port: Target port number
-            timeout: Operation timeout value if applicable
-        """
-        context: Dict[str, Any] = {}
-        if host:
-            context["host"] = host
-        if port:
-            context["port"] = port
-        if timeout:
-            context["timeout"] = timeout
-        
-        super().__init__(message, error_code="NETWORK_ERROR", context=context)
-        self.host = host
-        self.port = port
-        self.timeout = timeout
-
-
-class SSHCommandError(PracticeToolError):
-    """
-    Raised when SSH command execution fails or returns unexpected results.
-    
-    Provides detailed information about command execution failures,
-    including exit status, stdout/stderr output, and connection issues.
-    """
-    
-    def __init__(self, command: str, exit_status: Optional[int] = None,
-                 stdout: Optional[str] = None, stderr: Optional[str] = None,
-                 ssh_error: Optional[str] = None, host: Optional[str] = None):
-        """
-        Initialize SSH command execution exception.
-        
-        Args:
-            command: The SSH command that failed
-            exit_status: Command exit status code
-            stdout: Standard output from the command
-            stderr: Standard error output from the command
-            ssh_error: SSH-specific error message
-            host: Target host for the SSH connection
-        """
-        context = {"command": command}
-        if exit_status is not None:
-            context["exit_status"] = str(exit_status)
-        if stdout:
-            context["stdout"] = stdout[:200] + "..." if len(stdout) > 200 else stdout
-        if stderr:
-            context["stderr"] = stderr[:200] + "..." if len(stderr) > 200 else stderr
-        if ssh_error:
-            context["ssh_error"] = ssh_error
-        if host:
-            context["host"] = host
-        
-        message = f"SSH command execution failed: {command}"
-        if exit_status is not None:
-            message += f" (exit status: {exit_status})"
-        
-        super().__init__(message, error_code="SSH_COMMAND_FAILED", context=context)
-        self.command = command
-        self.exit_status = exit_status
-        self.stdout = stdout
-        self.stderr = stderr
-        self.ssh_error = ssh_error
-        self.host = host
 
 
 class ChallengeLoadError(PracticeToolError):

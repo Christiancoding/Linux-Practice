@@ -209,7 +209,7 @@ class SSHManager:
             if not self.validate_ssh_key_security(key_path):
                 raise SSHCommandError(
                     command=command,
-                    ssh_error="SSH key file has insecure permissions or is inaccessible",
+                    msg="SSH key file has insecure permissions or is inaccessible",
                     host=host
                 )
             
@@ -266,7 +266,7 @@ class SSHManager:
             self.logger.error(error_msg)
             raise SSHCommandError(
                 command=command,
-                ssh_error=error_msg,
+                msg=error_msg,
                 host=host
             ) from e
             
@@ -276,7 +276,7 @@ class SSHManager:
             self.logger.error(error_msg)
             raise SSHCommandError(
                 command=command,
-                ssh_error=error_msg,
+                msg=error_msg,
                 host=host
             ) from e
             
@@ -286,7 +286,7 @@ class SSHManager:
             self.logger.error(error_msg)
             raise SSHCommandError(
                 command=command,
-                ssh_error=error_msg,
+                msg=error_msg,
                 host=host
             ) from e
             
@@ -296,7 +296,7 @@ class SSHManager:
             self.logger.error(error_msg, exc_info=True)
             raise SSHCommandError(
                 command=command,
-                ssh_error=error_msg,
+                msg=error_msg,
                 host=host
             ) from e
     
