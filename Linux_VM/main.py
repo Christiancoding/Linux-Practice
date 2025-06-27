@@ -12,7 +12,6 @@ import sys
 import logging
 import traceback
 from pathlib import Path
-from typing import Optional
 
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -20,34 +19,13 @@ if sys.version_info < (3, 8):
     sys.exit(1)
 
 # Validate critical dependencies early
-try:
-    import typer
-except ImportError:
-    print("Error: Missing required library 'typer'.")
-    print("Please install it: pip install typer[all]")
-    sys.exit(1)
 
 try:
-    import libvirt
+    import libvirt  # type: ignore
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.")
     print("Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.")
     sys.exit(1)
-
-try:
-    import paramiko
-except ImportError:
-    print("Error: Missing required library 'paramiko'.")
-    print("Please install it: pip install paramiko")
-    sys.exit(1)
-
-try:
-    import yaml
-except ImportError:
-    print("Error: Missing required library 'PyYAML'.")
-    print("Please install it: pip install pyyaml")
-    sys.exit(1)
-
 
 class LPEMApplication:
     """
@@ -105,7 +83,7 @@ class LPEMApplication:
         """
         try:
             # Validate libvirt accessibility
-            test_conn = libvirt.openReadOnly('qemu:///system')
+            test_conn = libvirt.openReadOnly('qemu:///system')  # type: ignore
             if test_conn:
                 test_conn.close()
             

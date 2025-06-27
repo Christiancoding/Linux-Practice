@@ -13,7 +13,7 @@ import logging
 import socket
 import stat
 from pathlib import Path
-from typing import Dict, Optional, Any, Union, List
+from typing import Dict, Optional, Any, List
 
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -31,8 +31,12 @@ except ImportError:
 
 # Import local modules
 from .config import SSHConfiguration
-from .exceptions import SSHCommandError, NetworkError, format_exception_for_user
-from .console_helper import console, Panel, Table, RICH_AVAILABLE
+from .exceptions import SSHCommandError, NetworkError
+from .console_helper import console, RICH_AVAILABLE
+
+from rich.console import Console  # type: ignore
+
+console: Console  # type: ignore
 
 
 class SSHManager:
@@ -57,7 +61,6 @@ class SSHManager:
         self.logger = logging.getLogger(__name__)
         
         # Configure paramiko logging to reduce noise
-        paramiko.util.log_to_file('/dev/null')
         logging.getLogger("paramiko").setLevel(logging.WARNING)
     
     def _setup_logging(self) -> None:
@@ -130,7 +133,7 @@ class SSHManager:
             
             # Create temporary SSH client for testing
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddHostKeyPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             
             try:
                 # Attempt connection
@@ -145,7 +148,7 @@ class SSHManager:
                 )
                 
                 # Quick command test to verify full functionality
-                _, stdout, stderr = ssh_client.exec_command('echo "connection_test"', timeout=5)
+                _, stdout, _ = ssh_client.exec_command('echo "connection_test"', timeout=5)
                 output = stdout.read().decode('utf-8').strip()
                 
                 if output == "connection_test":
@@ -185,7 +188,7 @@ class SSHManager:
             verbose: Enable verbose output logging
             
         Returns:
-            Dict containing execution results with keys:
+            Dict[str, Any]: Dictionary containing execution results with keys:
             - 'success': bool indicating overall success
             - 'exit_status': int command exit code
             - 'stdout': str standard output
@@ -212,7 +215,7 @@ class SSHManager:
             
             # Establish SSH connection
             ssh_client = paramiko.SSHClient()
-            ssh_client.set_missing_host_key_policy(paramiko.AutoAddHostKeyPolicy())
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             
             try:
                 # Connect with comprehensive timeout handling
@@ -226,7 +229,7 @@ class SSHManager:
                 )
                 
                 # Execute command with timeout
-                stdin, stdout, stderr = ssh_client.exec_command(command, timeout=effective_timeout)
+                _, stdout, stderr = ssh_client.exec_command(command, timeout=effective_timeout)
                 
                 # Collect output and exit status
                 stdout_data = stdout.read().decode('utf-8', errors='replace')
@@ -236,7 +239,7 @@ class SSHManager:
                 execution_time = time.time() - start_time
                 
                 # Prepare result dictionary
-                result = {
+                result: Dict[str, Any] = {
                     'success': exit_status == 0,
                     'exit_status': exit_status,
                     'stdout': stdout_data,
@@ -312,7 +315,7 @@ class SSHManager:
         """
         try:
             # Prepare formatted output sections
-            output_sections = []
+            output_sections: List[str] = []
             
             if show_command:
                 if RICH_AVAILABLE:
@@ -385,7 +388,7 @@ class SSHManager:
         Raises:
             SSHCommandError: If any command fails and stop_on_failure is True
         """
-        results = []
+        results: List[Dict[str, Any]] = []
         
         for i, command in enumerate(commands, 1):
             try:
@@ -410,7 +413,7 @@ class SSHManager:
                 if stop_on_failure:
                     raise
                 # Add error result and continue
-                error_result = {
+                error_result: Dict[str, Any] = {
                     'success': False,
                     'exit_status': -1,
                     'stdout': '',

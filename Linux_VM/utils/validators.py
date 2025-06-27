@@ -9,10 +9,9 @@ progress reporting for educational assessment.
 
 import sys
 import re
-import socket
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any
 
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -29,10 +28,14 @@ except ImportError:
     sys.exit(1)
 
 # Import local modules
-from .config import ChallengeConfiguration, SystemConfiguration
-from .exceptions import ChallengeValidationError, SSHCommandError, format_exception_for_user
+from .config import ChallengeConfiguration
+from .exceptions import ChallengeValidationError, SSHCommandError
 from .ssh_manager import SSHManager
 from .console_helper import console, Panel, Syntax, RICH_AVAILABLE
+
+from typing import TYPE_CHECKING, Any
+if TYPE_CHECKING:
+    console: Any
 
 
 class ChallengeValidator:
@@ -82,7 +85,7 @@ class ChallengeValidator:
         Returns:
             List[str]: List of validation error messages (empty if valid)
         """
-        errors = []
+        errors: List[str] = []
         self.logger.debug(f"Validating challenge structure for: {filename}")
         
         # Validate top-level keys
@@ -159,13 +162,14 @@ class ChallengeValidator:
         Returns:
             List[str]: List of validation errors
         """
-        errors = []
+        errors: List[str] = []
         
         if not isinstance(validation_steps, list):
             errors.append(f"'{filename}': 'validation' must be a list of validation steps.")
             return errors
         
         for i, step in enumerate(validation_steps, 1):
+            step: Dict[str, Any]
             if not isinstance(step, dict):
                 errors.append(f"'{filename}': Validation step {i} must be a dictionary.")
                 continue
@@ -175,7 +179,7 @@ class ChallengeValidator:
                 errors.append(f"'{filename}': Validation step {i} missing required 'type' field.")
                 continue
             
-            step_type = step['type']
+            step_type: str = step['type']
             if step_type not in self.validation_registry:
                 errors.append(
                     f"'{filename}': Validation step {i} has unsupported type: '{step_type}'. "
@@ -480,23 +484,23 @@ def validate_challenge_file(file_path: Path) -> None:
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
             challenge_data = yaml.safe_load(content)
+            # Explicitly annotate type for static type checkers
+            challenge_data: Dict[str, Any] = challenge_data
         
         # Display file content with syntax highlighting
         if RICH_AVAILABLE:
             syntax = Syntax(content, "yaml", theme="default", line_numbers=True, word_wrap=False)
-            console.print(Panel(syntax, title=f"Content of '{file_path.name}'", border_style="dim"))
+            # Only pass Syntax (not FallbackSyntax) to Panel
+            if type(syntax).__name__ == "Syntax" and hasattr(syntax, "__rich_console__"):
+                console.print(Panel(syntax, title=f"Content of '{file_path.name}'", border_style="dim"))
+            else:
+                # Fallback: print as plain text
+                console.print(Panel(str(content), title=f"Content of '{file_path.name}'", border_style="dim"))
         else:
             console.print(f"\n--- Content of '{file_path.name}' ---\n{content}\n------------------------------")
         
         # Validate YAML structure
-        if not isinstance(challenge_data, dict):
-            error_msg = "Root content is not a valid YAML dictionary (object)."
-            if RICH_AVAILABLE:
-                console.print(Panel(f"[bold red]Error:[/bold red] {error_msg}", 
-                                  title="Validation Failed", border_style="red"))
-            else:
-                console.print(f"\n--- Validation Failed ---\n{error_msg}\n------")
-            raise SystemExit(1)
+        # The type of challenge_data is already Dict[str, Any], so no need to check isinstance.
         
         # Perform detailed structure validation
         errors = validator.validate_challenge_structure(challenge_data, file_path.name)

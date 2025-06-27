@@ -1,0 +1,30 @@
+2025-06-26 15:12:43,248 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 15:12:43,249 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 15:12:43,256 - __main__ - ERROR: Failed to import required modules: attempted relative import beyond top-level package
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 139, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 38, in <module>
+    from ..utils.console_helper import console, RICH_AVAILABLE
+ImportError: attempted relative import beyond top-level package
+2025-06-26 15:12:43,256 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-26 15:14:57,394 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 15:14:57,395 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 15:14:57,595 - __main__ - ERROR: Failed to import required modules: cannot import name 'LibvirtConnectionError' from 'utils.exceptions' (/home/retiredfan/Documents/test/Linux_VM/utils/exceptions.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 139, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 40, in <module>
+    from utils.exceptions import (
+ImportError: cannot import name 'LibvirtConnectionError' from 'utils.exceptions' (/home/retiredfan/Documents/test/Linux_VM/utils/exceptions.py)
+2025-06-26 15:14:57,596 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-26 23:54:09,695 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 23:54:09,697 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 23:54:09,814 - __main__ - ERROR: Failed to import required modules: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 117, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 47, in <module>
+    from utils.vm_manager import (
+ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+2025-06-26 23:54:09,814 - __main__ - INFO: LPEM Application shutdown complete

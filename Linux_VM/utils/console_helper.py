@@ -8,7 +8,7 @@ terminal output formatting and user interface elements.
 
 import sys
 import traceback
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, List
 
 # Third-party imports with graceful fallback handling
 try:
@@ -19,6 +19,7 @@ except ImportError:
     sys.exit(1)
 
 # Rich library integration with comprehensive fallback support
+_rich_available = False
 try:
     from rich.console import Console as RichConsole
     from rich.panel import Panel
@@ -28,10 +29,14 @@ try:
     from rich.markdown import Markdown
     from rich.text import Text
     from rich.prompt import Prompt, Confirm
-    RICH_AVAILABLE = True
+    _rich_available = True
 except ImportError:
-    RICH_AVAILABLE = False
+    _rich_available = False
 
+RICH_AVAILABLE = _rich_available
+
+
+from typing import Any
 
 class ConsoleManager:
     """
@@ -41,6 +46,8 @@ class ConsoleManager:
     when Rich is not available, ensuring consistent user experience across
     different environments.
     """
+
+    console: Any  # Add type annotation for console attribute
     
     def __init__(self):
         """Initialize console manager with appropriate backend."""
@@ -50,6 +57,8 @@ class ConsoleManager:
     def _setup_console(self) -> None:
         """Configure the primary console interface."""
         if RICH_AVAILABLE:
+            # Import RichConsole here to ensure it's available
+            from rich.console import Console as RichConsole
             self.console = RichConsole()
         else:
             self.console = FallbackConsole()
@@ -60,10 +69,25 @@ class ConsoleManager:
             self.Panel = Panel
             self.Table = Table
             self.Progress = Progress
-            self.SpinnerColumn = SpinnerColumn
+            try:
+                self.SpinnerColumn = SpinnerColumn
+            except NameError:
+                self.SpinnerColumn = None
             self.TextColumn = TextColumn
-            self.BarColumn = BarColumn
-            self.TimeElapsedColumn = TimeElapsedColumn
+            if 'BarColumn' in globals():
+                try:
+                    self.BarColumn = BarColumn
+                except NameError:
+                    self.BarColumn = None
+            else:
+                self.BarColumn = None
+            if 'TimeElapsedColumn' in globals():
+                try:
+                    self.TimeElapsedColumn = TimeElapsedColumn
+                except NameError:
+                    self.TimeElapsedColumn = None
+            else:
+                self.TimeElapsedColumn = None
             self.Syntax = Syntax
             self.Markdown = Markdown
             self.Text = Text
@@ -83,7 +107,7 @@ class ConsoleManager:
             self.Prompt = FallbackPrompt
             self.Confirm = FallbackConfirm
     
-    def print(self, *args, **kwargs) -> None:
+    def print(self, *args: Any, **kwargs: Any) -> None:
         """Enhanced print with Rich formatting support."""
         self.console.print(*args, **kwargs)
     
@@ -91,7 +115,7 @@ class ConsoleManager:
         """Print a horizontal rule with optional title."""
         self.console.rule(title, style=style)
     
-    def print_exception(self, *args, **kwargs) -> None:
+    def print_exception(self, *args: Any, **kwargs: Any) -> None:
         """Print exception with enhanced formatting."""
         self.console.print_exception(*args, **kwargs)
 
@@ -104,10 +128,10 @@ class FallbackConsole:
     Rich's interface for seamless degradation.
     """
     
-    def print(self, *args, **kwargs) -> None:
+    def print(self, *args: Any, **kwargs: dict[str, Any]) -> None:
         """Basic print functionality with Rich markup removal."""
         # Remove Rich markup tags for clean fallback output
-        clean_args = []
+        clean_args: List[str] = []
         for arg in args:
             if isinstance(arg, str):
                 # Simple Rich markup removal (basic patterns)
@@ -115,14 +139,23 @@ class FallbackConsole:
                 clean_arg = re.sub(r'\[/?[^\]]*\]', '', str(arg))
                 clean_args.append(clean_arg)
             else:
-                clean_args.append(arg)
-        typer.echo(*clean_args)
+                # Ensure arg is a valid object for str()
+                try:
+                    clean_args.append(str(arg))
+                except Exception:
+                    clean_args.append(repr(arg))
+        # Forward only supported kwargs to typer.echo
+        echo_kwargs = {}
+        for key in ("file", "nl", "err", "color"):
+            if key in kwargs:
+                echo_kwargs[key] = kwargs[key]
+        typer.echo(" ".join(str(arg) for arg in clean_args), **echo_kwargs)
     
     def rule(self, title: str = "", style: str = "") -> None:
         """Print a simple text rule."""
         typer.echo(f"--- {title} ---")
     
-    def print_exception(self, *args, **kwargs) -> None:
+    def print_exception(self, *args: Any, **kwargs: Any) -> None:
         """Print exception using standard traceback."""
         traceback.print_exc()
 
@@ -131,13 +164,13 @@ class FallbackPanel:
     """Fallback panel implementation for non-Rich environments."""
     
     def __init__(self, content: Any, title: str = "", border_style: str = "dim", 
-                 expand: bool = True, **kwargs):
+                 expand: bool = True, **kwargs: Any):
         self.content = content
         self.title = title
         self.border_style = border_style
         self.expand = expand
     
-    def __rich_console__(self, console, options):
+    def __rich_console__(self, console: Any, options: Any):
         """Rich console compatibility method."""
         yield f"--- {self.title} ---"
         yield str(self.content)
@@ -152,23 +185,24 @@ class FallbackTable:
     """Fallback table implementation for structured data display."""
     
     def __init__(self, title: str = "", show_header: bool = True, 
-                 header_style: str = "", **kwargs):
+                 header_style: str = "", **kwargs: Any):
         self.title = title
         self.show_header = show_header
         self.header_style = header_style
-        self.columns = []
-        self.rows = []
+        self.columns: List[dict[str, str]] = []
+        self.rows: List[tuple[Any, ...]] = []
+        self._is_grid = False  # Ensure attribute always exists
     
-    def add_column(self, header: str = "", style: str = "", **kwargs) -> None:
+    def add_column(self, header: str = "", style: str = "", **kwargs: dict[str, Any]) -> None:
         """Add a column to the table."""
         self.columns.append({"header": header, "style": style})
     
-    def add_row(self, *values) -> None:
+    def add_row(self, *values: Any) -> None:
         """Add a row to the table."""
         self.rows.append(values)
     
     @classmethod
-    def grid(cls, padding: tuple = (0, 1), **kwargs):
+    def grid(cls, padding: tuple[int, int] = (0, 1), **kwargs: Any):
         """Create a grid-style table."""
         instance = cls(**kwargs)
         instance._is_grid = True
@@ -176,7 +210,7 @@ class FallbackTable:
     
     def __str__(self) -> str:
         """String representation for fallback display."""
-        output = []
+        output: List[str] = []
         if self.title:
             output.append(f"--- {self.title} ---")
         
@@ -194,9 +228,9 @@ class FallbackTable:
 class FallbackProgress:
     """Fallback progress implementation for operation tracking."""
     
-    def __init__(self, *columns, **kwargs):
-        self.columns = columns
-        self.tasks = {}
+    def __init__(self, *columns: Any, **kwargs: Any):
+        self.columns: tuple[Any, ...] = columns
+        self.tasks: dict[int, dict[str, Any]] = {}
         self.task_counter = 0
     
     def add_task(self, description: str, total: Optional[float] = None, **kwargs):
@@ -211,8 +245,8 @@ class FallbackProgress:
         typer.echo(f"Starting: {description}")
         return task_id
     
-    def update(self, task_id, completed: Optional[float] = None, 
-               advance: Optional[float] = None, **kwargs):
+    def update(self, task_id: int, completed: Optional[float] = None, 
+               advance: Optional[float] = None, **kwargs: Any):
         """Update task progress."""
         if task_id in self.tasks:
             if advance:
@@ -223,26 +257,26 @@ class FallbackProgress:
     def __enter__(self):
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[Any]) -> None:
         for task in self.tasks.values():
             typer.echo(f"Completed: {task['description']}")
 
 
 # Fallback implementations for other Rich components
 class FallbackSpinnerColumn:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         pass
 
 class FallbackTextColumn:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any):
         pass
 
 class FallbackBarColumn:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: dict[str, Any]):
         pass
 
 class FallbackTimeElapsedColumn:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: dict[str, Any]):
         pass
 
 class FallbackSyntax:
@@ -263,11 +297,15 @@ class FallbackSyntax:
             numbered_lines = [f"{i+1:4d} | {line}" for i, line in enumerate(lines)]
             return '\n'.join(numbered_lines)
         return self.code
+    
+    def __rich_console__(self, console: Any, options: Any):
+        """Rich console compatibility method for FallbackSyntax."""
+        yield self.__str__()
 
 class FallbackMarkdown:
     """Fallback markdown implementation."""
     
-    def __init__(self, content: str, **kwargs):
+    def __init__(self, content: str, **kwargs: dict[str, Any]):
         self.content = content
     
     def __str__(self) -> str:
@@ -284,7 +322,7 @@ class FallbackMarkdown:
 class FallbackText:
     """Fallback text implementation."""
     
-    def __init__(self, text: str = "", style: str = "", **kwargs):
+    def __init__(self, text: str = "", style: str = "", **kwargs: Any):
         self.text = text
         self.style = style
     
@@ -295,7 +333,7 @@ class FallbackPrompt:
     """Fallback prompt implementation."""
     
     @staticmethod
-    def ask(question: str, default: Any = None, **kwargs) -> str:
+    def ask(question: str, default: Any = None, **kwargs: Any) -> str:
         """Ask user for input with fallback prompt."""
         if default:
             return typer.prompt(f"{question} [{default}]", default=default)
@@ -305,7 +343,7 @@ class FallbackConfirm:
     """Fallback confirmation implementation."""
     
     @staticmethod
-    def ask(question: str, default: bool = False, **kwargs) -> bool:
+    def ask(question: str, default: bool = False, **kwargs: Any) -> bool:
         """Ask user for confirmation with fallback prompt."""
         return typer.confirm(question, default=default)
 

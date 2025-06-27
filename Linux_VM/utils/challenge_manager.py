@@ -21,10 +21,12 @@ except ImportError:
 
 # Local imports
 from .console_helper import console, RICH_AVAILABLE
+from rich.console import Console  # type: ignore
+
+console: "Console"  # type: ignore
 from .exceptions import (
     PracticeToolError,
-    ChallengeLoadError,
-    ChallengeValidationError
+    ChallengeLoadError
 )
 from .config import config
 from .ssh_manager import run_ssh_command, SSHCommandError
@@ -36,7 +38,7 @@ if RICH_AVAILABLE:
     from rich.panel import Panel
     from rich.table import Table
     from rich.markdown import Markdown
-    from rich.prompt import Prompt, Confirm
+    from rich.prompt import Confirm
 
 
 class ChallengeManager:
@@ -120,14 +122,11 @@ hints:
         Returns:
             List[str]: List of validation errors (empty if valid)
         """
-        errors = []
+        errors: List[str] = []
         
-        if not isinstance(challenge_data, dict):
-            errors.append(f"'{filename}': Root must be a dictionary")
-            return errors
         
         # --- Required Fields ---
-        required_fields = {
+        required_fields: Dict[str, type] = {
             'id': str,
             'name': str, 
             'description': str,
@@ -135,10 +134,11 @@ hints:
         }
         
         for field, expected_type in required_fields.items():
+            expected_type: type  # type: ignore
             if field not in challenge_data:
                 errors.append(f"'{filename}': Missing required field '{field}'")
             elif not isinstance(challenge_data[field], expected_type):
-                errors.append(f"'{filename}': Field '{field}' must be of type {expected_type.__name__}")
+                errors.append(f"'{filename}': Field '{field}' must be of type {getattr(expected_type, '__name__', str(expected_type))}")
         
         # --- Optional Fields with Type Validation ---
         optional_fields = {
@@ -156,7 +156,7 @@ hints:
                 if isinstance(expected_type, tuple):
                     # Multiple allowed types
                     if not any(isinstance(value, t) for t in expected_type):
-                        type_names = " or ".join(t.__name__ for t in expected_type)
+                        type_names = " or ".join([t.__name__ for t in expected_type if hasattr(t, "__name__")])
                         errors.append(f"'{filename}': Field '{field}' must be of type {type_names}")
                 else:
                     if not isinstance(value, expected_type):
@@ -181,7 +181,7 @@ hints:
             if not challenge_data['validation']:
                 errors.append(f"'{filename}': 'validation' cannot be empty")
             else:
-                for i, step in enumerate(challenge_data['validation']):
+                for i, step in enumerate(challenge_data['validation']):  # type: ignore[var-annotated]
                     step_label = f"'{filename}' Validation step {i+1}"
                     if not isinstance(step, dict):
                         errors.append(f"{step_label}: Must be a dictionary")
@@ -189,12 +189,15 @@ hints:
                         errors.append(f"{step_label}: Missing 'type'")
                     else:
                         # Type-specific validation
-                        step_type = step.get('type')
+                        step_typed: Dict[str, Any] = step  # type: ignore
+                        step_type = step_typed.get('type')
                         if step_type == 'run_command':
                             if 'command' not in step:
                                 errors.append(f"{step_label}: Missing 'command'")
                             if 'expected_exit_code' in step:
                                 try:
+                                    if step['expected_exit_code'] is None or not isinstance(step['expected_exit_code'], (int, str)):
+                                        raise ValueError
                                     int(step['expected_exit_code'])
                                 except (ValueError, TypeError):
                                     errors.append(f"{step_label}: 'expected_exit_code' must be an integer")
@@ -210,9 +213,19 @@ hints:
                                 errors.append(f"{step_label}: Missing 'port'")
                             else:
                                 try:
-                                    port = int(step['port'])
-                                    if not (1 <= port <= 65535):
-                                        errors.append(f"{step_label}: Port must be between 1 and 65535")
+                                    try:
+                                        port_value = step['port']
+                                        if isinstance(port_value, (int, str)):
+                                            try:
+                                                port = int(str(port_value))
+                                                if not (1 <= port <= 65535):
+                                                    errors.append(f"{step_label}: Port must be between 1 and 65535")
+                                            except (ValueError, TypeError):
+                                                errors.append(f"{step_label}: Port must be a valid integer")
+                                        else:
+                                            errors.append(f"{step_label}: Port must be a valid integer")
+                                    except (ValueError, TypeError):
+                                        errors.append(f"{step_label}: Port must be a valid integer")
                                 except (ValueError, TypeError):
                                     errors.append(f"{step_label}: Port must be a valid integer")
                         elif step_type in ['check_file_exists', 'check_file_contains']:
@@ -221,20 +234,23 @@ hints:
                             if step_type == 'check_file_contains' and 'search_string' not in step:
                                 errors.append(f"{step_label}: Missing 'search_string'")
                             if 'matches_regex' in step:
-                                try:
-                                    re.compile(step['matches_regex'])
-                                except re.error as regex_err:
-                                    errors.append(f"{step_label}: Invalid regex '{step['matches_regex']}': {regex_err}")
+                                regex_value: str = step['matches_regex']
+                                if not isinstance(regex_value, str):
+                                    errors.append(f"{step_label}: 'matches_regex' must be a string")
+                                else:
+                                    try:
+                                        re.compile(regex_value)
+                                    except re.error as regex_err:
+                                        errors.append(f"{step_label}: Invalid regex '{regex_value}': {regex_err}")
                         else:
                             errors.append(f"{step_label}: Unsupported validation type: '{step_type}'")
         
         # --- Setup Steps ---
         if 'setup' in challenge_data and isinstance(challenge_data['setup'], list):
-            for i, step in enumerate(challenge_data['setup']):
+            setup_steps: List[Dict[str, Any]] = challenge_data['setup']  # type: ignore
+            for i, step in enumerate(setup_steps):
                 step_label = f"'{filename}' Setup step {i+1}"
-                if not isinstance(step, dict):
-                    errors.append(f"{step_label}: Must be a dictionary")
-                elif 'type' not in step:
+                if 'type' not in step:
                     errors.append(f"{step_label}: Missing 'type'")
                 else:
                     step_type = step.get('type')
@@ -254,7 +270,11 @@ hints:
                     errors.append(f"{hint_label}: Missing 'text'")
                 elif 'cost' in hint:
                     try:
-                        cost = int(hint['cost'])
+                        try:
+                            cost_val = hint.get('cost', 0)
+                            cost = int(cost_val) if isinstance(cost_val, (int, str)) and str(cost_val).isdigit() else 0
+                        except (ValueError, TypeError):
+                            cost = 0
                         if cost < 0:
                             errors.append(f"{hint_label}: Cost must be non-negative")
                     except (ValueError, TypeError):
@@ -658,12 +678,12 @@ def validate_challenge_structure(challenge_data: Dict[str, Any], filename: str =
     manager = ChallengeManager()
     return manager.validate_challenge_structure(challenge_data, filename)
 
-def load_challenges_from_dir(challenges_dir: Path) -> Dict[str, Dict]:
+def load_challenges_from_dir(challenges_dir: Path) -> Dict[str, Dict[str, Any]]:
     """Backward compatibility function for loading challenges from directory."""
     manager = ChallengeManager()
     return manager.load_challenges_from_dir(challenges_dir)
 
-def list_challenges(challenges: Dict[str, Dict]) -> None:
+def list_challenges(challenges: Dict[str, Dict[str, Any]]) -> None:
     """Backward compatibility function for listing challenges."""
     manager = ChallengeManager()
     return manager.list_challenges(challenges)

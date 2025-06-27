@@ -134,7 +134,7 @@ class NetworkError(PracticeToolError):
             port: Target port number
             timeout: Operation timeout value if applicable
         """
-        context = {}
+        context: Dict[str, Any] = {}
         if host:
             context["host"] = host
         if port:
@@ -172,7 +172,7 @@ class SSHCommandError(PracticeToolError):
         """
         context = {"command": command}
         if exit_status is not None:
-            context["exit_status"] = exit_status
+            context["exit_status"] = str(exit_status)
         if stdout:
             context["stdout"] = stdout[:200] + "..." if len(stdout) > 200 else stdout
         if stderr:
@@ -213,7 +213,7 @@ class ChallengeLoadError(PracticeToolError):
             file_path: Path to the challenge file that failed to load
             yaml_error: Optional underlying YAML parsing error
         """
-        context = {}
+        context: Dict[str, Any] = {}
         if file_path:
             context["file_path"] = file_path
         if yaml_error:
