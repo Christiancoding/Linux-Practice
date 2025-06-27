@@ -87,12 +87,6 @@ class VMManager:
             
             # Attempt connection to libvirt daemon
             raw_conn = libvirt.open(self.libvirt_uri)  # type: ignore
-            if raw_conn is None:
-                raise PracticeToolError(
-                    f"Failed to establish libvirt connection to '{self.libvirt_uri}'",
-                    error_code="LIBVIRT_CONNECTION_FAILED",
-                    context={"uri": self.libvirt_uri}
-                )
             conn = raw_conn
             
             # Verify connection functionality
@@ -491,7 +485,12 @@ class VMManager:
             timeout=timeout
         )
 
-
+def get_vm_ip_address(domain: libvirt.virDomain) -> str:
+    """Backward compatibility function for IP retrieval with just domain parameter."""
+    # Get the connection from the domain
+    conn = domain.connect()
+    manager = VMManager()
+    return manager.get_vm_ip(conn, domain)
 # Convenience functions for backward compatibility with ww.py
 def connect_libvirt(uri: Optional[str] = None) -> libvirt.virConnect:
     """Backward compatibility function for libvirt connection."""
@@ -533,5 +532,5 @@ def wait_for_vm_ready(vm_ip: str, ssh_user: str, ssh_key_path: Path, timeout: in
 __all__ = [
     'VMManager',
     'connect_libvirt', 'close_libvirt', 'find_vm', 'list_vms', 
-    'start_vm', 'get_vm_ip', 'wait_for_vm_ready'
+    'start_vm', 'get_vm_ip', 'get_vm_ip_address', 'wait_for_vm_ready'
 ]
