@@ -84,7 +84,7 @@ class LPEMApplication:
         """
         try:
             # Validate libvirt accessibility
-            test_conn = libvirt.openReadOnly('qemu:///system')  # type: ignore
+            test_conn = libvirt.openReadOnly('qemu:///system') 
             if test_conn:
                 test_conn.close()
             
