@@ -28,3 +28,13 @@ Traceback (most recent call last):
     from utils.vm_manager import (
 ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
 2025-06-26 23:54:09,814 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-27 00:06:49,485 - __main__ - INFO: LPEM Application logging initialized
+2025-06-27 00:06:49,486 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-27 00:06:51,302 - __main__ - ERROR: Failed to import required modules: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/main.py", line 118, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 47, in <module>
+    from utils.vm_manager import (
+ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+2025-06-27 00:06:51,355 - __main__ - INFO: LPEM Application shutdown complete

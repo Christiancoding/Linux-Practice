@@ -12,7 +12,8 @@ import sys
 import logging
 import traceback
 from pathlib import Path
-
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
     print("Linux+ Practice Environment Manager requires Python 3.8+. Please upgrade your Python installation.")

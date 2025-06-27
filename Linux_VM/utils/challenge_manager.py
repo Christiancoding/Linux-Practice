@@ -7,11 +7,9 @@ practice environments with YAML-based challenge definitions.
 """
 
 import re
-import time
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
-import sys
+from typing import Dict, List, Any, Tuple
 
 # Third-party imports
 try:
@@ -50,7 +48,8 @@ class ChallengeManager:
     def __init__(self):
         """Initialize the challenge manager."""
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        self._loaded_challenges: Dict[str, Dict] = {}
+        self._loaded_challenges: Dict[str, Dict[str, Any]] = {}
+
         self._challenge_template = self._get_challenge_template()
     
     def _get_challenge_template(self) -> str:
@@ -151,6 +150,7 @@ hints:
         }
         
         for field, expected_type in optional_fields.items():
+            expected_type: type | tuple[type, ...]  # type: ignore
             if field in challenge_data:
                 value = challenge_data[field]
                 if isinstance(expected_type, tuple):
@@ -198,7 +198,7 @@ hints:
                                 try:
                                     if step['expected_exit_code'] is None or not isinstance(step['expected_exit_code'], (int, str)):
                                         raise ValueError
-                                    int(step['expected_exit_code'])
+                                    int(step['expected_exit_code']);
                                 except (ValueError, TypeError):
                                     errors.append(f"{step_label}: 'expected_exit_code' must be an integer")
                         elif step_type == 'check_service_status':
