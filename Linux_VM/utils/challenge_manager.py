@@ -9,7 +9,7 @@ practice environments with YAML-based challenge definitions.
 import re
 import logging
 from pathlib import Path
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple, Union
 
 # Third-party imports
 try:
@@ -140,7 +140,7 @@ hints:
                 errors.append(f"'{filename}': Field '{field}' must be of type {getattr(expected_type, '__name__', str(expected_type))}")
         
         # --- Optional Fields with Type Validation ---
-        optional_fields = {
+        optional_fields: Dict[str, Union[type, Tuple[type, ...]]] = {
             'category': str,
             'difficulty': str,
             'score': (int, str),  # Allow string for conversion
@@ -213,18 +213,12 @@ hints:
                                 errors.append(f"{step_label}: Missing 'port'")
                             else:
                                 try:
-                                    try:
-                                        port_value = step['port']
-                                        if isinstance(port_value, (int, str)):
-                                            try:
-                                                port = int(str(port_value))
-                                                if not (1 <= port <= 65535):
-                                                    errors.append(f"{step_label}: Port must be between 1 and 65535")
-                                            except (ValueError, TypeError):
-                                                errors.append(f"{step_label}: Port must be a valid integer")
-                                        else:
-                                            errors.append(f"{step_label}: Port must be a valid integer")
-                                    except (ValueError, TypeError):
+                                    port_value = step['port']
+                                    if isinstance(port_value, (int, str)):
+                                        port = int(str(port_value))
+                                        if not (1 <= port <= 65535):
+                                            errors.append(f"{step_label}: Port must be between 1 and 65535")
+                                    else:
                                         errors.append(f"{step_label}: Port must be a valid integer")
                                 except (ValueError, TypeError):
                                     errors.append(f"{step_label}: Port must be a valid integer")
@@ -262,7 +256,7 @@ hints:
         
         # --- Hints ---
         if 'hints' in challenge_data and isinstance(challenge_data['hints'], list):
-            for i, hint in enumerate(challenge_data['hints']):
+            for i, hint in enumerate(challenge_data.get('hints', [])):
                 hint_label = f"'{filename}' Hint {i+1}"
                 if not isinstance(hint, dict):
                     errors.append(f"{hint_label}: Must be a dictionary")
@@ -270,21 +264,18 @@ hints:
                     errors.append(f"{hint_label}: Missing 'text'")
                 elif 'cost' in hint:
                     try:
-                        try:
-                            cost_val = hint.get('cost', 0)
-                            cost = int(cost_val) if isinstance(cost_val, (int, str)) and str(cost_val).isdigit() else 0
-                        except (ValueError, TypeError):
-                            cost = 0
-                        if cost < 0:
-                            errors.append(f"{hint_label}: Cost must be non-negative")
+                        cost_val = hint.get('cost', 0)  # `hint` is now explicitly typed
+                        cost = int(cost_val) if isinstance(cost_val, (int, str)) and str(cost_val).isdigit() else 0
                     except (ValueError, TypeError):
-                        errors.append(f"{hint_label}: 'cost' must be an integer")
+                        cost = 0
+                    if cost < 0:
+                        errors.append(f"{hint_label}: Cost must be non-negative")
         
         return errors
     
     # --- Challenge Loading ---
     
-    def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict]:
+    def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict[str, Any]]:
         """
         Load challenge definitions from YAML files in a directory.
         
@@ -292,7 +283,7 @@ hints:
             challenges_dir: Path to directory containing challenge YAML files
             
         Returns:
-            Dict[str, Dict]: Dictionary mapping challenge IDs to challenge data
+            Dict[str, Dict[str, Any]]: Dictionary mapping challenge IDs to challenge data
             
         Raises:
             ChallengeLoadError: If directory doesn't exist or other loading errors

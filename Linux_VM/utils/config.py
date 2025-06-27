@@ -17,7 +17,7 @@ if sys.version_info < (3, 8):
 
 # Import libvirt for error code constants (with graceful fallback)
 try:
-    import libvirt  # type: ignore
+    import libvirt
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.\n"
           "Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.", 
@@ -81,7 +81,7 @@ class ChallengeConfiguration:
     """Challenge system configuration and default settings."""
     
     # Default Challenge Settings
-    DEFAULT_CHALLENGES_DIR: Path = Path("./challenges")
+    DEFAULT_CHALLENGES_DIR: Path = Path(__file__).parent.parent / "challenges"
     DEFAULT_CHALLENGE_SCORE: int = 100
     
     # Challenge Validation Settings

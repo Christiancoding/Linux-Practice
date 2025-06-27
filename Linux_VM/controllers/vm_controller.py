@@ -85,7 +85,7 @@ logger = logging.getLogger(__name__)
 
 if RICH_AVAILABLE:
     from rich.panel import Panel
-    from rich.table import Table
+    from rich.table import Table  # Ensure Table is imported unconditionally
 
 
 class VMController:
@@ -574,7 +574,8 @@ def start_vm_command(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 @vm_app.command("stop")
@@ -603,7 +604,8 @@ def stop_vm_command(
         console.print(f"[bold red]:x: Error stopping VM:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 @vm_app.command("status")
@@ -618,7 +620,7 @@ def vm_status_command(
         domain = find_vm(conn, vm_name)
         
         # Get basic VM information
-        is_active = domain.isActive()
+        is_active: bool = domain.isActive()
         state_str = "Running" if is_active else "Stopped"
         
         if RICH_AVAILABLE:
@@ -647,7 +649,8 @@ def vm_status_command(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 @vm_app.command("snapshots")
@@ -666,7 +669,8 @@ def list_vm_snapshots(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 @vm_app.command("revert")
@@ -689,7 +693,8 @@ def revert_vm_snapshot(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 # --- Utility Commands ---
@@ -760,7 +765,8 @@ def setup_user(
         console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
         raise typer.Exit(code=1)
     finally:
-        close_libvirt(conn)
+        if conn is not None:
+            close_libvirt(conn)
 
 
 if __name__ == "__main__":
