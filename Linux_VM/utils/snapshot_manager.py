@@ -129,7 +129,15 @@ class SnapshotManager:
             console.print(f"  [yellow]:warning: QEMU Agent: Unexpected error during filesystem freeze: {e}[/]", style="yellow")
             self.logger.error(f"Unexpected error in qemu_agent_fsfreeze: {e}", exc_info=True)
             return False
-    
+    def cleanup_old_snapshots(self, domain: libvirt.virDomain, keep_count: int = 5) -> None:
+        """
+        Public method to clean up old snapshot files.
+        
+        Args:
+            domain: The libvirt domain object
+            keep_count: Number of recent snapshots to keep
+        """
+        return self._cleanup_old_snapshots(domain, keep_count)
     def qemu_agent_fsthaw(self, domain: libvirt.virDomain) -> bool:
         """
         Thaw filesystems using QEMU Guest Agent after snapshot creation.
