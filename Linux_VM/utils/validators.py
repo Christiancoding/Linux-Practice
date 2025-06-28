@@ -440,14 +440,14 @@ class ChallengeValidator:
             ChallengeValidationError: If file content doesn't match expectation
         """
         file_path = step_data.get("path")
-        search_content = step_data.get("content")
+        search_content = step_data.get("text")
         should_contain = step_data.get("should_contain", True)
         
         if not file_path:
             raise ChallengeValidationError(["'check_file_contains' step missing required 'path' field."])
         
-        if not search_content:
-            raise ChallengeValidationError(["'check_file_contains' step missing required 'content' field."])
+        if not search_content and not step_data.get("matches_regex"):
+            raise ChallengeValidationError(["'check_file_contains' step missing required 'text' or 'matches_regex' field."])
         
         # Use grep to search for content in the file
         command = f"grep -F '{search_content}' '{file_path}'"
