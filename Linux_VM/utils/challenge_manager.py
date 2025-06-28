@@ -149,7 +149,7 @@ hints:
                     if validation_steps:
                         normalized_data['validation'] = validation_steps
 
-        # Use normalized_data for the rest of the validation instead of challenge_data
+        challenge_data = normalized_data
         
         # --- Required Fields ---
         required_fields: Dict[str, type] = {
@@ -291,6 +291,29 @@ hints:
                                         re.compile(regex_value)
                                     except re.error as regex_err:
                                         errors.append(f"{step_label}: Invalid regex '{regex_value}': {regex_err}")
+                        elif step_type == 'ensure_group_exists':
+                            if 'group' not in step:
+                                errors.append(f"{step_label}: Missing 'group'")
+                        elif step_type == 'ensure_user_exists':
+                            if 'user' not in step:
+                                errors.append(f"{step_label}: Missing 'user'")
+                        elif step_type == 'check_user_group':
+                            check_type = step.get('check_type')
+                            if not check_type:
+                                errors.append(f"{step_label}: Missing 'check_type'")
+                            elif check_type in ['user_exists', 'user_primary_group', 'user_in_group', 'user_shell']:
+                                if 'username' not in step:
+                                    errors.append(f"{step_label}: Missing 'username'")
+                                if check_type in ['user_primary_group', 'user_in_group'] and 'group' not in step:
+                                    errors.append(f"{step_label}: Missing 'group'")
+                                if check_type == 'user_shell' and 'shell' not in step:
+                                    errors.append(f"{step_label}: Missing 'shell'")
+                        elif step_type == 'check_command':
+                            if 'command' not in step:
+                                errors.append(f"{step_label}: Missing 'command'")
+                        elif step_type == 'check_history':
+                            if 'command_pattern' not in step:
+                                errors.append(f"{step_label}: Missing 'command_pattern'")
                         else:
                             errors.append(f"{step_label}: Unsupported validation type: '{step_type}'")
         
@@ -306,6 +329,12 @@ hints:
                     if step_type == 'run_command':
                         if 'command' not in step:
                             errors.append(f"{step_label}: Missing 'command'")
+                    elif step_type == 'ensure_group_exists':
+                        if 'group' not in step:
+                            errors.append(f"{step_label}: Missing 'group'")
+                    elif step_type == 'ensure_user_exists':
+                        if 'user' not in step:
+                            errors.append(f"{step_label}: Missing 'user'")
                     else:
                         errors.append(f"{step_label}: Unsupported setup type: '{step_type}'")
         

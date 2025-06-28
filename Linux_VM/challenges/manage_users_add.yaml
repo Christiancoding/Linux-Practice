@@ -17,8 +17,7 @@ user_action_simulation: "sudo useradd -m testuser" # -m creates home dir
 validation:
   - type: run_command
     command: "id testuser" # Check if user exists and get uid/gid info
-    success_criteria:
-      exit_status: 0 # Command should succeed if user exists
+    expected_exit_code: 0
       # Optional: Could add regex check for uid/gid if needed
       # stdout_matches_regex: "uid=\\d+\\(testuser\\) gid=\\d+\\(testuser\\)"
   - type: check_file_exists
