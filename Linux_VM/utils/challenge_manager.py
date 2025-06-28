@@ -124,8 +124,8 @@ hints:
         # --- NORMALIZATION: Handle alternative field naming conventions ---
         normalized_data = dict(challenge_data)
         errors: List[str] = []
+        
         # Handle alternative field naming conventions for backward compatibility
-        normalized_data = dict(challenge_data)
         if 'challenge_id' in normalized_data and 'id' not in normalized_data:
             normalized_data['id'] = normalized_data['challenge_id']
         if 'title' in normalized_data and 'name' not in normalized_data:
@@ -193,7 +193,8 @@ hints:
         if 'id' in challenge_data and isinstance(challenge_data['id'], str):
             if not re.match(r'^[a-zA-Z0-9_-]+$', challenge_data['id']):
                 errors.append(f"'{filename}': ID must contain only alphanumeric characters, hyphens, and underscores")
-        
+        if 'task' in normalized_data and 'description' not in normalized_data:
+            normalized_data['description'] = normalized_data['task']
         # --- Score Validation ---
         if 'score' in challenge_data:
             try:
@@ -355,8 +356,7 @@ hints:
                     if cost < 0:
                         errors.append(f"{hint_label}: Cost must be non-negative")
         
-        return errors
-    
+        return errors, normalized_data
     # --- Challenge Loading ---
     
     def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict[str, Any]]:
@@ -401,7 +401,7 @@ hints:
                     continue
                 
                 # Validate structure before processing
-                validation_errors = self.validate_challenge_structure(challenge_data, yaml_file.name)
+                validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
                 if validation_errors:
                     error_panel_content = "\n".join([f"- {e}" for e in validation_errors])
                     if RICH_AVAILABLE:
@@ -418,6 +418,7 @@ hints:
                     skipped_count += 1
                     continue
                 
+                challenge_data = normalized_challenge_data
                 challenge_id = challenge_data['id']
                 
                 # Apply defaults and type conversions after validation
