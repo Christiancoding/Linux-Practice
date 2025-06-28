@@ -27,7 +27,7 @@ from .exceptions import (
     ChallengeLoadError
 )
 from .config import config
-from .ssh_manager import run_ssh_command, SSHCommandError
+from .ssh_manager import SSHCommandError
 
 # Set up module logger
 logger = logging.getLogger(__name__)
@@ -608,9 +608,10 @@ hints:
                     console.print("[yellow]Running setup command (Ensure challenge source is trusted!)[/]", style="yellow")
                 
                 try:
+                    from .ssh_manager import run_ssh_command
                     setup_result = run_ssh_command(vm_ip, ssh_user, ssh_key_path, command, verbose=False)
                 except SSHCommandError as e:
-                    raise PracticeToolError(f"Challenge setup failed: Error executing command '{command}': {e}") from e
+                    raise PracticeToolError(f"SSH command execution failed: {e}")
                 
                 if verbose:
                     from .ssh_manager import format_ssh_output

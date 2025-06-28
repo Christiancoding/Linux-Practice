@@ -38,3 +38,11 @@ Traceback (most recent call last):
     from utils.vm_manager import (
 ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
 2025-06-27 00:06:51,355 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-28 13:34:32,887 - __main__ - INFO: LPEM Application logging initialized
+2025-06-28 13:34:32,888 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-28 13:34:33,043 - __main__ - INFO: CLI interface loaded successfully
+2025-06-28 13:34:33,061 - utils.vm_manager - INFO: Connecting to libvirt at: qemu:///system
+2025-06-28 13:34:33,062 - utils.vm_manager - INFO: Successfully connected to libvirt host: retiredfan-Inspiron-3880
+2025-06-28 13:34:33,062 - utils.vm_manager - INFO: VM 'ubuntu24.04-2' found with state: shut off
+2025-06-28 13:34:33,076 - utils.vm_manager - INFO: Libvirt connection closed successfully
+2025-06-28 13:34:33,076 - __main__ - INFO: LPEM Application shutdown complete

@@ -328,6 +328,15 @@ class VMManager:
                 
         except libvirt.libvirtError as e:
             error_msg = f"Failed to start VM '{vm_name}': {e}"
+            
+            # Check for common permission issues
+            if "Permission denied" in str(e):
+                error_msg += "\n\nThis is likely a permission issue. Try:"
+                error_msg += "\n1. sudo usermod -a -G libvirt $USER"
+                error_msg += "\n2. Log out and back in"
+                error_msg += "\n3. Or run: sudo chown libvirt-qemu:libvirt /var/lib/libvirt/images/*.qcow2"
+                error_msg += "\n4. sudo chmod 660 /var/lib/libvirt/images/*.qcow2"
+            
             self.logger.error(error_msg)
             raise PracticeToolError(
                 error_msg,
