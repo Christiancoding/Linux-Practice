@@ -17,7 +17,7 @@ if sys.version_info < (3, 8):
 
 # Import libvirt for error code constants (with graceful fallback)
 try:
-    import libvirt
+    import libvirt # type: ignore
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.\n"
           "Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.", 
