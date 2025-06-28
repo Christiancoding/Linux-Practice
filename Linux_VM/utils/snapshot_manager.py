@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, List, Tuple, Any
 import logging
-
+from .config import LibvirtErrorCodes
 # Third-party imports
 try:
     import libvirt
@@ -32,21 +32,6 @@ from .config import config
 
 # Set up module logger
 logger = logging.getLogger(__name__)
-
-# Libvirt error codes for specific error handling
-try:
-    VIR_ERR_CONFIG_EXIST = getattr(libvirt, "VIR_ERR_CONFIG_EXIST", -1)
-    VIR_ERR_AGENT_UNRESPONSIVE = getattr(libvirt, "VIR_ERR_AGENT_UNRESPONSIVE", -1)
-    VIR_ERR_OPERATION_INVALID = getattr(libvirt, "VIR_ERR_OPERATION_INVALID", -1)
-    VIR_ERR_NO_DOMAIN_SNAPSHOT = getattr(libvirt, "VIR_ERR_NO_DOMAIN_SNAPSHOT", -1)
-except AttributeError:
-    # Fallback for older libvirt versions
-    if 'VIR_ERR_CONFIG_EXIST' not in globals():
-        VIR_ERR_CONFIG_EXIST = -1
-    if 'VIR_ERR_AGENT_UNRESPONSIVE' not in globals():
-        VIR_ERR_AGENT_UNRESPONSIVE = -1
-    if 'VIR_ERR_OPERATION_INVALID' not in globals():
-        VIR_ERR_OPERATION_INVALID = -1
 
 if RICH_AVAILABLE:
     from rich.panel import Panel
@@ -133,7 +118,7 @@ class SnapshotManager:
                 
         except libvirt.libvirtError as e:
             error_code = e.get_error_code()
-            if error_code == VIR_ERR_AGENT_UNRESPONSIVE and VIR_ERR_AGENT_UNRESPONSIVE != -1:
+            if error_code == LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE and LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE != -1:
                 console.print("  [yellow]:warning: QEMU Agent: Agent unresponsive, cannot freeze filesystems.[/]", style="yellow")
             else:
                 console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze failed: {e}[/]", style="yellow")
@@ -202,7 +187,7 @@ class SnapshotManager:
                 
         except libvirt.libvirtError as e:
             error_code = e.get_error_code()
-            if error_code == VIR_ERR_AGENT_UNRESPONSIVE and VIR_ERR_AGENT_UNRESPONSIVE != -1:
+            if error_code == LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE and LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE != -1:
                 console.print("  [yellow]:warning: QEMU Agent: Agent unresponsive, cannot thaw filesystems.[/]", style="yellow")
             else:
                 console.print(f"  [yellow]:warning: QEMU Agent: Filesystem thaw failed: {e}[/]", style="yellow")
@@ -388,13 +373,13 @@ class SnapshotManager:
             
         except libvirt.libvirtError as e:
             err_code = e.get_error_code()
-            if err_code == VIR_ERR_CONFIG_EXIST and VIR_ERR_CONFIG_EXIST != -1:
+            if err_code == LibvirtErrorCodes.VIR_ERR_CONFIG_EXIST and LibvirtErrorCodes.VIR_ERR_CONFIG_EXIST != -1:
                 raise SnapshotOperationError(f"Snapshot metadata '{snapshot_name}' already exists. Delete it first.") from e
-            elif err_code == VIR_ERR_AGENT_UNRESPONSIVE and VIR_ERR_AGENT_UNRESPONSIVE != -1 and quiesce_flag_used:
+            elif err_code == LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE and LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE != -1 and quiesce_flag_used:
                 msg = f"Snapshot creation failed: Libvirt QUIESCE flag requires guest agent interaction, but agent was unresponsive ({e})"
                 console.print(f"[bold red]Error:[/bold red] {msg}", style="red")
                 raise SnapshotOperationError(msg) from e
-            elif err_code == VIR_ERR_OPERATION_INVALID and VIR_ERR_OPERATION_INVALID != -1:
+            elif err_code == LibvirtErrorCodes.VIR_ERR_OPERATION_INVALID and LibvirtErrorCodes.VIR_ERR_OPERATION_INVALID != -1:
                 msg = f"Snapshot creation failed (Operation Invalid): Check snapshot flags and disk configuration. Libvirt error: {e}"
                 console.print(f"[bold red]Error:[/bold red] {msg}", style="red")
                 raise SnapshotOperationError(msg) from e
@@ -446,7 +431,7 @@ class SnapshotManager:
             
         except libvirt.libvirtError as e:
             err_code = e.get_error_code()
-            if err_code == VIR_ERR_NO_DOMAIN_SNAPSHOT and VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
+            if err_code == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT and LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
                 raise SnapshotOperationError(f"Snapshot '{snapshot_name}' not found.") from e
             else:
                 raise SnapshotOperationError(f"Error reverting to snapshot '{snapshot_name}': {e}") from e
@@ -492,7 +477,7 @@ class SnapshotManager:
             
         except libvirt.libvirtError as e:
             err_code = e.get_error_code()
-            if err_code == VIR_ERR_NO_DOMAIN_SNAPSHOT and VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
+            if err_code == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT and LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
                 raise SnapshotOperationError(f"Snapshot '{snapshot_name}' not found.") from e
             else:
                 raise SnapshotOperationError(f"Error deleting snapshot '{snapshot_name}': {e}") from e
@@ -561,7 +546,7 @@ class SnapshotManager:
                     details = desc_node.text.strip() if desc_node is not None and desc_node.text else "[dim]No description[/]"
                     
                 except libvirt.libvirtError as e_lookup:
-                    if e_lookup.get_error_code() == VIR_ERR_NO_DOMAIN_SNAPSHOT and VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
+                    if e_lookup.get_error_code() == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT and LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
                         details = "[yellow](Disappeared)[/]"
                     else:
                         details = f"[red](Error looking up: {e_lookup})[/]"
