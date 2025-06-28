@@ -9,9 +9,8 @@ reversion, and QEMU guest agent filesystem operations for consistent snapshots.
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Tuple, Any
 import logging
-import json
 
 # Third-party imports
 try:
@@ -119,7 +118,9 @@ class SnapshotManager:
                     console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected string response: {response}[/]", style="yellow")
                     return False
             elif isinstance(response, dict):
-                frozen_count = response.get('return', 0)
+                # Explicitly type response for static analysis
+                response_dict: Dict[str, Any] = response
+                frozen_count = response_dict.get('return', 0)
                 if frozen_count > 0:
                     console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems frozen successfully (Count: {frozen_count}).[/]")
                     return True

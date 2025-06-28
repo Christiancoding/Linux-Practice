@@ -620,7 +620,7 @@ def vm_status_command(
         domain = find_vm(conn, vm_name)
         
         # Get basic VM information
-        is_active: bool = domain.isActive()
+        is_active: bool = bool(domain.isActive())
         state_str = "Running" if is_active else "Stopped"
         
         if RICH_AVAILABLE:
