@@ -34,7 +34,13 @@ from rich.console import Console
 console: Console
 
 if RICH_AVAILABLE:
-    pass
+    from rich.panel import Panel
+    from rich.table import Table
+else:
+    # Import fallback components from console_helper
+    from utils.console_helper import Panel, Table
+    Panel = Panel
+    Table = Table
 from utils.config import config
 from utils.exceptions import (
     PracticeToolError,
@@ -439,7 +445,7 @@ def run_challenge(
         challenge_passed = all_validations_passed
         final_score = current_score if challenge_passed else 0
         
-        from ..utils.challenge_manager import ChallengeManager
+        from utils.challenge_manager import ChallengeManager
         manager = ChallengeManager()
         manager.display_challenge_results(challenge, challenge_id, challenge_passed, 
                                         final_score, hints_used_count, total_hint_cost)
@@ -488,6 +494,10 @@ def create_challenge_template_cmd(
     )] = Path("challenge_template.yaml")
 ):
     """Creates a template YAML file for defining a new challenge."""
+    if RICH_AVAILABLE:
+        from rich.syntax import Syntax
+        from rich.panel import Panel
+        from rich.prompt import Confirm
     try:
         if output_file.exists():
             if RICH_AVAILABLE:
@@ -620,7 +630,7 @@ def cleanup_snapshots_command(
         
         from utils.snapshot_manager import SnapshotManager
         manager = SnapshotManager()
-        manager._cleanup_old_snapshots(domain, keep_count)
+        manager.cleanup_old_snapshots(domain, keep_count)
         
         console.print(f"[green]:heavy_check_mark: Cleaned up old snapshots for VM '[cyan]{vm_name}[/cyan]' (kept {keep_count} recent).[/]")
         

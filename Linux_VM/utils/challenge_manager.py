@@ -700,6 +700,7 @@ hints:
         result_panel_style = "green" if challenge_passed else "red"
         
         if RICH_AVAILABLE:
+            from rich.table import Table
             result_table = Table.grid(padding=(0, 2))
             result_table.add_column(style="bold")
             result_table.add_column()
