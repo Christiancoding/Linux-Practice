@@ -10,7 +10,7 @@ Provides robust error handling and user-friendly status reporting.
 import sys
 import time
 import logging
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List, Any, Tuple, cast
 from pathlib import Path
 
 # Ensure Python 3.8+ compatibility
@@ -188,8 +188,11 @@ class VMManager:
             self.logger.info("Retrieving VM list from libvirt")
             
             # Get all domains (running and defined)
-            active_domains = conn.listDomainsID()
-            defined_domains: List[str] = conn.listDefinedDomains()
+            active_domains: List[int] = conn.listDomainsID()
+            defined_domains = cast(List[str], conn.listDefinedDomains())
+            # Optionally, cast for static type checkers:
+            # from typing import cast
+            # defined_domains = cast(List[str], conn.listDefinedDomains())
             
             if not active_domains and not defined_domains:
                 console.print("[yellow]No virtual machines found in libvirt.[/]")
@@ -365,7 +368,7 @@ class VMManager:
             # Method 1: Try libvirt guest agent
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT)  # type: ignore
-                interfaces = interfaces_raw  # type: Dict[str, Any]
+                interfaces = interfaces_raw
                 ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                 if ip_address:
                     self.logger.info(f"Got IP from guest agent for '{vm_name}': {ip_address}")
