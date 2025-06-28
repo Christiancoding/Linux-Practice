@@ -14,7 +14,7 @@ import logging
 from .config import LibvirtErrorCodes
 # Third-party imports
 try:
-    import libvirt
+    import libvirt # type: ignore
 except ImportError:
     raise ImportError("libvirt-python is required. Install with: pip install libvirt-python")
 
@@ -69,13 +69,14 @@ class SnapshotManager:
         try:
             console.print("  :ice_cube: Attempting QEMU Agent filesystem freeze...")
             
-            # Check if QEMU agent command is available
-            if not hasattr(domain, 'qemuAgentCommand'):
+            # Safely get qemuAgentCommand method
+            qemu_agent_cmd = getattr(domain, "qemuAgentCommand", None)
+            if not callable(qemu_agent_cmd):
                 console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand not available on this libvirt version.[/]", style="yellow")
                 return False
                 
             # Execute guest agent filesystem freeze command
-            response = domain.qemuAgentCommand(
+            response = qemu_agent_cmd(
                 '{"execute":"guest-fsfreeze-freeze"}',
                 timeout=10,  # 10 second timeout
                 flags=0
@@ -155,13 +156,14 @@ class SnapshotManager:
         try:
             console.print("  :fire: Attempting QEMU Agent filesystem thaw...")
             
-            # Check if QEMU agent command is available
-            if not hasattr(domain, 'qemuAgentCommand'):
+            # Safely get qemuAgentCommand method
+            qemu_agent_cmd = getattr(domain, "qemuAgentCommand", None)
+            if not callable(qemu_agent_cmd):
                 console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand not available on this libvirt version.[/]", style="yellow")
                 return False
             
             # Execute guest agent filesystem thaw command
-            response = domain.qemuAgentCommand(
+            response = qemu_agent_cmd(
                 '{"execute":"guest-fsfreeze-thaw"}',
                 timeout=10,  # 10 second timeout
                 flags=0

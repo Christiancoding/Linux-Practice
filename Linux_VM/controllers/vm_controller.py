@@ -375,7 +375,7 @@ def run_challenge(
         wait_for_vm_ready(str(vm_ip), ssh_user, ssh_key_path)
         
         # Verify SSH key permissions
-        if ssh_key_path.stat().st_mode & config.ssh.KEY_PERMISSIONS_MASK != 0o400:
+        if (ssh_key_path.stat().st_mode & config.ssh.KEY_PERMISSIONS_MASK) != 0:
             raise PracticeToolError(f"SSH key '{ssh_key_path}' permissions are too open. Set to 0400.")
 
         # Test SSH connection
