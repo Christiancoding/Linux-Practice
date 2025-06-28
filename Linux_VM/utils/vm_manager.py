@@ -398,12 +398,6 @@ class VMManager:
             error_msg = f"Unexpected error getting IP for VM '{vm_name}': {e}"
             self.logger.error(error_msg, exc_info=True)
             raise NetworkError(error_msg, host=str(vm_name)) from e
-    def get_vm_ip_address(domain: libvirt.virDomain) -> str:
-        """Backward compatibility function for IP retrieval with just domain parameter."""
-        # Get the connection from the domain
-        conn = domain.connect()
-        manager = VMManager()
-        return manager.get_vm_ip(conn, domain)
     def _extract_ip_from_interfaces(self, interfaces: Dict[str, Any], vm_name: str) -> Optional[str]:
         """
         Extract IPv4 address from libvirt interface information.

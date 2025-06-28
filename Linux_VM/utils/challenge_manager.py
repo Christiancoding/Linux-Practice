@@ -288,7 +288,7 @@ hints:
         Raises:
             ChallengeLoadError: If directory doesn't exist or other loading errors
         """
-        challenges: Dict[str, Dict] = {}
+        challenges: Dict[str, Dict[str, Any]] = {}
         
         if not challenges_dir.is_dir():
             raise ChallengeLoadError(f"Challenges directory not found: '{challenges_dir}'")
@@ -389,7 +389,7 @@ hints:
     
     # --- Challenge Display and Management ---
     
-    def list_challenges(self, challenges: Dict[str, Dict]) -> None:
+    def list_challenges(self, challenges: Dict[str, Dict[str, Any]]) -> None:
         """
         Display a formatted list of available challenges.
         
@@ -432,7 +432,6 @@ hints:
             console.print("\nAvailable Practice Challenges:")
             console.print("-" * 80)
             for challenge_id, challenge in sorted(challenges.items()):
-                concepts = ", ".join(challenge.get('concepts', [])[:2])
                 console.print(f"{challenge_id:20} | {challenge.get('name', 'N/A'):25} | {challenge.get('difficulty', 'N/A'):10} | {challenge.get('score', 0):>3}")
             console.print("-" * 80)
     

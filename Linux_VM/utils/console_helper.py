@@ -26,7 +26,6 @@ try:
     from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
     from rich.syntax import Syntax
     from rich.markdown import Markdown
-    from rich.text import Text
     from rich.prompt import Prompt, Confirm
     _rich_available = True
 except ImportError:
