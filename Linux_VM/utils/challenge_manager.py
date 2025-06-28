@@ -121,8 +121,35 @@ hints:
         Returns:
             List[str]: List of validation errors (empty if valid)
         """
+        # --- NORMALIZATION: Handle alternative field naming conventions ---
+        normalized_data = dict(challenge_data)
         errors: List[str] = []
-        
+        # Handle alternative field naming conventions for backward compatibility
+        normalized_data = dict(challenge_data)
+        if 'challenge_id' in normalized_data and 'id' not in normalized_data:
+            normalized_data['id'] = normalized_data['challenge_id']
+        if 'title' in normalized_data and 'name' not in normalized_data:
+            normalized_data['name'] = normalized_data['title']
+
+        # Handle nested validation structure
+        if 'validation' in normalized_data:
+            validation = normalized_data['validation']
+            if isinstance(validation, dict):
+                # Handle nested validation structure like final_state_checks
+                if 'final_state_checks' in validation:
+                    normalized_data['validation'] = validation['final_state_checks']
+                elif 'process_validation_checks' in validation:
+                    normalized_data['validation'] = validation['process_validation_checks']
+                else:
+                    # Convert any nested dict to a list of its values
+                    validation_steps = []
+                    for key, value in validation.items():
+                        if isinstance(value, list):
+                            validation_steps.extend(value)
+                    if validation_steps:
+                        normalized_data['validation'] = validation_steps
+
+        # Use normalized_data for the rest of the validation instead of challenge_data
         
         # --- Required Fields ---
         required_fields: Dict[str, type] = {
@@ -194,6 +221,12 @@ hints:
                         if step_type == 'run_command':
                             if 'command' not in step:
                                 errors.append(f"{step_label}: Missing 'command'")
+                        elif step_type == 'ensure_group_exists':
+                            if 'group' not in step:
+                                errors.append(f"{step_label}: Missing 'group'")
+                        elif step_type == 'ensure_user_exists':
+                            if 'user' not in step:
+                                errors.append(f"{step_label}: Missing 'user'")
                             if 'expected_exit_code' in step:
                                 try:
                                     if step['expected_exit_code'] is None or not isinstance(step['expected_exit_code'], (int, str)):
@@ -208,6 +241,23 @@ hints:
                                 valid_statuses = ['active', 'inactive', 'failed', 'enabled', 'disabled']
                                 if step['expected_status'] not in valid_statuses:
                                     errors.append(f"{step_label}: 'expected_status' must be one of {valid_statuses}")
+                        elif step_type == 'check_user_group':
+                            check_type = step.get('check_type')
+                            if not check_type:
+                                errors.append(f"{step_label}: Missing 'check_type'")
+                            elif check_type in ['user_exists', 'user_primary_group', 'user_in_group', 'user_shell']:
+                                if 'username' not in step:
+                                    errors.append(f"{step_label}: Missing 'username'")
+                                if check_type in ['user_primary_group', 'user_in_group'] and 'group' not in step:
+                                    errors.append(f"{step_label}: Missing 'group'")
+                                if check_type == 'user_shell' and 'shell' not in step:
+                                    errors.append(f"{step_label}: Missing 'shell'")
+                        elif step_type == 'check_command':
+                            if 'command' not in step:
+                                errors.append(f"{step_label}: Missing 'command'")
+                        elif step_type == 'check_history':
+                            if 'command_pattern' not in step:
+                                errors.append(f"{step_label}: Missing 'command_pattern'")
                         elif step_type == 'check_port_listening':
                             if 'port' not in step:
                                 errors.append(f"{step_label}: Missing 'port'")
@@ -222,11 +272,16 @@ hints:
                                         errors.append(f"{step_label}: Port must be a valid integer")
                                 except (ValueError, TypeError):
                                     errors.append(f"{step_label}: Port must be a valid integer")
-                        elif step_type in ['check_file_exists', 'check_file_contains']:
-                            if 'file_path' not in step:
-                                errors.append(f"{step_label}: Missing 'file_path'")
-                            if step_type == 'check_file_contains' and 'search_string' not in step:
-                                errors.append(f"{step_label}: Missing 'search_string'")
+                        elif step_type == 'check_file_exists':
+                            if 'path' not in step:
+                                errors.append(f"{step_label}: Missing 'path'")
+                        elif step_type == 'check_file_contains':
+                            if 'path' not in step:
+                                errors.append(f"{step_label}: Missing 'path'")
+                            if 'text' not in step and 'matches_regex' not in step:
+                                errors.append(f"{step_label}: Missing 'text' or 'matches_regex'")
+                            if 'text' in step and 'matches_regex' in step:
+                                errors.append(f"{step_label}: Cannot have both 'text' and 'matches_regex'")
                             if 'matches_regex' in step:
                                 regex_value: str = step['matches_regex']
                                 if not isinstance(regex_value, str):
