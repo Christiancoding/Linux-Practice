@@ -95,9 +95,14 @@ class LPEMApplication:
             
             # Validate working directory permissions
             current_dir = Path.cwd()
-            if not current_dir.is_dir() or not (current_dir / 'controllers').exists():
+            script_dir = Path(__file__).parent
+            expected_controllers = script_dir / 'controllers'
+
+            if not expected_controllers.exists():
                 print("Warning: Application may not be running from the correct directory.")
-                print("Expected to find 'controllers' subdirectory in current working directory.")
+                print(f"Expected to find 'controllers' subdirectory at: {expected_controllers}")
+                print(f"Current working directory: {current_dir}")
+                print(f"Script directory: {script_dir}")
         
         except Exception as e:
             if self.debug:
@@ -113,6 +118,15 @@ class LPEMApplication:
         """
         try:
             self.logger.info("Starting Linux+ Practice Environment Manager")
+            
+            # Change to script directory to ensure proper imports
+            script_dir = Path(__file__).parent
+            original_cwd = Path.cwd()
+            
+            if original_cwd != script_dir:
+                self.logger.info(f"Changing directory from {original_cwd} to {script_dir}")
+                import os
+                os.chdir(script_dir)
             
             # Import and run the main CLI application
             from controllers.vm_controller import app

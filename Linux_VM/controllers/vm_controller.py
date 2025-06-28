@@ -49,9 +49,8 @@ from utils.vm_manager import (
     list_vms,
     start_vm,
     wait_for_vm_ready,
-    get_vm_ip_address
+    get_vm_ip
 )
-# ... continue changing all ..utils imports to just utils
 from utils.ssh_manager import (
     run_ssh_command
 )
@@ -359,7 +358,7 @@ def run_challenge(
             console.print(f"[dim]VM '[cyan]{vm_name}[/cyan]' is already running.[/]")
 
         console.print(":globe_with_meridians: Detecting VM IP address...")
-        vm_ip  = get_vm_ip_address(domain)
+        vm_ip = get_vm_ip(conn, domain)
         if not vm_ip:
             raise PracticeToolError("Could not determine VM IP address.")
 
@@ -607,7 +606,30 @@ def stop_vm_command(
         if conn is not None:
             close_libvirt(conn)
 
-
+@vm_app.command("cleanup-snapshots")
+def cleanup_snapshots_command(
+    vm_name: Annotated[str, typer.Argument(help="Name of the VM to cleanup snapshots for.")],
+    keep_count: Annotated[int, typer.Option("--keep", help="Number of recent snapshots to keep.")] = 3,
+    libvirt_uri: Annotated[str, typer.Option("--uri", help="Libvirt connection URI.")] = config.vm.LIBVIRT_URI
+):
+    """Clean up old snapshot files for a virtual machine."""
+    conn = None
+    try:
+        conn = connect_libvirt(libvirt_uri)
+        domain = find_vm(conn, vm_name)
+        
+        from utils.snapshot_manager import SnapshotManager
+        manager = SnapshotManager()
+        manager._cleanup_old_snapshots(domain, keep_count)
+        
+        console.print(f"[green]:heavy_check_mark: Cleaned up old snapshots for VM '[cyan]{vm_name}[/cyan]' (kept {keep_count} recent).[/]")
+        
+    except PracticeToolError as e:
+        console.print(f"[bold red]:x: Error:[/bold red] {e}", style="red")
+        raise typer.Exit(code=1)
+    finally:
+        if conn is not None:
+            close_libvirt(conn)
 @vm_app.command("status")
 def vm_status_command(
     vm_name: Annotated[str, typer.Argument(help="Name of the VM to check.")],
@@ -634,7 +656,7 @@ def vm_status_command(
             if is_active:
                 # Try to get IP address
                 try:
-                    vm_ip = get_vm_ip_address(domain)
+                    vm_ip = get_vm_ip(conn, domain)
                     if vm_ip:
                         info_table.add_row("IP Address:", f"[blue]{vm_ip}[/]")
                 except Exception:
@@ -732,7 +754,7 @@ def setup_user(
             console.print(f":rocket: Starting VM '[cyan]{vm_name}[/cyan]'...")
             start_vm(domain)
         
-        vm_ip = get_vm_ip_address(domain)
+        vm_ip = get_vm_ip(conn, domain)
         if not vm_ip:
             raise PracticeToolError("Could not determine VM IP address.")
         

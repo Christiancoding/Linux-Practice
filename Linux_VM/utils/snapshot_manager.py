@@ -69,13 +69,13 @@ class SnapshotManager:
         try:
             console.print("  :ice_cube: Attempting QEMU Agent filesystem freeze...")
             
-            # Execute guest agent filesystem freeze command
-            qemu_agent_cmd = getattr(domain, "qemuAgentCommand", None)
-            if not callable(qemu_agent_cmd):
-                console.print("[red]QEMU Agent command not available on this libvirt domain object.[/]", style="red")
-                self.logger.error("qemuAgentCommand is not available on the domain object.")
+            # Check if QEMU agent command is available
+            if not hasattr(domain, 'qemuAgentCommand'):
+                console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand not available on this libvirt version.[/]", style="yellow")
                 return False
-            response = qemu_agent_cmd(
+                
+            # Execute guest agent filesystem freeze command
+            response = domain.qemuAgentCommand(
                 '{"execute":"guest-fsfreeze-freeze"}',
                 timeout=10,  # 10 second timeout
                 flags=0
@@ -99,13 +99,10 @@ class SnapshotManager:
                         console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned no frozen filesystems: {response}[/]", style="yellow")
                         return False
                 except (json.JSONDecodeError, KeyError):
-                    # If JSON parsing fails, return as unexpected string response
                     console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected string response: {response}[/]", style="yellow")
                     return False
             elif isinstance(response, dict):
-                # Explicitly type response for static analysis
-                response_dict: Dict[str, Any] = response
-                frozen_count = response_dict.get('return', 0)
+                frozen_count = response.get('return', 0)
                 if frozen_count > 0:
                     console.print(f"  [green]:heavy_check_mark: QEMU Agent: Filesystems frozen successfully (Count: {frozen_count}).[/]")
                     return True
@@ -115,7 +112,11 @@ class SnapshotManager:
             else:
                 console.print(f"  [yellow]:warning: QEMU Agent: Filesystem freeze returned unexpected response type: {type(response)} {response}[/]", style="yellow")
                 return False
-                
+                    
+        except AttributeError as attr_err:
+            console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand method not available on domain object.[/]", style="yellow")
+            self.logger.warning(f"QEMU agent method not available: {attr_err}")
+            return False
         except libvirt.libvirtError as e:
             error_code = e.get_error_code()
             if error_code == LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE and LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE != -1:
@@ -145,6 +146,11 @@ class SnapshotManager:
             
         try:
             console.print("  :fire: Attempting QEMU Agent filesystem thaw...")
+            
+            # Check if QEMU agent command is available
+            if not hasattr(domain, 'qemuAgentCommand'):
+                console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand not available on this libvirt version.[/]", style="yellow")
+                return False
             
             # Execute guest agent filesystem thaw command
             response = domain.qemuAgentCommand(
@@ -184,7 +190,11 @@ class SnapshotManager:
             else:
                 console.print(f"  [yellow]:warning: QEMU Agent: Filesystem thaw returned unexpected response type: {type(response)} {response}[/]", style="yellow")
                 return False
-                
+                    
+        except AttributeError as attr_err:
+            console.print("  [yellow]:warning: QEMU Agent: qemuAgentCommand method not available on domain object.[/]", style="yellow")
+            self.logger.warning(f"QEMU agent method not available: {attr_err}")
+            return False
         except libvirt.libvirtError as e:
             error_code = e.get_error_code()
             if error_code == LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE and LibvirtErrorCodes.VIR_ERR_AGENT_UNRESPONSIVE != -1:
@@ -226,13 +236,10 @@ class SnapshotManager:
             # Create table for disk planning display
             disk_table = None
             if RICH_AVAILABLE:
-                if RICH_AVAILABLE:
-                    disk_table = Table(title="Snapshot Disk Planning", show_header=True, header_style="magenta")
-                    disk_table.add_column("Target Dev")
-                    disk_table.add_column("Original Disk") 
-                    disk_table.add_column("Snapshot Disk")
-                else:
-                    disk_table = None
+                disk_table = Table(title="Snapshot Disk Planning", show_header=True, header_style="magenta")
+                disk_table.add_column("Target Dev")
+                disk_table.add_column("Original Disk") 
+                disk_table.add_column("Snapshot Disk")
             
             for device in tree.findall('devices/disk'):
                 disk_type = device.get('type')
@@ -257,15 +264,38 @@ class SnapshotManager:
                     if original_disk_path_str is None:
                         console.print(f"[yellow]Warning:[/yellow] Disk '{target_dev}' source file attribute is missing, skipping snapshot for this disk.", style="yellow")
                         continue
+                    
+                    # Initialize the path variable for this iteration
                     original_disk_path = Path(original_disk_path_str).resolve()
                     original_disk_dir = original_disk_path.parent
+                    
+                    # Validate that the source file exists
+                    if not original_disk_path.exists():
+                        raise SnapshotOperationError(
+                            f"Base disk file does not exist: {original_disk_path}. "
+                            f"VM configuration may be corrupted. Please check the VM disk configuration."
+                        )
                     
                     if not original_disk_dir.is_dir():
                         raise SnapshotOperationError(f"Directory '{original_disk_dir}' for base disk '{original_disk_path.name}' (target: {target_dev}) does not exist.")
                     
-                    # Generate snapshot file path
-                    timestamp_suffix = int(time.time())
-                    snapshot_disk_name = f"{original_disk_path.stem}-{snapshot_name}-{timestamp_suffix}.qcow2"
+                    # Generate clean snapshot file path
+                    base_name = original_disk_path.stem
+                    # Clean the base name by removing previous snapshot suffixes
+                    if '-practice' in base_name or '-snap' in base_name:
+                        # Find the first occurrence of a snapshot pattern and truncate there
+                        base_parts = base_name.split('-')
+                        clean_parts = []
+                        for part in base_parts:
+                            if any(x in part.lower() for x in ['practice', 'snapshot', 'external', 'snap']):
+                                break
+                            clean_parts.append(part)
+                        base_name = '-'.join(clean_parts) if clean_parts else base_parts[0]
+
+                    # Create a short, unique snapshot filename
+                    import hashlib
+                    unique_id = hashlib.md5(f"{snapshot_name}-{time.time()}".encode()).hexdigest()[:8]
+                    snapshot_disk_name = f"{base_name}-{target_dev}-snap-{unique_id}.qcow2"
                     snapshot_disk_path = original_disk_dir / snapshot_disk_name
                     snapshot_disk_files.append(str(snapshot_disk_path))
                     
@@ -297,11 +327,11 @@ class SnapshotManager:
             
             # Generate final snapshot XML
             snapshot_xml = f"""<domainsnapshot>
-  <name>{snapshot_name}</name>
-  <description>External snapshot for practice session (Agent Freeze: {agent_frozen})</description>
-  <disks>
-{disks_xml}  </disks>
-</domainsnapshot>"""
+    <name>{snapshot_name}</name>
+    <description>External snapshot for practice session (Agent Freeze: {agent_frozen})</description>
+    <disks>
+    {disks_xml}  </disks>
+    </domainsnapshot>"""
             
             self.logger.debug(f"Generated snapshot XML for {disk_count} disks")
             return snapshot_xml, snapshot_disk_files
@@ -327,6 +357,7 @@ class SnapshotManager:
         Raises:
             SnapshotOperationError: If snapshot creation fails
         """
+        self._cleanup_old_snapshots(domain)
         if not domain:
             raise PracticeToolError("Invalid VM domain provided to create_external_snapshot.")
         
@@ -564,6 +595,43 @@ class SnapshotManager:
                 
         except libvirt.libvirtError as e:
             raise PracticeToolError(f"Error listing snapshots for VM '{domain.name()}': {e}") from e
+    def _cleanup_old_snapshots(self, domain: libvirt.virDomain, keep_count: int = 5) -> None:
+        """
+        Clean up old snapshot files to prevent disk space issues.
+        
+        Args:
+            domain: The libvirt domain object
+            keep_count: Number of recent snapshots to keep
+        """
+        try:
+            # Get VM disk directory
+            raw_xml = domain.XMLDesc(0)
+            tree = ET.fromstring(raw_xml)
+            
+            for device in tree.findall('devices/disk'):
+                if device.get('type') == 'file' and device.get('device') == 'disk':
+                    source_node = device.find('source')
+                    if source_node is not None and 'file' in source_node.attrib:
+                        disk_path = Path(source_node.get('file'))
+                        disk_dir = disk_path.parent
+                        
+                        # Find all snapshot files for this VM
+                        vm_base = disk_path.stem.split('-')[0]  # Get just the VM name part
+                        snapshot_files = list(disk_dir.glob(f"{vm_base}-*-snap-*.qcow2"))
+                        
+                        # Sort by modification time (newest first)
+                        snapshot_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+                        
+                        # Remove old snapshots beyond keep_count
+                        for old_file in snapshot_files[keep_count:]:
+                            try:
+                                old_file.unlink()
+                                self.logger.info(f"Cleaned up old snapshot file: {old_file.name}")
+                            except OSError as e:
+                                self.logger.warning(f"Could not remove old snapshot file {old_file}: {e}")
+                                
+        except Exception as e:
+            self.logger.warning(f"Error during snapshot cleanup: {e}")
 
 
 # Convenience functions for backward compatibility with ww.py
