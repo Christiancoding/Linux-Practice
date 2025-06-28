@@ -119,13 +119,14 @@ class SSHCommandError(PracticeToolError):
     including exit status, stderr output, and connection details.
     """
     
-    def __init__(self, command: str, exit_status: Optional[int] = None,
+    def __init__(self, command: str, msg: Optional[str] = None, exit_status: Optional[int] = None,
                  stderr: Optional[str] = None, host: Optional[str] = None):
         """
         Initialize SSH command error exception.
         
         Args:
             command: The command that failed to execute
+            msg: Optional custom error message
             exit_status: Optional exit status code from command
             stderr: Optional stderr output from command
             host: Optional hostname where command was executed
@@ -138,9 +139,12 @@ class SSHCommandError(PracticeToolError):
         if host:
             context["host"] = host
         
-        message = f"SSH command failed: {command}"
-        if exit_status is not None:
-            message += f" (exit code: {exit_status})"
+        if msg:
+            message = msg
+        else:
+            message = f"SSH command failed: {command}"
+            if exit_status is not None:
+                message += f" (exit code: {exit_status})"
         
         super().__init__(message, error_code="SSH_COMMAND_FAILED", context=context)
         self.command = command

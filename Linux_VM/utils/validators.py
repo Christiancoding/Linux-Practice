@@ -121,8 +121,9 @@ class ChallengeValidator:
         if 'concepts' in challenge_data:
             if not isinstance(challenge_data['concepts'], list):
                 errors.append(f"'{filename}': 'concepts' must be a list of strings.")
-            elif not all(isinstance(c, str) for c in challenge_data['concepts']):
-                errors.append(f"'{filename}': All items in 'concepts' must be strings.")
+            else:
+                if not all(isinstance(c, str) for c in challenge_data['concepts']):
+                    errors.append(f"'{filename}': All items in 'concepts' must be strings.")
         
         # Validate score field (should be convertible to integer)
         if 'score' in challenge_data:
@@ -168,7 +169,7 @@ class ChallengeValidator:
             errors.append(f"'{filename}': 'validation' must be a list of validation steps.")
             return errors
         
-        # Add type hint for static type checkers
+        from typing import Dict, List, Any
         validation_steps_typed: List[Dict[str, Any]] = validation_steps
 
         for i, step in enumerate(validation_steps_typed, 1):

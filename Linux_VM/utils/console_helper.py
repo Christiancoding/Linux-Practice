@@ -198,7 +198,7 @@ class FallbackTable:
         self.rows: List[tuple[Any, ...]] = []
         self._is_grid = False  # Ensure attribute always exists
     
-    def add_column(self, header: str = "", style: str = "", **kwargs: dict[str, Any]) -> None:
+    def add_column(self, header: str = "", style: str = "", **kwargs: Any) -> None:
         """Add a column to the table."""
         self.columns.append({"header": header, "style": style})
     
@@ -277,18 +277,18 @@ class FallbackTextColumn:
         pass
 
 class FallbackBarColumn:
-    def __init__(self, *args: Any, **kwargs: dict[str, Any]):
+    def __init__(self, *args: Any, **kwargs: Any):
         pass
 
 class FallbackTimeElapsedColumn:
-    def __init__(self, *args: Any, **kwargs: dict[str, Any]):
+    def __init__(self, *args: Any, **kwargs: Any):
         pass
 
 class FallbackSyntax:
     """Fallback syntax highlighting implementation."""
     
     def __init__(self, code: str, lexer: str, theme: str = "default", 
-                 line_numbers: bool = False, word_wrap: bool = False, **kwargs: dict[str, Any]):
+                line_numbers: bool = False, word_wrap: bool = False, **kwargs: Any):
         self.code = code
         self.lexer = lexer
         self.theme = theme
@@ -310,7 +310,7 @@ class FallbackSyntax:
 class FallbackMarkdown:
     """Fallback markdown implementation."""
     
-    def __init__(self, content: str, **kwargs: dict[str, Any]):
+    def __init__(self, content: str, **kwargs: Any):
         self.content = content
     
     def __str__(self) -> str:
