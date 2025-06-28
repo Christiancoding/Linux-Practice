@@ -236,7 +236,6 @@ class SnapshotManager:
             SnapshotOperationError: If XML generation fails
         """
         snapshot_disk_files: List[str] = []
-        
         try:
             raw_xml: str = domain.XMLDesc(0)
             tree = ET.fromstring(raw_xml)
@@ -295,7 +294,7 @@ class SnapshotManager:
                     if '-practice' in base_name or '-snap' in base_name:
                         # Find the first occurrence of a snapshot pattern and truncate there
                         base_parts = base_name.split('-')
-                        clean_parts = []
+                        clean_parts: List[str] = []
                         for part in base_parts:
                             if any(x in part.lower() for x in ['practice', 'snapshot', 'external', 'snap']):
                                 break
