@@ -143,7 +143,7 @@ hints:
                 else:
                     # Convert any nested dict to a list of its values
                     validation_steps = []
-                    for key, value in validation.items():
+                    for value in validation.values():
                         if isinstance(value, list):
                             validation_steps.extend(value)
                     if validation_steps:
