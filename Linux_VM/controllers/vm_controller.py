@@ -35,9 +35,9 @@ from utils.exceptions import (
     SnapshotOperationError,
     ChallengeLoadError,
     ChallengeValidationError,
-    VMNotFoundError,
-    NetworkError,
-    SSHCommandError
+#    VMNotFoundError,
+#    NetworkError,
+#    SSHCommandError
 )
 from utils.vm_manager import (
     connect_libvirt,

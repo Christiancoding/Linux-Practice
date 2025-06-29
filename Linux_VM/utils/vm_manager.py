@@ -368,34 +368,36 @@ class VMManager:
             # Method 1: Try libvirt guest agent
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT)  # type: ignore
-                interfaces = interfaces_raw
-                ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
-                if ip_address:
-                    self.logger.info(f"Got IP from guest agent for '{vm_name}': {ip_address}")
-                    return ip_address
+                if interfaces_raw and isinstance(interfaces_raw, dict):
+                    interfaces: Dict[str, Any] = interfaces_raw
+                    ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
+                    if ip_address:
+                        self.logger.info(f"Got IP from guest agent for '{vm_name}': {ip_address}")
+                        return ip_address
             except libvirt.libvirtError as agent_error:
                 self.logger.debug(f"Guest agent method failed for '{vm_name}': {agent_error}")
 
             # Method 2: Try DHCP lease information
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE)  # type: ignore
-                from typing import cast
-                interfaces = cast(Dict[str, Any], interfaces_raw)
-                ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
-                if ip_address:
-                    self.logger.info(f"Got IP from DHCP lease for '{vm_name}': {ip_address}")
-                    return ip_address
+                if interfaces_raw and isinstance(interfaces_raw, dict):
+                    interfaces: Dict[str, Any] = interfaces_raw
+                    ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
+                    if ip_address:
+                        self.logger.info(f"Got IP from DHCP lease for '{vm_name}': {ip_address}")
+                        return ip_address
             except libvirt.libvirtError as lease_error:
                 self.logger.debug(f"DHCP lease method failed for '{vm_name}': {lease_error}")
 
             # Method 3: Try ARP information
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP)  # type: ignore
-                interfaces: Dict[str, Any] = interfaces_raw
-                ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
-                if ip_address:
-                    self.logger.info(f"Got IP from ARP for '{vm_name}': {ip_address}")
-                    return ip_address
+                if interfaces_raw and isinstance(interfaces_raw, dict):
+                    interfaces: Dict[str, Any] = interfaces_raw
+                    ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
+                    if ip_address:
+                        self.logger.info(f"Got IP from ARP for '{vm_name}': {ip_address}")
+                        return ip_address
             except libvirt.libvirtError as arp_error:
                 self.logger.debug(f"ARP method failed for '{vm_name}': {arp_error}")
 

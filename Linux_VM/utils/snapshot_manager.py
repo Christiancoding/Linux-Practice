@@ -304,7 +304,7 @@ class SnapshotManager:
                     # Create a short, unique snapshot filename
                     import hashlib
                     unique_id = hashlib.md5(f"{snapshot_name}-{time.time()}".encode()).hexdigest()[:8]
-                    snapshot_disk_name = f"{base_name}-{target_dev}-snap-{unique_id}.qcow2"
+                    snapshot_disk_name = f"{base_name}-snap-{unique_id}.qcow2"
                     snapshot_disk_path = original_disk_dir / snapshot_disk_name
                     snapshot_disk_files.append(str(snapshot_disk_path))
                     
