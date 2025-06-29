@@ -1,7 +1,7 @@
 # Linux-Practice
 This is a Ubuntu linux based python program to help study for the Linux + exam.
 # Linux+ Study v2 - Project Structure
-
+# Planning to have:
 ## Overview
 This document outlines the complete project structure for the Linux+ Study application v2, including migration status and component descriptions.
 
