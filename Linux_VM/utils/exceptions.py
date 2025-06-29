@@ -401,6 +401,7 @@ def format_exception_for_user(exception: Exception) -> str:
 # Export all exception classes
 __all__ = [
     'PracticeToolError',
+    'LibvirtConnectionError',
     'VMNotFoundError',
     'SnapshotOperationError', 
     'NetworkError',
