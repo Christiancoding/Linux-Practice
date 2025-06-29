@@ -527,7 +527,12 @@ def get_vm_ip(conn: libvirt.virConnect, domain: libvirt.virDomain) -> str:
     """Backward compatibility function for IP retrieval."""
     manager = VMManager()
     return manager.get_vm_ip(conn, domain)
-
+def get_vm_ip_address(domain: libvirt.virDomain) -> str:
+    """Backward compatibility function for IP retrieval with just domain parameter."""
+    # Get the connection from the domain
+    conn = domain.connect()
+    manager = VMManager()
+    return manager.get_vm_ip(conn, domain)
 def wait_for_vm_ready(vm_ip: str, ssh_user: str, ssh_key_path: Path, timeout: int = VMConfiguration.READINESS_TIMEOUT_SECONDS) -> None:
     """Backward compatibility function for readiness waiting."""
     manager = VMManager()
@@ -538,5 +543,5 @@ def wait_for_vm_ready(vm_ip: str, ssh_user: str, ssh_key_path: Path, timeout: in
 __all__ = [
     'VMManager',
     'connect_libvirt', 'close_libvirt', 'find_vm', 'list_vms', 
-    'start_vm', 'get_vm_ip', 'get_vm_ip_address', 'wait_for_vm_ready'
+    'start_vm', 'get_vm_ip', 'get_vm_ip_address', 'wait_for_vm_ready'  # Add get_vm_ip_address
 ]
