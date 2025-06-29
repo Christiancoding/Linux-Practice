@@ -28,25 +28,16 @@ except ImportError:
 
 
 # Local imports
-from utils.console_helper import console, RICH_AVAILABLE
-
-from rich.console import Console
-console: Console
-
-if RICH_AVAILABLE:
-    from rich.panel import Panel
-    from rich.table import Table
-else:
-    # Import fallback components from console_helper
-    from utils.console_helper import Panel, Table
-    Panel = Panel
-    Table = Table
+from utils.console_helper import console, RICH_AVAILABLE, Panel, Table
 from utils.config import config
 from utils.exceptions import (
     PracticeToolError,
     SnapshotOperationError,
     ChallengeLoadError,
-    ChallengeValidationError
+    ChallengeValidationError,
+    VMNotFoundError,
+    NetworkError,
+    SSHCommandError
 )
 from utils.vm_manager import (
     connect_libvirt,
@@ -57,9 +48,7 @@ from utils.vm_manager import (
     wait_for_vm_ready,
     get_vm_ip
 )
-from utils.ssh_manager import (
-    run_ssh_command
-)
+from utils.ssh_manager import run_ssh_command
 from utils.snapshot_manager import (
     create_external_snapshot,
     revert_to_snapshot,
