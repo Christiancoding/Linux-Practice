@@ -110,7 +110,8 @@ hints:
     
     # --- Challenge Structure Validation ---
     
-    def validate_challenge_structure(self, challenge_data: Dict[str, Any], filename: str = "challenge") -> List[str]:
+    def validate_challenge_structure(self, challenge_data: Dict[str, Any], 
+                               filename: str = "challenge") -> Tuple[List[str], Dict[str, Any]]:
         """
         Validate the structure and content of a challenge definition.
         
@@ -356,7 +357,7 @@ hints:
                     if cost < 0:
                         errors.append(f"{hint_label}: Cost must be non-negative")
         
-        return errors, normalized_data
+        return errors, challenge_data
     # --- Challenge Loading ---
     
     def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict[str, Any]]:
@@ -434,22 +435,16 @@ hints:
                 
                 # Ensure required lists exist
                 # Ensure challenge_data is a dict before setting keys
-                if isinstance(challenge_data, dict):
-                    challenge_data['setup'] = challenge_data.get('setup', [])
-                    challenge_data['concepts'] = challenge_data.get('concepts', [])
+                challenge_data['setup'] = challenge_data.get('setup', [])
+                challenge_data['concepts'] = challenge_data.get('concepts', [])
                 
                 # Check for duplicate IDs
                 if challenge_id in challenges:
                     console.print(f"  :warning: Duplicate challenge ID '[bold yellow]{challenge_id}[/]' found in '[cyan]{yaml_file.name}[/cyan]'. Overwriting previous definition.", style="yellow")
                 
-                if isinstance(challenge_data, dict):
-                    challenges[challenge_id] = challenge_data
-                    loaded_count += 1
-                    self.logger.debug(f"Loaded challenge: {challenge_id} from {yaml_file.name}")
-                else:
-                    console.print(f"  :warning: Skipping '[cyan]{yaml_file.name}[/cyan]': Challenge data is not a dictionary after normalization.", style="yellow")
-                    skipped_count += 1
-                    continue
+                challenges[challenge_id] = challenge_data
+                loaded_count += 1
+                self.logger.debug(f"Loaded challenge: {challenge_id} from {yaml_file.name}")
                 
             except yaml.YAMLError as e:
                 console.print(f"  [red]:x: Error parsing YAML file '[cyan]{yaml_file.name}[/cyan]': {e}[/]", style="red")

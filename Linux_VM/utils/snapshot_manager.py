@@ -621,28 +621,29 @@ class SnapshotManager:
                 if device.get('type') == 'file' and device.get('device') == 'disk':
                     source_node = device.find('source')
                     if source_node is not None and 'file' in source_node.attrib:
-                        disk_path = Path(source_node.get('file'))
-                        disk_dir = disk_path.parent
-                        
-                        # Find all snapshot files for this VM
-                        vm_base = disk_path.stem.split('-')[0]  # Get just the VM name part
-                        snapshot_files = list(disk_dir.glob(f"{vm_base}-*-snap-*.qcow2"))
-                        
-                        # Sort by modification time (newest first)
-                        snapshot_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
-                        
-                        # Remove old snapshots beyond keep_count
-                        for old_file in snapshot_files[keep_count:]:
-                            try:
-                                old_file.unlink()
-                                self.logger.info(f"Cleaned up old snapshot file: {old_file.name}")
-                            except OSError as e:
-                                self.logger.warning(f"Could not remove old snapshot file {old_file}: {e}")
+                        file_path = source_node.get('file')
+                        if file_path is not None:
+                            disk_path = Path(file_path)
+                            disk_dir = disk_path.parent
+                            
+                            # Find all snapshot files for this VM
+                            vm_base = disk_path.stem.split('-')[0]  # Get just the VM name part
+                            snapshot_files = list(disk_dir.glob(f"{vm_base}-*-snap-*.qcow2"))
+                            
+                            # Sort by modification time (newest first)
+                            snapshot_files.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+                            
+                            # Remove old snapshots beyond keep_count
+                            for old_file in snapshot_files[keep_count:]:
+                                try:
+                                    old_file.unlink()
+                                    self.logger.info(f"Cleaned up old snapshot file: {old_file.name}")
+                                except OSError as e:
+                                    self.logger.warning(f"Could not remove old snapshot file {old_file}: {e}")
                                 
         except Exception as e:
             self.logger.warning(f"Error during snapshot cleanup: {e}")
-
-
+        
 # Convenience functions for backward compatibility with ww.py
 def qemu_agent_fsfreeze(domain: libvirt.virDomain) -> bool:
     """Backward compatibility function for agent filesystem freeze."""
