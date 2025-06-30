@@ -268,7 +268,7 @@ def run_challenge(
     console.rule(f"[bold green]Starting Challenge: [cyan]{challenge_id}[/cyan][/]", style="green")
     
     # Initialize workflow variables
-    conn: Optional[libvirt.virConnect] = None
+    conn: Optional[Any] = None
     domain: Optional[Any] = None
     vm_ip: Optional[str] = None
     snapshot_created = False

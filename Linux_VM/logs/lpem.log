@@ -58,3 +58,15 @@ ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/ho
 2025-06-29 00:28:26,671 - __main__ - INFO: Starting Linux+ Practice Environment Manager
 2025-06-29 00:28:26,836 - __main__ - INFO: CLI interface loaded successfully
 2025-06-29 00:28:26,857 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:39:36,363 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:39:36,723 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:39:36,908 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:39:36,922 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:39:46,459 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:39:46,460 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:39:46,620 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:39:46,629 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:40:38,556 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:40:38,557 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:40:38,747 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:40:38,754 - __main__ - INFO: LPEM Application shutdown complete
