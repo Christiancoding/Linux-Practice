@@ -25,7 +25,10 @@ except ImportError:
     print("Error: Missing required library 'typer'.")
     print("Please install it: pip install typer[all]")
     sys.exit(1)
-
+try:
+    import libvirt  # type: ignore
+except ImportError:
+    libvirt = None  # Will be handled by vm_manager
 
 # Local imports
 from utils.console_helper import console, RICH_AVAILABLE, Panel, Table
@@ -265,7 +268,7 @@ def run_challenge(
     console.rule(f"[bold green]Starting Challenge: [cyan]{challenge_id}[/cyan][/]", style="green")
     
     # Initialize workflow variables
-    conn: Optional[Any] = None
+    conn: Optional[libvirt.virConnect] = None
     domain: Optional[Any] = None
     vm_ip: Optional[str] = None
     snapshot_created = False
@@ -353,7 +356,8 @@ def run_challenge(
             console.print(f"[dim]VM '[cyan]{vm_name}[/cyan]' is already running.[/]")
 
         console.print(":globe_with_meridians: Detecting VM IP address...")
-        vm_ip = get_vm_ip(conn, domain)
+        if conn is None:
+            raise PracticeToolError("Libvirt connection not established")
         if not vm_ip:
             raise PracticeToolError("Could not determine VM IP address.")
 

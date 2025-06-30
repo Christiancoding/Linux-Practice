@@ -154,7 +154,7 @@ class FallbackConsole:
             # typer.echo expects color to be a bool
             if isinstance(kwargs["color"], bool):
                 echo_kwargs["color"] = kwargs["color"]
-        typer.echo(" ".join(str(arg) for arg in clean_args), **echo_kwargs)
+        typer.echo(" ".join(str(arg) for arg in clean_args))
     
     def rule(self, title: str = "", style: str = "") -> None:
         """Print a simple text rule."""

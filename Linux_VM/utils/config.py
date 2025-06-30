@@ -36,7 +36,6 @@ class VMConfiguration:
     READINESS_TIMEOUT_SECONDS: int = 120
     READINESS_POLL_INTERVAL_SECONDS: int = 5
     SHUTDOWN_TIMEOUT_SECONDS: int = 120
-    
     # Libvirt Connection Configuration
     LIBVIRT_URI: str = 'qemu:///system'
 

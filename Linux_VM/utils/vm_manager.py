@@ -12,6 +12,10 @@ import time
 import logging
 from typing import Optional, Dict, List, Any, Tuple, cast
 from pathlib import Path
+import os
+import stat
+import subprocess
+import xml.etree.ElementTree as ET
 
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -86,12 +90,11 @@ class VMManager:
             self.logger.info(f"Connecting to libvirt at: {self.libvirt_uri}")
             
             # Attempt connection to libvirt daemon
-            raw_conn = libvirt.open(self.libvirt_uri)  # type: ignore
-            conn = raw_conn
+            conn: libvirt.virConnect = libvirt.open(self.libvirt_uri)  # type: ignore
             
             # Verify connection functionality
             try:
-                hostname = conn.getHostname()
+                hostname: str = conn.getHostname()
                 self.logger.info(f"Successfully connected to libvirt host: {hostname}")
             except libvirt.libvirtError as e:
                 self.logger.warning(f"Connection established but hostname query failed: {e}")
@@ -152,12 +155,12 @@ class VMManager:
         try:
             self.logger.debug(f"Searching for VM: {vm_name}")
             
-            # Attempt to lookup domain by name
-            domain = conn.lookupByName(vm_name)
+            # Add explicit type annotation for the lookup result
+            domain: libvirt.virDomain = conn.lookupByName(vm_name)
             
             # Verify domain accessibility
             try:
-                domain_info: Tuple[int, int, int, int, int] = domain.info()
+                domain_info: tuple[int, int, int, int, int] = domain.info()
                 self.logger.info(f"VM '{vm_name}' found with state: {self._get_domain_state_name(domain_info[0])}")
             except libvirt.libvirtError as e:
                 self.logger.warning(f"VM found but info query failed: {e}")
@@ -189,16 +192,14 @@ class VMManager:
             
             # Get all domains (running and defined)
             active_domains: List[int] = conn.listDomainsID()
-            defined_domains = cast(List[str], conn.listDefinedDomains())
-            # Optionally, cast for static type checkers:
-            # from typing import cast
-            # defined_domains = cast(List[str], conn.listDefinedDomains())
+            defined_domains: List[str] = conn.listDefinedDomains()
             
             if not active_domains and not defined_domains:
                 console.print("[yellow]No virtual machines found in libvirt.[/]")
                 return
             
             # Create comprehensive VM status table
+            table = None
             if RICH_AVAILABLE:
                 table = Table(title="Available Virtual Machines", show_header=True, header_style="bold cyan")
                 table.add_column("Name", style="bold", min_width=20)
@@ -212,10 +213,10 @@ class VMManager:
                 console.print("-" * 70)
             
             # Process active (running) domains
-            for domain_id in (int(x) for x in active_domains):
+            for domain_id in active_domains:
                 try:
-                    domain = conn.lookupByID(int(domain_id))
-                    self._add_vm_to_display(domain, table if RICH_AVAILABLE else None, domain_id)
+                    domain = conn.lookupByID(domain_id)
+                    self._add_vm_to_display(domain, table, domain_id)
                 except libvirt.libvirtError as e:
                     self.logger.warning(f"Error accessing active domain ID {domain_id}: {e}")
             
@@ -223,12 +224,12 @@ class VMManager:
             for domain_name in defined_domains:
                 try:
                     domain = conn.lookupByName(domain_name)
-                    self._add_vm_to_display(domain, table if RICH_AVAILABLE else None)
+                    self._add_vm_to_display(domain, table)
                 except libvirt.libvirtError as e:
                     self.logger.warning(f"Error accessing defined domain '{domain_name}': {e}")
             
             # Display the results
-            if RICH_AVAILABLE:
+            if RICH_AVAILABLE and table:
                 console.print(table)
             
         except libvirt.libvirtError as e:
@@ -237,7 +238,7 @@ class VMManager:
             console.print(f"[red]Error listing VMs: {e}[/]")
             
     def _add_vm_to_display(self, domain: libvirt.virDomain, table: Optional[Any], 
-                          domain_id: Optional[int] = None) -> None:
+                        domain_id: Optional[int] = None) -> None:
         """
         Add VM information to display table or console output.
         
@@ -248,10 +249,10 @@ class VMManager:
         """
         try:
             name: str = domain.name()
-            info = domain.info()
+            info: Tuple[int, int, int, int, int] = domain.info()
             state = self._get_domain_state_name(info[0])
             max_mem = f"{info[1] // 1024} MB"
-            cpu_count = str(int(info[3]))
+            cpu_count = str(info[3])
             vm_id = str(domain_id) if domain_id is not None else "-"
             
             # Color coding for states
@@ -293,12 +294,149 @@ class VMManager:
         }
         return state_names.get(state_code, f"unknown({state_code})")
     
-    def start_vm(self, domain: libvirt.virDomain) -> None:
+    def _check_and_fix_vm_permissions(self, domain: libvirt.virDomain, auto_fix: bool = True) -> bool:
         """
-        Start virtual machine with comprehensive state management.
+        Check and optionally fix VM disk file permissions.
+        
+        Args:
+            domain: Libvirt domain object
+            auto_fix: Whether to automatically attempt permission fixes
+            
+        Returns:
+            bool: True if permissions are correct or successfully fixed
+        """
+        vm_name = domain.name()
+        
+        try:
+            # Get VM XML to find disk files
+            raw_xml = domain.XMLDesc(0)
+            tree = ET.fromstring(raw_xml)
+            
+            permission_issues = []
+            
+            # Check each disk device
+            for device in tree.findall('devices/disk'):
+                if device.get('type') == 'file' and device.get('device') == 'disk':
+                    source_node = device.find('source')
+                    if source_node is not None and 'file' in source_node.attrib:
+                        disk_path = Path(source_node.get('file'))
+                        
+                        if disk_path.exists():
+                            # Check file ownership and permissions
+                            stat_info = disk_path.stat()
+                            
+                            # Get file owner and group
+                            import pwd
+                            import grp
+                            try:
+                                owner = pwd.getpwuid(stat_info.st_uid).pw_name
+                                group = grp.getgrgid(stat_info.st_gid).gr_name
+                            except KeyError:
+                                owner = str(stat_info.st_uid)
+                                group = str(stat_info.st_gid)
+                            
+                            # Check if permissions are correct
+                            expected_perms = 0o660  # rw-rw----
+                            current_perms = stat.S_IMODE(stat_info.st_mode)
+                            
+                            # Check if libvirt can access the file
+                            libvirt_access_ok = (
+                                (owner == 'libvirt-qemu' or group == 'libvirt') and
+                                (current_perms & 0o660) == 0o660
+                            )
+                            
+                            if not libvirt_access_ok:
+                                issue = {
+                                    'path': disk_path,
+                                    'current_owner': owner,
+                                    'current_group': group,
+                                    'current_perms': oct(current_perms),
+                                    'expected_owner': 'libvirt-qemu',
+                                    'expected_group': 'libvirt',
+                                    'expected_perms': oct(expected_perms)
+                                }
+                                permission_issues.append(issue)
+            
+            if not permission_issues:
+                self.logger.debug(f"VM '{vm_name}' disk permissions are correct")
+                return True
+            
+            # Report permission issues
+            console.print(f"[yellow]:warning: Permission issues detected for VM '{vm_name}':[/]")
+            for issue in permission_issues:
+                console.print(f"  File: {issue['path']}")
+                console.print(f"    Current: {issue['current_owner']}:{issue['current_group']} {issue['current_perms']}")
+                console.print(f"    Expected: {issue['expected_owner']}:{issue['expected_group']} {issue['expected_perms']}")
+            
+            if not auto_fix:
+                console.print("[yellow]Use --auto-fix-permissions to automatically correct these issues.[/]")
+                return False
+            
+            # Attempt to fix permissions
+            console.print("[yellow]Attempting to fix VM disk permissions...[/]")
+            
+            # Check if user is in libvirt group
+            try:
+                result = subprocess.run(['groups'], capture_output=True, text=True, check=True)
+                user_groups = result.stdout.strip().split()
+                if 'libvirt' not in user_groups:
+                    console.print("[yellow]Adding current user to libvirt group...[/]")
+                    subprocess.run(['sudo', 'usermod', '-a', '-G', 'libvirt', os.getenv('USER', 'user')], check=True)
+                    console.print("[green]User added to libvirt group. You may need to log out and back in.[/]")
+            except subprocess.CalledProcessError as e:
+                self.logger.warning(f"Could not check/fix user groups: {e}")
+            
+            # Fix file ownership and permissions
+            success_count = 0
+            for issue in permission_issues:
+                try:
+                    disk_path = issue['path']
+                    
+                    # Fix ownership
+                    chown_cmd = ['sudo', 'chown', 'libvirt-qemu:libvirt', str(disk_path)]
+                    subprocess.run(chown_cmd, check=True, capture_output=True)
+                    
+                    # Fix permissions
+                    chmod_cmd = ['sudo', 'chmod', '660', str(disk_path)]
+                    subprocess.run(chmod_cmd, check=True, capture_output=True)
+                    
+                    console.print(f"[green]Fixed permissions for: {disk_path}[/]")
+                    success_count += 1
+                    
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[red]Failed to fix permissions for {disk_path}: {e}[/]")
+                    self.logger.error(f"Permission fix failed for {disk_path}: {e}")
+            
+            if success_count == len(permission_issues):
+                console.print(f"[green]Successfully fixed all {success_count} permission issues.[/]")
+                
+                # Restart libvirtd to ensure changes take effect
+                try:
+                    console.print("[yellow]Restarting libvirtd service...[/]")
+                    subprocess.run(['sudo', 'systemctl', 'restart', 'libvirtd'], check=True, capture_output=True)
+                    console.print("[green]Libvirtd service restarted successfully.[/]")
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[yellow]Warning: Could not restart libvirtd: {e}[/]")
+                
+                return True
+            else:
+                console.print(f"[yellow]Fixed {success_count}/{len(permission_issues)} permission issues.[/]")
+                return False
+                
+        except ET.ParseError as e:
+            self.logger.error(f"Error parsing VM XML for '{vm_name}': {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Unexpected error checking VM permissions for '{vm_name}': {e}")
+            return False
+
+    def start_vm(self, domain: libvirt.virDomain, auto_fix_permissions: bool = True) -> None:
+        """
+        Start a virtual machine with automatic permission checking and fixing.
         
         Args:
             domain: Libvirt domain object to start
+            auto_fix_permissions: Whether to automatically fix permission issues
             
         Raises:
             PracticeToolError: If VM startup fails
@@ -317,36 +455,240 @@ class VMManager:
             console.print(f"[yellow]Starting VM '{vm_name}'...[/]")
             self.logger.info(f"Attempting to start VM: {vm_name}")
             
-            # Start the domain
-            result = domain.create()
-            if result == 0:
-                console.print(f"[green]VM '{vm_name}' started successfully.[/]")
-                self.logger.info(f"VM '{vm_name}' started successfully")
-            else:
-                raise PracticeToolError(
-                    f"VM start operation returned unexpected result: {result}",
-                    error_code="VM_START_UNEXPECTED_RESULT",
-                    context={"vm_name": vm_name, "result": result}
-                )
-                
+            # First attempt to start
+            try:
+                result = domain.create()
+                if result == 0:
+                    console.print(f"[green]VM '{vm_name}' started successfully.[/]")
+                    self.logger.info(f"VM '{vm_name}' started successfully")
+                    return
+                else:
+                    raise PracticeToolError(
+                        f"VM start operation returned unexpected result: {result}",
+                        error_code="VM_START_UNEXPECTED_RESULT",
+                        context={"vm_name": vm_name, "result": result}
+                    )
+            
+            except libvirt.libvirtError as e:
+                # Check if this is a permission issue
+                if "Permission denied" in str(e):
+                    console.print(f"[yellow]Permission issue detected. Checking VM disk permissions...[/]")
+                    
+                    # Try to fix permissions
+                    if auto_fix_permissions and self._check_and_fix_vm_permissions(domain, auto_fix=True):
+                        console.print(f"[yellow]Retrying VM start after permission fix...[/]")
+                        
+                        # Retry starting the VM
+                        try:
+                            result = domain.create()
+                            if result == 0:
+                                console.print(f"[green]VM '{vm_name}' started successfully after permission fix.[/]")
+                                self.logger.info(f"VM '{vm_name}' started successfully after permission fix")
+                                return
+                        except libvirt.libvirtError as retry_error:
+                            # If retry fails, fall through to original error handling
+                            e = retry_error
+                    
+                    # Permission fix failed or not attempted
+                    error_msg = f"Failed to start VM '{vm_name}': {e}"
+                    error_msg += "\n\nThis is likely a permission issue. Try:"
+                    error_msg += "\n1. sudo usermod -a -G libvirt $USER"
+                    error_msg += "\n2. Log out and back in"
+                    error_msg += "\n3. Or run: sudo chown libvirt-qemu:libvirt /var/lib/libvirt/images/*.qcow2"
+                    error_msg += "\n4. sudo chmod 660 /var/lib/libvirt/images/*.qcow2"
+                    
+                    self.logger.error(error_msg)
+                    raise PracticeToolError(
+                        error_msg,
+                        error_code="VM_START_FAILED",
+                        context={"vm_name": vm_name, "libvirt_error": str(e)}
+                    ) from e
+                else:
+                    # Not a permission issue, raise original error
+                    raise
+                    
         except libvirt.libvirtError as e:
             error_msg = f"Failed to start VM '{vm_name}': {e}"
-            
-            # Check for common permission issues
-            if "Permission denied" in str(e):
-                error_msg += "\n\nThis is likely a permission issue. Try:"
-                error_msg += "\n1. sudo usermod -a -G libvirt $USER"
-                error_msg += "\n2. Log out and back in"
-                error_msg += "\n3. Or run: sudo chown libvirt-qemu:libvirt /var/lib/libvirt/images/*.qcow2"
-                error_msg += "\n4. sudo chmod 660 /var/lib/libvirt/images/*.qcow2"
-            
             self.logger.error(error_msg)
             raise PracticeToolError(
                 error_msg,
                 error_code="VM_START_FAILED",
                 context={"vm_name": vm_name, "libvirt_error": str(e)}
             ) from e
-    
+    def _shutdown_vm_gracefully(self, domain: libvirt.virDomain, timeout: int = 30) -> bool:
+        """
+        Attempt graceful shutdown of VM with timeout.
+        
+        Args:
+            domain: Libvirt domain object
+            timeout: Timeout in seconds for graceful shutdown
+            
+        Returns:
+            bool: True if shutdown was successful, False if forced shutdown needed
+        """
+        vm_name = domain.name()
+        try:
+            if not domain.isActive():
+                return True
+                
+            console.print(f"[yellow]Attempting graceful shutdown of VM '{vm_name}'...[/]")
+            domain.shutdown()
+            
+            # Wait for graceful shutdown
+            import time
+            for _ in range(timeout):
+                if not domain.isActive():
+                    console.print(f"[green]VM '{vm_name}' shutdown gracefully.[/]")
+                    return True
+                time.sleep(1)
+            
+            console.print(f"[yellow]Graceful shutdown timeout, forcing shutdown...[/]")
+            return False
+            
+        except Exception as e:
+            self.logger.warning(f"Error during graceful shutdown of '{vm_name}': {e}")
+            return False
+    def shutdown_vm(self, domain: libvirt.virDomain, 
+                    timeout: int = VMConfiguration.SHUTDOWN_TIMEOUT_SECONDS) -> bool:
+        """
+        Gracefully shutdown virtual machine with ACPI signal and force fallback.
+        
+        Args:
+            domain: Libvirt domain object to shutdown
+            timeout: Maximum wait time for graceful shutdown in seconds
+            
+        Returns:
+            bool: True if shutdown was successful
+            
+        Raises:
+            PracticeToolError: If shutdown fails completely
+        """
+        vm_name = domain.name()
+        
+        try:
+            # Check current VM state
+            if not domain.isActive():
+                console.print(f"[yellow]VM '{vm_name}' is already shut down.[/]")
+                return True
+            
+            console.print(f"[yellow]Attempting graceful shutdown for VM '{vm_name}' (ACPI)...[/]")
+            self.logger.info(f"Initiating graceful shutdown for VM: {vm_name}")
+            
+            # Attempt graceful ACPI shutdown
+            shutdown_failed = False
+            try:
+                result = domain.shutdown()
+                if result < 0:
+                    shutdown_failed = True
+                    console.print(f"[yellow]ACPI shutdown command failed for VM '{vm_name}'. Will try force destroy if needed.[/]")
+                else:
+                    console.print("[dim]ACPI shutdown signal sent.[/]")
+            except libvirt.libvirtError as e:
+                shutdown_failed = True
+                console.print(f"[yellow]Error sending ACPI shutdown signal for VM '{vm_name}': {e}[/]")
+            
+            # Wait for graceful shutdown with progress tracking
+            if not shutdown_failed:
+                console.print(f"[dim]Waiting up to {timeout}s for graceful shutdown...[/]")
+                
+                if RICH_AVAILABLE:
+                    from rich.progress import Progress, BarColumn, TextColumn, TimeElapsedColumn
+                    
+                    with Progress(
+                        TextColumn("[progress.description]{task.description}"),
+                        BarColumn(),
+                        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                        TimeElapsedColumn(),
+                        console=console
+                    ) as progress:
+                        task = progress.add_task(f"Shutting down '{vm_name}'...", total=timeout)
+                        start_time = time.time()
+                        
+                        while (time.time() - start_time) < timeout:
+                            try:
+                                if not domain.isActive():
+                                    progress.update(task, completed=timeout, 
+                                                description=f"VM '{vm_name}' shut down.")
+                                    break
+                                
+                                elapsed = time.time() - start_time
+                                progress.update(task, completed=elapsed, 
+                                            description=f"Shutting down '{vm_name}'...")
+                                time.sleep(3)
+                                
+                            except libvirt.libvirtError as e:
+                                if e.get_error_code() == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN:
+                                    progress.update(task, completed=timeout, 
+                                                description=f"VM '{vm_name}' disappeared (assumed shut down)")
+                                    console.print("\n[yellow]VM disappeared during shutdown wait.[/]")
+                                    return True
+                                raise
+                        else:
+                            progress.update(task, description=f"VM '{vm_name}' still active after timeout.")
+                else:
+                    # Fallback progress for non-Rich environments
+                    start_time = time.time()
+                    while (time.time() - start_time) < timeout:
+                        if not domain.isActive():
+                            break
+                        console.print(".", end="")
+                        time.sleep(3)
+                    console.print()
+            
+            # Check final state and force destroy if needed
+            if domain.isActive():
+                console.print(f"[yellow]VM '{vm_name}' did not shut down gracefully. Forcing power off (destroy)...[/]")
+                self.logger.warning(f"Forcing destroy on VM '{vm_name}' after timeout")
+                
+                result = domain.destroy()
+                if result < 0:
+                    raise PracticeToolError(
+                        f"Failed to destroy (force power off) VM '{vm_name}' after timeout",
+                        error_code="VM_DESTROY_FAILED",
+                        context={"vm_name": vm_name, "timeout": timeout}
+                    )
+                else:
+                    console.print(f"[green]VM '{vm_name}' destroyed (forced power off).[/]")
+                    time.sleep(2)  # Brief pause after destroy
+                    return True
+            else:
+                console.print(f"[green]VM '{vm_name}' shut down successfully.[/]")
+                self.logger.info(f"VM '{vm_name}' shut down gracefully")
+                return True
+                
+        except libvirt.libvirtError as e:
+            err_code = e.get_error_code()
+            
+            # Handle cases where VM is already gone
+            if err_code == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN:
+                console.print(f"[yellow]VM '{vm_name}' disappeared or is already shut down.[/]")
+                return True
+            elif err_code == LibvirtErrorCodes.VIR_ERR_OPERATION_INVALID:
+                try:
+                    if not domain.isActive():
+                        console.print(f"[yellow]VM '{vm_name}' is already shut down (operation invalid).[/]")
+                        return True
+                except libvirt.libvirtError:
+                    console.print(f"[yellow]VM '{vm_name}' disappeared or is already shut down.[/]")
+                    return True
+            
+            # Unexpected libvirt error
+            error_msg = f"Error during shutdown process for VM '{vm_name}': {e}"
+            self.logger.error(error_msg)
+            raise PracticeToolError(
+                error_msg,
+                error_code="VM_SHUTDOWN_ERROR", 
+                context={"vm_name": vm_name, "libvirt_error": str(e)}
+            ) from e
+            
+        except Exception as e:
+            error_msg = f"Unexpected error shutting down VM '{vm_name}': {e}"
+            self.logger.error(error_msg, exc_info=True)
+            raise PracticeToolError(
+                error_msg,
+                error_code="VM_SHUTDOWN_UNEXPECTED_ERROR",
+                context={"vm_name": vm_name}
+            ) from e
     def get_vm_ip(self, conn: libvirt.virConnect, domain: libvirt.virDomain) -> str:
         """
         Retrieve VM IP address using libvirt guest agent or DHCP lease information.
@@ -361,6 +703,12 @@ class VMManager:
         Raises:
             NetworkError: If IP address cannot be determined
         """
+        if not hasattr(conn, 'getHostname'):
+            raise PracticeToolError(
+                "Invalid libvirt connection object provided",
+                error_code="INVALID_CONNECTION_TYPE"
+            )
+        
         vm_name = domain.name()
         self.logger.info(f"Attempting to get IP address for VM: {vm_name}")
         
@@ -441,7 +789,6 @@ class VMManager:
             self.logger.debug(f"Error extracting IP from interfaces for '{vm_name}': {e}")
         
         return None
-    
     def wait_for_vm_ready(self, vm_ip: str, ssh_user: str, ssh_key_path: Path, 
                          timeout: int = VMConfiguration.READINESS_TIMEOUT_SECONDS) -> None:
         """
@@ -493,7 +840,7 @@ class VMManager:
             timeout=timeout
         )
 # Convenience functions for backward compatibility with ww.py
-def connect_libvirt(uri: Optional[str] = None) -> libvirt.virConnect:
+def connect_libvirt(uri: Optional[str] = None) -> 'libvirt.virConnect':
     """Backward compatibility function for libvirt connection."""
     manager = VMManager(uri)
     return manager.connect_libvirt()
@@ -532,11 +879,14 @@ def wait_for_vm_ready(vm_ip: str, ssh_user: str, ssh_key_path: Path, timeout: in
     """Backward compatibility function for readiness waiting."""
     manager = VMManager()
     manager.wait_for_vm_ready(vm_ip, ssh_user, ssh_key_path, timeout)
-
+def shutdown_vm(domain: libvirt.virDomain, timeout: int = VMConfiguration.SHUTDOWN_TIMEOUT_SECONDS) -> bool:
+    """Backward compatibility function for VM shutdown."""
+    manager = VMManager()
+    return manager.shutdown_vm(domain, timeout)
 
 # Export all public components
 __all__ = [
     'VMManager',
     'connect_libvirt', 'close_libvirt', 'find_vm', 'list_vms', 
-    'start_vm', 'get_vm_ip', 'get_vm_ip_address', 'wait_for_vm_ready'
+    'start_vm', 'get_vm_ip', 'shutdown_vm', 'get_vm_ip_address', 'wait_for_vm_ready'
 ]
