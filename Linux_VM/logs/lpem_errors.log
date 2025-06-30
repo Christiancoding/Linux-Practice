@@ -46,3 +46,15 @@ ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/ho
 2025-06-28 13:34:33,062 - utils.vm_manager - INFO: VM 'ubuntu24.04-2' found with state: shut off
 2025-06-28 13:34:33,076 - utils.vm_manager - INFO: Libvirt connection closed successfully
 2025-06-28 13:34:33,076 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:27:54,793 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:27:54,794 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:27:55,722 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:27:55,727 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:28:13,928 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:28:13,929 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:28:14,092 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:28:14,101 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:28:26,670 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:28:26,671 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:28:26,836 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:28:26,857 - __main__ - INFO: LPEM Application shutdown complete

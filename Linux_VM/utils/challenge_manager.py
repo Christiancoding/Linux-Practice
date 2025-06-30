@@ -19,9 +19,6 @@ except ImportError:
 
 # Local imports
 from .console_helper import console, RICH_AVAILABLE
-from rich.console import Console  # type: ignore
-
-console: "Console"  # type: ignore
 from .exceptions import (
     PracticeToolError,
     ChallengeLoadError
@@ -31,6 +28,12 @@ from .ssh_manager import SSHCommandError
 
 # Set up module logger
 logger = logging.getLogger(__name__)
+
+# Rich imports with proper fallbacks
+Panel = None
+Table = None
+Markdown = None
+Confirm = None
 
 if RICH_AVAILABLE:
     from rich.panel import Panel
@@ -53,65 +56,149 @@ class ChallengeManager:
         self._challenge_template = self._get_challenge_template()
     
     def _get_challenge_template(self) -> str:
-        """Get the default challenge template for new challenges."""
+        """
+        Get the comprehensive challenge template with all validation examples.
+        
+        The template includes examples for all supported validation types:
+        - run_command: Execute commands with success criteria validation
+        - check_service_status: Validate systemd service states
+        - check_port_listening: Verify network port availability
+        - check_file_exists: Confirm file/directory existence and properties
+        - check_file_contains: Search file content with text or regex
+        - check_user_group: Validate user accounts and group memberships
+        - check_command: General command execution with flexible criteria
+        - check_history: Verify command history for specific patterns
+        
+        Setup step examples:
+        - run_command: Execute setup commands on the VM
+        - ensure_group_exists: Verify prerequisite groups exist
+        - ensure_user_exists: Verify prerequisite users exist
+        
+        Returns:
+            str: Complete YAML challenge template with comprehensive examples
+        """
         return """# --- Challenge Definition File ---
-# See documentation or existing challenges for examples.
-# SECURITY WARNING: 'run_command' executes commands via SSH on the target VM.
-# Do not load challenges from untrusted sources without understanding the commands.
+    # See documentation or existing challenges for examples.
+    # SECURITY WARNING: 'run_command' executes commands via SSH on the target VM.
+    # Do not load challenges from untrusted sources without understanding the commands.
 
-# Unique identifier for the challenge (e.g., configure-ssh-keys)
-id: my-new-challenge
+    # Unique identifier for the challenge (e.g., configure-ssh-keys)
+    id: my-new-challenge
 
-# Human-readable name for the challenge
-name: "My New Challenge Title"
+    # Human-readable name for the challenge
+    name: "My New Challenge Title"
 
-# Detailed description of the objective for the user (Markdown supported)
-description: |
-  Explain what the user needs to accomplish here.
-  * Use lists.
-  * Use `code`.
-  * **Bold** and _italics_.
+    # Detailed description of the objective for the user (Markdown supported)
+    description: |
+    Explain what the user needs to accomplish here.
+    * Use lists.
+    * Use `code`.
+    * **Bold** and _italics_.
 
-# Category for grouping challenges (e.g., Networking, Security, File Management)
-category: "Uncategorized"
+    # Category for grouping challenges (e.g., Networking, Security, File Management)
+    category: "Uncategorized"
 
-# Difficulty level (e.g., Easy, Medium, Hard, Expert)
-difficulty: "Medium"
+    # Difficulty level (e.g., Easy, Medium, Hard, Expert)
+    difficulty: "Medium"
 
-# Potential score for completing the challenge successfully (before hint costs)
-score: 100
+    # Potential score for completing the challenge successfully (before hint costs)
+    score: 100
 
-# List of relevant Linux concepts or commands involved
-concepts:
-  - example-concept
-  - example-command
+    # List of relevant Linux concepts or commands involved
+    concepts:
+    - ssh
+    - ssh-keygen
+    - systemctl
 
-# Optional: Setup steps executed *before* the user interacts with the VM.
-# Used to put the VM into the correct starting state for the challenge.
-# WARNING: Commands run here execute on the VM via SSH. Use with extreme caution.
-setup:
-  - type: run_command
-    command: "echo 'Challenge setup complete'"
+    # Optional: Setup steps executed *before* the user interacts with the VM.
+    # Used to put the VM into the correct starting state for the challenge.
+    # WARNING: Commands run here execute on the VM via SSH. Use with extreme caution.
+    #          Prefer declarative steps (copy_file, ensure_service_status) if possible.
+    setup:
+    - type: run_command
+        # Example: Ensure a package needed for the challenge is installed
+        # command: "sudo apt-get update && sudo apt-get install -y --no-install-recommends some-package"
+        command: "echo 'Setup step 1: Placeholder command executed on VM'"
+    # - type: copy_file # Needs implementation using Paramiko SFTP
+    #   source: "files/needed_config.txt" # Path relative to challenge file
+    #   destination: "/etc/needed_config.txt" # Absolute path on VM
+    #   owner: "root" # Optional: user name or uid
+    #   group: "root" # Optional: group name or gid
+    #   mode: "0644" # Optional: octal mode string
+    # - type: ensure_service_status
+    #   service: "nginx"
+    #   state: "stopped" # 'started', 'stopped', 'restarted'
+    #   enabled: false # Optional: true, false
 
-# Validation steps to check if the challenge was completed successfully
-validation:
-  - type: run_command
-    command: "test -f /tmp/example"
-    expected_exit_code: 0
-    description: "Check if example file exists"
+    # Optional: A command that simulates the user performing the correct action.
+    # Useful for testing validation logic with the --simulate flag.
+    # WARNING: Command runs on the VM via SSH.
+    user_action_simulation: "echo 'User action simulation: Placeholder command executed on VM'"
 
-# Optional: Hints to help users (with score penalties)
-hints:
-  - text: "This is your first hint"
-    cost: 10
-  - text: "This is a more detailed hint"
-    cost: 20
-"""
+    # Required: Validation steps executed *after* the user performs the action.
+    # These determine if the challenge objective was met.
+    validation:
+    - type: run_command # Check command output/exit status
+        command: "hostname" # Example: check hostname
+        success_criteria:
+        exit_status: 0 # Default is 0 if success_criteria is omitted
+        # stdout_contains: "practice-vm" # Check if stdout includes this string
+        # stdout_equals: "expected_exact_output" # Check for exact stdout match
+        # stdout_matches_regex: "^Welcome to .*$" # Check if stdout matches regex
+        # stderr_empty: true # Check if stderr is empty
+        # stderr_contains: "Warning:" # Check if stderr contains string
+    - type: check_service_status
+        service: "ssh"
+        expected_status: "active" # active | inactive | failed
+        # check_enabled: true # Optional: Check if service is enabled at boot
+    - type: check_port_listening
+        port: 22
+        protocol: "tcp" # tcp | udp
+        expected_state: true # true (listening) | false (not listening)
+    - type: check_file_exists
+        path: "/home/roo/.ssh/authorized_keys"
+        expected_state: true # true (exists) | false (does not exist)
+        file_type: "file" # any | file | directory
+        # owner: "roo" # Optional: Check owner username or uid
+        # group: "roo" # Optional: Check group name or gid
+        # permissions: "0600" # Optional: Check exact octal permissions
+    - type: check_file_contains
+        path: "/etc/motd"
+        text: "Welcome" # Mutually exclusive with matches_regex
+        # matches_regex: "^Welcome to .*$" # Mutually exclusive with text
+        expected_state: true # true (contains) | false (does not contain)
+    - type: check_user_group
+        check_type: "user_exists" # user_exists | user_primary_group | user_in_group | user_shell
+        username: "testuser"
+        # group: "testgroup" # Required for user_primary_group and user_in_group
+        # shell: "/bin/bash" # Required for user_shell
+    - type: check_command
+        command: "test -f /tmp/example_file"
+        expected_exit_status: 0
+    - type: check_history
+        command_pattern: "(useradd|usermod).*testuser"
+        expected_count: ">0" # ">0" | ">=1" | "==2" | "1" etc.
+        user_context: "root" # Optional: user whose history to check
+        notes: "Verify appropriate user management commands were used"
+
+    # Optional: Hints displayed to the user upon request.
+    hints:
+    - text: "First hint: Point towards a general concept or tool."
+        cost: 0 # Score cost for viewing this hint
+    - text: "Second hint: Suggest a specific command or file to look at."
+        cost: 10
+    - text: "Third hint: Give more specific guidance or mention a common mistake."
+        cost: 20
+
+    # Optional: A 'flag' string displayed upon successful completion.
+    # If omitted, a generic success message is shown.
+    # flag: "CTF{My_Challenge_Completed_Successfully}"
+    """
     
     # --- Challenge Structure Validation ---
     
     def validate_challenge_structure(self, challenge_data: Dict[str, Any], 
-                               filename: str = "challenge") -> Tuple[List[str], Dict[str, Any]]:
+                            filename: str = "challenge") -> List[str]:
         """
         Validate the structure and content of a challenge definition.
         
@@ -357,7 +444,7 @@ hints:
                     if cost < 0:
                         errors.append(f"{hint_label}: Cost must be non-negative")
         
-        return errors, challenge_data
+        return errors
     # --- Challenge Loading ---
     
     def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict[str, Any]]:

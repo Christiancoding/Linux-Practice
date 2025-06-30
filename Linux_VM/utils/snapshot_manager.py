@@ -9,9 +9,13 @@ reversion, and QEMU guest agent filesystem operations for consistent snapshots.
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, List, Tuple, Any
+from typing import List, Tuple
 import logging
+import json
 from .config import LibvirtErrorCodes
+import stat
+import os
+import subprocess
 # Third-party imports
 try:
     import libvirt # type: ignore
@@ -49,7 +53,176 @@ class SnapshotManager:
     def __init__(self):
         """Initialize the snapshot manager."""
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-    
+    def _check_and_fix_vm_permissions(self, domain: libvirt.virDomain, auto_fix: bool = True) -> bool:
+        """
+        Check and optionally fix VM disk file permissions before snapshot operations.
+        
+        Args:
+            domain: Libvirt domain object
+            auto_fix: Whether to automatically attempt permission fixes
+            
+        Returns:
+            bool: True if permissions are correct or successfully fixed
+        """
+        vm_name = domain.name()
+        
+        try:
+            # Get VM XML to find disk files
+            raw_xml = domain.XMLDesc(0)
+            tree = ET.fromstring(raw_xml)
+            
+            permission_issues = []
+            
+            # Check each disk device
+            for device in tree.findall('devices/disk'):
+                if device.get('type') == 'file' and device.get('device') == 'disk':
+                    source_node = device.find('source')
+                    if source_node is not None and 'file' in source_node.attrib:
+                        disk_path = Path(source_node.get('file'))
+                        
+                        if disk_path.exists():
+                            # Check file ownership and permissions
+                            stat_info = disk_path.stat()
+                            
+                            # Get file owner and group
+                            import pwd
+                            import grp
+                            try:
+                                owner = pwd.getpwuid(stat_info.st_uid).pw_name
+                                group = grp.getgrgid(stat_info.st_gid).gr_name
+                            except KeyError:
+                                owner = str(stat_info.st_uid)
+                                group = str(stat_info.st_gid)
+                            
+                            # Check if permissions are correct
+                            expected_perms = 0o660  # rw-rw----
+                            current_perms = stat.S_IMODE(stat_info.st_mode)
+                            
+                            # Check if libvirt can access the file
+                            libvirt_access_ok = (
+                                (owner == 'libvirt-qemu' or group == 'libvirt') and
+                                (current_perms & 0o660) == 0o660
+                            )
+                            
+                            if not libvirt_access_ok:
+                                issue = {
+                                    'path': disk_path,
+                                    'current_owner': owner,
+                                    'current_group': group,
+                                    'current_perms': oct(current_perms),
+                                    'expected_owner': 'libvirt-qemu',
+                                    'expected_group': 'libvirt',
+                                    'expected_perms': oct(expected_perms)
+                                }
+                                permission_issues.append(issue)
+                                
+                            # Also check for snapshot files in the same directory
+                            disk_dir = disk_path.parent
+                            vm_base = disk_path.stem.split('-')[0]
+                            snapshot_files = list(disk_dir.glob(f"{vm_base}*snap*.qcow2"))
+                            
+                            for snap_file in snapshot_files:
+                                snap_stat = snap_file.stat()
+                                try:
+                                    snap_owner = pwd.getpwuid(snap_stat.st_uid).pw_name
+                                    snap_group = grp.getgrgid(snap_stat.st_gid).gr_name
+                                except KeyError:
+                                    snap_owner = str(snap_stat.st_uid)
+                                    snap_group = str(snap_stat.st_gid)
+                                
+                                snap_perms = stat.S_IMODE(snap_stat.st_mode)
+                                snap_access_ok = (
+                                    (snap_owner == 'libvirt-qemu' or snap_group == 'libvirt') and
+                                    (snap_perms & 0o660) == 0o660
+                                )
+                                
+                                if not snap_access_ok:
+                                    snap_issue = {
+                                        'path': snap_file,
+                                        'current_owner': snap_owner,
+                                        'current_group': snap_group,
+                                        'current_perms': oct(snap_perms),
+                                        'expected_owner': 'libvirt-qemu',
+                                        'expected_group': 'libvirt',
+                                        'expected_perms': oct(expected_perms)
+                                    }
+                                    permission_issues.append(snap_issue)
+            
+            if not permission_issues:
+                self.logger.debug(f"VM '{vm_name}' disk and snapshot permissions are correct")
+                return True
+            
+            # Report permission issues
+            console.print(f"[yellow]:warning: Permission issues detected for VM '{vm_name}' disk/snapshot files:[/]")
+            for issue in permission_issues:
+                console.print(f"  File: {issue['path']}")
+                console.print(f"    Current: {issue['current_owner']}:{issue['current_group']} {issue['current_perms']}")
+                console.print(f"    Expected: {issue['expected_owner']}:{issue['expected_group']} {issue['expected_perms']}")
+            
+            if not auto_fix:
+                console.print("[yellow]Use --auto-fix-permissions to automatically correct these issues.[/]")
+                return False
+            
+            # Attempt to fix permissions
+            console.print("[yellow]Attempting to fix VM disk and snapshot file permissions...[/]")
+            
+            # Check if user is in libvirt group
+            try:
+                result = subprocess.run(['groups'], capture_output=True, text=True, check=True)
+                user_groups = result.stdout.strip().split()
+                if 'libvirt' not in user_groups:
+                    console.print("[yellow]Adding current user to libvirt group...[/]")
+                    subprocess.run(['sudo', 'usermod', '-a', '-G', 'libvirt', os.getenv('USER', 'user')], check=True)
+                    console.print("[green]User added to libvirt group. You may need to log out and back in.[/]")
+            except subprocess.CalledProcessError as e:
+                self.logger.warning(f"Could not check/fix user groups: {e}")
+            
+            # Fix file ownership and permissions
+            success_count = 0
+            for issue in permission_issues:
+                try:
+                    file_path = issue['path']
+                    
+                    # Fix ownership
+                    chown_cmd = ['sudo', 'chown', 'libvirt-qemu:libvirt', str(file_path)]
+                    subprocess.run(chown_cmd, check=True, capture_output=True)
+                    
+                    # Fix permissions
+                    chmod_cmd = ['sudo', 'chmod', '660', str(file_path)]
+                    subprocess.run(chmod_cmd, check=True, capture_output=True)
+                    
+                    console.print(f"[green]Fixed permissions for: {file_path}[/]")
+                    success_count += 1
+                    
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[red]Failed to fix permissions for {file_path}: {e}[/]")
+                    self.logger.error(f"Permission fix failed for {file_path}: {e}")
+            
+            if success_count == len(permission_issues):
+                console.print(f"[green]Successfully fixed all {success_count} permission issues.[/]")
+                
+                # Restart libvirtd to ensure changes take effect
+                try:
+                    console.print("[yellow]Restarting libvirtd service...[/]")
+                    subprocess.run(['sudo', 'systemctl', 'restart', 'libvirtd'], check=True, capture_output=True)
+                    console.print("[green]Libvirtd service restarted successfully.[/]")
+                    # Give libvirtd time to restart
+                    import time
+                    time.sleep(3)
+                except subprocess.CalledProcessError as e:
+                    console.print(f"[yellow]Warning: Could not restart libvirtd: {e}[/]")
+                
+                return True
+            else:
+                console.print(f"[yellow]Fixed {success_count}/{len(permission_issues)} permission issues.[/]")
+                return False
+                
+        except ET.ParseError as e:
+            self.logger.error(f"Error parsing VM XML for '{vm_name}': {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Unexpected error checking VM permissions for '{vm_name}': {e}")
+            return False
     # --- QEMU Guest Agent Functions ---
     
     def qemu_agent_fsfreeze(self, domain: libvirt.virDomain) -> bool:
@@ -90,7 +263,6 @@ class SnapshotManager:
             elif isinstance(response, str):
                 # Try to parse JSON response
                 try:
-                    import json
                     response_data = json.loads(response)
                     frozen_count = response_data.get('return', 0)
                     if frozen_count > 0:
@@ -177,7 +349,6 @@ class SnapshotManager:
             elif isinstance(response, str):
                 # Try to parse JSON response
                 try:
-                    import json
                     response_data = json.loads(response)
                     thawed_count = response_data.get('return', 0)
                     if thawed_count >= 0:
@@ -352,13 +523,14 @@ class SnapshotManager:
         except Exception as e:
             raise SnapshotOperationError(f"Unexpected error generating snapshot XML: {e}") from e
     
-    def create_external_snapshot(self, domain: libvirt.virDomain, snapshot_name: str) -> bool:
+    def create_external_snapshot(self, domain: libvirt.virDomain, snapshot_name: str, auto_fix_permissions: bool = True) -> bool:
         """
-        Create an external snapshot with agent-based filesystem freeze/thaw.
+        Create an external snapshot with agent-based filesystem freeze/thaw and automatic permission checking.
         
         Args:
             domain: The libvirt domain object
             snapshot_name: Name for the snapshot
+            auto_fix_permissions: Whether to automatically fix permission issues
             
         Returns:
             bool: True if snapshot creation was successful
@@ -371,6 +543,13 @@ class SnapshotManager:
             raise PracticeToolError("Invalid VM domain provided to create_external_snapshot.")
         
         console.rule(f"[bold]Creating EXTERNAL Snapshot: [cyan]{snapshot_name}[/][/]", style="blue")
+        
+        # Check and fix permissions before snapshot creation
+        if auto_fix_permissions:
+            console.print(f"[yellow]Checking VM disk permissions before snapshot creation...[/]")
+            permission_ok = self._check_and_fix_vm_permissions(domain, auto_fix=True)
+            if not permission_ok:
+                console.print(f"[yellow]Warning: Could not fix all permission issues, attempting snapshot creation anyway...[/]")
         
         was_frozen_by_agent = False
         
@@ -403,13 +582,34 @@ class SnapshotManager:
             
             # 4. Create Snapshot via Libvirt
             console.print(f"  Attempting snapshot creation (Flags: {flags})...")
-            snapshot = domain.snapshotCreateXML(str(snapshot_xml), flags)
             
-            if snapshot:
-                console.print(f"[green]:camera_with_flash: Successfully created external snapshot metadata: '{snapshot.getName()}'[/]")
-                return True
-            else:
-                raise SnapshotOperationError(f"Libvirt snapshotCreateXML returned None unexpectedly for '{snapshot_name}'.")
+            try:
+                snapshot = domain.snapshotCreateXML(str(snapshot_xml), flags)
+                
+                if snapshot:
+                    console.print(f"[green]:camera_with_flash: Successfully created external snapshot metadata: '{snapshot.getName()}'[/]")
+                    return True
+                else:
+                    raise SnapshotOperationError(f"Libvirt snapshotCreateXML returned None unexpectedly for '{snapshot_name}'.")
+            
+            except libvirt.libvirtError as create_error:
+                # If snapshot creation fails due to permissions, try to fix and retry
+                if "Permission denied" in str(create_error) and auto_fix_permissions:
+                    console.print(f"[yellow]Snapshot creation failed due to permissions, attempting fix and retry...[/]")
+                    
+                    if self._check_and_fix_vm_permissions(domain, auto_fix=True):
+                        console.print(f"[yellow]Retrying snapshot creation after permission fix...[/]")
+                        snapshot = domain.snapshotCreateXML(str(snapshot_xml), flags)
+                        
+                        if snapshot:
+                            console.print(f"[green]:camera_with_flash: Successfully created external snapshot metadata after permission fix: '{snapshot.getName()}'[/]")
+                            return True
+                        else:
+                            raise SnapshotOperationError(f"Libvirt snapshotCreateXML returned None after permission fix for '{snapshot_name}'.")
+                    else:
+                        raise SnapshotOperationError(f"Could not fix permissions for snapshot creation: {create_error}") from create_error
+                else:
+                    raise create_error
             
         except libvirt.libvirtError as e:
             err_code = e.get_error_code()
@@ -480,14 +680,15 @@ class SnapshotManager:
         finally:
             console.rule(f"[bold]End Snapshot Revert[/]", style="blue")
     
-    def delete_snapshot(self, domain: libvirt.virDomain, snapshot_name: str, delete_children: bool = False) -> bool:
+    def delete_snapshot(self, domain: libvirt.virDomain, snapshot_name: str, delete_children: bool = False, auto_fix_permissions: bool = True) -> bool:
         """
-        Delete a snapshot and optionally its children.
+        Delete a snapshot and optionally its children, with automatic permission checking and fixing.
         
         Args:
             domain: The libvirt domain object
             snapshot_name: Name of the snapshot to delete
             delete_children: Whether to delete child snapshots
+            auto_fix_permissions: Whether to automatically fix permission issues
             
         Returns:
             bool: True if deletion was successful
@@ -498,23 +699,69 @@ class SnapshotManager:
         if not domain:
             raise PracticeToolError("Invalid VM domain provided to delete_snapshot.")
         
-        console.print(f":wastebasket: Deleting snapshot: [cyan]{snapshot_name}[/]")
+        vm_name = domain.name()
+        console.rule(f"[bold]Deleting Snapshot: [cyan]{snapshot_name}[/][/]", style="blue")
+        
+        # Check if VM is running and might need to be shut down
+        if domain.isActive():
+            console.print(f"[yellow]:warning: VM is running. Shutting down before deleting snapshot...[/]")
+            try:
+                # Gracefully shutdown VM first
+                from .vm_manager import VMManager
+                vm_manager = VMManager()
+                vm_manager._shutdown_vm_gracefully(domain, timeout_seconds=120)
+            except Exception as shutdown_error:
+                console.print(f"[yellow]Warning: Could not gracefully shutdown VM: {shutdown_error}[/]")
+                console.print(f"[yellow]Forcing VM shutdown...[/]")
+                try:
+                    domain.destroy()
+                    console.print(f"[green]VM '{vm_name}' forced shutdown.[/]")
+                except libvirt.libvirtError as force_error:
+                    console.print(f"[red]Failed to force shutdown VM: {force_error}[/]")
         
         try:
+            # Check and fix permissions before attempting deletion
+            if auto_fix_permissions:
+                console.print(f"[yellow]Checking VM disk permissions before snapshot deletion...[/]")
+                permission_ok = self._check_and_fix_vm_permissions(domain, auto_fix=True)
+                if not permission_ok:
+                    console.print(f"[yellow]Warning: Could not fix all permission issues, attempting deletion anyway...[/]")
+            
             # 1. Look up the snapshot
+            console.print(f":wastebasket: Attempting to delete snapshot '[cyan]{snapshot_name}[/cyan]' (Flags=0). This might involve merging data...")
             snapshot = domain.snapshotLookupByName(snapshot_name, 0)
             
             # 2. Set deletion flags
+            # Use metadata-only deletion to avoid disk file access issues
             flags = libvirt.VIR_DOMAIN_SNAPSHOT_DELETE_METADATA_ONLY
             if delete_children:
                 flags |= libvirt.VIR_DOMAIN_SNAPSHOT_DELETE_CHILDREN
             
-            # 3. Delete the snapshot
-            snapshot.delete(flags)
-            
-            console.print(f"[green]:heavy_check_mark: Successfully deleted snapshot '{snapshot_name}'[/]")
-            return True
-            
+            # 3. Attempt the deletion
+            try:
+                snapshot.delete(flags)
+                console.print(f"[green]:heavy_check_mark: Successfully deleted snapshot '[cyan]{snapshot_name}[/cyan]'[/]")
+                return True
+                
+            except libvirt.libvirtError as delete_error:
+                # If metadata-only deletion fails, try without any flags as fallback
+                if "Permission denied" in str(delete_error) and auto_fix_permissions:
+                    console.print(f"[yellow]Metadata deletion failed, retrying after additional permission fixes...[/]")
+                    
+                    # Try to fix permissions again and retry
+                    if self._check_and_fix_vm_permissions(domain, auto_fix=True):
+                        try:
+                            # Retry the deletion with minimal flags
+                            snapshot.delete(0)  # No flags - let libvirt decide
+                            console.print(f"[green]:heavy_check_mark: Successfully deleted snapshot '[cyan]{snapshot_name}[/cyan]' after permission fix[/]")
+                            return True
+                        except libvirt.libvirtError as retry_error:
+                            raise SnapshotOperationError(f"Snapshot deletion failed even after permission fix: {retry_error}") from retry_error
+                    else:
+                        raise SnapshotOperationError(f"Could not fix permissions for snapshot deletion: {delete_error}") from delete_error
+                else:
+                    raise delete_error
+                
         except libvirt.libvirtError as e:
             err_code = e.get_error_code()
             if err_code == LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT and LibvirtErrorCodes.VIR_ERR_NO_DOMAIN_SNAPSHOT != -1:
@@ -523,6 +770,8 @@ class SnapshotManager:
                 raise SnapshotOperationError(f"Error deleting snapshot '{snapshot_name}': {e}") from e
         except Exception as e:
             raise SnapshotOperationError(f"Unexpected error deleting snapshot '{snapshot_name}': {e}") from e
+        finally:
+            console.rule(f"[bold]End Snapshot Deletion[/]", style="blue")
     
     def list_snapshots(self, domain: libvirt.virDomain) -> None:
         """

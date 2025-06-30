@@ -54,12 +54,18 @@ class ChallengeValidator:
         self.logger = logging.getLogger(__name__)
         
         # Registry of available validation step types
-        self.validation_registry = {
+        self.validation_registry: Dict[str, Any] = {
             "run_command": self._validate_run_command,
             "check_service_status": self._validate_check_service_status,
             "check_port_listening": self._validate_check_port_listening,
             "check_file_exists": self._validate_check_file_exists,
             "check_file_contains": self._validate_check_file_contains,
+            # Add these new validation types:
+            "check_user_group": self._validate_check_user_group,
+            "check_command": self._validate_check_command,
+            "check_history": self._validate_check_history,
+            "ensure_group_exists": self._validate_ensure_group_exists,
+            "ensure_user_exists": self._validate_ensure_user_exists,
         }
     
     def _setup_logging(self) -> None:
@@ -181,9 +187,10 @@ class ChallengeValidator:
             
             step_type: str = step['type']
             if step_type not in self.validation_registry:
+                supported_types = ', '.join(self.validation_registry.keys())
                 errors.append(
                     f"'{filename}': Validation step {i} has unsupported type: '{step_type}'. "
-                    f"Supported types: {', '.join(self.validation_registry.keys())}"
+                    f"Supported types: {supported_types}"
                 )
         
         return errors
@@ -470,7 +477,266 @@ class ChallengeValidator:
         except SSHCommandError as e:
             raise ChallengeValidationError([f"Failed to search file content: {e}"]) from e
 
+    def _validate_check_user_group(self, step_data: Dict[str, Any], vm_ip: str,
+                                ssh_user: str, ssh_key: Path, verbose: bool) -> None:
+        """
+        Validate user and group management operations.
+        
+        Args:
+            step_data: Step configuration with check_type and related parameters
+            vm_ip: Target VM IP address
+            ssh_user: SSH username
+            ssh_key: SSH private key path
+            verbose: Enable verbose output
+            
+        Raises:
+            ChallengeValidationError: If user/group validation fails
+        """
+        check_type = step_data.get("check_type")
+        username = step_data.get("username")
+        
+        if not check_type:
+            raise ChallengeValidationError(["'check_user_group' step missing required 'check_type' field."])
+        
+        try:
+            if check_type == "user_exists":
+                if not username:
+                    raise ChallengeValidationError(["'user_exists' check missing required 'username' field."])
+                
+                command = f"id {username}"
+                result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+                
+                if not result.get('success', False):
+                    raise ChallengeValidationError([f"User '{username}' does not exist on the system."])
+                    
+            elif check_type == "user_primary_group":
+                if not username:
+                    raise ChallengeValidationError(["'user_primary_group' check missing required 'username' field."])
+                
+                expected_group = step_data.get("group")
+                if not expected_group:
+                    raise ChallengeValidationError(["'user_primary_group' check missing required 'group' field."])
+                
+                command = f"id -gn {username}"
+                result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+                
+                if not result.get('success', False):
+                    raise ChallengeValidationError([f"Could not determine primary group for user '{username}'."])
+                
+                actual_group = result.get('stdout', '').strip()
+                if actual_group != expected_group:
+                    raise ChallengeValidationError([
+                        f"User '{username}' primary group is '{actual_group}', expected '{expected_group}'."
+                    ])
+                    
+            elif check_type == "user_in_group":
+                if not username:
+                    raise ChallengeValidationError(["'user_in_group' check missing required 'username' field."])
+                
+                expected_group = step_data.get("group")
+                if not expected_group:
+                    raise ChallengeValidationError(["'user_in_group' check missing required 'group' field."])
+                
+                command = f"groups {username}"
+                result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+                
+                if not result.get('success', False):
+                    raise ChallengeValidationError([f"Could not determine groups for user '{username}'."])
+                
+                user_groups = result.get('stdout', '').strip()
+                if expected_group not in user_groups.split():
+                    raise ChallengeValidationError([
+                        f"User '{username}' is not in group '{expected_group}'. Current groups: {user_groups}"
+                    ])
+                    
+            elif check_type == "user_shell":
+                if not username:
+                    raise ChallengeValidationError(["'user_shell' check missing required 'username' field."])
+                
+                expected_shell = step_data.get("shell")
+                if not expected_shell:
+                    raise ChallengeValidationError(["'user_shell' check missing required 'shell' field."])
+                
+                command = f"getent passwd {username} | cut -d: -f7"
+                result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+                
+                if not result.get('success', False):
+                    raise ChallengeValidationError([f"Could not determine shell for user '{username}'."])
+                
+                actual_shell = result.get('stdout', '').strip()
+                if actual_shell != expected_shell:
+                    raise ChallengeValidationError([
+                        f"User '{username}' shell is '{actual_shell}', expected '{expected_shell}'."
+                    ])
+            else:
+                raise ChallengeValidationError([f"Unsupported check_type for user_group validation: '{check_type}'"])
+                
+        except SSHCommandError as e:
+            raise ChallengeValidationError([f"SSH command execution failed: {e}"]) from e
 
+    def _validate_check_command(self, step_data: Dict[str, Any], vm_ip: str,
+                            ssh_user: str, ssh_key: Path, verbose: bool) -> None:
+        """
+        Validate by executing a general command with flexible success criteria.
+        
+        Args:
+            step_data: Step configuration with 'command' and optional success criteria
+            vm_ip: Target VM IP address
+            ssh_user: SSH username
+            ssh_key: SSH private key path
+            verbose: Enable verbose output
+            
+        Raises:
+            ChallengeValidationError: If command validation fails
+        """
+        command = step_data.get("command")
+        expected_exit_status = step_data.get("expected_exit_status", 0)
+        
+        if not command:
+            raise ChallengeValidationError(["'check_command' step missing required 'command' field."])
+        
+        try:
+            result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+            
+            actual_exit_status = result.get('exit_status', -1)
+            if actual_exit_status != expected_exit_status:
+                stderr_output = result.get('stderr', '').strip()
+                error_details = [
+                    f"Command '{command}' exited with code {actual_exit_status}, expected {expected_exit_status}."
+                ]
+                if stderr_output:
+                    error_details.append(f"Error output: {stderr_output}")
+                
+                raise ChallengeValidationError(error_details)
+                
+        except SSHCommandError as e:
+            raise ChallengeValidationError([f"SSH command execution failed: {e}"]) from e
+
+    def _validate_check_history(self, step_data: Dict[str, Any], vm_ip: str,
+                            ssh_user: str, ssh_key: Path, verbose: bool) -> None:
+        """
+        Validate command history for specific patterns or commands.
+        
+        Args:
+            step_data: Step configuration with command_pattern and expected_count
+            vm_ip: Target VM IP address
+            ssh_user: SSH username
+            ssh_key: SSH private key path
+            verbose: Enable verbose output
+            
+        Raises:
+            ChallengeValidationError: If history validation fails
+        """
+        command_pattern = step_data.get("command_pattern")
+        expected_count = step_data.get("expected_count", ">0")
+        user_context = step_data.get("user_context", ssh_user)
+        
+        if not command_pattern:
+            raise ChallengeValidationError(["'check_history' step missing required 'command_pattern' field."])
+        
+        try:
+            # Check history for the specified user context
+            if user_context == "root":
+                history_command = f"sudo bash -c 'history | grep -E \"{command_pattern}\" | wc -l'"
+            else:
+                history_command = f"history | grep -E '{command_pattern}' | wc -l"
+            
+            result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, history_command, verbose=verbose)
+            
+            if not result.get('success', False):
+                raise ChallengeValidationError([f"Failed to check command history: {result.get('stderr', 'Unknown error')}"])
+            
+            try:
+                actual_count = int(result.get('stdout', '0').strip())
+            except ValueError:
+                raise ChallengeValidationError([f"Could not parse history count from output: {result.get('stdout', '')}"])
+            
+            # Parse expected count (supports ">0", ">=1", "==2", etc.)
+            if expected_count.startswith(">"):
+                threshold = int(expected_count[1:]) if expected_count[1:] else 0
+                if actual_count <= threshold:
+                    raise ChallengeValidationError([
+                        f"Expected more than {threshold} occurrences of pattern '{command_pattern}' in history, found {actual_count}."
+                    ])
+            elif expected_count.startswith(">="):
+                threshold = int(expected_count[2:])
+                if actual_count < threshold:
+                    raise ChallengeValidationError([
+                        f"Expected at least {threshold} occurrences of pattern '{command_pattern}' in history, found {actual_count}."
+                    ])
+            elif expected_count.startswith("==") or expected_count.isdigit():
+                threshold = int(expected_count[2:] if expected_count.startswith("==") else expected_count)
+                if actual_count != threshold:
+                    raise ChallengeValidationError([
+                        f"Expected exactly {threshold} occurrences of pattern '{command_pattern}' in history, found {actual_count}."
+                    ])
+            else:
+                raise ChallengeValidationError([f"Unsupported expected_count format: '{expected_count}'"])
+                
+        except SSHCommandError as e:
+            raise ChallengeValidationError([f"SSH command execution failed: {e}"]) from e
+
+    def _validate_ensure_group_exists(self, step_data: Dict[str, Any], vm_ip: str,
+                                    ssh_user: str, ssh_key: Path, verbose: bool) -> None:
+        """
+        Validate that a group exists on the system (typically used in setup).
+        
+        Args:
+            step_data: Step configuration with 'group' name
+            vm_ip: Target VM IP address
+            ssh_user: SSH username
+            ssh_key: SSH private key path
+            verbose: Enable verbose output
+            
+        Raises:
+            ChallengeValidationError: If group validation fails
+        """
+        group_name = step_data.get("group")
+        user_context = step_data.get("user_context", ssh_user)
+        
+        if not group_name:
+            raise ChallengeValidationError(["'ensure_group_exists' step missing required 'group' field."])
+        
+        try:
+            command = f"getent group {group_name}"
+            result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+            
+            if not result.get('success', False):
+                raise ChallengeValidationError([f"Group '{group_name}' does not exist on the system."])
+                
+        except SSHCommandError as e:
+            raise ChallengeValidationError([f"SSH command execution failed: {e}"]) from e
+
+    def _validate_ensure_user_exists(self, step_data: Dict[str, Any], vm_ip: str,
+                                    ssh_user: str, ssh_key: Path, verbose: bool) -> None:
+        """
+        Validate that a user exists on the system (typically used in setup).
+        
+        Args:
+            step_data: Step configuration with 'user' name
+            vm_ip: Target VM IP address
+            ssh_user: SSH username
+            ssh_key: SSH private key path
+            verbose: Enable verbose output
+            
+        Raises:
+            ChallengeValidationError: If user validation fails
+        """
+        username = step_data.get("user")
+        user_context = step_data.get("user_context", ssh_user)
+        
+        if not username:
+            raise ChallengeValidationError(["'ensure_user_exists' step missing required 'user' field."])
+        
+        try:
+            command = f"id {username}"
+            result = self.ssh_manager.run_ssh_command(vm_ip, ssh_user, ssh_key, command, verbose=verbose)
+            
+            if not result.get('success', False):
+                raise ChallengeValidationError([f"User '{username}' does not exist on the system."])
+                
+        except SSHCommandError as e:
+            raise ChallengeValidationError([f"SSH command execution failed: {e}"]) from e
 def validate_challenge_file(file_path: Path) -> None:
     """
     Comprehensive validation and display of a challenge YAML file.
