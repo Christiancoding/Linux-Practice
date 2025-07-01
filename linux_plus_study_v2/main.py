@@ -16,6 +16,7 @@ from pathlib import Path
 from turtle import setup
 from typing import Optional, Dict, List
 import signal
+from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -74,7 +75,6 @@ class LinuxPlusStudySystem:
         
         self.logger = logging.getLogger(__name__)
         self.logger.info("Linux Plus Study System logging initialized")
-    
     def _setup_signal_handlers(self) -> None:
         """Setup signal handlers for graceful shutdown."""
         def signal_handler(signum, frame):
@@ -119,7 +119,6 @@ class LinuxPlusStudySystem:
                 return
             
             # Import web application components
-            from views.web_view import LinuxPlusStudyWeb
             from controllers.quiz_controller import QuizController
             from controllers.stats_controller import StatsController
             
@@ -132,9 +131,10 @@ class LinuxPlusStudySystem:
             self.logger.info("Web application components loaded successfully")
             
             # Create Flask application
-            app = LinuxPlusStudyWeb.setup_routes(
+            app = self.setup_routes(
                 quiz_controller=quiz_controller,
-                stats_controller=stats_controller
+                stats_controller=stats_controller,
+                game_state=game_state
             )
             
             self.logger.info(f"Web interface loaded successfully - Starting server on {host}:{port}")
@@ -156,7 +156,6 @@ class LinuxPlusStudySystem:
         except Exception as e:
             self.logger.error(f"Web application error: {e}", exc_info=True)
             print(f"Web application failed to start: {e}")
-    
     def run_vm_management(self) -> None:
         """
         Launch the VM management CLI interface (LPEM functionality).
@@ -302,7 +301,35 @@ class LinuxPlusStudySystem:
         print("   python main.py --vm --debug")
         print("   python main.py --cli")
         print()
-        input("Press Enter to continue...")
+        input("Press Enter to continue...")    
+    def setup_routes(self, quiz_controller, stats_controller, game_state):
+        """
+        Setup Flask application with routes and controllers.
+        
+        Args:
+            quiz_controller: Quiz controller instance
+            stats_controller: Statistics controller instance
+            game_state: Game state instance
+            
+        Returns:
+            Configured Flask application
+        """
+        try:
+            # Initialize web view with game_state and controllers
+            web_view = LinuxPlusStudyWeb(game_state, debug=self.debug)
+            
+            # The web_view already has a configured Flask app with routes
+            app = web_view.app
+            
+            # Update the controllers in the web view
+            web_view.quiz_controller = quiz_controller
+            web_view.stats_controller = stats_controller
+            
+            return app
+            
+        except Exception as e:
+            self.logger.error(f"Failed to setup Flask routes: {e}", exc_info=True)
+            raise
 
 
 def create_argument_parser() -> argparse.ArgumentParser:
