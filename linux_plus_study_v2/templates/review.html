@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card bg-secondary">
+            <div class="card-header">
+                <h2 class="text-center text-warning mb-0">
+                    <i class="fas fa-redo"></i> Review Incorrect Answers
+                </h2>
+            </div>
+            <div class="card-body">
+                <div id="review-container">
+                    <div class="text-center text-muted">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadReviewQuestions();
+});
+
+function loadReviewQuestions() {
+    fetch('/api/review_incorrect')
+        .then(response => response.json())
+        .then(data => {
+            displayReviewQuestions(data);
+        })
+        .catch(error => {
+            console.error('Error loading review questions:', error);
+        });
+}
+
+function displayReviewQuestions(data) {
+    const container = document.getElementById('review-container');
+    
+    if (!data.has_questions) {
+        container.innerHTML = '<div class="text-center text-muted">No incorrect answers to review. Keep practicing!</div>';
+        return;
+    }
+    
+    let html = '';
+    data.questions.forEach((question, index) => {
+        const [questionText, options, correctIndex, category, explanation] = question;
+        
+        html += `
+            <div class="card bg-dark mb-3">
+                <div class="card-body">
+                    <h5 class="text-warning">Question ${index + 1}</h5>
+                    <p class="text-muted small">Category: ${category}</p>
+                    <p class="text-light">${questionText}</p>
+                    
+                    <div class="options mb-3">
+                        ${options.map((option, i) => `
+                            <div class="form-check ${i === correctIndex ? 'text-success' : ''}">
+                                <span class="form-check-label">
+                                    ${String.fromCharCode(65 + i)}. ${option}
+                                    ${i === correctIndex ? ' ✓ (Correct)' : ''}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    ${explanation ? `
+                        <div class="alert alert-info">
+                            <strong>Explanation:</strong> ${explanation}
+                        </div>
+                    ` : ''}
+                    
+                    <button class="btn btn-outline-warning btn-sm" onclick="removeFromReview('${questionText.replace(/'/g, "\\'")}', ${index})">
+                        Remove from Review List
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function removeFromReview(questionText, index) {
+    if (!confirm('Remove this question from your review list?')) {
+        return;
+    }
+    
+    fetch('/api/remove_from_review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            question_text: questionText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadReviewQuestions(); // Reload the list
+            showAlert('Question removed from review list', 'success');
+        } else {
+            showAlert('Error removing question', 'danger');
+        }
+    })
+    .catch(error => {
+        showAlert('Error removing question', 'danger');
+    });
+}
+</script>
+{% endblock %}

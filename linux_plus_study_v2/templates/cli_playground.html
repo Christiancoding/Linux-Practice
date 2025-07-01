@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="mb-4">
+        <i class="fas fa-terminal"></i> CLI Playground
+    </h1>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- CLI Terminal -->
+            <div class="cli-container">
+                <div class="cli-header">
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>Linux Study Terminal</span>
+                    </div>
+                </div>
+                
+                <div class="cli-terminal" id="cliTerminal">
+                    <div class="cli-output">
+                        <div class="cli-result">Welcome to Linux Plus CLI Playground!</div>
+                        <div class="cli-result">Type 'help' to see available commands.</div>
+                        <div class="cli-result">This is a safe educational environment for practicing Linux commands.</div>
+                        <div class="cli-result"></div>
+                    </div>
+                    
+                    <div class="cli-input-line">
+                        <span class="cli-prompt">student@linux-study:~/sandbox$</span>
+                        <input type="text" class="cli-input" id="cliInput" 
+                               placeholder="Enter command..." autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CLI Controls -->
+            <div class="cli-controls">
+                <button type="button" class="btn-cli" onclick="clearTerminal()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+                <button type="button" class="btn-cli" onclick="showHistory()">
+                    <i class="fas fa-history"></i> History
+                </button>
+                <button type="button" class="btn-cli" onclick="showHelp()">
+                    <i class="fas fa-question-circle"></i> Help
+                </button>
+                <button type="button" class="btn-cli" onclick="resetPlayground()">
+                    <i class="fas fa-refresh"></i> Reset
+                </button>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <!-- Tutorial Section -->
+            <div class="cli-tutorial">
+                <h5><i class="fas fa-lightbulb"></i> Quick Tutorial</h5>
+                <p>Try these basic commands to get started:</p>
+                <ul class="mb-0">
+                    <li><code>ls</code> - List files in current directory</li>
+                    <li><code>cat sample.txt</code> - View file contents</li>
+                    <li><code>grep INFO log.txt</code> - Search for text</li>
+                    <li><code>wc data.csv</code> - Count lines/words</li>
+                    <li><code>help</code> - Show all commands</li>
+                </ul>
+            </div>
+            
+            <!-- Available Commands -->
+            <div class="cli-tutorial">
+                <h5><i class="fas fa-list"></i> Available Commands</h5>
+                <div class="command-grid" id="commandGrid">
+                    <!-- Commands will be loaded here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="../static/js/cli_playground.js"></script>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content bg-dark text-light">
+            <div class="modal-header">
+                <h5 class="modal-title" id="historyModalLabel">
+                    <i class="fas fa-history"></i> Command History
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="historyContent">
+                    <em>Loading history...</em>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-danger" onclick="clearHistory()">Clear History</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading indicator -->
+<div id="loadingIndicator" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="../static/js/cli_playground.js"></script>
+{% endblock %}
