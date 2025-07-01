@@ -1,8 +1,0 @@
-README.txt
-setup.py
-lpem.egg-info/PKG-INFO
-lpem.egg-info/SOURCES.txt
-lpem.egg-info/dependency_links.txt
-lpem.egg-info/entry_points.txt
-lpem.egg-info/requires.txt
-lpem.egg-info/top_level.txt
