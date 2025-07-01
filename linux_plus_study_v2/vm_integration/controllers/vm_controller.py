@@ -732,7 +732,7 @@ def revert_vm_snapshot(
 def setup_user(
     vm_name: Annotated[str, typer.Option("--vm", help="Name of the libvirt VM to use.")] = config.vm.DEFAULT_VM_NAME,
     new_user: Annotated[str, typer.Option("--new-user", help="Username to set up on the VM.")] = config.ssh.DEFAULT_SSH_USER,
-    admin_user: Annotated[str, typer.Option("--admin-user", help="An existing sudoer user on the VM.")] = "ubuntu",
+    admin_user: Annotated[str, typer.Option("--admin-user", help="An existing sudoer user on the VM.")] = "retiredfan",  # Changed from "ubuntu" to "retiredfan"
     admin_key: Annotated[Path, typer.Option("--admin-key", help="Path to SSH private key for admin user.")] = config.ssh.DEFAULT_SSH_KEY_PATH,
     public_key_path: Annotated[Path, typer.Option("--pub-key", help="Path to PUBLIC SSH key to install.", 
         exists=True, file_okay=True, readable=True)] = Path("~/.ssh/id_ed25519.pub").expanduser(),
@@ -841,7 +841,7 @@ def setup_vm_user(vm_name: str, new_user: str = "student"):
         setup_user(
             vm_name=vm_name,
             new_user=new_user,
-            admin_user="ubuntu",
+            admin_user="retiredfan",  # Changed from "ubuntu" to "retiredfan"
             admin_key=config.ssh.DEFAULT_SSH_KEY_PATH,
             public_key_path=Path("~/.ssh/id_ed25519.pub").expanduser(),
             libvirt_uri=config.vm.LIBVIRT_URI
