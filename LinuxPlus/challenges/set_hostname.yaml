@@ -1,0 +1,28 @@
+id: set_hostname
+name: "Set System Hostname"
+description: "Ensure the virtual machine's hostname is set to 'linuxbox'."
+category: "System Management"
+difficulty: "Easy"
+score: 50 # Assign a score
+concepts: ["hostnamectl", "hostname", "sudo"]
+setup:
+  - type: run_command
+    command: "sudo hostnamectl set-hostname practice-vm --static"
+user_action_simulation: "sudo hostnamectl set-hostname linuxbox --static"
+validation:
+  - type: run_command # Still useful for direct output checks
+    command: "hostname"
+    success_criteria:
+      exit_status: 0
+      stdout_equals: "linuxbox"
+  - type: check_file_contains # Verify the static hostname file
+    path: "/etc/hostname"
+    text: "linuxbox" # Check for exact text
+    expected_state: true # Ensure it's present
+hints:
+  - text: "Which command is used to view or set the system's hostname?"
+    cost: 0 # Free hint
+  - text: "Look into the 'hostnamectl' command."
+    cost: 5 # Cost 5 points
+  - text: "Remember you might need elevated privileges (sudo) to change the hostname."
+    cost: 10 # Cost 10 points

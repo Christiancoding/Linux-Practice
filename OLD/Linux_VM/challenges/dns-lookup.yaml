@@ -1,0 +1,31 @@
+id: dns-lookup
+name: "DNS Lookup"
+description: "Use the 'dig' command to perform a DNS lookup for example.com and save the output to ~/dns_results.txt"
+category: "Networking"
+difficulty: "Easy"
+score: 40
+concepts: ["dig", "DNS", "redirection"]
+setup:
+  - type: run_command
+    command: "rm -f /home/roo/dns_results.txt"
+user_action_simulation: "dig example.com > /home/roo/dns_results.txt"
+validation:
+  - type: check_file_exists
+    path: "/home/roo/dns_results.txt"
+    expected_state: true
+    file_type: "file"
+  - type: check_file_contains
+    path: "/home/roo/dns_results.txt"
+    text: "example.com"
+    expected_state: true
+  - type: check_file_contains
+    path: "/home/roo/dns_results.txt" 
+    text: "ANSWER SECTION"
+    expected_state: true
+hints:
+  - text: "The 'dig' command is used for DNS lookups."
+    cost: 0
+  - text: "Remember to redirect the output to a file with the > operator."
+    cost: 5
+  - text: "Try: dig example.com > ~/dns_results.txt"
+    cost: 10

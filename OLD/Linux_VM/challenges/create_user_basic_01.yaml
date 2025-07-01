@@ -1,0 +1,56 @@
+challenge_id: create_user_basic_01
+title: "Create a User Account with Specific Requirements"
+description: "Create a new user account named 'analyst' with custom settings"
+domain: "2.0 Security"
+objective_refs: ["2.2"]
+difficulty: "Basic"
+estimated_time_mins: 10
+concepts: ["useradd", "usermod", "passwd", "groups", "user management"]
+distro_compatibility: ["Any"]
+setup:
+  - type: ensure_group_exists
+    group: "reports"
+    user_context: root
+  - type: ensure_group_exists
+    group: "analytics"
+    user_context: root
+task: "Create a new user account named 'analyst' with home directory at /home/analyst, 
+      primary group 'reports', supplementary group 'analytics', default shell bash, 
+      and set an initial password of 'Temp2023!' that must be changed on first login."
+validation:
+  final_state_checks:
+    - type: check_user_group
+      check_type: user_exists
+      username: "analyst"
+    - type: check_user_group
+      check_type: user_primary_group
+      username: "analyst"
+      group: "reports"
+    - type: check_user_group
+      check_type: user_in_group
+      username: "analyst"
+      group: "analytics"
+    - type: check_user_group
+      check_type: user_shell
+      username: "analyst"
+      shell: "/bin/bash"
+    - type: check_file_exists
+      path: "/home/analyst"
+      is_directory: true
+    - type: check_command
+      command: "chage -l analyst | grep 'Password expires' | grep -i 'password must be changed'"
+      expected_exit_status: 0
+  process_validation_checks:
+    - type: check_history
+      command_pattern: "(useradd|usermod).*analyst"
+      expected_count: ">0"
+      user_context: root
+      notes: "History checks confirm appropriate user management commands were used"
+hints:
+  - text: "Which command is used to create a new user account?"
+    cost: 0
+  - text: "Consider the useradd command with appropriate options to set groups, shell, and home directory"
+    cost: 5
+  - text: "The passwd and chage commands can help with password management"
+    cost: 10
+solution_file: "solutions/create_user_basic_01.md"
