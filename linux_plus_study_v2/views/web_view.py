@@ -336,7 +336,7 @@ class LinuxPlusStudyWeb:
             try:
                 if not self.game_state.questions:
                     return jsonify({
-                        'success': False, 
+                        'success': False,
                         'message': 'No questions are currently loaded to export.'
                     }), 400
                 
@@ -1585,7 +1585,54 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 }), 500
-        self.setup_export_import_routes()
+        @self.app.route('/api/quiz_results')
+        def api_quiz_results():
+            """Get the results of the completed quiz session."""
+            try:
+                # Get results from the quiz controller
+                results = self.quiz_controller.get_quiz_results()
+                
+                if results is None:
+                    return jsonify({
+                        'success': False,
+                        'error': 'No quiz results available'
+                    })
+                
+                return jsonify({
+                    'success': True,
+                    **results
+                })
+                
+            except Exception as e:
+                print(f"Error getting quiz results: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                })
+
+        @self.app.route('/api/session_summary')
+        def api_session_summary():
+            """Get a summary of the current/last quiz session."""
+            try:
+                summary = self.quiz_controller.get_session_summary()
+                
+                if summary is None:
+                    return jsonify({
+                        'success': False,
+                        'error': 'No session summary available'
+                    })
+                
+                return jsonify({
+                    'success': True,
+                    **summary
+                })
+                
+            except Exception as e:
+                print(f"Error getting session summary: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                })
     def handle_api_errors(f):
         def wrapper(*args, **kwargs):
             try:

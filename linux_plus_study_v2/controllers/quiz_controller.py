@@ -555,6 +555,32 @@ class QuizController:
             'detailed_answers': self.session_answers
         }
     
+    def get_quiz_results(self):
+        """Get comprehensive results of the completed quiz session."""
+        if not hasattr(self, 'last_session_results') or self.last_session_results is None:
+            return None
+        
+        return self.last_session_results
+
+    def get_session_summary(self):
+        """Get a summary of the current or last session."""
+        try:
+            status = self.get_session_status()
+            
+            return {
+                'score': status['session_score'],
+                'total': status['session_total'],
+                'percentage': (status['session_score'] / status['session_total'] * 100) if status['session_total'] > 0 else 0,
+                'streak': status['current_streak'],
+                'points_earned': status.get('points_earned', 0),
+                'mode': status['mode'],
+                'quiz_active': status['quiz_active'],
+                'categories_studied': getattr(self, 'categories_in_session', [])
+            }
+        except Exception as e:
+            print(f"Error generating session summary: {e}")
+            return None
+    
     def _calculate_points(self, is_correct, current_streak):
         """Calculate points earned for an answer."""
         if is_correct:
