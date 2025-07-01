@@ -15,7 +15,7 @@ import traceback
 from pathlib import Path
 from typing import Optional, Dict, List
 import signal
-
+from models.game_state import GameState
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
     print("Linux Plus Study System requires Python 3.8+. Please upgrade your Python installation.")
@@ -123,6 +123,7 @@ class LinuxPlusStudySystem:
             from controllers.stats_controller import StatsController
             
             # Initialize controllers
+            game_state = GameState()
             quiz_controller = QuizController()
             stats_controller = StatsController()
             
