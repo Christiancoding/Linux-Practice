@@ -198,44 +198,38 @@ class ChallengeManager:
     # --- Challenge Structure Validation ---
     
     def validate_challenge_structure(self, challenge_data: Dict[str, Any], 
-                            filename: str = "challenge") -> List[str]:
+                            filename: str = "challenge") -> Tuple[List[str], Dict[str, Any]]:
         """
-        Validate the structure and content of a challenge definition.
+        Validate challenge structure and return errors and normalized data.
         
         Args:
-            challenge_data: The parsed challenge YAML data
-            filename: The filename for error reporting
+            challenge_data: Raw challenge data from YAML
+            filename: Name of the file being validated (for error messages)
             
         Returns:
-            List[str]: List of validation errors (empty if valid)
+            Tuple of (validation_errors, normalized_challenge_data)
         """
-        # --- NORMALIZATION: Handle alternative field naming conventions ---
-        normalized_data = dict(challenge_data)
         errors: List[str] = []
         
-        # Handle alternative field naming conventions for backward compatibility
-        if 'challenge_id' in normalized_data and 'id' not in normalized_data:
-            normalized_data['id'] = normalized_data['challenge_id']
-        if 'title' in normalized_data and 'name' not in normalized_data:
-            normalized_data['name'] = normalized_data['title']
-
-        # Handle nested validation structure
-        if 'validation' in normalized_data:
+        # Create a copy for normalization
+        normalized_data = dict(challenge_data)
+        
+        # Handle nested validation structure like final_state_checks
+        if 'validation' in normalized_data and isinstance(normalized_data['validation'], dict):
             validation = normalized_data['validation']
-            if isinstance(validation, dict):
-                # Handle nested validation structure like final_state_checks
-                if 'final_state_checks' in validation:
-                    normalized_data['validation'] = validation['final_state_checks']
-                elif 'process_validation_checks' in validation:
-                    normalized_data['validation'] = validation['process_validation_checks']
-                else:
-                    # Convert any nested dict to a list of its values
-                    validation_steps = []
-                    for value in validation.values():
-                        if isinstance(value, list):
-                            validation_steps.extend(value)
-                    if validation_steps:
-                        normalized_data['validation'] = validation_steps
+            # Handle nested validation structure like final_state_checks
+            if 'final_state_checks' in validation:
+                normalized_data['validation'] = validation['final_state_checks']
+            elif 'process_validation_checks' in validation:
+                normalized_data['validation'] = validation['process_validation_checks']
+            else:
+                # Convert any nested dict to a list of its values
+                validation_steps = []
+                for value in validation.values():
+                    if isinstance(value, list):
+                        validation_steps.extend(value)
+                if validation_steps:
+                    normalized_data['validation'] = validation_steps
 
         challenge_data = normalized_data
         
@@ -248,38 +242,15 @@ class ChallengeManager:
         }
         
         for field, expected_type in required_fields.items():
-            expected_type: type  # type: ignore
             if field not in challenge_data:
                 errors.append(f"'{filename}': Missing required field '{field}'")
             elif not isinstance(challenge_data[field], expected_type):
-                errors.append(f"'{filename}': Field '{field}' must be of type {getattr(expected_type, '__name__', str(expected_type))}")
-        
-        # --- Optional Fields with Type Validation ---
-        optional_fields: Dict[str, Union[type, Tuple[type, ...]]] = {
-            'category': str,
-            'difficulty': str,
-            'score': (int, str),  # Allow string for conversion
-            'concepts': list,
-            'setup': list,
-            'hints': list
-        }
-        
-        for field, expected_type in optional_fields.items():
-            expected_type: type | tuple[type, ...]  # type: ignore
-            if field in challenge_data:
-                value = challenge_data[field]
-                if isinstance(expected_type, tuple):
-                    # Multiple allowed types
-                    if not any(isinstance(value, t) for t in expected_type):
-                        type_names = " or ".join([t.__name__ for t in expected_type if hasattr(t, "__name__")])
-                        errors.append(f"'{filename}': Field '{field}' must be of type {type_names}")
-                else:
-                    if not isinstance(value, expected_type):
-                        errors.append(f"'{filename}': Field '{field}' must be of type {expected_type.__name__}")
+                errors.append(f"'{filename}': Field '{field}' must be of type {expected_type.__name__}")
         
         # --- ID Validation ---
         if 'id' in challenge_data and isinstance(challenge_data['id'], str):
-            if not re.match(r'^[a-zA-Z0-9_-]+$', challenge_data['id']):
+            challenge_id = challenge_data['id']
+            if not re.match(r'^[a-zA-Z0-9_-]+$', challenge_id):
                 errors.append(f"'{filename}': ID must contain only alphanumeric characters, hyphens, and underscores")
         if 'task' in normalized_data and 'description' not in normalized_data:
             normalized_data['description'] = normalized_data['task']
@@ -393,16 +364,6 @@ class ChallengeManager:
                             elif check_type in ['user_exists', 'user_primary_group', 'user_in_group', 'user_shell']:
                                 if 'username' not in step:
                                     errors.append(f"{step_label}: Missing 'username'")
-                                if check_type in ['user_primary_group', 'user_in_group'] and 'group' not in step:
-                                    errors.append(f"{step_label}: Missing 'group'")
-                                if check_type == 'user_shell' and 'shell' not in step:
-                                    errors.append(f"{step_label}: Missing 'shell'")
-                        elif step_type == 'check_command':
-                            if 'command' not in step:
-                                errors.append(f"{step_label}: Missing 'command'")
-                        elif step_type == 'check_history':
-                            if 'command_pattern' not in step:
-                                errors.append(f"{step_label}: Missing 'command_pattern'")
                         else:
                             errors.append(f"{step_label}: Unsupported validation type: '{step_type}'")
         
@@ -444,7 +405,7 @@ class ChallengeManager:
                     if cost < 0:
                         errors.append(f"{hint_label}: Cost must be non-negative")
         
-        return errors
+        return errors, normalized_data
     # --- Challenge Loading ---
     
     def load_challenges_from_dir(self, challenges_dir: Path) -> Dict[str, Dict[str, Any]]:
