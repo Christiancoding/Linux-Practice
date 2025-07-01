@@ -31,9 +31,10 @@ except ImportError:
     libvirt = None  # Will be handled by vm_manager
 
 # Local imports
+from vm_integration.utils.challenge_manager import ChallengeManager
 from vm_integration.utils.console_helper import console, RICH_AVAILABLE, Panel, Table
-from utils.config import config
-from utils.exceptions import (
+from vm_integration.utils.config import config
+from vm_integration.utils.exceptions import (
     PracticeToolError,
     SnapshotOperationError,
     ChallengeLoadError,
@@ -42,7 +43,7 @@ from utils.exceptions import (
 #    NetworkError,
 #    SSHCommandError
 )
-from utils.vm_manager import (
+from vm_integration.utils.vm_manager import (
     connect_libvirt,
     close_libvirt,
     find_vm,
@@ -51,21 +52,22 @@ from utils.vm_manager import (
     wait_for_vm_ready,
     get_vm_ip
 )
-from utils.ssh_manager import run_ssh_command
-from utils.snapshot_manager import (
+from vm_integration.utils.ssh_manager import run_ssh_command
+from vm_integration.utils.snapshot_manager import (
     create_external_snapshot,
     revert_to_snapshot,
     delete_snapshot,
     list_snapshots
 )
-from utils.challenge_manager import (
+from vm_integration.utils.challenge_manager import (
     load_challenges_from_dir,
     display_challenge_details,
     execute_setup_steps,
     manage_hints,
-    create_challenge_template
+    create_challenge_template,
+    ChallengeManager
 )
-from utils.validators import (
+from vm_integration.utils.validators import (
     execute_validation_step,
     validate_challenge_file
 )
@@ -358,6 +360,9 @@ def run_challenge(
         console.print(":globe_with_meridians: Detecting VM IP address...")
         if conn is None:
             raise PracticeToolError("Libvirt connection not established")
+        
+        # Fix: Actually call get_vm_ip function
+        vm_ip = get_vm_ip(conn, domain)
         if not vm_ip:
             raise PracticeToolError("Could not determine VM IP address.")
 
@@ -438,7 +443,6 @@ def run_challenge(
         challenge_passed = all_validations_passed
         final_score = current_score if challenge_passed else 0
         
-        from utils.challenge_manager import ChallengeManager
         manager = ChallengeManager()
         manager.display_challenge_results(challenge, challenge_id, challenge_passed, 
                                         final_score, hints_used_count, total_hint_cost)
@@ -763,6 +767,19 @@ def setup_user(
         
         console.print(f"[green]:heavy_check_mark: VM accessible at [cyan]{vm_ip}[/cyan][/]")
         
+        # Wait for SSH readiness - THIS WAS MISSING!
+        console.print(":hourglass: Waiting for SSH service...")
+        wait_for_vm_ready(str(vm_ip), admin_user, admin_key_path)
+        
+        # Verify SSH key permissions
+        if (admin_key_path.stat().st_mode & config.ssh.KEY_PERMISSIONS_MASK) != 0:
+            raise PracticeToolError(f"SSH key '{admin_key_path}' permissions are too open. Set to 0400.")
+
+        # Test SSH connection
+        console.print(":unlock: Testing SSH connection...")
+        run_ssh_command(vm_ip, admin_user, admin_key_path, "echo 'SSH connection successful!'", timeout=config.ssh.CONNECT_TIMEOUT_SECONDS)
+        console.print("[green]:heavy_check_mark: SSH connection established.[/]")
+
         # User setup commands
         setup_commands = [
             f"sudo useradd -m -s /bin/bash {new_user}",
@@ -774,6 +791,7 @@ def setup_user(
             f"sudo usermod -aG sudo {new_user}"
         ]
         
+        console.print(f"\n[blue]:gear: Setting up user '[cyan]{new_user}[/cyan]'...[/]")
         for i, command in enumerate(setup_commands, 1):
             console.print(f"[dim]Step {i}/{len(setup_commands)}: {command}[/]")
             result = run_ssh_command(vm_ip, admin_user, admin_key_path, command)
@@ -792,6 +810,158 @@ def setup_user(
     finally:
         if conn is not None:
             close_libvirt(conn)
+
+
+def run_challenge_workflow(challenge_id: str, vm_name: str = "ubuntu-practice"):
+    """Wrapper function to run a challenge workflow with default parameters."""
+    try:
+        # Call the main run_challenge function with default parameters
+        run_challenge(
+            challenge_id=challenge_id,
+            vm_name=vm_name,
+            ssh_user=config.ssh.DEFAULT_SSH_USER,
+            ssh_key=config.ssh.DEFAULT_SSH_KEY_PATH,
+            challenges_dir=config.challenge.DEFAULT_CHALLENGES_DIR,
+            snapshot_name="practice-session",
+            auto_confirm=False,
+            keep_snapshot=False,
+            verbose=False,
+            libvirt_uri=config.vm.LIBVIRT_URI
+        )
+    except typer.Exit:
+        # Re-raise typer exits to maintain proper exit codes
+        raise
+    except Exception as e:
+        raise PracticeToolError(f"Challenge workflow failed: {e}")
+
+def setup_vm_user(vm_name: str, new_user: str = "student"):
+    """Wrapper function to setup a VM user with default parameters."""
+    try:
+        # Call the main setup_user function with default parameters
+        setup_user(
+            vm_name=vm_name,
+            new_user=new_user,
+            admin_user="ubuntu",
+            admin_key=config.ssh.DEFAULT_SSH_KEY_PATH,
+            public_key_path=Path("~/.ssh/id_ed25519.pub").expanduser(),
+            libvirt_uri=config.vm.LIBVIRT_URI
+        )
+    except typer.Exit:
+        # Re-raise typer exits to maintain proper exit codes
+        raise
+    except Exception as e:
+        raise PracticeToolError(f"User setup failed: {e}")
+
+def validate_challenge(challenge_path: str):
+    """Wrapper function to validate a challenge file."""
+    try:
+        file_path = Path(challenge_path)
+        if not file_path.exists():
+            raise PracticeToolError(f"Challenge file '{challenge_path}' does not exist.")
+        
+        # Call the main validate_challenge_yaml function
+        validate_challenge_yaml(file_path)
+        print(f"Challenge file '{challenge_path}' validation completed.")
+        
+    except typer.Exit:
+        # Re-raise typer exits to maintain proper exit codes
+        raise
+    except Exception as e:
+        raise PracticeToolError(f"Challenge validation failed: {e}")
+
+def display_vm_menu():
+    """Display interactive menu for VM management when no command is provided."""
+    while True:
+        print("\n" + "="*60)
+        print("🖥️  VM MANAGEMENT & PRACTICE CHALLENGES")
+        print("="*60)
+        print("Available Commands:")
+        print()
+        print("1. List Available VMs")
+        print("2. List Available Challenges") 
+        print("3. Run a Challenge")
+        print("4. Setup VM User")
+        print("5. Create Challenge Template")
+        print("6. Validate Challenge")
+        print("0. Return to Main Menu")
+        print()
+        
+        try:
+            choice = input("Enter your choice (0-6): ").strip()
+            
+            if choice == '1':
+                print("\n--- Available VMs ---")
+                list_available_vms()
+                input("\nPress Enter to continue...")
+                
+            elif choice == '2':
+                print("\n--- Available Challenges ---")
+                list_available_challenges()
+                input("\nPress Enter to continue...")
+                
+            elif choice == '3':
+                challenge_id = input("Enter Challenge ID: ").strip()
+                vm_name = input("Enter VM Name (default: ubuntu-practice): ").strip() or "ubuntu-practice"
+                print(f"\nRunning challenge '{challenge_id}' on VM '{vm_name}'...")
+                try:
+                    run_challenge_workflow(challenge_id=challenge_id, vm_name=vm_name)
+                except Exception as e:
+                    print(f"Error running challenge: {e}")
+                input("\nPress Enter to continue...")
+                
+            elif choice == '4':
+                vm_name = input("Enter VM Name (default: ubuntu-practice): ").strip() or "ubuntu-practice"
+                new_user = input("Enter Username to Setup (default: student): ").strip() or "student"
+                print(f"\nSetting up user '{new_user}' on VM '{vm_name}'...")
+                try:
+                    setup_vm_user(vm_name=vm_name, new_user=new_user)
+                except Exception as e:
+                    print(f"Error setting up user: {e}")
+                input("\nPress Enter to continue...")
+                
+            elif choice == '5':
+                template_name = input("Enter template name: ").strip()
+                if template_name:
+                    try:
+                        create_challenge_template(template_name)
+                    except Exception as e:
+                        print(f"Error creating template: {e}")
+                input("\nPress Enter to continue...")
+                
+            elif choice == '6':
+                challenge_path = input("Enter path to challenge file: ").strip()
+                if challenge_path:
+                    try:
+                        validate_challenge(challenge_path)
+                    except Exception as e:
+                        print(f"Error validating challenge: {e}")
+                input("\nPress Enter to continue...")
+                
+            elif choice == '0':
+                print("Returning to main menu...")
+                break
+                
+            else:
+                print("Invalid choice. Please enter 0-6.")
+                
+        except KeyboardInterrupt:
+            print("\n\nReturning to main menu...")
+            break
+        except EOFError:
+            print("\n\nReturning to main menu...")
+            break
+
+# Modify the main app to check for arguments
+def main():
+    """Main entry point that provides menu when no commands given."""
+    import sys
+    
+    # If commands/arguments are passed, let Typer handle them
+    if len(sys.argv) > 1:
+        app()
+    else:
+        # No commands passed, display interactive menu
+        display_vm_menu()
 
 
 if __name__ == "__main__":

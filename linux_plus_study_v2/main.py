@@ -168,15 +168,16 @@ class LinuxPlusStudySystem:
                 return
             
             # Import VM management components
-            from vm_integration.controllers.vm_controller import app as vm_cli_app
+            from vm_integration.controllers.vm_controller import main as vm_main
             
             self.logger.info("VM management interface loaded successfully")
             print("🖥️  Linux Plus Practice Environment Manager (LPEM)")
             print("🔧 VM Management & Practice Challenges")
             print("📚 Interactive Linux+ Exam Preparation")
+            print()
             
-            # Run VM CLI application
-            vm_cli_app()
+            # Run VM management with menu interface
+            vm_main()
             
         except ImportError as import_err:
             error_msg = f"Failed to import VM management modules: {import_err}"
