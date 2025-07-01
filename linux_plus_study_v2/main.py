@@ -130,6 +130,7 @@ class LinuxPlusStudySystem:
             # Create Flask application
             app = create_app(
                 quiz_controller=quiz_controller,
+                game_state=game_state,
                 stats_controller=stats_controller
             )
             
