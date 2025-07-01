@@ -30,42 +30,77 @@ try:
 except ImportError:
     libvirt = None  # Will be handled by vm_manager
 
+<<<<<<< HEAD
+# Add this at the top after the existing imports:
+import sys
+from pathlib import Path
+
+# Add the project root to Python path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Update imports
+from vm_integration.utils.console_helper import console, RICH_AVAILABLE, Panel, Table
+from utils.config import config  # Use main project config
+from vm_integration.utils.exceptions import (
+=======
 # Local imports
 from utils.console_helper import console, RICH_AVAILABLE, Panel, Table
 from utils.config import config
 from utils.exceptions import (
+>>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
     PracticeToolError,
     SnapshotOperationError,
     ChallengeLoadError,
     ChallengeValidationError,
+<<<<<<< HEAD
+)
+from vm_integration.utils.vm_manager import (
+=======
 #    VMNotFoundError,
 #    NetworkError,
 #    SSHCommandError
 )
 from utils.vm_manager import (
+>>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
     connect_libvirt,
     close_libvirt,
     find_vm,
     list_vms,
     start_vm,
     wait_for_vm_ready,
+<<<<<<< HEAD
+    get_vm_ip  # Fix the function name issue from logs
+)
+from vm_integration.utils.ssh_manager import run_ssh_command
+from vm_integration.utils.snapshot_manager import (
+=======
     get_vm_ip
 )
 from utils.ssh_manager import run_ssh_command
 from utils.snapshot_manager import (
+>>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
     create_external_snapshot,
     revert_to_snapshot,
     delete_snapshot,
     list_snapshots
 )
+<<<<<<< HEAD
+from vm_integration.utils.challenge_manager import (
+=======
 from utils.challenge_manager import (
+>>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
     load_challenges_from_dir,
     display_challenge_details,
     execute_setup_steps,
     manage_hints,
     create_challenge_template
 )
+<<<<<<< HEAD
+from vm_integration.utils.validators import (
+=======
 from utils.validators import (
+>>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
     execute_validation_step,
     validate_challenge_file
 )

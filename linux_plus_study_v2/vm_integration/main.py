@@ -12,6 +12,11 @@ import sys
 import logging
 import traceback
 from pathlib import Path
+from typing import Optional, Dict, List, Any
+from vm_integration.controllers.vm_controller import VMController, VMIntegrationService
+from models.practice_environment import PracticeEnvironment
+from models.user import User
+logger = logging.getLogger(__name__)
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 # Ensure Python 3.8+ compatibility
