@@ -1,0 +1,4 @@
+INFO: Application started
+WARN: Low memory
+ERROR: Connection failed
+INFO: Process completed

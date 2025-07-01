@@ -1,0 +1,6 @@
+{
+  "enable_db_pooling": true,
+  "database_type": "sqlite",
+  "pool_monitoring": true,
+  "connection_timeout": 30
+}
