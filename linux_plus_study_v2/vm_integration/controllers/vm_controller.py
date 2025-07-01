@@ -31,6 +31,9 @@ except ImportError:
     libvirt = None  # Will be handled by vm_manager
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
 # Add this at the top after the existing imports:
 import sys
 from pathlib import Path
@@ -43,16 +46,20 @@ sys.path.insert(0, str(project_root))
 from vm_integration.utils.console_helper import console, RICH_AVAILABLE, Panel, Table
 from utils.config import config  # Use main project config
 from vm_integration.utils.exceptions import (
+<<<<<<< HEAD
 =======
 # Local imports
 from utils.console_helper import console, RICH_AVAILABLE, Panel, Table
 from utils.config import config
 from utils.exceptions import (
 >>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
+=======
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     PracticeToolError,
     SnapshotOperationError,
     ChallengeLoadError,
     ChallengeValidationError,
+<<<<<<< HEAD
 <<<<<<< HEAD
 )
 from vm_integration.utils.vm_manager import (
@@ -63,6 +70,10 @@ from vm_integration.utils.vm_manager import (
 )
 from utils.vm_manager import (
 >>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
+=======
+)
+from vm_integration.utils.vm_manager import (
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     connect_libvirt,
     close_libvirt,
     find_vm,
@@ -70,26 +81,36 @@ from utils.vm_manager import (
     start_vm,
     wait_for_vm_ready,
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     get_vm_ip  # Fix the function name issue from logs
 )
 from vm_integration.utils.ssh_manager import run_ssh_command
 from vm_integration.utils.snapshot_manager import (
+<<<<<<< HEAD
 =======
     get_vm_ip
 )
 from utils.ssh_manager import run_ssh_command
 from utils.snapshot_manager import (
 >>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
+=======
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     create_external_snapshot,
     revert_to_snapshot,
     delete_snapshot,
     list_snapshots
 )
 <<<<<<< HEAD
+<<<<<<< HEAD
 from vm_integration.utils.challenge_manager import (
 =======
 from utils.challenge_manager import (
 >>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
+=======
+from vm_integration.utils.challenge_manager import (
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     load_challenges_from_dir,
     display_challenge_details,
     execute_setup_steps,
@@ -97,10 +118,14 @@ from utils.challenge_manager import (
     create_challenge_template
 )
 <<<<<<< HEAD
+<<<<<<< HEAD
 from vm_integration.utils.validators import (
 =======
 from utils.validators import (
 >>>>>>> f08fe1f57090b0e4b2f6fc109b69a5f86ff71121
+=======
+from vm_integration.utils.validators import (
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
     execute_validation_step,
     validate_challenge_file
 )

@@ -889,6 +889,7 @@ __all__ = [
     'VMManager',
     'connect_libvirt', 'close_libvirt', 'find_vm', 'list_vms', 
     'start_vm', 'get_vm_ip', 'shutdown_vm', 'get_vm_ip', 'wait_for_vm_ready'
+<<<<<<< HEAD
 ]
 #!/usr/bin/env python3
 """
@@ -1781,4 +1782,6 @@ __all__ = [
     'VMManager',
     'connect_libvirt', 'close_libvirt', 'find_vm', 'list_vms', 
     'start_vm', 'get_vm_ip', 'shutdown_vm', 'get_vm_ip_address', 'wait_for_vm_ready'
+=======
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
 ]

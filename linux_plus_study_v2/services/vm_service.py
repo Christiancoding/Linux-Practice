@@ -39,4 +39,8 @@ class VMIntegrationService:
     def execute_challenge_validation(self, session_id: str, challenge_step: str) -> bool:
         """Validate challenge completion."""
         # Integration with validators
+<<<<<<< HEAD
         return False
+=======
+        return False
+>>>>>>> 60448e5 (	renamed:    Linux_VM/OLD/ww.py -> OLD/Linux_VM/OLD/ww.py)
