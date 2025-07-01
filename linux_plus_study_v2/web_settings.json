@@ -1,0 +1,10 @@
+
+{
+  "enable_db_pooling": true,
+  "database_type": "sqlite",
+  "pool_monitoring": true,
+  "connection_timeout": 30,
+  "focusMode": false,
+  "breakReminder": 1,
+  "timestamp": 1750136537.98861
+}
