@@ -13,6 +13,7 @@ import logging
 import argparse
 import traceback
 from pathlib import Path
+from turtle import setup
 from typing import Optional, Dict, List
 import signal
 from models.game_state import GameState
@@ -118,7 +119,7 @@ class LinuxPlusStudySystem:
                 return
             
             # Import web application components
-            from views.web_view import create_app
+            from views.web_view import LinuxPlusStudyWeb
             from controllers.quiz_controller import QuizController
             from controllers.stats_controller import StatsController
             
@@ -131,7 +132,7 @@ class LinuxPlusStudySystem:
             self.logger.info("Web application components loaded successfully")
             
             # Create Flask application
-            app = create_app(
+            app = LinuxPlusStudyWeb.setup_routes(
                 quiz_controller=quiz_controller,
                 stats_controller=stats_controller
             )
