@@ -122,15 +122,17 @@ class LinuxPlusStudySystem:
             from controllers.quiz_controller import QuizController
             from controllers.stats_controller import StatsController
             
-            # Initialize controllers
+            # Initialize game state first
             game_state = GameState()
-            quiz_controller = QuizController()
-            stats_controller = StatsController()
+            
+            # Initialize controllers with game_state
+            quiz_controller = QuizController(game_state)
+            stats_controller = StatsController(game_state)
+            self.logger.info("Web application components loaded successfully")
             
             # Create Flask application
             app = create_app(
                 quiz_controller=quiz_controller,
-                game_state=game_state,
                 stats_controller=stats_controller
             )
             
