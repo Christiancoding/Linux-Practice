@@ -68,7 +68,46 @@ class CLIPlayground:
                 "configs": {"type": "dir", "size": 4096, "permissions": "drwxr-xr-x"}
             }
         }
-    
+    def _get_help_text(self):
+        """Get comprehensive help text for CLI playground commands."""
+        return """Linux Plus CLI Playground - Available Commands:
+
+        FILE OPERATIONS:
+        ls                    - List files and directories
+        cat <file>           - Display file contents
+        head <file>          - Show first 10 lines of file
+        tail <file>          - Show last 10 lines of file
+
+        TEXT PROCESSING:
+        grep <pattern> <file> - Search for pattern in file
+        wc <file>            - Count lines, words, and characters
+
+        SYSTEM INFO:
+        pwd                  - Show current directory path
+        whoami              - Display current username
+        date                - Show current date and time
+
+        UTILITIES:
+        echo "text"         - Display text
+        find . -name "*.txt" - Find files by pattern
+        clear               - Clear terminal screen
+        help                - Show this help message
+
+        SAMPLE FILES AVAILABLE:
+        sample.txt          - Basic text file
+        log.txt             - Log file with different message types
+        data.csv            - CSV data file
+        config.conf         - Configuration file
+
+        EXAMPLES:
+        cat sample.txt              - View sample file
+        grep "ERROR" log.txt        - Find error messages
+        wc data.csv                 - Count lines in CSV
+        echo "Hello World"          - Print text
+        find . -name "*.txt"        - Find all .txt files
+
+        This is a safe educational environment. Not all Linux commands are available.
+        Type commands above to practice Linux command line skills!"""
     def get_prompt(self) -> str:
         """
         Get the current command prompt.
@@ -157,6 +196,31 @@ class CLIPlayground:
             return command_handlers[command](args)
         else:
             return f"-bash: {command}: command not found"
+    def start_interactive_session(self):
+        """Start interactive CLI session for standalone mode."""
+        print(f"Linux Plus CLI Playground - Sandbox Directory: {self.sandbox_dir}")
+        print("Type 'help' for commands, 'exit' to quit")
+        
+        while True:
+            try:
+                command = input("linux_plus_cli$ ").strip()
+                
+                if command.lower() in ['exit', 'quit']:
+                    print("Goodbye!")
+                    break
+                elif command.lower() == 'help':
+                    print(self._get_help_text())
+                elif command:
+                    result = self.execute_command(command)
+                    if result:
+                        print(result)
+                        
+            except KeyboardInterrupt:
+                print("\nGoodbye!")
+                break
+            except EOFError:
+                print("\nGoodbye!")
+                break
     def _handle_help(self, args: List[str]) -> str:
         """Handle the help command."""
         return (

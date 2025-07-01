@@ -31,7 +31,7 @@ except ImportError:
     libvirt = None  # Will be handled by vm_manager
 
 # Local imports
-from utils.console_helper import console, RICH_AVAILABLE, Panel, Table
+from vm_integration.utils.console_helper import console, RICH_AVAILABLE, Panel, Table
 from utils.config import config
 from utils.exceptions import (
     PracticeToolError,
