@@ -1,0 +1,138 @@
+2025-06-26 15:12:43,248 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 15:12:43,249 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 15:12:43,256 - __main__ - ERROR: Failed to import required modules: attempted relative import beyond top-level package
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 139, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 38, in <module>
+    from ..utils.console_helper import console, RICH_AVAILABLE
+ImportError: attempted relative import beyond top-level package
+2025-06-26 15:12:43,256 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-26 15:14:57,394 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 15:14:57,395 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 15:14:57,595 - __main__ - ERROR: Failed to import required modules: cannot import name 'LibvirtConnectionError' from 'utils.exceptions' (/home/retiredfan/Documents/test/Linux_VM/utils/exceptions.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 139, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 40, in <module>
+    from utils.exceptions import (
+ImportError: cannot import name 'LibvirtConnectionError' from 'utils.exceptions' (/home/retiredfan/Documents/test/Linux_VM/utils/exceptions.py)
+2025-06-26 15:14:57,596 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-26 23:54:09,695 - __main__ - INFO: LPEM Application logging initialized
+2025-06-26 23:54:09,697 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-26 23:54:09,814 - __main__ - ERROR: Failed to import required modules: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/./main.py", line 117, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 47, in <module>
+    from utils.vm_manager import (
+ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+2025-06-26 23:54:09,814 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-27 00:06:49,485 - __main__ - INFO: LPEM Application logging initialized
+2025-06-27 00:06:49,486 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-27 00:06:51,302 - __main__ - ERROR: Failed to import required modules: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/test/Linux_VM/main.py", line 118, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/test/Linux_VM/controllers/vm_controller.py", line 47, in <module>
+    from utils.vm_manager import (
+ImportError: cannot import name 'get_vm_ip_address' from 'utils.vm_manager' (/home/retiredfan/Documents/test/Linux_VM/utils/vm_manager.py)
+2025-06-27 00:06:51,355 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-28 13:34:32,887 - __main__ - INFO: LPEM Application logging initialized
+2025-06-28 13:34:32,888 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-28 13:34:33,043 - __main__ - INFO: CLI interface loaded successfully
+2025-06-28 13:34:33,061 - utils.vm_manager - INFO: Connecting to libvirt at: qemu:///system
+2025-06-28 13:34:33,062 - utils.vm_manager - INFO: Successfully connected to libvirt host: retiredfan-Inspiron-3880
+2025-06-28 13:34:33,062 - utils.vm_manager - INFO: VM 'ubuntu24.04-2' found with state: shut off
+2025-06-28 13:34:33,076 - utils.vm_manager - INFO: Libvirt connection closed successfully
+2025-06-28 13:34:33,076 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:27:54,793 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:27:54,794 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:27:55,722 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:27:55,727 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:28:13,928 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:28:13,929 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:28:14,092 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:28:14,101 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-29 00:28:26,670 - __main__ - INFO: LPEM Application logging initialized
+2025-06-29 00:28:26,671 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-29 00:28:26,836 - __main__ - INFO: CLI interface loaded successfully
+2025-06-29 00:28:26,857 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:39:36,363 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:39:36,723 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:39:36,908 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:39:36,922 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:39:46,459 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:39:46,460 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:39:46,620 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:39:46,629 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:40:38,556 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:40:38,557 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:40:38,747 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:40:38,754 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:44:13,613 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:44:14,068 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:44:14,252 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:44:14,256 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:44:52,530 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:44:52,532 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:44:52,687 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:44:52,696 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 18:45:02,273 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 18:45:02,274 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 18:45:02,426 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 18:45:02,432 - utils.vm_manager - INFO: Connecting to libvirt at: qemu:///system
+2025-06-30 18:45:02,433 - utils.vm_manager - INFO: Successfully connected to libvirt host: retiredfan-Inspiron-3880
+2025-06-30 18:45:02,434 - utils.vm_manager - INFO: VM 'ubuntu24.04-2' found with state: shut off
+2025-06-30 18:45:02,434 - utils.vm_manager - INFO: Attempting to start VM: ubuntu24.04-2
+2025-06-30 18:45:03,184 - utils.vm_manager - INFO: VM 'ubuntu24.04-2' started successfully
+2025-06-30 18:45:03,184 - utils.vm_manager - INFO: Attempting to get IP address for VM: ubuntu24.04-2
+2025-06-30 18:45:03,185 - utils.vm_manager - ERROR: Could not determine IP address for VM 'ubuntu24.04-2' using any available method
+2025-06-30 18:45:03,185 - utils.vm_manager - INFO: Libvirt connection closed successfully
+2025-06-30 18:45:03,186 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 19:22:48,784 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 19:22:48,785 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 19:22:48,967 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 19:22:48,972 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 19:23:00,199 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 19:23:00,203 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 19:23:00,431 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 19:23:00,436 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 19:23:07,191 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 19:23:07,192 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 19:23:07,351 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 19:23:07,361 - __main__ - INFO: LPEM Application shutdown complete
+2025-06-30 19:23:22,341 - __main__ - INFO: LPEM Application logging initialized
+2025-06-30 19:23:22,342 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-06-30 19:23:22,516 - __main__ - INFO: CLI interface loaded successfully
+2025-06-30 19:23:22,524 - utils.challenge_manager.ChallengeManager - ERROR: Unexpected error loading create_tmp_file.yaml: not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/utils/challenge_manager.py", line 492, in load_challenges_from_dir
+    validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 0)
+2025-06-30 19:23:22,528 - utils.challenge_manager.ChallengeManager - ERROR: Unexpected error loading create_user_basic_01.yaml: not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/utils/challenge_manager.py", line 492, in load_challenges_from_dir
+    validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 0)
+2025-06-30 19:23:22,531 - utils.challenge_manager.ChallengeManager - ERROR: Unexpected error loading dns-lookup.yaml: not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/utils/challenge_manager.py", line 492, in load_challenges_from_dir
+    validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 0)
+2025-06-30 19:23:22,533 - utils.challenge_manager.ChallengeManager - ERROR: Unexpected error loading manage_users_add.yaml: not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/utils/challenge_manager.py", line 492, in load_challenges_from_dir
+    validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 0)
+2025-06-30 19:23:22,536 - utils.challenge_manager.ChallengeManager - ERROR: Unexpected error loading set_hostname.yaml: not enough values to unpack (expected 2, got 0)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/utils/challenge_manager.py", line 492, in load_challenges_from_dir
+    validation_errors, normalized_challenge_data = self.validate_challenge_structure(challenge_data, yaml_file.name)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: not enough values to unpack (expected 2, got 0)
+2025-06-30 19:23:22,538 - __main__ - INFO: LPEM Application shutdown complete

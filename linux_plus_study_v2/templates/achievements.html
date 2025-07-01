@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <!-- Progress Overview -->
+        <div class="card bg-secondary mb-4">
+            <div class="card-header">
+                <h2 class="text-center text-warning mb-0">
+                    <i class="fas fa-trophy"></i> Current Progress
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3">
+                        <div class="card bg-dark">
+                            <div class="card-body">
+                                <h3 class="text-warning" id="total-points">0</h3>
+                                <p class="mb-0">💰 Total Points</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark">
+                            <div class="card-body">
+                                <h3 class="text-info" id="questions-answered">0</h3>
+                                <p class="mb-0">📝 Questions Answered</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark">
+                            <div class="card-body">
+                                <h3 class="text-success" id="days-studied">0</h3>
+                                <p class="mb-0">📅 Days Studied</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-dark">
+                            <div class="card-body">
+                                <h3 class="text-primary" id="badges-earned">0</h3>
+                                <p class="mb-0">🏆 Badges Earned</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bars -->
+                <div class="row mt-4" id="progress-bars">
+                    <!-- Progress bars will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Achievements Column -->
+            <div class="col-lg-6">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h4 class="text-success mb-0">
+                            <i class="fas fa-medal"></i> Achievements
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Unlocked Achievements -->
+                        <h5 class="text-warning">🎉 Unlocked</h5>
+                        <div id="unlocked-achievements" class="mb-4">
+                            <div class="text-center text-muted">Loading...</div>
+                        </div>
+
+                        <!-- Available Achievements -->
+                        <h5 class="text-info">🎯 Available</h5>
+                        <div id="available-achievements">
+                            <div class="text-center text-muted">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Column -->
+            <div class="col-lg-6">
+                <div class="card bg-secondary">
+                    <div class="card-header">
+                        <h4 class="text-primary mb-0">
+                            <i class="fas fa-chart-line"></i> Personal Leaderboard
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small">Your best quiz sessions</p>
+                        <div id="leaderboard-container" style="max-height: 500px; overflow-y: auto;">
+                            <div class="text-center text-muted">Loading...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Load achievements and leaderboard on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadAchievements();
+    loadLeaderboard();
+});
+
+function loadAchievements() {
+    fetch('/api/achievements')
+        .then(response => response.json())
+        .then(data => {
+            displayProgressOverview(data.progress);
+            displayUnlockedAchievements(data.unlocked);
+            displayAvailableAchievements(data.available);
+            
+            // Update progress numbers
+            document.getElementById('total-points').textContent = data.total_points || 0;
+            document.getElementById('questions-answered').textContent = data.questions_answered || 0;
+            document.getElementById('days-studied').textContent = data.days_studied || 0;
+            document.getElementById('badges-earned').textContent = data.unlocked.length || 0;
+        })
+        .catch(error => {
+            console.error('Error loading achievements:', error);
+        });
+}
+
+function loadLeaderboard() {
+    fetch('/api/leaderboard')
+        .then(response => response.json())
+        .then(data => {
+            displayLeaderboard(data);
+        })
+        .catch(error => {
+            console.error('Error loading leaderboard:', error);
+        });
+}
+
+function displayProgressOverview(progress) {
+    const container = document.getElementById('progress-bars');
+    container.innerHTML = '';
+    
+    if (!progress || Object.keys(progress).length === 0) {
+        container.innerHTML = '<div class="col-12 text-center text-muted">No progress data available</div>';
+        return;
+    }
+    
+    Object.entries(progress).forEach(([key, data]) => {
+        const name = key.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+        const percentage = Math.min(data.percentage, 100);
+        
+        let progressClass = 'bg-secondary';
+        if (percentage >= 100) progressClass = 'bg-success';
+        else if (percentage >= 75) progressClass = 'bg-info';
+        else if (percentage >= 50) progressClass = 'bg-warning';
+        else if (percentage >= 25) progressClass = 'bg-primary';
+        
+        const progressHtml = `
+            <div class="col-md-4 mb-3">
+                <div class="text-center mb-2">
+                    <strong>${name}</strong>
+                    <br>
+                    <small class="text-muted">${data.current} / ${data.target}</small>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar ${progressClass}" style="width: ${percentage}%"></div>
+                </div>
+                <div class="text-center mt-1">
+                    <small>${percentage.toFixed(1)}%</small>
+                </div>
+            </div>
+        `;
+        container.innerHTML += progressHtml;
+    });
+}
+
+function displayUnlockedAchievements(unlocked) {
+    const container = document.getElementById('unlocked-achievements');
+    
+    if (!unlocked || unlocked.length === 0) {
+        container.innerHTML = '<div class="text-muted">No achievements unlocked yet. Keep studying! 🌟</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    unlocked.forEach(achievement => {
+        const badgeHtml = `
+            <div class="alert alert-success py-2 mb-2">
+                <strong>${achievement.description}</strong>
+            </div>
+        `;
+        container.innerHTML += badgeHtml;
+    });
+}
+
+function displayAvailableAchievements(available) {
+    const container = document.getElementById('available-achievements');
+    
+    if (!available || available.length === 0) {
+        container.innerHTML = '<div class="text-muted">All achievements unlocked! 🎉</div>';
+        return;
+    }
+    
+    container.innerHTML = '';
+    available.forEach(achievement => {
+        const badgeHtml = `
+            <div class="alert alert-secondary py-2 mb-2">
+                <strong>🔒 ${achievement.description}</strong>
+            </div>
+        `;
+        container.innerHTML += badgeHtml;
+    });
+}
+
+function displayLeaderboard(leaderboard) {
+    const container = document.getElementById('leaderboard-container');
+    
+    if (!leaderboard || leaderboard.length === 0) {
+        container.innerHTML = '<div class="text-muted">No sessions recorded yet. Start studying to see your progress!</div>';
+        return;
+    }
+    
+    let leaderboardHtml = `
+        <table class="table table-dark table-sm">
+            <thead>
+                <tr>
+                    <th width="10%">Rank</th>
+                    <th width="25%">Date</th>
+                    <th width="20%">Score</th>
+                    <th width="25%">Accuracy</th>
+                    <th width="20%">Points</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    leaderboard.forEach(entry => {
+        let accuracyClass = 'text-muted';
+        if (entry.accuracy >= 75) accuracyClass = 'text-success';
+        else if (entry.accuracy >= 50) accuracyClass = 'text-warning';
+        else accuracyClass = 'text-danger';
+        
+        leaderboardHtml += `
+            <tr>
+                <td class="text-center">
+                    ${entry.rank <= 3 ? getRankIcon(entry.rank) : entry.rank}
+                </td>
+                <td>${entry.date}</td>
+                <td class="text-center">${entry.score_display}</td>
+                <td class="text-center ${accuracyClass}">${entry.accuracy_display}</td>
+                <td class="text-center text-warning">${entry.points}</td>
+            </tr>
+        `;
+    });
+    
+    leaderboardHtml += '</tbody></table>';
+    container.innerHTML = leaderboardHtml;
+}
+
+function getRankIcon(rank) {
+    const icons = {
+        1: '🥇',
+        2: '🥈',
+        3: '🥉'
+    };
+    return icons[rank] || rank;
+}
+</script>
+{% endblock %}
