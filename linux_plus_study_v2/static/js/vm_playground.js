@@ -46,6 +46,16 @@ class VMPlayground {
     }
     
     async refreshVMs() {
+        const vmListContainer = document.getElementById('vmList');
+        
+        // Show loading state
+        vmListContainer.innerHTML = `
+            <div class="text-center" style="padding: 20px;">
+                <div class="spinner-border" role="status"></div>
+                <div style="margin-top: 10px; color: #6b7280;">Loading VMs...</div>
+            </div>
+        `;
+        
         try {
             const response = await fetch('/api/vm/list');
             const data = await response.json();
@@ -53,11 +63,24 @@ class VMPlayground {
             if (data.success) {
                 this.renderVMList(data.vms);
             } else {
-                this.addToTerminal(`Error loading VMs: ${data.error}`, 'error');
+                this.showError(data.error);
             }
         } catch (error) {
-            this.addToTerminal(`Error refreshing VMs: ${error.message}`, 'error');
+            this.showError(`Network error: ${error.message}`);
         }
+    }
+
+    // Add this new method to show errors in the VM list
+    showError(errorMessage) {
+        const vmListContainer = document.getElementById('vmList');
+        vmListContainer.innerHTML = `
+            <div class="error-message">
+                <strong>Error:</strong> ${errorMessage}
+            </div>
+            <button class="btn-vm refresh" onclick="vmPlayground.refreshVMs()" style="margin-top: 10px;">
+                🔄 Retry
+            </button>
+        `;
     }
     
     renderVMList(vms) {
