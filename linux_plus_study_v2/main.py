@@ -21,6 +21,8 @@ from types import FrameType  # <-- Add this import
 from flask import Flask  # <-- Add this import at the top with other imports
 from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
+from controllers.quiz_controller import QuizController
+from controllers.stats_controller import StatsController
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
     print("Linux Plus Study System requires Python 3.8+. Please upgrade your Python installation.")
@@ -320,9 +322,9 @@ class LinuxPlusStudySystem:
         input("Press Enter to continue...")    
     def setup_routes(
         self,
-        quiz_controller: object,  # Replace 'object' with actual type if known
-        stats_controller: object, # Replace 'object' with actual type if known
-        game_state: object        # Replace 'object' with actual type if known
+        quiz_controller: QuizController,
+        stats_controller: StatsController,
+        game_state: GameState
     ) -> Flask:
         """
         Setup Flask application with routes and controllers.

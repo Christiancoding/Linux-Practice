@@ -23,6 +23,12 @@ STREAK_BONUS_MULTIPLIER = 2
 class QuizController:
     """Handles quiz logic and session management."""
 
+    points_per_question: int
+    streak_bonus: int
+    max_streak_bonus: int
+    debug_mode: bool
+    current_streak_bonus: int  # Only if used elsewhere
+
     def __init__(self, game_state: Any):
         """
         Initialize the quiz controller.
@@ -650,13 +656,15 @@ class QuizController:
             return self.session_total >= 1
         
         return False
-    def update_settings(self, settings):
+    def update_settings(self, settings: Dict[str, Any]) -> None:
         """Update quiz controller with new settings."""
-        self.points_per_question = settings.get('pointsPerQuestion', 10)
-        self.streak_bonus = settings.get('streakBonus', 5)
-        self.max_streak_bonus = settings.get('maxStreakBonus', 50)
-        self.debug_mode = settings.get('debugMode', False)
+        self.points_per_question: int = settings.get('pointsPerQuestion', 10)
+        self.streak_bonus: int = settings.get('streakBonus', 5)
+        self.max_streak_bonus: int = settings.get('maxStreakBonus', 50)
+        self.debug_mode: bool = settings.get('debugMode', False)
         
         # Update any active scoring calculations
         if hasattr(self, 'current_streak_bonus'):
-            self.current_streak_bonus = min(self.current_streak_bonus, self.max_streak_bonus)
+            self.current_streak_bonus = min(
+                int(self.current_streak_bonus), int(self.max_streak_bonus)
+            )

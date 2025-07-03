@@ -182,6 +182,12 @@ SCORING_SETTINGS = {
     "leaderboard_max_entries": 100,
 }
 
+# --- Quiz Scoring Constants ---
+POINTS_PER_CORRECT = 10
+POINTS_PER_INCORRECT = 0
+STREAK_BONUS_THRESHOLD = 3
+STREAK_BONUS_MULTIPLIER = 2
+
 # Question Categories (Linux Plus specific)
 QUESTION_CATEGORIES = [
     "Hardware and System Configuration",

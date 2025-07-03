@@ -363,7 +363,7 @@
     },
     "In Kubernetes, what is an Ambassador container?": {
       "correct": 0,
-      "attempts": 7,
+      "attempts": 8,
       "history": [
         {
           "timestamp": "2025-06-09T23:01:18.920785",
@@ -391,6 +391,10 @@
         },
         {
           "timestamp": "2025-07-03T13:30:01.444848",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-03T14:07:05.193842",
           "correct": false
         }
       ]
@@ -451,7 +455,7 @@
     },
     "Concepts & Terms (Containers)": {
       "correct": 0,
-      "attempts": 7
+      "attempts": 8
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
@@ -471,7 +475,7 @@
     }
   },
   "total_correct": 25,
-  "total_attempts": 94,
+  "total_attempts": 95,
   "incorrect_review": [
     "What is the primary function of the `mkinitrd` command?",
     "What is an AppImage?",
