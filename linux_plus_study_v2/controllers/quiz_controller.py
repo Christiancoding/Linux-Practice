@@ -17,7 +17,7 @@ from utils.config import *
 class QuizController:
     """Handles quiz logic and session management."""
 
-    def __init__(self, game_state):
+    def __init__(self, game_state: Any):
         """
         Initialize the quiz controller.
         
