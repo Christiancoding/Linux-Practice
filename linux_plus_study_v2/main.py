@@ -16,6 +16,7 @@ from pathlib import Path
 from turtle import setup
 from typing import Optional, Dict, List
 import signal
+import socket
 from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
 # Ensure Python 3.8+ compatibility
@@ -117,7 +118,19 @@ class LinuxPlusStudySystem:
             if not self._validate_web_dependencies():
                 print("Error: Flask dependencies not available. Install with: pip install flask")
                 return
-            
+
+            # Check if port is available, increment if not
+            original_port = port
+            while True:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                    sock.settimeout(1)
+                    result = sock.connect_ex((host, port))
+                    if result != 0:
+                        break  # Port is free
+                    port += 1
+            if port != original_port:
+                print(f"⚠️  Port {original_port} is in use. Switching to available port {port}.")
+
             # Import web application components
             from controllers.quiz_controller import QuizController
             from controllers.stats_controller import StatsController
