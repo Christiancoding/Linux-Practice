@@ -763,7 +763,7 @@ class CLIPlayground:
                 return '\n'.join(output)
             else:
                 # Simple format
-                return '  '.join([f.name for f in files if not f.name.startswith('.')])
+                return '  '.join([f.name for f in files if f.name.startswith('.')])
         except Exception as e:
             return f'ls: {e}'
     
@@ -877,7 +877,7 @@ class CLIPlayground:
         
         try:
             content = file_path.read_text()
-            matching_lines = []
+            matching_lines: list[str] = []  # Explicitly declare type for type checker
             for line in content.split('\n'):
                 if pattern.lower() in line.lower():
                     matching_lines.append(line)
