@@ -285,18 +285,38 @@ function showAlert(message, type = 'info') {
  * Saves settings to the backend by calling the /api/save_settings endpoint.
  */
 function saveSettings() {
-    const focusModeEl = document.getElementById('focusMode');
-    const breakReminderEl = document.getElementById('breakReminder');
+    const elements = {
+        focusMode: document.getElementById('focusMode'),
+        breakReminder: document.getElementById('breakReminder'),
+        debugMode: document.getElementById('debugMode'),
+        pointsPerQuestion: document.getElementById('pointsPerQuestion'),
+        streakBonus: document.getElementById('streakBonus'),
+        maxStreakBonus: document.getElementById('maxStreakBonus')
+    };
 
-    if (!focusModeEl || !breakReminderEl) {
+    // Check if we're on the settings page
+    if (!elements.focusMode || !elements.breakReminder) {
         console.error('Settings elements not found on this page.');
         return;
     }
 
     const settings = {
-        focusMode: focusModeEl.checked,
-        breakReminder: parseInt(breakReminderEl.value) || 10
+        focusMode: elements.focusMode.checked,
+        breakReminder: parseInt(elements.breakReminder.value) || 10,
+        debugMode: elements.debugMode?.checked || false,
+        pointsPerQuestion: parseInt(elements.pointsPerQuestion?.value) || 10,
+        streakBonus: parseInt(elements.streakBonus?.value) || 5,
+        maxStreakBonus: parseInt(elements.maxStreakBonus?.value) || 50
     };
+
+    // Client-side validation
+    if (settings.maxStreakBonus < settings.streakBonus) {
+        showAlert('Max Streak Bonus cannot be less than Streak Bonus. Adjusting automatically.', 'warning');
+        settings.maxStreakBonus = settings.streakBonus;
+        if (elements.maxStreakBonus) {
+            elements.maxStreakBonus.value = settings.maxStreakBonus;
+        }
+    }
 
     fetch('/api/save_settings', {
         method: 'POST',
@@ -309,6 +329,11 @@ function saveSettings() {
     .then(data => {
         if (data.success) {
             showAlert('Settings saved successfully!', 'success');
+            
+            // Update form with server-validated values
+            if (data.settings) {
+                populateSettingsForm(data.settings);
+            }
         } else {
             showAlert('Failed to save settings: ' + (data.error || 'Unknown server error'), 'danger');
         }
@@ -318,27 +343,39 @@ function saveSettings() {
         showAlert('An error occurred while saving settings.', 'danger');
     });
 }
+/**
+ * Populates the settings form with values from the provided settings object.
+ * @param {Object} settings - The settings object containing values to populate the form.
+ */
+function populateSettingsForm(settings) {
+    const elements = {
+        focusMode: document.getElementById('focusMode'),
+        breakReminder: document.getElementById('breakReminder'),
+        debugMode: document.getElementById('debugMode'),
+        pointsPerQuestion: document.getElementById('pointsPerQuestion'),
+        streakBonus: document.getElementById('streakBonus'),
+        maxStreakBonus: document.getElementById('maxStreakBonus')
+    };
+
+    if (elements.focusMode) elements.focusMode.checked = settings.focusMode || false;
+    if (elements.breakReminder) elements.breakReminder.value = settings.breakReminder || 10;
+    if (elements.debugMode) elements.debugMode.checked = settings.debugMode || false;
+    if (elements.pointsPerQuestion) elements.pointsPerQuestion.value = settings.pointsPerQuestion || 10;
+    if (elements.streakBonus) elements.streakBonus.value = settings.streakBonus || 5;
+    if (elements.maxStreakBonus) elements.maxStreakBonus.value = settings.maxStreakBonus || 50;
+}
 
 /**
- * Loads settings from the backend and populates the form on the settings page.
+ * Enhanced settings loading with comprehensive defaults
  */
 function loadSettings() {
-    const focusModeEl = document.getElementById('focusMode');
-    const breakReminderEl = document.getElementById('breakReminder');
-
-    // Only run if the settings elements exist on the page
-    if (!focusModeEl || !breakReminderEl) {
-        return;
-    }
-
     fetch('/api/load_settings')
     .then(response => response.json())
     .then(data => {
         if (data.success && data.settings) {
-            focusModeEl.checked = data.settings.focusMode || false;
-            breakReminderEl.value = data.settings.breakReminder || 10;
+            populateSettingsForm(data.settings);
         } else {
-             showAlert('Could not load current settings from server.', 'warning');
+            showAlert('Could not load current settings from server.', 'warning');
         }
     })
     .catch(error => {

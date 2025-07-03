@@ -3,7 +3,7 @@
   "questions": {
     "Which command installs the GRUB2 bootloader to a specified device?": {
       "correct": 5,
-      "attempts": 17,
+      "attempts": 18,
       "history": [
         {
           "timestamp": "2025-06-05T22:45:14.387936",
@@ -71,6 +71,10 @@
         },
         {
           "timestamp": "2025-06-11T23:32:13.142528",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-03T13:29:15.903587",
           "correct": false
         }
       ]
@@ -178,8 +182,8 @@
       ]
     },
     "What does ACL stand for in Linux security?": {
-      "correct": 6,
-      "attempts": 8,
+      "correct": 7,
+      "attempts": 9,
       "history": [
         {
           "timestamp": "2025-06-06T13:33:23.821291",
@@ -211,6 +215,10 @@
         },
         {
           "timestamp": "2025-06-11T23:31:44.356580",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-07-03T13:29:20.582191",
           "correct": true
         }
       ]
@@ -255,7 +263,7 @@
     },
     "What is the primary function of the `mkinitrd` command?": {
       "correct": 0,
-      "attempts": 11,
+      "attempts": 12,
       "history": [
         {
           "timestamp": "2025-06-06T15:09:55.321148",
@@ -299,6 +307,10 @@
         },
         {
           "timestamp": "2025-06-11T23:50:15.328916",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-03T13:29:26.963692",
           "correct": false
         }
       ]
@@ -351,7 +363,7 @@
     },
     "In Kubernetes, what is an Ambassador container?": {
       "correct": 0,
-      "attempts": 6,
+      "attempts": 7,
       "history": [
         {
           "timestamp": "2025-06-09T23:01:18.920785",
@@ -375,6 +387,10 @@
         },
         {
           "timestamp": "2025-06-11T23:31:05.777790",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-03T13:30:01.444848",
           "correct": false
         }
       ]
@@ -415,10 +431,14 @@
     },
     "What is Ansible primarily used for?": {
       "correct": 0,
-      "attempts": 1,
+      "attempts": 2,
       "history": [
         {
           "timestamp": "2025-06-11T23:31:23.640090",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-03T13:29:11.529086",
           "correct": false
         }
       ]
@@ -427,31 +447,31 @@
   "categories": {
     "Commands (System Management)": {
       "correct": 10,
-      "attempts": 45
+      "attempts": 47
     },
     "Concepts & Terms (Containers)": {
       "correct": 0,
-      "attempts": 6
+      "attempts": 7
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
-      "attempts": 1
+      "attempts": 2
     },
     "Concepts & Terms (System Management)": {
       "correct": 1,
       "attempts": 7
     },
     "Concepts & Terms (Security)": {
-      "correct": 8,
-      "attempts": 13
+      "correct": 9,
+      "attempts": 14
     },
     "Troubleshooting": {
       "correct": 5,
       "attempts": 17
     }
   },
-  "total_correct": 24,
-  "total_attempts": 89,
+  "total_correct": 25,
+  "total_attempts": 94,
   "incorrect_review": [
     "What is the primary function of the `mkinitrd` command?",
     "What is an AppImage?",
@@ -549,5 +569,10 @@
       "accuracy": 0.0,
       "points": -8
     }
-  ]
+  ],
+  "settings": {
+    "points_per_question": 100,
+    "streak_bonus": 5,
+    "max_streak_bonus": 50
+  }
 }

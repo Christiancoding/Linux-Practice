@@ -17,21 +17,40 @@ import hashlib
 import time
 import logging
 import traceback
+import atexit
 from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
 from vm_integration.utils.vm_manager import VMManager
 from vm_integration.utils.ssh_manager import SSHManager
-import libvirt
+try:
+    import libvirt
+except ImportError:
+    libvirt = None
+    logging.warning("libvirt-python not available. VM functionality will be limited.")
+
 from utils.config import (
     QUICK_FIRE_QUESTIONS, QUICK_FIRE_TIME_LIMIT, MINI_QUIZ_QUESTIONS,
     POINTS_PER_CORRECT, POINTS_PER_INCORRECT, STREAK_BONUS_THRESHOLD, STREAK_BONUS_MULTIPLIER
 )
-from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections
+
+try:
+    from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections
+except ImportError as e:
+    logging.error(f"Database utilities import failed: {e}")
+    # Define fallback functions
+    def initialize_database_pool(*args, **kwargs):
+        return None
+    def get_database_manager():
+        return None
+    def cleanup_database_connections():
+        pass
+
 from utils.config import get_config_value
 from werkzeug.utils import secure_filename
 import tempfile
 import mimetypes
+from typing import Any, Dict, Optional
 
 cli_playground = get_cli_playground()
 def setup_database_for_web():
@@ -65,27 +84,55 @@ class LinuxPlusStudyWeb:
                         static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'))
         self.debug = debug
         self.window = None
+        
+        # Initialize logger
+        self.logger = logging.getLogger(__name__)
+        if not self.logger.handlers:
+            handler = logging.StreamHandler()
+            formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(formatter)
+            self.logger.addHandler(handler)
+            self.logger.setLevel(logging.INFO)
 
         # Add caching to reduce lag
         self.app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 300  # Cache static files for 5 minutes
         self.app.config['TEMPLATES_AUTO_RELOAD'] = False  # Disable template auto-reload in production
-        self.setup_cli_playground_routes(self.app)
-        
+    
+        # Generate secure secret key
+        import secrets
+        self.app.secret_key = os.environ.get('FLASK_SECRET_KEY', secrets.token_hex(32))
+    
         # Session configuration for better performance
-        self.app.secret_key = 'your-secret-key-here'  # Add a proper secret key
         self.app.config['SESSION_TYPE'] = 'filesystem'
         self.app.config['PERMANENT_SESSION_LIFETIME'] = 3600  # 1 hour
 
-        from controllers.quiz_controller import QuizController
-        from controllers.stats_controller import StatsController
-        
-        self.quiz_controller = QuizController(game_state)
-        self.stats_controller = StatsController(game_state)
+        # Initialize controllers with proper error handling
+        try:
+            from controllers.quiz_controller import QuizController
+            from controllers.stats_controller import StatsController
+            
+            self.quiz_controller = QuizController(game_state)
+            self.stats_controller = StatsController(game_state)
+        except ImportError as e:
+            self.logger.error(f"Failed to import controllers: {e}")
+            raise ImportError(f"Controller import failed: {e}")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize controllers: {e}")
+            raise RuntimeError(f"Controller initialization failed: {e}")
+    
+        # Initialize state variables
         self.current_category_filter = None
         self.current_question_data = None
         self.current_question_index = -1
         
+        # Setup CLI playground routes first
+        self.setup_cli_playground_routes(self.app)
+        
+        # Setup all routes
         self.setup_routes()
+        
+        # Setup export/import routes
+        self.setup_export_import_routes()
     def set_debug_mode(self, enabled: bool = True):
         """Toggle debug mode for the application."""
         self.debug = enabled
@@ -97,24 +144,23 @@ class LinuxPlusStudyWeb:
         if self.quiz_controller.current_quiz_mode in disabled_modes:
             return False
         try:
-            settings = self._load_web_settings()
-            break_interval = settings.get('breakReminder', 10)
-            
+            settings: Dict[str, Any] = self._load_web_settings()
+            break_interval = int(settings.get('breakReminder', 10))
             # Check if break reminders are enabled (interval > 0) and threshold met
             return (break_interval > 0 and 
                     self.quiz_controller.questions_since_break >= break_interval)
-        except:
+        except Exception:
             return False
-    
-    def _get_break_interval(self):
+
+    def _get_break_interval(self) -> int:
         """Get the current break reminder interval from settings."""
         try:
-            settings = self._load_web_settings()
-            return settings.get('breakReminder', 10)
-        except:
+            settings: Dict[str, Any] = self._load_web_settings()
+            return int(settings.get('breakReminder', 10))
+        except Exception:
             return 10
 
-    def _load_web_settings(self):
+    def _load_web_settings(self) -> Dict[str, Any]:
         """Load settings from web_settings.json file."""
         try:
             if os.path.exists('web_settings.json'):
@@ -122,11 +168,35 @@ class LinuxPlusStudyWeb:
                     return json.load(f)
         except Exception as e:
             print(f"Error loading web settings: {e}")
-        
         # Return default settings if file doesn't exist or can't be loaded
         return {'focusMode': False, 'breakReminder': 10}
 
-    def toggle_fullscreen(self, enable=True):
+    def _apply_settings_to_game_state(self, settings: Dict[str, Any]) -> bool:
+        """Apply settings changes to the current game state and controllers."""
+        try:
+            # Update quiz controller settings
+            if hasattr(self.quiz_controller, 'update_settings'):
+                self.quiz_controller.update_settings(settings)
+            # Update debug mode
+            if settings.get('debugMode', False):
+                self.app.config['DEBUG'] = True
+                self.debug = True
+            else:
+                self.app.config['DEBUG'] = False
+                self.debug = False
+            # Update game state scoring settings
+            if hasattr(self.game_state, 'update_scoring_settings'):
+                self.game_state.update_scoring_settings(
+                    points_per_question=int(settings.get('pointsPerQuestion', 10)),
+                    streak_bonus=int(settings.get('streakBonus', 5)),
+                    max_streak_bonus=int(settings.get('maxStreakBonus', 50))
+                )
+            return True
+        except Exception as e:
+            print(f"Error applying settings to game state: {e}")
+            return False
+
+    def toggle_fullscreen(self, enable: bool = True) -> Dict[str, Any]:
         """Toggle application window fullscreen."""
         try:
             if hasattr(self, 'window') and self.window:
@@ -136,7 +206,7 @@ class LinuxPlusStudyWeb:
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    def is_fullscreen(self):
+    def is_fullscreen(self) -> Dict[str, Any]:
         """Check if window is in fullscreen mode."""
         try:
             if hasattr(self, 'window') and self.window:
@@ -144,26 +214,33 @@ class LinuxPlusStudyWeb:
             return {'success': False, 'fullscreen': False}
         except Exception as e:
             return {'success': False, 'error': str(e)}
-    def setup_app_teardown(self, app):
+
+    def setup_app_teardown(self, app: Flask) -> None:
         """Setup application teardown handlers for proper cleanup."""
-        
+
         @app.teardown_appcontext
-        def close_db_session(error):
+        def close_db_session(error: Optional[BaseException]) -> None:
             """Close database session after each request."""
-            db_manager = get_database_manager()
-            if db_manager and hasattr(db_manager, 'scoped_session_factory'):
-                db_manager.scoped_session_factory.remove()
-        
+            try:
+                db_manager = get_database_manager()
+                if db_manager and hasattr(db_manager, 'scoped_session_factory') and db_manager.scoped_session_factory:
+                    db_manager.scoped_session_factory.remove()
+            except Exception as e:
+                logging.error(f"Error closing database session: {e}")
+
         @app.teardown_request
-        def cleanup_request(exception=None):
+        def cleanup_request(exception: Optional[BaseException] = None) -> None:
             """Clean up resources after each request."""
-            if exception:
-                logging.error(f"Request error: {exception}")
-        
-        # Register cleanup on application shutdown
-        import atexit
-        atexit.register(cleanup_database_connections)
-    def setup_cli_playground_routes(self, app):
+            try:
+                if exception:
+                    logging.error(f"Request error: {exception}")
+            except Exception as e:
+                logging.error(f"Error in request cleanup: {e}")
+    
+    # Register cleanup on application shutdown
+    import atexit
+    atexit.register(cleanup_database_connections)
+    def setup_cli_playground_routes(self, app: Flask) -> None:
         """Setup CLI playground API routes"""
         
         # Store command history in memory (you could also use a file)
@@ -424,7 +501,7 @@ class LinuxPlusStudyWeb:
                     return jsonify({
                         'success': False,
                         'message': 'No questions are currently loaded to export.'
-                    }), 400
+                    }, 400)
                 
                 # Generate filename with timestamp
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -758,7 +835,7 @@ class LinuxPlusStudyWeb:
                             
                             # Convert letter to index (A=0, B=1, etc.)
                             correct_index = ord(correct_letter) - ord('A')
-                            answers_dict[answer_number] = correct_index
+                            answers_dict[answer_number] = correct_index;
                             
                             # Look for explanation in next lines
                             explanation_lines = []
@@ -1535,18 +1612,31 @@ class LinuxPlusStudyWeb:
         def api_save_settings():
             try:
                 data = request.get_json()
-                settings = {
+                
+                # Comprehensive settings model with validation
+                settings: dict[str, Any] = {
                     'focusMode': data.get('focusMode', False),
-                    'breakReminder': data.get('breakReminder', 10),
+                    'breakReminder': max(1, min(50, data.get('breakReminder', 10))),
+                    'debugMode': data.get('debugMode', False),
+                    'pointsPerQuestion': max(1, min(100, data.get('pointsPerQuestion', 10))),
+                    'streakBonus': max(0, min(50, data.get('streakBonus', 5))),
+                    'maxStreakBonus': max(0, min(200, data.get('maxStreakBonus', 50))),
                     'timestamp': time.time()
                 }
                 
-                # Save to a simple file (you could also use the game_state)
+                # Validate numeric settings
+                if settings['maxStreakBonus'] < settings['streakBonus']:
+                    settings['maxStreakBonus'] = settings['streakBonus']
+                
+                # Save to file
                 import json
                 with open('web_settings.json', 'w') as f:
-                    json.dump(settings, f)
+                    json.dump(settings, f, indent=2)
                 
-                return jsonify({'success': True})
+                # Apply settings to current game state
+                self._apply_settings_to_game_state(settings)
+                
+                return jsonify({'success': True, 'settings': settings})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
 
@@ -1557,13 +1647,35 @@ class LinuxPlusStudyWeb:
                 try:
                     with open('web_settings.json', 'r') as f:
                         settings = json.load(f)
+                    
+                    # Ensure all required fields exist with defaults
+                    default_settings = {
+                        'focusMode': False,
+                        'breakReminder': 10,
+                        'debugMode': False,
+                        'pointsPerQuestion': 10,
+                        'streakBonus': 5,
+                        'maxStreakBonus': 50
+                    }
+                    
+                    for key, default_value in default_settings.items():
+                        if key not in settings:
+                            settings[key] = default_value
+                    
                     return jsonify({'success': True, 'settings': settings})
                 except FileNotFoundError:
-                    # Return defaults
-                    return jsonify({'success': True, 'settings': {'focusMode': False, 'breakReminder': 10}})
+                    # Return comprehensive defaults
+                    default_settings = {
+                        'focusMode': False,
+                        'breakReminder': 10,
+                        'debugMode': False,
+                        'pointsPerQuestion': 10,
+                        'streakBonus': 5,
+                        'maxStreakBonus': 50
+                    }
+                    return jsonify({'success': True, 'settings': default_settings})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
-        # Add these routes in the setup_routes method after the existing routes
 
         @self.app.route('/api/set_fullscreen', methods=['POST'])
         def api_set_fullscreen():
@@ -1693,11 +1805,12 @@ class LinuxPlusStudyWeb:
                             domain = conn.lookupByID(vm_id)
                             running_vms.append(domain.name())
                         except Exception as e:
-                            self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
-                    
+                            if hasattr(self, 'logger'):
+                                self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
+            
                     # Combine all VMs
                     all_vm_names = set(defined_vms + running_vms)
-                    
+            
                     for vm_name in all_vm_names:
                         try:
                             domain = conn.lookupByName(vm_name)
@@ -1714,7 +1827,8 @@ class LinuxPlusStudyWeb:
                                 try:
                                     vm_info['ip'] = vm_manager.get_vm_ip(conn, domain)
                                 except Exception as e:
-                                    self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
+                                    if hasattr(self, 'logger'):
+                                        self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
                                     vm_info['ip'] = 'Unknown'
                             else:
                                 vm_info['ip'] = 'Not running'
@@ -1722,14 +1836,15 @@ class LinuxPlusStudyWeb:
                             vms.append(vm_info)
                             
                         except Exception as e:
-                            self.logger.warning(f"Error processing VM {vm_name}: {e}")
+                            if hasattr(self, 'logger'):
+                                self.logger.warning(f"Error processing VM {vm_name}: {e}")
                             # Add error VM entry
                             vms.append({
                                 'name': vm_name,
                                 'status': 'error',
                                 'error': str(e)
                             })
-                    
+            
                 except Exception as e:
                     return jsonify({
                         'success': False,
@@ -1740,14 +1855,15 @@ class LinuxPlusStudyWeb:
                         conn.close()
                     except:
                         pass
-                
+            
                 return jsonify({
                     'success': True, 
                     'vms': sorted(vms, key=lambda x: x['name'])
                 })
                 
             except Exception as e:
-                self.logger.error(f"Unexpected error in VM list API: {e}", exc_info=True)
+                if hasattr(self, 'logger'):
+                    self.logger.error(f"Unexpected error in VM list API: {e}", exc_info=True)
                 return jsonify({
                     'success': False,
                     'error': f'Unexpected error: {str(e)}'
@@ -1899,24 +2015,6 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': True, 'challenges': []})
                 
                 challenges = []
-                for challenge_file in challenges_dir.glob('*.yaml'):
-                    try:
-                        # Basic challenge info extraction
-                        challenge_info = {
-                            'name': challenge_file.stem,
-                            'filename': challenge_file.name,
-                            'path': str(challenge_file),
-                            'size': challenge_file.stat().st_size,
-                            'modified': challenge_file.stat().st_mtime
-                        }
-                        challenges.append(challenge_info)
-                    except Exception as e:
-                        self.logger.warning(f"Error reading challenge {challenge_file}: {e}")
-                
-                return jsonify({
-                    'success': True, 
-                    'challenges': sorted(challenges, key=lambda x: x['name'])
-                })
                 
             except Exception as e:
                 self.logger.error(f"Error listing challenges: {e}", exc_info=True)

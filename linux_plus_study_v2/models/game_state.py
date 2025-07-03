@@ -591,3 +591,26 @@ class GameState:
         self.achievement_system.clear_achievements()
         self.reset_session()
         self._sync_categories_with_history()
+    def update_scoring_settings(self, points_per_question=10, streak_bonus=5, max_streak_bonus=50):
+        """Update scoring settings for the game."""
+        self.points_per_question = points_per_question
+        self.streak_bonus = streak_bonus
+        self.max_streak_bonus = max_streak_bonus
+        
+        # Save settings to prevent loss on restart
+        self.save_settings()
+
+    def save_settings(self):
+        """Save current settings to game state."""
+        try:
+            settings = {
+                'points_per_question': getattr(self, 'points_per_question', 10),
+                'streak_bonus': getattr(self, 'streak_bonus', 5),
+                'max_streak_bonus': getattr(self, 'max_streak_bonus', 50)
+            }
+            
+            # Save to game state history
+            self.study_history['settings'] = settings
+            self.save_history()
+        except Exception as e:
+            print(f"Error saving settings to game state: {e}")
