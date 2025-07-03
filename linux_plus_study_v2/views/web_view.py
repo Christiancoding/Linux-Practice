@@ -86,6 +86,11 @@ class LinuxPlusStudyWeb:
         self.current_question_index = -1
         
         self.setup_routes()
+    def set_debug_mode(self, enabled: bool = True):
+        """Toggle debug mode for the application."""
+        self.debug = enabled
+        self.app.config['DEBUG'] = enabled
+        return {'success': True, 'debug': enabled}
     def _should_show_break_reminder(self) -> bool:
         """Check if break reminder should be shown based on current settings."""
         disabled_modes = {'daily_challenge', 'pop_quiz', 'quick_fire', 'mini_quiz'}

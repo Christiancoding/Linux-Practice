@@ -10,12 +10,15 @@ import time
 import random
 import hashlib
 from datetime import datetime
+from typing import Optional, Dict, Any
 from utils.config import *
 
 
 class QuizController:
     """Handles quiz logic and session management."""
     
+    _current_question_cache: Optional[Dict[str, Any]] = None
+
     def __init__(self, game_state):
         """
         Initialize the quiz controller.
@@ -42,7 +45,7 @@ class QuizController:
         # Daily challenge
         self.daily_challenge_completed = False
         self.last_daily_challenge_date = None
-    def get_current_question(self):
+    def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
         if not self.quiz_active:
             return None
@@ -53,7 +56,7 @@ class QuizController:
         
         return None
 
-    def cache_current_question(self, question_data):
+    def cache_current_question(self, question_data: Dict[str, Any]):
         """Cache the current question for repeated access."""
         self._current_question_cache = question_data
     def clear_current_question_cache(self):
@@ -64,7 +67,7 @@ class QuizController:
         """Check if there's a cached current question."""
         return hasattr(self, '_current_question_cache') and self._current_question_cache is not None
     
-    def start_quiz_session(self, mode=QUIZ_MODE_STANDARD, category_filter=None):
+    def start_quiz_session(self, mode: str = QUIZ_MODE_STANDARD, category_filter: Optional[str] = None) -> dict[str, Any]:
         """
         Start a new quiz session.
         
@@ -112,7 +115,7 @@ class QuizController:
             'quick_fire_active': self.quick_fire_active
         }
     
-    def get_next_question(self, category_filter=None):
+    def get_next_question(self, category_filter: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get the next question for the current session.
         
@@ -591,7 +594,7 @@ class QuizController:
         else:
             return POINTS_PER_INCORRECT
     
-    def _get_available_questions_count(self, category_filter=None):
+    def _get_available_questions_count(self, category_filter: Optional[str] = None) -> int:
         """Get count of available questions for the filter."""
         if category_filter is None:
             return len(self.game_state.questions)
