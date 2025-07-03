@@ -146,8 +146,8 @@ class QuizController:
         original_index: int
         question_data, original_index = self.game_state.select_question(category_filter)
         
-        if question_data is not None:
-            result = {
+        if question_data:
+            result: Dict[str, Any] = {
                 'question_data': question_data,
                 'original_index': original_index,
                 'question_number': self.session_total + 1,
@@ -162,7 +162,7 @@ class QuizController:
         self.quiz_active = False
         return None
     
-    def get_session_status(self):
+    def get_session_status(self) -> Dict[str, Any]:
         """Get current session status information."""
         return {
             'quiz_active': self.quiz_active,
@@ -173,7 +173,7 @@ class QuizController:
             'questions_since_break': self.questions_since_break
         }
 
-    def force_end_session(self):
+    def force_end_session(self) -> Dict[str, Any]:
         """Force end session and return final results."""
         if not self.quiz_active:
             return {
@@ -189,7 +189,7 @@ class QuizController:
         session_points = getattr(self.game_state, 'session_points', 0)
         
         # Store results before clearing
-        results = {
+        results: Dict[str, Any] = {
             'session_score': self.session_score,
             'session_total': self.session_total,
             'accuracy': accuracy,
@@ -219,7 +219,7 @@ class QuizController:
         
         return results
     
-    def validate_session_state(self):
+    def validate_session_state(self) -> Dict[str, Any]:
         """Validate current session state and return status."""
         if not self.quiz_active:
             return {'valid': False, 'reason': 'No active session'}
