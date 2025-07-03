@@ -67,22 +67,22 @@ class GameState:
         self._sync_categories_with_history()
     
     @property
-    def questions(self) -> List:
+    def questions(self) -> List[Tuple[str, List[str], int, str, str]]:
         """Get questions in tuple format for backwards compatibility."""
         return self.question_manager.get_question_tuples()
     
     @property
-    def categories(self) -> set:
+    def categories(self) -> set[str]:
         """Get set of question categories."""
         return self.question_manager.categories
     
     @property
-    def achievements(self) -> Dict:
+    def achievements(self) -> Dict[str, Any]:
         """Get achievements data."""
         return self.achievement_system.achievements
     
     @property
-    def leaderboard(self) -> List:
+    def leaderboard(self) -> List[Dict[str, Any]]:
         """Get leaderboard data."""
         return self.achievement_system.leaderboard
     
