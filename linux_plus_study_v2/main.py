@@ -354,7 +354,6 @@ class LinuxPlusStudySystem:
             self.logger.error(f"Failed to setup Flask routes: {e}", exc_info=True)
             raise
 
-
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create comprehensive command line argument parser."""
     parser = argparse.ArgumentParser(
