@@ -4,6 +4,7 @@ Web View for the Linux+ Study Game using Flask + pywebview.
 Creates a desktop app with modern web interface.
 """
 
+from sqlalchemy import true
 import webview
 import threading
 import time
@@ -2120,8 +2121,8 @@ class LinuxPlusStudyWeb:
     
     def run_flask_app(self):
         """Run the Flask app in a separate thread."""
-        self.app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
-    
+        self.app.run(host='127.0.0.1', port=5000, debug=True, use_reloader=True)
+
     def start(self):
         """Start the web interface in a desktop window."""
         # Start Flask in a separate thread
