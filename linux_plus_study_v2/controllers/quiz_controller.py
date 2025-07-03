@@ -13,6 +13,12 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 from utils.config import *
 
+# Define default constants
+POINTS_PER_CORRECT = 10
+POINTS_PER_INCORRECT = 0
+STREAK_BONUS_THRESHOLD = 3
+STREAK_BONUS_MULTIPLIER = 2
+
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -46,6 +52,10 @@ class QuizController:
         # Daily challenge
         self.daily_challenge_completed = False
         self.last_daily_challenge_date = None
+
+        # Last session results
+        self.last_session_results: Optional[Dict[str, Any]] = None
+
     def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
         if not self.quiz_active:
@@ -196,6 +206,8 @@ class QuizController:
             'session_points': session_points,
             'quiz_mode': self.current_quiz_mode
         }
+        # Save results for later retrieval
+        self.last_session_results = results
         
         # Clear all session state
         self.quiz_active = False
@@ -224,11 +236,11 @@ class QuizController:
         if not self.quiz_active:
             return {'valid': False, 'reason': 'No active session'}
         
-        if not hasattr(self, 'current_quiz_mode') or self.current_quiz_mode is None:
+        if not hasattr(self, 'current_quiz_mode'):
             return {'valid': False, 'reason': 'Invalid quiz mode'}
         
         return {'valid': True}
-    def submit_answer(self, question_data, user_answer_index, original_index):
+    def submit_answer(self, question_data, user_answer_index, original_index) -> dict[str, Any]:
         """
         Process a submitted answer.
         
@@ -303,7 +315,7 @@ class QuizController:
         
         return result
     
-    def skip_question(self):
+    def skip_question(self) -> Dict[str, Any]:
         """
         Handle question skipping.
         
@@ -322,7 +334,7 @@ class QuizController:
             'session_complete': self._check_session_complete()
         }
     
-    def end_session(self):
+    def end_session(self) -> Dict[str, Any]:
         """
         End the current quiz session.
         
@@ -363,7 +375,7 @@ class QuizController:
         self.game_state.save_history()
         self.game_state.save_achievements()
         
-        return {
+        session_results = {
             'session_score': self.session_score,
             'session_total': self.session_total,
             'accuracy': accuracy,
@@ -372,8 +384,10 @@ class QuizController:
             'mode': self.current_quiz_mode,
             'verify_answers': self.session_answers if self.current_quiz_mode == QUIZ_MODE_VERIFY else None
         }
+        self.last_session_results = session_results
+        return session_results
     
-    def start_quick_fire_mode(self):
+    def start_quick_fire_mode(self) -> Dict[str, Any]:
         """Initialize Quick Fire mode."""
         self.quick_fire_active = True
         self.quick_fire_start_time = time.time()
@@ -386,7 +400,7 @@ class QuizController:
             'question_limit': QUICK_FIRE_QUESTIONS
         }
     
-    def check_quick_fire_status(self):
+    def check_quick_fire_status(self) -> Dict[str, Any]:
         """
         Check if Quick Fire mode should continue.
         
@@ -418,7 +432,7 @@ class QuizController:
             'questions_remaining': questions_remaining
         }
     
-    def end_quick_fire_mode(self, time_up=False):
+    def end_quick_fire_mode(self, time_up=False) -> dict[str, Any]:
         """
         End Quick Fire mode and return results.
         
@@ -451,7 +465,7 @@ class QuizController:
             'achievement_earned': achievement_earned
         }
     
-    def get_daily_challenge_question(self):
+    def get_daily_challenge_question(self) -> Optional[Dict[str, Any]]:
         """
         Get today's daily challenge question.
         
@@ -480,7 +494,7 @@ class QuizController:
         
         return None
     
-    def complete_daily_challenge(self, is_correct):
+    def complete_daily_challenge(self, is_correct) -> Dict[str, Any]:
         """
         Mark daily challenge as complete and handle rewards.
         
@@ -521,7 +535,7 @@ class QuizController:
             'date': today_iso
         }
     
-    def check_break_reminder(self, break_interval):
+    def check_break_reminder(self, break_interval) -> bool:
         """
         Check if a break reminder should be shown.
         
@@ -537,7 +551,7 @@ class QuizController:
         """Reset the break counter."""
         self.questions_since_break = 0
     
-    def get_verify_mode_results(self):
+    def get_verify_mode_results(self) -> Dict[str, Any]:
         """
         Get results for verify mode session.
         
@@ -561,14 +575,14 @@ class QuizController:
             'detailed_answers': self.session_answers
         }
     
-    def get_quiz_results(self):
+    def get_quiz_results(self) -> Optional[Dict[str, Any]]:
         """Get comprehensive results of the completed quiz session."""
         if not hasattr(self, 'last_session_results') or self.last_session_results is None:
             return None
         
         return self.last_session_results
 
-    def get_session_summary(self):
+    def get_session_summary(self) -> Optional[Dict[str, Any]]:
         """Get a summary of the current or last session."""
         try:
             status = self.get_session_status()

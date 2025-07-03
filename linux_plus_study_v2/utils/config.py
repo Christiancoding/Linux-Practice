@@ -2,32 +2,16 @@
 """
 Configuration constants for the Linux+ Study Game.
 """
-from typing import Optional, List
+from typing import Optional, List, Dict, Any, Union
 import sys
 import os
 from pathlib import Path
 
-# --- File Constants ---
-HISTORY_FILE = "linux_plus_history.json"
-ACHIEVEMENTS_FILE = "linux_plus_achievements.json"
+# Ensure minimum Python version compatibility
+if sys.version_info < (3, 8):
+    print("Linux+ Practice Environment Manager requires Python 3.8+")
+    sys.exit(1)
 
-# --- Quiz Mode Constants ---
-QUIZ_MODE_STANDARD = "standard"
-QUIZ_MODE_VERIFY = "verify"
-
-# --- Gamification Constants ---
-POINTS_PER_CORRECT = 10
-POINTS_PER_INCORRECT = -2
-STREAK_BONUS_THRESHOLD = 3
-STREAK_BONUS_MULTIPLIER = 1.5
-
-# --- Quick Fire Mode Constants ---
-QUICK_FIRE_QUESTIONS = 5
-QUICK_FIRE_TIME_LIMIT = 180  # 3 minutes in seconds
-
-# --- Mini Quiz Constants ---
-MINI_QUIZ_QUESTIONS = 3
-MINI_QUIZ_TIME_LIMIT = 30  # 30 seconds
 # Project structure paths
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
@@ -41,16 +25,51 @@ ACHIEVEMENTS_FILE = PROJECT_ROOT / "linux_plus_achievements.json"
 HISTORY_FILE = PROJECT_ROOT / "linux_plus_history.json"
 WEB_SETTINGS_FILE = PROJECT_ROOT / "web_settings.json"
 
-# Application modes (GUI mode removed)
+# Application modes
 SUPPORTED_MODES = ["cli", "web"]
 DEFAULT_MODE = "cli"
 
+# --- Quiz Mode Constants ---
+QUIZ_MODE_STANDARD = "standard"
+QUIZ_MODE_VERIFY = "verify"
+
+# --- Quick Fire Mode Constants ---
+QUICK_FIRE_QUESTIONS = 5
+QUICK_FIRE_TIME_LIMIT = 180  # 3 minutes in seconds
+
+# --- Mini Quiz Constants ---
+MINI_QUIZ_QUESTIONS = 3
+MINI_QUIZ_TIME_LIMIT = 30  # 30 seconds
 
 # --- Colorama Setup (CLI Colors) ---
+COLOR_QUESTION = ""
+COLOR_OPTIONS = ""
+COLOR_OPTION_NUM = ""
+COLOR_CATEGORY = ""
+COLOR_CORRECT = ""
+COLOR_INCORRECT = ""
+COLOR_EXPLANATION = ""
+COLOR_PROMPT = ""
+COLOR_HEADER = ""
+COLOR_SUBHEADER = ""
+COLOR_STATS_LABEL = ""
+COLOR_STATS_VALUE = ""
+COLOR_STATS_ACC_GOOD = ""
+COLOR_STATS_ACC_AVG = ""
+COLOR_STATS_ACC_BAD = ""
+COLOR_BORDER = ""
+COLOR_INPUT = ""
+COLOR_ERROR = ""
+COLOR_WARNING = ""
+COLOR_INFO = ""
+COLOR_WELCOME_BORDER = ""
+COLOR_WELCOME_TEXT = ""
+COLOR_WELCOME_TITLE = ""
+COLOR_RESET = ""
+
 try:
     import colorama
     colorama.init(autoreset=True)
-    
     # Define a richer color palette using colorama styles
     C = {
         "reset": colorama.Style.RESET_ALL,
@@ -83,8 +102,7 @@ try:
         "bg_cyan": colorama.Back.CYAN,
         "bg_white": colorama.Back.WHITE,
     }
-    
-    # Define semantic colors using the palette
+    # Assign semantic colors using the palette
     COLOR_QUESTION = C["fg_bright_cyan"] + C["bold"]
     COLOR_OPTIONS = C["fg_white"]
     COLOR_OPTION_NUM = C["fg_yellow"] + C["bold"]
@@ -109,35 +127,11 @@ try:
     COLOR_WELCOME_TEXT = C["fg_white"]
     COLOR_WELCOME_TITLE = C["fg_bright_yellow"] + C["bold"]
     COLOR_RESET = C["reset"]
-    
 except ImportError:
     print("Warning: Colorama not found. Colored output will be disabled in CLI.")
-    # Define empty strings if colorama is not available
-    c = {k: "" for k in ["reset", "bold", "dim", "fg_black", "fg_red", "fg_green", 
-         "fg_yellow", "fg_blue", "fg_magenta", "fg_cyan", "fg_white", "fg_lightblack_ex", 
-         "fg_bright_red", "fg_bright_green", "fg_bright_yellow", "fg_bright_blue", 
-         "fg_bright_magenta", "fg_bright_cyan", "fg_bright_white", "bg_red", "bg_green", 
-         "bg_yellow", "bg_blue", "bg_magenta", "bg_cyan", "bg_white"]}
-    
-    COLOR_QUESTION, COLOR_OPTIONS, COLOR_OPTION_NUM, COLOR_CATEGORY = "", "", "", ""
-    COLOR_CORRECT, COLOR_INCORRECT, COLOR_EXPLANATION, COLOR_PROMPT = "", "", "", ""
-    COLOR_HEADER, COLOR_SUBHEADER, COLOR_STATS_LABEL, COLOR_STATS_VALUE = "", "", "", ""
-    COLOR_STATS_ACC_GOOD, COLOR_STATS_ACC_AVG, COLOR_STATS_ACC_BAD = "", "", ""
-    COLOR_BORDER, COLOR_INPUT, COLOR_ERROR, COLOR_WARNING, COLOR_INFO = "", "", "", "", ""
-    COLOR_WELCOME_BORDER, COLOR_WELCOME_TEXT, COLOR_WELCOME_TITLE = "", "", ""
-    COLOR_RESET = ""
 
-# --- Sample Questions Data ---
-SAMPLE_QUESTIONS = [
-    (
-        "Which command installs the GRUB2 bootloader to a specified device?",
-        ["grub2-mkconfig", "grub2-install", "update-grub", "dracut"],
-        1, "Commands (System Management)",
-        "`grub2-install` installs the GRUB2 bootloader files to the appropriate location and typically installs the boot code to the MBR or EFI partition. Example: `grub2-install /dev/sda` (for BIOS systems) or `grub2-install --target=x86_64-efi --efi-directory=/boot/efi` (for UEFI systems)."
-    )
-]
 # CLI Configuration Settings
-CLI_SETTINGS = {
+CLI_SETTINGS: Dict[str, Any] = {
     "welcome_message": "Welcome to Linux Plus Study Tool",
     "prompt_symbol": ">>> ",
     "clear_screen": True,
@@ -148,7 +142,7 @@ CLI_SETTINGS = {
 }
 
 # Web Configuration Settings
-WEB_SETTINGS = {
+WEB_SETTINGS: Dict[str, Any] = {
     "default_host": "127.0.0.1",
     "default_port": 5000,
     "debug_mode": False,
@@ -159,7 +153,7 @@ WEB_SETTINGS = {
 }
 
 # Quiz Configuration
-QUIZ_SETTINGS = {
+QUIZ_SETTINGS: Dict[str, Any] = {
     "default_question_count": 10,
     "max_question_count": 50,
     "min_question_count": 1,
@@ -169,11 +163,13 @@ QUIZ_SETTINGS = {
     "allow_review": True,
 }
 
-# Achievement System Configuration
-ACHIEVEMENT_SETTINGS = {
+# Achievement System Configuration (consolidated)
+ACHIEVEMENT_SETTINGS: Dict[str, Any] = {
     "points_per_correct": 10,
+    "points_per_incorrect": -2,
     "bonus_streak_multiplier": 1.5,
     "streak_threshold": 5,
+    "streak_bonus_threshold": 3,
     "daily_challenge_bonus": 50,
     "perfect_quiz_bonus": 25,
 }
@@ -193,20 +189,21 @@ QUESTION_CATEGORIES = [
     "Security",
     "Linux Troubleshooting and Diagnostics",
     "Automation and Scripting",
+    "Commands (System Management)",
 ]
 
 # Difficulty Levels
 DIFFICULTY_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert"]
 
 # File validation settings
-FILE_VALIDATION = {
+FILE_VALIDATION: Dict[str, Any] = {
     "max_file_size": 50 * 1024 * 1024,  # 50MB
     "allowed_extensions": [".json", ".txt", ".csv"],
     "encoding": "utf-8",
 }
 
 # Logging Configuration
-LOGGING_SETTINGS = {
+LOGGING_SETTINGS: Dict[str, Any] = {
     "log_level": "INFO",
     "log_file": PROJECT_ROOT / "app.log",
     "max_log_size": 10 * 1024 * 1024,  # 10MB
@@ -241,7 +238,7 @@ DEBUG_SETTINGS = {
 }
 
 # API Configuration (for potential future web API)
-API_SETTINGS: dict[str, object] = {
+API_SETTINGS: Dict[str, Any] = {
     "version": "v1",
     "rate_limit": 100,  # requests per minute
     "cors_enabled": False,
@@ -257,99 +254,15 @@ UI_CONSTANTS = {
 }
 
 # Performance Settings
-PERFORMANCE_SETTINGS: dict[str, object] = {
+PERFORMANCE_SETTINGS: Dict[str, Any] = {
     "cache_questions": True,
     "cache_timeout": 3600,  # 1 hour
     "lazy_loading": True,
     "pagination_size": 20,
 }
 
-def get_config_value(section: str, key: str, default: object = None) -> object:
-    """
-    Retrieve a configuration value from the specified section.
-    
-    Args:
-        section (str): Configuration section name
-        key (str): Configuration key
-        default: Default value if key not found
-        
-    Returns:
-        Configuration value or default
-    """
-    config_sections: dict[str, dict[str, object]] = {
-        "cli": CLI_SETTINGS,
-        "web": WEB_SETTINGS,
-        "quiz": QUIZ_SETTINGS,
-        "achievements": ACHIEVEMENT_SETTINGS,
-        "scoring": SCORING_SETTINGS,
-        "logging": LOGGING_SETTINGS,
-        "debug": DEBUG_SETTINGS,
-        "api": API_SETTINGS,
-        "ui": UI_CONSTANTS,
-        "performance": PERFORMANCE_SETTINGS,
-    }
-    
-    section_config = config_sections.get(section, {})
-    return section_config.get(key, default)
-
-def validate_mode(mode):
-    """
-    Validate if the provided mode is supported.
-    
-    Args:
-        mode (str): Application mode to validate
-        
-    Returns:
-        bool: True if mode is supported, False otherwise
-    """
-    return mode in SUPPORTED_MODES
-
-def get_file_path(file_type):
-    """
-    Get the full file path for a specific file type.
-    
-    Args:
-        file_type (str): Type of file (questions, achievements, history, etc.)
-        
-    Returns:
-        Path: Full path to the specified file
-    """
-    file_paths = {
-        "questions": QUESTIONS_FILE,
-        "achievements": ACHIEVEMENTS_FILE,
-        "history": HISTORY_FILE,
-        "web_settings": WEB_SETTINGS_FILE,
-    }
-    
-    return file_paths.get(file_type)
-
-def ensure_directories():
-    """
-    Ensure all required directories exist.
-    Create them if they don't exist.
-    """
-    directories = [
-        DATA_DIR,
-        TEMPLATES_DIR,
-        STATIC_DIR,
-        STATIC_DIR / "css",
-        STATIC_DIR / "js",
-    ]
-    
-    for directory in directories:
-        directory.mkdir(parents=True, exist_ok=True)
-
-# Environment-specific overrides
-if os.getenv("FLASK_ENV") == "development":
-    WEB_SETTINGS["debug_mode"] = True
-    DEBUG_SETTINGS["verbose_logging"] = True
-
-if os.getenv("PRODUCTION") == "true":
-    WEB_SETTINGS["debug_mode"] = False
-    DEBUG_SETTINGS["verbose_logging"] = False
-    LOGGING_SETTINGS["log_level"] = "WARNING"
 # Database Connection Pooling Settings
-DATABASE_POOL_SETTINGS = {
+DATABASE_POOL_SETTINGS: Dict[str, Any] = {
     "pool_size": 10,           # Number of connections to maintain in pool
     "max_overflow": 20,        # Additional connections beyond pool_size
     "pool_pre_ping": True,     # Validate connections before use
@@ -359,7 +272,7 @@ DATABASE_POOL_SETTINGS = {
 }
 
 # Database Configuration
-DATABASE_SETTINGS = {
+DATABASE_SETTINGS: Dict[str, Any] = {
     "sqlite": {
         "url": "sqlite:///data/linux_plus_study.db",
         "pool_enabled": False,  # SQLite doesn't benefit from pooling
@@ -373,37 +286,37 @@ DATABASE_SETTINGS = {
         "pool_enabled": True,
     }
 }
-def get_database_config(db_type="sqlite"):
-    """
-    Get database configuration with connection pooling settings.
-    
-    Args:
-        db_type (str): Database type (sqlite, postgresql, mysql)
-        
-    Returns:
-        dict: Combined database and pool configuration
-    """
-    db_config = DATABASE_SETTINGS.get(db_type, DATABASE_SETTINGS["sqlite"])
-    
-    if db_config.get("pool_enabled", False):
-        return {**db_config, **DATABASE_POOL_SETTINGS}
-    else:
-        return db_config
-# Ensure minimum Python version compatibility
-if sys.version_info < (3, 8):
-    print("Linux+ Practice Environment Manager requires Python 3.8+")
-    sys.exit(1)
+
+# --- Sample Questions Data ---
+SAMPLE_QUESTIONS = [
+    (
+        "Which command installs the GRUB2 bootloader to a specified device?",
+        ["grub2-mkconfig", "grub2-install", "update-grub", "dracut"],
+        1, "Commands (System Management)",
+        "`grub2-install` installs the GRUB2 bootloader files to the appropriate location and typically installs the boot code to the MBR or EFI partition. Example: `grub2-install /dev/sda` (for BIOS systems) or `grub2-install --target=x86_64-efi --efi-directory=/boot/efi` (for UEFI systems)."
+    )
+]
+
+# Environment-specific overrides
+if os.getenv("FLASK_ENV") == "development":
+    WEB_SETTINGS["debug_mode"] = True
+    DEBUG_SETTINGS["verbose_logging"] = True
+
+if os.getenv("PRODUCTION") == "true":
+    WEB_SETTINGS["debug_mode"] = False
+    DEBUG_SETTINGS["verbose_logging"] = False
+    LOGGING_SETTINGS["log_level"] = "WARNING"
 
 # Import libvirt for error code constants (with graceful fallback)
 try:
-    import libvirt # type: ignore
+    import libvirt  # type: ignore
 except ImportError:
     print("Error: Missing required library 'libvirt-python'.\n"
           "Please install it (e.g., 'pip install libvirt-python' or via system package manager) and try again.", 
           file=sys.stderr)
     sys.exit(1)
 
-
+# Configuration Classes for VM Management
 class VMConfiguration:
     """Virtual Machine management configuration settings."""
     
@@ -417,7 +330,6 @@ class VMConfiguration:
     SHUTDOWN_TIMEOUT_SECONDS: int = 120
     # Libvirt Connection Configuration
     LIBVIRT_URI: str = 'qemu:///system'
-
 
 class SSHConfiguration:
     """SSH connection and authentication configuration settings."""
@@ -453,7 +365,6 @@ class SSHConfiguration:
             return False
         
         return True
-
 
 class ChallengeConfiguration:
     """Challenge system configuration and default settings."""
@@ -492,7 +403,6 @@ class ChallengeConfiguration:
         
         return sorted(challenge_files)
 
-
 class SystemConfiguration:
     """System-wide configuration and service management settings."""
     
@@ -511,7 +421,6 @@ class SystemConfiguration:
     DEFAULT_FILE_MODE: str = "0644"
     DEFAULT_DIR_MODE: str = "0755"
 
-
 class LibvirtErrorCodes:
     """Libvirt error code constants with safe fallback handling."""
     
@@ -524,7 +433,6 @@ class LibvirtErrorCodes:
     VIR_ERR_ARGUMENT_UNSUPPORTED = getattr(libvirt, 'VIR_ERR_ARGUMENT_UNSUPPORTED', -1)
     VIR_ERR_CONFIG_EXIST = getattr(libvirt, 'VIR_ERR_CONFIG_EXIST', -1)
     VIR_ERR_INVALID_DOMAIN = getattr(libvirt, 'VIR_ERR_INVALID_DOMAIN', -1)
-
 
 class ApplicationConfiguration:
     """Main application configuration combining all subsystem settings."""
@@ -578,6 +486,98 @@ class ApplicationConfiguration:
         
         return True
 
+# Utility Functions
+def get_config_value(section: str, key: str, default: Any = None) -> Any:
+    """
+    Retrieve a configuration value from the specified section.
+    
+    Args:
+        section (str): Configuration section name
+        key (str): Configuration key
+        default: Default value if key not found
+        
+    Returns:
+        Configuration value or default
+    """
+    config_sections: Dict[str, Dict[str, Any]] = {
+        "cli": CLI_SETTINGS,
+        "web": WEB_SETTINGS,
+        "quiz": QUIZ_SETTINGS,
+        "achievements": ACHIEVEMENT_SETTINGS,
+        "scoring": SCORING_SETTINGS,
+        "logging": LOGGING_SETTINGS,
+        "debug": DEBUG_SETTINGS,
+        "api": API_SETTINGS,
+        "ui": UI_CONSTANTS,
+        "performance": PERFORMANCE_SETTINGS,
+    }
+    
+    section_config = config_sections.get(section, {})
+    return section_config.get(key, default)
+
+def validate_mode(mode: str) -> bool:
+    """
+    Validate if the provided mode is supported.
+    
+    Args:
+        mode (str): Application mode to validate
+        
+    Returns:
+        bool: True if mode is supported, False otherwise
+    """
+    return mode in SUPPORTED_MODES
+
+def get_file_path(file_type: str) -> Optional[Path]:
+    """
+    Get the full file path for a specific file type.
+    
+    Args:
+        file_type (str): Type of file (questions, achievements, history, etc.)
+        
+    Returns:
+        Path: Full path to the specified file
+    """
+    file_paths = {
+        "questions": QUESTIONS_FILE,
+        "achievements": ACHIEVEMENTS_FILE,
+        "history": HISTORY_FILE,
+        "web_settings": WEB_SETTINGS_FILE,
+    }
+    
+    return file_paths.get(file_type)
+
+def ensure_directories() -> None:
+    """
+    Ensure all required directories exist.
+    Create them if they don't exist.
+    """
+    directories = [
+        DATA_DIR,
+        TEMPLATES_DIR,
+        STATIC_DIR,
+        STATIC_DIR / "css",
+        STATIC_DIR / "js",
+    ]
+    
+    for directory in directories:
+        directory.mkdir(parents=True, exist_ok=True)
+
+def get_database_config(db_type: str = "sqlite") -> Dict[str, Any]:
+    """
+    Get database configuration with connection pooling settings.
+    
+    Args:
+        db_type (str): Database type (sqlite, postgresql, mysql)
+        
+    Returns:
+        dict: Combined database and pool configuration
+    """
+    db_config = DATABASE_SETTINGS.get(db_type, DATABASE_SETTINGS["sqlite"])
+    
+    if db_config.get("pool_enabled", False):
+        return {**db_config, **DATABASE_POOL_SETTINGS}
+    else:
+        return db_config
 
 # Backward compatibility - maintain the original Config class interface
 class Config(VMConfiguration, SSHConfiguration, ChallengeConfiguration, SystemConfiguration):
@@ -589,7 +589,6 @@ class Config(VMConfiguration, SSHConfiguration, ChallengeConfiguration, SystemCo
     Config class from ww.py.
     """
     pass
-
 
 # Global configuration instance for easy importing
 config = ApplicationConfiguration()
