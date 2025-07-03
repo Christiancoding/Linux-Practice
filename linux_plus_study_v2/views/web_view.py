@@ -9,6 +9,8 @@ import threading
 import time
 from flask import Flask, render_template, request, jsonify, send_from_directory, session, send_file, flash, redirect, url_for
 import os
+from vm_integration.utils.snapshot_manager import SnapshotManager
+from pathlib import Path
 import json
 from datetime import datetime
 import hashlib
@@ -18,6 +20,9 @@ import traceback
 from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
+from vm_integration.utils.vm_manager import VMManager
+from vm_integration.utils.ssh_manager import SSHManager
+import libvirt
 from utils.config import (
     QUICK_FIRE_QUESTIONS, QUICK_FIRE_TIME_LIMIT, MINI_QUIZ_QUESTIONS,
     POINTS_PER_CORRECT, POINTS_PER_INCORRECT, STREAK_BONUS_THRESHOLD, STREAK_BONUS_MULTIPLIER
@@ -1163,6 +1168,7 @@ class LinuxPlusStudyWeb:
             return render_template('settings.html')
         
         @self.app.route('/api/status')
+        @self.app.route('/api/status')
         def api_status():
             try:
                 # Use quiz controller as single source of truth
@@ -1633,6 +1639,389 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 })
+        @self.app.route('/vm_playground')
+        def vm_playground():
+            """Render VM management playground interface."""
+            return render_template('vm_playground.html')
+
+        @self.app.route('/api/vm/list', methods=['GET'])
+        def api_vm_list():
+            """API endpoint to list all VMs."""
+            try:
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                
+                vms = []
+                for vm_name in conn.listDefinedDomains():
+                    domain = conn.lookupByName(vm_name)
+                    is_active = domain.isActive()
+                    
+                    vm_info = {
+                        'name': vm_name,
+                        'status': 'running' if is_active else 'stopped',
+                        'id': domain.ID() if is_active else None
+                    }
+                    
+                    # Try to get IP if running
+                    if is_active:
+                        try:
+                            vm_info['ip'] = vm_manager.get_vm_ip(conn, domain)
+                        except Exception:
+                            vm_info['ip'] = 'Unknown'
+                    
+                    vms.append(vm_info)
+                
+                conn.close()
+                return jsonify({'success': True, 'vms': vms})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/start', methods=['POST'])
+        def api_vm_start():
+            """API endpoint to start a VM."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                if domain.isActive():
+                    return jsonify({'success': False, 'error': f'VM {vm_name} is already running'})
+                
+                vm_manager.start_vm(domain)
+                conn.close()
+                
+                return jsonify({'success': True, 'message': f'VM {vm_name} started successfully'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/stop', methods=['POST'])
+        def api_vm_stop():
+            """API endpoint to stop a VM."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                force = data.get('force', False)
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                if not domain.isActive():
+                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
+                
+                if force:
+                    domain.destroy()  # Force shutdown
+                else:
+                    domain.shutdown()  # Graceful shutdown
+                
+                conn.close()
+                
+                action = 'force stopped' if force else 'shutdown initiated'
+                return jsonify({'success': True, 'message': f'VM {vm_name} {action}'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/execute', methods=['POST'])
+        def api_vm_execute():
+            """API endpoint to execute commands on a VM via SSH."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                command = data.get('command')
+                
+                if not vm_name or not command:
+                    return jsonify({'success': False, 'error': 'VM name and command are required'})
+                
+                vm_manager = VMManager()
+                ssh_manager = SSHManager()
+                
+                # Get VM IP
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                if not domain.isActive():
+                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
+                
+                vm_ip = vm_manager.get_vm_ip(conn, domain)
+                conn.close()
+                
+                # Execute command via SSH
+                from pathlib import Path
+                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'  # Adjust as needed
+                
+                result = ssh_manager.run_ssh_command(
+                    host=vm_ip,
+                    username='ubuntu',  # Adjust as needed
+                    key_path=ssh_key_path,
+                    command=command,
+                    timeout=30,
+                    verbose=True
+                )
+                
+                return jsonify({
+                    'success': result['success'],
+                    'output': result.get('stdout', ''),
+                    'error': result.get('stderr', ''),
+                    'exit_status': result.get('exit_status', 0)
+                })
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/status', methods=['GET'])
+        def api_vm_status():
+            """API endpoint to get detailed VM status."""
+            try:
+                vm_name = request.args.get('vm_name')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                is_active = domain.isActive()
+                status_info = {
+                    'name': vm_name,
+                    'status': 'running' if is_active else 'stopped',
+                    'id': domain.ID() if is_active else None,
+                    'ip': None,
+                    'uptime': None
+                }
+                
+                if is_active:
+                    try:
+                        status_info['ip'] = vm_manager.get_vm_ip(conn, domain)
+                    except Exception:
+                        status_info['ip'] = 'Unknown'
+                
+                conn.close()
+                
+                return jsonify({'success': True, 'status': status_info})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        @self.app.route('/api/vm/challenges', methods=['GET'])
+        def api_vm_challenges():
+            """API endpoint to list available challenges."""
+            try:
+                challenges_dir = Path('challenges')  # Adjust path as needed
+                if not challenges_dir.exists():
+                    return jsonify({'success': True, 'challenges': []})
+                
+                challenges = []
+                for challenge_file in challenges_dir.glob('*.yaml'):
+                    try:
+                        # Basic challenge info extraction
+                        challenge_info = {
+                            'name': challenge_file.stem,
+                            'filename': challenge_file.name,
+                            'path': str(challenge_file),
+                            'size': challenge_file.stat().st_size,
+                            'modified': challenge_file.stat().st_mtime
+                        }
+                        challenges.append(challenge_info)
+                    except Exception as e:
+                        self.logger.warning(f"Error reading challenge {challenge_file}: {e}")
+                
+                return jsonify({
+                    'success': True, 
+                    'challenges': sorted(challenges, key=lambda x: x['name'])
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error listing challenges: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/run_challenge', methods=['POST'])
+        def api_vm_run_challenge():
+            """API endpoint to run a challenge on a VM."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                challenge_name = data.get('challenge_name')
+                
+                if not vm_name or not challenge_name:
+                    return jsonify({'success': False, 'error': 'VM name and challenge name are required'})
+                
+                # Import challenge runner
+                from vm_integration.controllers.challenge_runner import ChallengeRunner
+                
+                challenge_runner = ChallengeRunner()
+                
+                # Create snapshot before running challenge
+                snapshot_name = f"before_{challenge_name}_{int(time.time())}"
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                # Create snapshot for safety
+                snapshot_manager = SnapshotManager()
+                snapshot_manager.create_snapshot(domain, snapshot_name)
+                
+                # Run the challenge
+                challenge_path = Path('challenges') / f"{challenge_name}.yaml"
+                result = challenge_runner.run_challenge(
+                    challenge_path=challenge_path,
+                    vm_name=vm_name,
+                    libvirt_uri=vm_manager.libvirt_uri
+                )
+                
+                conn.close()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Challenge {challenge_name} started on VM {vm_name}',
+                    'snapshot_created': snapshot_name,
+                    'challenge_result': result
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error running challenge: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/snapshots', methods=['GET'])
+        def api_vm_snapshots():
+            """API endpoint to list VM snapshots."""
+            try:
+                vm_name = request.args.get('vm_name')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                # Get snapshots
+                snapshots = []
+                try:
+                    snapshot_names = domain.listAllSnapshots()
+                    for snapshot in snapshot_names:
+                        snapshot_info = {
+                            'name': snapshot.getName(),
+                            'description': snapshot.getXMLDesc(),
+                            'creation_time': snapshot.getName(),  # Parse from XML if needed
+                            'current': snapshot.isCurrent()
+                        }
+                        snapshots.append(snapshot_info)
+                except Exception as e:
+                    self.logger.debug(f"Error listing snapshots: {e}")
+                
+                conn.close()
+                
+                return jsonify({
+                    'success': True,
+                    'snapshots': sorted(snapshots, key=lambda x: x['name'])
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error listing snapshots: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/create_snapshot', methods=['POST'])
+        def api_vm_create_snapshot():
+            """API endpoint to create a VM snapshot."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                description = data.get('description', '')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                snapshot_manager = SnapshotManager()
+                snapshot_manager.create_snapshot(domain, snapshot_name, description)
+                
+                conn.close()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Snapshot {snapshot_name} created for VM {vm_name}'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error creating snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/restore_snapshot', methods=['POST'])
+        def api_vm_restore_snapshot():
+            """API endpoint to restore a VM from snapshot."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                # Find and restore snapshot
+                snapshot = domain.snapshotLookupByName(snapshot_name)
+                domain.revertToSnapshot(snapshot)
+                
+                conn.close()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'VM {vm_name} restored from snapshot {snapshot_name}'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error restoring snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/vm/delete_snapshot', methods=['POST'])
+        def api_vm_delete_snapshot():
+            """API endpoint to delete a VM snapshot."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                conn = vm_manager.connect_libvirt()
+                domain = vm_manager.find_vm(conn, vm_name)
+                
+                # Find and delete snapshot
+                snapshot = domain.snapshotLookupByName(snapshot_name)
+                snapshot.delete()
+                
+                conn.close()
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Snapshot {snapshot_name} deleted from VM {vm_name}'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
     def handle_api_errors(f):
         def wrapper(*args, **kwargs):
             try:

@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}VM Management Playground{% endblock %}
+
+{% block extra_css %}
+<style>
+    .vm-container {
+        display: flex;
+        gap: 20px;
+        height: calc(100vh - 200px);
+    }
+    
+    .vm-sidebar {
+        width: 300px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .vm-terminal {
+        flex: 1;
+        background: #1e1e1e;
+        color: #ffffff;
+        font-family: 'Courier New', monospace;
+        border-radius: 8px;
+        padding: 20px;
+        overflow-y: auto;
+    }
+    
+    .vm-list-item {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .vm-list-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .vm-list-item.active {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .vm-status {
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+    
+    .vm-status.running {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .vm-status.stopped {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .vm-terminal-output {
+        min-height: 400px;
+        white-space: pre-wrap;
+        font-size: 14px;
+        line-height: 1.4;
+    }
+    
+    .vm-input-line {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+    
+    .vm-prompt {
+        color: #00ff00;
+        margin-right: 10px;
+    }
+    
+    .vm-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: #ffffff;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+    }
+    
+    .vm-controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .btn-vm {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .btn-vm.start {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-vm.stop {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .btn-vm.refresh {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-vm:hover {
+        opacity: 0.8;
+    }
+    
+    .btn-vm:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+        .btn-vm.challenge {
+        background: #fd7e14;
+        color: white;
+    }
+    
+    .btn-vm.snapshot {
+        background: #6f42c1;
+        color: white;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    
+    .close:hover {
+        color: black;
+    }
+    
+    .challenge-item, .snapshot-item {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 15px;
+        margin: 10px 0;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .challenge-item:hover, .snapshot-item:hover {
+        border-color: #007bff;
+        background: #e3f2fd;
+    }
+    
+    .challenge-meta, .snapshot-meta {
+        font-size: 0.9em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    
+    .action-buttons {
+        margin-top: 10px;
+    }
+    
+    .action-buttons button {
+        margin-right: 5px;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+    
+    .btn-run {
+        background: #28a745;
+        color: white;
+    }
+    
+    .btn-restore {
+        background: #007bff;
+        color: white;
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>🖥️ VM Management Playground</h1>
+            <p class="lead">Manage virtual machines and execute commands remotely</p>
+        </div>
+    </div>
+    
+    <div class="vm-container">
+        <div class="vm-sidebar">
+            <h5>Available VMs</h5>
+            <div class="vm-controls">
+                <button class="btn-vm refresh" onclick="vmPlayground.refreshVMs()">
+                    🔄 Refresh
+                </button>
+            </div>
+            <div id="vmList">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading VMs...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="vm-terminal">
+            <div class="vm-controls">
+                <button class="btn-vm start" id="startBtn" onclick="vmPlayground.startVM()" disabled>
+                    ▶️ Start VM
+                </button>
+                <button class="btn-vm stop" id="stopBtn" onclick="vmPlayground.stopVM()" disabled>
+                    ⏹️ Stop VM
+                </button>
+                <button class="btn-vm refresh" onclick="vmPlayground.clearTerminal()">
+                    🧹 Clear
+                </button>
+                <button class="btn-vm challenge" onclick="vmPlayground.showChallenges()">
+                    🎯 Challenges
+                </button>
+                <button class="btn-vm snapshot" onclick="vmPlayground.showSnapshots()">
+                    📸 Snapshots
+                </button>
+            </div>
+            
+            <div id="vmTerminal" class="vm-terminal-output">
+                <div style="color: #00ff00;">Welcome to VM Management Playground!</div>
+                <div style="color: #ffff00;">Select a VM from the sidebar to get started.</div>
+                <div style="color: #ffffff;">Type 'help' for available commands.</div>
+            </div>
+            
+            <div class="vm-input-line">
+                <span class="vm-prompt" id="vmPrompt">vm@playground:~$</span>
+                <input type="text" class="vm-input" id="vmInput" placeholder="Enter command..." disabled>
+            </div>
+        </div>
+        <!-- Challenges Modal -->
+        <div id="challengesModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="vmPlayground.closeModal('challengesModal')">&times;</span>
+                <h2>Available Challenges</h2>
+                <div id="challengesList">
+                    <div class="text-center">Loading challenges...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Snapshots Modal -->
+        <div id="snapshotsModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="vmPlayground.closeModal('snapshotsModal')">&times;</span>
+                <h2>VM Snapshots</h2>
+                <div class="mb-3">
+                    <input type="text" id="snapshotName" placeholder="Snapshot name" class="form-control" style="display: inline-block; width: 200px; margin-right: 10px;">
+                    <button class="btn-vm snapshot" onclick="vmPlayground.createSnapshot()">Create Snapshot</button>
+                </div>
+                <div id="snapshotsList">
+                    <div class="text-center">Loading snapshots...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/vm_playground.js') }}"></script>
+{% endblock %}
