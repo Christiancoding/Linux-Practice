@@ -16,8 +16,6 @@ from utils.config import *
 
 class QuizController:
     """Handles quiz logic and session management."""
-    
-    _current_question_cache: Optional[Dict[str, Any]] = None
 
     def __init__(self, game_state):
         """
@@ -31,6 +29,9 @@ class QuizController:
         self.quiz_active = False
         self.current_streak = 0
         self.questions_since_break = 0
+        
+        # Initialize question cache
+        self._current_question_cache = None
         
         # Quick Fire mode attributes
         self.quick_fire_active = False
@@ -128,7 +129,7 @@ class QuizController:
         if not self.quiz_active:
             return None
         
-        # Clear previous cache
+        # Clear previous cache - check if it exists first
         if hasattr(self, '_current_question_cache'):
             delattr(self, '_current_question_cache')
         
@@ -141,6 +142,8 @@ class QuizController:
             return self.get_daily_challenge_question()
         
         # Regular question selection
+        question_data: tuple
+        original_index: int
         question_data, original_index = self.game_state.select_question(category_filter)
         
         if question_data is not None:
@@ -633,3 +636,13 @@ class QuizController:
             return self.session_total >= 1
         
         return False
+    def update_settings(self, settings):
+        """Update quiz controller with new settings."""
+        self.points_per_question = settings.get('pointsPerQuestion', 10)
+        self.streak_bonus = settings.get('streakBonus', 5)
+        self.max_streak_bonus = settings.get('maxStreakBonus', 50)
+        self.debug_mode = settings.get('debugMode', False)
+        
+        # Update any active scoring calculations
+        if hasattr(self, 'current_streak_bonus'):
+            self.current_streak_bonus = min(self.current_streak_bonus, self.max_streak_bonus)

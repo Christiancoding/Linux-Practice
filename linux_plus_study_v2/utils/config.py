@@ -241,7 +241,7 @@ DEBUG_SETTINGS = {
 }
 
 # API Configuration (for potential future web API)
-API_SETTINGS = {
+API_SETTINGS: dict[str, object] = {
     "version": "v1",
     "rate_limit": 100,  # requests per minute
     "cors_enabled": False,
@@ -257,14 +257,14 @@ UI_CONSTANTS = {
 }
 
 # Performance Settings
-PERFORMANCE_SETTINGS = {
+PERFORMANCE_SETTINGS: dict[str, object] = {
     "cache_questions": True,
     "cache_timeout": 3600,  # 1 hour
     "lazy_loading": True,
     "pagination_size": 20,
 }
 
-def get_config_value(section, key, default=None):
+def get_config_value(section: str, key: str, default: object = None) -> object:
     """
     Retrieve a configuration value from the specified section.
     
@@ -276,7 +276,7 @@ def get_config_value(section, key, default=None):
     Returns:
         Configuration value or default
     """
-    config_sections = {
+    config_sections: dict[str, dict[str, object]] = {
         "cli": CLI_SETTINGS,
         "web": WEB_SETTINGS,
         "quiz": QUIZ_SETTINGS,

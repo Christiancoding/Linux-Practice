@@ -22,7 +22,7 @@ class CLIPlayground:
         self.current_directory = "/home/user"
         self.username = "user"
         self.hostname = "linux-playground"
-        self.command_history = []
+        self.command_history: List[str] = []
         self.command_history = []
         self.current_directory = os.getcwd()
         self.safe_commands = {
@@ -57,7 +57,7 @@ class CLIPlayground:
         self._create_sample_files()
         
         # Simulated file system
-        self.file_system = {
+        self.file_system: Dict[str, Dict[str, Dict[str, str | int]]] = {
             "/home/user": {
                 "app.py": {"type": "file", "size": 4096, "permissions": "-rwxr-xr-x"},
                 "documents": {"type": "dir", "size": 4096, "permissions": "drwxr-xr--"},
@@ -753,7 +753,7 @@ class CLIPlayground:
             files = list(target_dir.iterdir())
             if '-l' in args:
                 # Long format
-                output = []
+                output: list[str] = []  # Explicitly declare type for type checker
                 for file in files:
                     stat = file.stat()
                     size = stat.st_size

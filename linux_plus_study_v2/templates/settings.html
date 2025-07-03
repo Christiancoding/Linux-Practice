@@ -2,7 +2,7 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-lg-8 mx-auto">
+    <div class="col-lg-10 mx-auto">
         <div class="card bg-secondary">
             <div class="card-header">
                 <h2 class="text-center text-info mb-0">
@@ -11,6 +11,7 @@
             </div>
             <div class="card-body">
                 <div class="row">
+                    <!-- General Settings Column -->
                     <div class="col-md-6">
                         <h5>General Settings</h5>
                         <div class="form-check form-switch mb-3">
@@ -19,35 +20,41 @@
                                 Enable Debug Mode
                             </label>
                         </div>
+                        
                         <div class="mb-3">
                             <label for="pointsPerQuestion" class="form-label">Points per Question</label>
                             <input type="number" class="form-control bg-dark text-light" id="pointsPerQuestion" value="10" min="1" max="100">
                         </div>
+                        
                         <div class="mb-3">
                             <label for="streakBonus" class="form-label">Streak Bonus (per question)</label>
                             <input type="number" class="form-control bg-dark text-light" id="streakBonus" value="5" min="0" max="50">
                         </div>
+                        
                         <div class="mb-3">
-                            <label for="maxStreak" class="form-label">Max Streak Bonus</label>
-                            <input type="number" class="form-control bg-dark text-light" id="maxStreak" value="50" min="0" max="500">
+                            <label for="maxStreakBonus" class="form-label">Max Streak Bonus</label>
+                            <input type="number" class="form-control bg-dark text-light" id="maxStreakBonus" value="50" min="0" max="200">
                         </div>
                     </div>
+                    
+                    <!-- Study Preferences Column -->
                     <div class="col-md-6">
                         <h5>Study Preferences</h5>
                         <div class="form-check form-switch mb-3">
-                           <input class="form-check-input" type="checkbox" id="focusMode">
+                            <input class="form-check-input" type="checkbox" id="focusMode">
                             <label class="form-check-label" for="focusMode">
                                 Enable Focus Mode (Fullscreen on Quiz Start)
                             </label>
                         </div>
+                        
                         <div class="mb-3">
                             <label for="breakReminder" class="form-label">Break Reminder (every X questions)</label>
                             <input type="number" class="form-control bg-dark text-light" id="breakReminder" value="10" min="1" max="50">
                         </div>
+                        
                         <button class="btn btn-success" onclick="saveSettings()">Save Settings</button>
-                    </div>
-                    <div class="col-md-6">
-                        <h5>Data Management</h5>
+                        
+                        <h5 class="mt-4">Data Management</h5>
                         <button class="btn btn-outline-info mb-2 d-block w-100" onclick="exportHistory()">
                             <i class="fas fa-download"></i> Export History
                         </button>
@@ -72,8 +79,19 @@ document.addEventListener('DOMContentLoaded', function() {
 function saveSettings() {
     const settings = {
         focusMode: document.getElementById('focusMode').checked,
-        breakReminder: parseInt(document.getElementById('breakReminder').value)
+        breakReminder: parseInt(document.getElementById('breakReminder').value),
+        debugMode: document.getElementById('debugMode').checked,
+        pointsPerQuestion: parseInt(document.getElementById('pointsPerQuestion').value),
+        streakBonus: parseInt(document.getElementById('streakBonus').value),
+        maxStreakBonus: parseInt(document.getElementById('maxStreakBonus').value)
     };
+
+    // Validate settings
+    if (settings.maxStreakBonus < settings.streakBonus) {
+        showAlert('Max Streak Bonus cannot be less than Streak Bonus. Adjusting automatically.', 'warning');
+        settings.maxStreakBonus = settings.streakBonus;
+        document.getElementById('maxStreakBonus').value = settings.maxStreakBonus;
+    }
 
     fetch('/api/save_settings', {
         method: 'POST',
@@ -86,6 +104,10 @@ function saveSettings() {
     .then(data => {
         if (data.success) {
             showAlert('Settings saved successfully!', 'success');
+            // Update form with any server-side adjustments
+            if (data.settings) {
+                populateSettings(data.settings);
+            }
         } else {
             showAlert('Failed to save settings: ' + (data.error || 'Unknown error'), 'danger');
         }
@@ -101,8 +123,7 @@ function loadSettings() {
         .then(response => response.json())
         .then(data => {
             if (data.success && data.settings) {
-                document.getElementById('focusMode').checked = data.settings.focusMode || false;
-                document.getElementById('breakReminder').value = data.settings.breakReminder || 10;
+                populateSettings(data.settings);
             } else if(data.error) {
                 console.error('Failed to load settings:', data.error);
                 showAlert('Could not load settings.', 'danger');
@@ -112,6 +133,15 @@ function loadSettings() {
             console.error('Error loading settings:', error);
             showAlert('Could not load settings.', 'danger');
         });
+}
+
+function populateSettings(settings) {
+    document.getElementById('focusMode').checked = settings.focusMode || false;
+    document.getElementById('breakReminder').value = settings.breakReminder || 10;
+    document.getElementById('debugMode').checked = settings.debugMode || false;
+    document.getElementById('pointsPerQuestion').value = settings.pointsPerQuestion || 10;
+    document.getElementById('streakBonus').value = settings.streakBonus || 5;
+    document.getElementById('maxStreakBonus').value = settings.maxStreakBonus || 50;
 }
 
 function exportHistory() {

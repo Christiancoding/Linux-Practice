@@ -1,1 +1,9 @@
-{"focusMode": false, "breakReminder": 1, "timestamp": 1751563621.4125412}
+{
+  "focusMode": true,
+  "breakReminder": 1,
+  "debugMode": true,
+  "pointsPerQuestion": 100,
+  "streakBonus": 5,
+  "maxStreakBonus": 50,
+  "timestamp": 1751567411.5377176
+}
