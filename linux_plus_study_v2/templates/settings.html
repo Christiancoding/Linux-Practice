@@ -12,6 +12,27 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-6">
+                        <h5>General Settings</h5>
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="debugMode">
+                            <label class="form-check-label" for="debugMode">
+                                Enable Debug Mode
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pointsPerQuestion" class="form-label">Points per Question</label>
+                            <input type="number" class="form-control bg-dark text-light" id="pointsPerQuestion" value="10" min="1" max="100">
+                        </div>
+                        <div class="mb-3">
+                            <label for="streakBonus" class="form-label">Streak Bonus (per question)</label>
+                            <input type="number" class="form-control bg-dark text-light" id="streakBonus" value="5" min="0" max="50">
+                        </div>
+                        <div class="mb-3">
+                            <label for="maxStreak" class="form-label">Max Streak Bonus</label>
+                            <input type="number" class="form-control bg-dark text-light" id="maxStreak" value="50" min="0" max="500">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
                         <h5>Study Preferences</h5>
                         <div class="form-check form-switch mb-3">
                            <input class="form-check-input" type="checkbox" id="focusMode">

@@ -17,6 +17,8 @@ from turtle import setup
 from typing import Optional, Dict, List
 import signal
 import socket
+from types import FrameType  # <-- Add this import
+from flask import Flask  # <-- Add this import at the top with other imports
 from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
 # Ensure Python 3.8+ compatibility
@@ -78,7 +80,7 @@ class LinuxPlusStudySystem:
         self.logger.info("Linux Plus Study System logging initialized")
     def _setup_signal_handlers(self) -> None:
         """Setup signal handlers for graceful shutdown."""
-        def signal_handler(signum, frame):
+        def signal_handler(signum: int, frame: FrameType | None) -> None:
             self.logger.info(f"Received signal {signum}, initiating graceful shutdown")
             print("\nShutting down gracefully...")
             sys.exit(0)
@@ -316,7 +318,12 @@ class LinuxPlusStudySystem:
         print("   python main.py --cli")
         print()
         input("Press Enter to continue...")    
-    def setup_routes(self, quiz_controller, stats_controller, game_state):
+    def setup_routes(
+        self,
+        quiz_controller: object,  # Replace 'object' with actual type if known
+        stats_controller: object, # Replace 'object' with actual type if known
+        game_state: object        # Replace 'object' with actual type if known
+    ) -> Flask:
         """
         Setup Flask application with routes and controllers.
         
