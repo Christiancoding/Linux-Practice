@@ -1646,36 +1646,107 @@ class LinuxPlusStudyWeb:
 
         @self.app.route('/api/vm/list', methods=['GET'])
         def api_vm_list():
-            """API endpoint to list all VMs."""
+            """API endpoint to list all VMs with enhanced error handling."""
             try:
-                vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
+                # Check if libvirt is available
+                try:
+                    import libvirt
+                except ImportError:
+                    return jsonify({
+                        'success': False, 
+                        'error': 'libvirt-python not installed. Please install with: pip install libvirt-python'
+                    })
+                
+                # Check if VM manager can be initialized
+                try:
+                    vm_manager = VMManager()
+                except Exception as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to initialize VM manager: {str(e)}'
+                    })
+                
+                # Try to connect to libvirt
+                try:
+                    conn = vm_manager.connect_libvirt()
+                except Exception as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to connect to libvirt: {str(e)}. Make sure libvirt is running.'
+                    })
                 
                 vms = []
-                for vm_name in conn.listDefinedDomains():
-                    domain = conn.lookupByName(vm_name)
-                    is_active = domain.isActive()
+                try:
+                    # Get defined VMs
+                    defined_vms = conn.listDefinedDomains()
                     
-                    vm_info = {
-                        'name': vm_name,
-                        'status': 'running' if is_active else 'stopped',
-                        'id': domain.ID() if is_active else None
-                    }
-                    
-                    # Try to get IP if running
-                    if is_active:
+                    # Get running VMs  
+                    running_vm_ids = conn.listDomainsID()
+                    running_vms = []
+                    for vm_id in running_vm_ids:
                         try:
-                            vm_info['ip'] = vm_manager.get_vm_ip(conn, domain)
-                        except Exception:
-                            vm_info['ip'] = 'Unknown'
+                            domain = conn.lookupByID(vm_id)
+                            running_vms.append(domain.name())
+                        except Exception as e:
+                            self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
                     
-                    vms.append(vm_info)
+                    # Combine all VMs
+                    all_vm_names = set(defined_vms + running_vms)
+                    
+                    for vm_name in all_vm_names:
+                        try:
+                            domain = conn.lookupByName(vm_name)
+                            is_active = domain.isActive()
+                            
+                            vm_info = {
+                                'name': vm_name,
+                                'status': 'running' if is_active else 'stopped',
+                                'id': domain.ID() if is_active else None
+                            }
+                            
+                            # Try to get IP if running
+                            if is_active:
+                                try:
+                                    vm_info['ip'] = vm_manager.get_vm_ip(conn, domain)
+                                except Exception as e:
+                                    self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
+                                    vm_info['ip'] = 'Unknown'
+                            else:
+                                vm_info['ip'] = 'Not running'
+                            
+                            vms.append(vm_info)
+                            
+                        except Exception as e:
+                            self.logger.warning(f"Error processing VM {vm_name}: {e}")
+                            # Add error VM entry
+                            vms.append({
+                                'name': vm_name,
+                                'status': 'error',
+                                'error': str(e)
+                            })
+                    
+                except Exception as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Error listing VMs: {str(e)}'
+                    })
+                finally:
+                    try:
+                        conn.close()
+                    except:
+                        pass
                 
-                conn.close()
-                return jsonify({'success': True, 'vms': vms})
+                return jsonify({
+                    'success': True, 
+                    'vms': sorted(vms, key=lambda x: x['name'])
+                })
                 
             except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
+                self.logger.error(f"Unexpected error in VM list API: {e}", exc_info=True)
+                return jsonify({
+                    'success': False,
+                    'error': f'Unexpected error: {str(e)}'
+                })
 
         @self.app.route('/api/vm/start', methods=['POST'])
         def api_vm_start():
