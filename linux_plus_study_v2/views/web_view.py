@@ -86,7 +86,7 @@ class LinuxPlusStudyWeb:
         self.current_question_index = -1
         
         self.setup_routes()
-    def _should_show_break_reminder(self):
+    def _should_show_break_reminder(self) -> bool:
         """Check if break reminder should be shown based on current settings."""
         disabled_modes = {'daily_challenge', 'pop_quiz', 'quick_fire', 'mini_quiz'}
         if self.quiz_controller.current_quiz_mode in disabled_modes:

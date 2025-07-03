@@ -113,7 +113,7 @@ try:
 except ImportError:
     print("Warning: Colorama not found. Colored output will be disabled in CLI.")
     # Define empty strings if colorama is not available
-    C = {k: "" for k in ["reset", "bold", "dim", "fg_black", "fg_red", "fg_green", 
+    c = {k: "" for k in ["reset", "bold", "dim", "fg_black", "fg_red", "fg_green", 
          "fg_yellow", "fg_blue", "fg_magenta", "fg_cyan", "fg_white", "fg_lightblack_ex", 
          "fg_bright_red", "fg_bright_green", "fg_bright_yellow", "fg_bright_blue", 
          "fg_bright_magenta", "fg_bright_cyan", "fg_bright_white", "bg_red", "bg_green", 
