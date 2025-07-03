@@ -283,83 +283,192 @@
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <h1>🖥️ VM Management Playground</h1>
-            <p class="lead">Manage virtual machines and execute commands remotely</p>
-        </div>
-    </div>
-    
-    <div class="vm-container">
-        <div class="vm-sidebar">
-            <h5>Available VMs</h5>
-            <div class="vm-controls">
-                <button class="btn-vm refresh" onclick="vmPlayground.refreshVMs()">
-                    🔄 Refresh
-                </button>
+<div class="vm-dashboard">
+    <!-- Header Section -->
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="title-section">
+                <h1 class="page-title">
+                    <i class="fas fa-server"></i>
+                    Virtual Machine Management
+                </h1>
+                <p class="page-subtitle">Advanced VM orchestration and command execution platform</p>
             </div>
-            <div id="vmList">
-                <div class="text-center">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">Loading VMs...</span>
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="running-vms">0</div>
+                        <div class="stat-label">Running</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-pause-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="stopped-vms">0</div>
+                        <div class="stat-label">Stopped</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-number" id="error-vms">0</div>
+                        <div class="stat-label">Issues</div>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="vm-terminal">
-            <div class="vm-controls">
-                <button class="btn-vm start" id="startBtn" onclick="vmPlayground.startVM()" disabled>
-                    ▶️ Start VM
-                </button>
-                <button class="btn-vm stop" id="stopBtn" onclick="vmPlayground.stopVM()" disabled>
-                    ⏹️ Stop VM
-                </button>
-                <button class="btn-vm refresh" onclick="vmPlayground.clearTerminal()">
-                    🧹 Clear
-                </button>
-                <button class="btn-vm challenge" onclick="vmPlayground.showChallenges()">
-                    🎯 Challenges
-                </button>
-                <button class="btn-vm snapshot" onclick="vmPlayground.showSnapshots()">
-                    📸 Snapshots
-                </button>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="vm-workspace">
+        <!-- VM Management Panel -->
+        <div class="vm-management-panel">
+            <div class="panel-header">
+                <h3 class="panel-title">
+                    <i class="fas fa-list"></i>
+                    Virtual Machines
+                </h3>
+                <div class="panel-controls">
+                    <button class="btn-panel refresh" onclick="vmPlayground.refreshVMs()">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Refresh</span>
+                    </button>
+                    <button class="btn-panel create" onclick="vmPlayground.showCreateVM()">
+                        <i class="fas fa-plus"></i>
+                        <span>Create</span>
+                    </button>
+                </div>
             </div>
             
-            <div id="vmTerminal" class="vm-terminal-output">
-                <div style="color: #00ff00;">Welcome to VM Management Playground!</div>
-                <div style="color: #ffff00;">Select a VM from the sidebar to get started.</div>
-                <div style="color: #ffffff;">Type 'help' for available commands.</div>
+            <div class="vm-list-container">
+                <div id="vmList" class="vm-list">
+                    <div class="loading-state">
+                        <div class="modern-spinner"></div>
+                        <p>Discovering virtual machines...</p>
+                    </div>
+                </div>
             </div>
-            
-            <div class="vm-input-line">
-                <span class="vm-prompt" id="vmPrompt">vm@playground:~$</span>
-                <input type="text" class="vm-input" id="vmInput" placeholder="Enter command..." disabled>
-            </div>
-        </div>
-        <!-- Challenges Modal -->
-        <div id="challengesModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="vmPlayground.closeModal('challengesModal')">&times;</span>
-                <h2>Available Challenges</h2>
-                <div id="challengesList">
-                    <div class="text-center">Loading challenges...</div>
+
+            <!-- VM Details Panel -->
+            <div class="vm-details-panel" id="vmDetailsPanel" style="display: none;">
+                <div class="details-header">
+                    <h4 class="details-title">VM Details</h4>
+                    <button class="btn-close" onclick="vmPlayground.hideDetails()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="details-content">
+                    <div class="detail-item">
+                        <label>Name:</label>
+                        <span id="detail-name">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span id="detail-status" class="status-badge">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>IP Address:</label>
+                        <span id="detail-ip">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Memory:</label>
+                        <span id="detail-memory">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>CPU:</label>
+                        <span id="detail-cpu">-</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Snapshots Modal -->
-        <div id="snapshotsModal" class="modal">
-            <div class="modal-content">
-                <span class="close" onclick="vmPlayground.closeModal('snapshotsModal')">&times;</span>
-                <h2>VM Snapshots</h2>
-                <div class="mb-3">
-                    <input type="text" id="snapshotName" placeholder="Snapshot name" class="form-control" style="display: inline-block; width: 200px; margin-right: 10px;">
-                    <button class="btn-vm snapshot" onclick="vmPlayground.createSnapshot()">Create Snapshot</button>
+        <!-- Terminal Interface -->
+        <div class="terminal-interface">
+            <div class="terminal-header">
+                <div class="terminal-title">
+                    <i class="fas fa-terminal"></i>
+                    <span>Command Terminal</span>
+                    <div class="connection-indicator" id="connectionIndicator">
+                        <div class="indicator-dot"></div>
+                        <span>Disconnected</span>
+                    </div>
                 </div>
-                <div id="snapshotsList">
-                    <div class="text-center">Loading snapshots...</div>
+                <div class="terminal-controls">
+                    <button class="btn-terminal start" id="startBtn" onclick="vmPlayground.startVM()" disabled>
+                        <i class="fas fa-play"></i>
+                        <span>Start</span>
+                    </button>
+                    <button class="btn-terminal stop" id="stopBtn" onclick="vmPlayground.stopVM()" disabled>
+                        <i class="fas fa-stop"></i>
+                        <span>Stop</span>
+                    </button>
+                    <button class="btn-terminal restart" id="restartBtn" onclick="vmPlayground.restartVM()" disabled>
+                        <i class="fas fa-redo"></i>
+                        <span>Restart</span>
+                    </button>
+                    <button class="btn-terminal clear" onclick="vmPlayground.clearTerminal()">
+                        <i class="fas fa-eraser"></i>
+                        <span>Clear</span>
+                    </button>
+                    <button class="btn-terminal snapshot" onclick="vmPlayground.showSnapshots()">
+                        <i class="fas fa-camera"></i>
+                        <span>Snapshots</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="terminal-body">
+                <div class="terminal-output" id="terminalOutput">
+                    <div class="welcome-message">
+                        <div class="ascii-art">
+                            <pre>
+╔═══════════════════════════════════════════════════════════════╗
+║                    VM Management Terminal                     ║
+║                                                               ║
+║  Select a virtual machine from the sidebar to get started.   ║
+║  Use 'help' for available commands.                          ║
+╚═══════════════════════════════════════════════════════════════╝
+                            </pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="terminal-input-area">
+                    <div class="input-line">
+                        <span class="prompt" id="terminalPrompt">vm@playground:~$</span>
+                        <input type="text" class="terminal-input" id="terminalInput" 
+                               placeholder="Enter command..." autocomplete="off">
+                    </div>
+                    <div class="input-suggestions" id="inputSuggestions"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenge Modal -->
+    <div class="modal-overlay" id="challengeModal" style="display: none;">
+        <div class="modal-content challenge-modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-trophy"></i> VM Challenges</h3>
+                <button class="btn-close" onclick="vmPlayground.hideChallenges()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="challenge-categories">
+                    <div class="category-tab active" data-category="basic">Basic</div>
+                    <div class="category-tab" data-category="intermediate">Intermediate</div>
+                    <div class="category-tab" data-category="advanced">Advanced</div>
+                </div>
+                <div class="challenge-list" id="challengeList">
+                    <!-- Challenges will be populated here -->
                 </div>
             </div>
         </div>

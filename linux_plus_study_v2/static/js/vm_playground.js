@@ -30,6 +30,13 @@ class VMPlayground {
                 }
             }
         });
+        
+        // Modal close on outside click
+        window.onclick = (event) => {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
     }
     
     handleKeyDown(e) {
@@ -91,15 +98,20 @@ class VMPlayground {
             return;
         }
         
+        // Enhanced VM rendering with more details
         container.innerHTML = vms.map(vm => `
-            <div class="vm-list-item" data-vm-name="${vm.name}" onclick="vmPlayground.selectVM('${vm.name}')">
+            <div class="vm-list-item ${vm.name === this.selectedVM ? 'active' : ''}" 
+                 data-vm-name="${vm.name}" 
+                 onclick="vmPlayground.selectVM('${vm.name}')">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <div class="fw-bold">${vm.name}</div>
                         <div class="text-muted small">${vm.ip || 'No IP'}</div>
+                        ${vm.id ? `<div class="text-muted small">ID: ${vm.id}</div>` : ''}
                     </div>
                     <span class="vm-status ${vm.status}">${vm.status}</span>
                 </div>
+                ${vm.error ? `<div class="error-text small">${vm.error}</div>` : ''}
             </div>
         `).join('');
     }
@@ -486,17 +498,6 @@ class VMPlayground {
         document.getElementById(modalId).style.display = 'none';
     }
 
-    // Add this to the bindEvents method
-    bindEvents() {
-        // ... existing code ...
-        
-        // Modal close on outside click
-        window.onclick = (event) => {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        };
-    }
     navigateHistory(direction) {
         const input = document.getElementById('vmInput');
         
