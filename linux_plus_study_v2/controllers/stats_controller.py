@@ -11,6 +11,9 @@ from typing import Dict, List, Union, Any, TypedDict, Optional, Literal, Tuple, 
 from utils.config import *
 
 
+# Define a type for question data
+QuestionData = List[Any]  # or Tuple[str, ...] if more specific structure is known
+
 class LeaderboardEntry(TypedDict):
     date: str
     score: int
@@ -76,7 +79,7 @@ class CategoryData(TypedDict):
 
 class ReviewQuestionsData(TypedDict):
     has_questions: bool
-    questions: List[Any]  # Using Any since question structure is variable
+    questions: List[QuestionData]  # Updated to use QuestionData type
     missing_questions: List[str]
 
 class StatsController:
@@ -234,7 +237,7 @@ class StatsController:
         # Filter and sort categories with attempts
         categories_with_attempts: List[Tuple[str, CategoryData]] = [
             (cat, cast(CategoryData, stats)) for cat, stats in categories_data.items() 
-            if isinstance(stats, dict) and "attempts" in stats and stats.get("attempts", 0) > 0
+            if isinstance(stats, dict) and "attempts" in stats and stats["attempts"] > 0
         ]
         
         for category, stats in sorted(categories_with_attempts, key=lambda x: x[0]):
@@ -257,7 +260,7 @@ class StatsController:
         # Filter questions with attempts and sort by accuracy (lowest first)
         attempted_questions: Dict[str, Dict[str, Any]] = {
             q: stats for q, stats in question_stats.items() 
-            if isinstance(stats, dict) and stats.get("attempts", 0) > 0
+            if isinstance(stats, dict) and cast(Dict[str, Any], stats).get("attempts", 0) > 0
         }
         
         def sort_key(item: Tuple[str, Dict[str, Any]]) -> Tuple[float, int]:
@@ -280,8 +283,9 @@ class StatsController:
             if isinstance(stats.get("history"), list) and stats["history"]:
                 last_entry = stats["history"][-1]
                 if isinstance(last_entry, dict) and "correct" in last_entry:
-                    last_result_correct = last_entry.get("correct")
-                    last_result = "Correct" if last_result_correct else "Incorrect"
+                    last_result_correct = cast(Optional[bool], last_entry["correct"])
+                else:
+                    last_result_correct = None
             
             question_performance.append({
                 'rank': i + 1,
@@ -328,7 +332,7 @@ class StatsController:
             print(f"Error clearing statistics: {e}")
             return False
     
-    def update_leaderboard_entry(self, session_score, session_total, session_points):
+    def update_leaderboard_entry(self, session_score: int, session_total: int, session_points: int) -> None:
         """
         Update leaderboard with a new session entry.
         
@@ -341,7 +345,7 @@ class StatsController:
             return
         
         accuracy = (session_score / session_total) * 100
-        entry = {
+        entry: LeaderboardEntry = {
             "date": datetime.now().isoformat(),
             "score": session_score,
             "total": session_total,
@@ -352,8 +356,11 @@ class StatsController:
         self.game_state.leaderboard.append(entry)
         
         # Keep only top 10 sessions, sorted by accuracy then points
+        def sort_key(entry: LeaderboardEntry) -> Tuple[float, int]:
+            return (float(entry["accuracy"]), int(entry["points"]))
+            
         self.game_state.leaderboard.sort(
-            key=lambda x: (x["accuracy"], x["points"]), 
+            key=sort_key, 
             reverse=True
         )
         self.game_state.leaderboard = self.game_state.leaderboard[:10]
@@ -368,7 +375,7 @@ class StatsController:
         Returns:
             ReviewQuestionsData: Review questions data with found and missing questions
         """
-        incorrect_list = self.game_state.study_history.get("incorrect_review", [])
+        incorrect_list: List[str] = self.game_state.study_history.get("incorrect_review", [])
         
         # Ensure it's a list
         if not isinstance(incorrect_list, list):
@@ -383,8 +390,8 @@ class StatsController:
             }
         
         # Find full question data for each incorrect question text
-        questions_to_review = []
-        missing_questions = []
+        questions_to_review: List[QuestionData] = []
+        missing_questions: List[str] = []
         
         for incorrect_text in incorrect_list:
             found = False

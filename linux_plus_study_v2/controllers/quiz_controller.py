@@ -22,6 +22,9 @@ class QuizController:
     debug_mode: bool
     current_streak_bonus: int  # Only if used elsewhere
     session_answers: List[Tuple[Tuple[str, List[str], int, str, str], int, bool]]  # Add this type annotation
+    quick_fire_start_time: Optional[float]  # Time when quick fire mode started
+    quick_fire_end_time: Optional[float]    # Time when quick fire mode ended
+    quick_fire_duration: Optional[float]    # Duration of quick fire mode session
 
     def __init__(self, game_state: Any):
         """
@@ -152,7 +155,7 @@ class QuizController:
             return self.get_daily_challenge_question()
         
         # Regular question selection
-        question_data: tuple
+        question_data: Tuple[str, List[str], int, str, str]
         original_index: int
         question_data, original_index = self.game_state.select_question(category_filter)
         
@@ -375,7 +378,7 @@ class QuizController:
         self.game_state.save_history()
         self.game_state.save_achievements()
         
-        session_results = {
+        session_results: Dict[str, Union[int, float, str, List[Tuple[Tuple[str, List[str], int, str, str], int, bool]], None]] = {
             'session_score': self.session_score,
             'session_total': self.session_total,
             'accuracy': accuracy,
@@ -399,7 +402,51 @@ class QuizController:
             'time_limit': QUICK_FIRE_TIME_LIMIT,
             'question_limit': QUICK_FIRE_QUESTIONS
         }
-    
+    def _end_quick_fire_mode_internal(self, time_up: bool) -> None:
+        """
+        End Quick Fire mode and save results (internal implementation).
+        
+        Args:
+            time_up (bool): Whether time ran out
+        """
+        self.quick_fire_active = False
+        self.quick_fire_end_time = time.time()
+        
+        # Check if quick_fire_start_time is not None before subtraction
+        if self.quick_fire_start_time is not None:
+            self.quick_fire_duration = self.quick_fire_end_time - self.quick_fire_start_time
+        else:
+            self.quick_fire_duration = 0.0  # Default value if start time was not set
+
+        # Save Quick Fire results
+        self.game_state.quick_fire_results.append({
+            'questions_answered': self.quick_fire_questions_answered,
+            'time_up': time_up,
+            'duration': self.quick_fire_duration
+        })
+
+    def update_history(self, is_correct: bool) -> None:
+        """
+        Update the study history with the latest question result.
+        
+        Args:
+            is_correct (bool): Whether the last question was answered correctly
+        """
+        self.game_state.study_history.append({
+            'timestamp': time.time(),
+            'correct': is_correct
+        })
+
+    def take_break(self, break_interval: int) -> None:
+        """
+        Take a break during the quiz session.
+        
+        Args:
+            break_interval (int): Duration of the break in seconds
+        """
+        self.break_start_time = time.time()
+        self.break_duration = break_interval
+
     def check_quick_fire_status(self) -> Dict[str, Any]:
         """
         Check if Quick Fire mode should continue.
@@ -410,12 +457,19 @@ class QuizController:
         if not self.quick_fire_active:
             return {'active': False}
         
-        elapsed_time = time.time() - self.quick_fire_start_time
-        time_remaining = max(0, QUICK_FIRE_TIME_LIMIT - elapsed_time)
+        # Add null check before performing arithmetic
+        if self.quick_fire_start_time is not None:
+            elapsed_time = time.time() - self.quick_fire_start_time
+            time_remaining = max(0, QUICK_FIRE_TIME_LIMIT - elapsed_time)
+            # Check end conditions
+            time_up = elapsed_time > QUICK_FIRE_TIME_LIMIT
+        else:
+            # Handle case where start time wasn't properly set
+            elapsed_time = 0.0
+            time_remaining = 0.0
+            time_up = False
+            
         questions_remaining = max(0, QUICK_FIRE_QUESTIONS - self.quick_fire_questions_answered)
-        
-        # Check end conditions
-        time_up = elapsed_time > QUICK_FIRE_TIME_LIMIT
         questions_complete = self.quick_fire_questions_answered >= QUICK_FIRE_QUESTIONS
         
         if time_up or questions_complete:
@@ -432,7 +486,7 @@ class QuizController:
             'questions_remaining': questions_remaining
         }
     
-    def end_quick_fire_mode(self, time_up=False) -> dict[str, Any]:
+    def end_quick_fire_mode(self, time_up: bool = False) -> dict[str, Any]:
         """
         End Quick Fire mode and return results.
         
@@ -445,8 +499,29 @@ class QuizController:
         if not self.quick_fire_active:
             return {'error': 'Quick Fire not active'}
         
+        # First save results like the internal implementation did
+        self.quick_fire_end_time = time.time()
+        
+        # Check if quick_fire_start_time is not None before subtraction
+        if self.quick_fire_start_time is not None:
+            self.quick_fire_duration = self.quick_fire_end_time - self.quick_fire_start_time
+        else:
+            self.quick_fire_duration = 0.0  # Default value if start time was not set
+
+        # Save Quick Fire results
+        self.game_state.quick_fire_results.append({
+            'questions_answered': self.quick_fire_questions_answered,
+            'time_up': time_up,
+            'duration': self.quick_fire_duration
+        })
+        
         self.quick_fire_active = False
-        elapsed_time = time.time() - self.quick_fire_start_time
+        
+        # Check if quick_fire_start_time is not None before subtraction
+        if self.quick_fire_start_time is not None:
+            elapsed_time = time.time() - self.quick_fire_start_time
+        else:
+            elapsed_time = 0.0  # Default value if start time was not set
         
         # Award achievement if completed successfully
         achievement_earned = False
@@ -494,7 +569,7 @@ class QuizController:
         
         return None
     
-    def complete_daily_challenge(self, is_correct) -> Dict[str, Any]:
+    def complete_daily_challenge(self, is_correct: bool) -> Dict[str, Any]:
         """
         Mark daily challenge as complete and handle rewards.
         
@@ -535,7 +610,7 @@ class QuizController:
             'date': today_iso
         }
     
-    def check_break_reminder(self, break_interval) -> bool:
+    def check_break_reminder(self, break_interval: int) -> bool:
         """
         Check if a break reminder should be shown.
         
@@ -624,8 +699,13 @@ class QuizController:
         if not self.quick_fire_active:
             return None
         
-        elapsed = time.time() - self.quick_fire_start_time
-        time_remaining = max(0, QUICK_FIRE_TIME_LIMIT - elapsed)
+        if self.quick_fire_start_time is not None:
+            elapsed = time.time() - self.quick_fire_start_time
+            time_remaining = max(0, QUICK_FIRE_TIME_LIMIT - elapsed)
+        else:
+            elapsed = 0.0
+            time_remaining = 0.0
+            
         questions_remaining = max(0, QUICK_FIRE_QUESTIONS - self.quick_fire_questions_answered)
         
         return {

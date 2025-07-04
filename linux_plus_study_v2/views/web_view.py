@@ -574,7 +574,7 @@ class LinuxPlusStudyWeb:
                 }), 500
 
         @self.app.route('/import/questions', methods=['GET', 'POST'])
-        def import_questions():
+        def import_questions_route():
             """Enhanced import with duplicate detection and comprehensive reporting."""
             if request.method == 'GET':
                 return render_template('import.html')
@@ -693,6 +693,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'message': f'Error importing questions: {str(e)}'
                 }), 500
+                
+        # Store reference to make it clear the route is being used
+        self.import_questions_handler = import_questions_route
     def _parse_json_questions(self, content: str) -> List[Dict[str, Any]]:
         """
         Parse questions from JSON content with comprehensive format support.
