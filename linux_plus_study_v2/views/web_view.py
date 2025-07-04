@@ -393,7 +393,7 @@ class LinuxPlusStudyWeb:
                     'umount': 'Unmount filesystem'
                 }
                 
-                result = []
+                result: List[Dict[str, str]] = []
                 for cmd in commands:
                     result.append({
                         'command': cmd,

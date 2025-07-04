@@ -12,7 +12,7 @@ from utils.config import *
 
 
 # Define a type for question data
-QuestionData = List[Any]  # or Tuple[str, ...] if more specific structure is known
+QuestionData = Union[List[Any], Tuple[Any, ...]]  # Updated to support both list and tuple structures
 
 class LeaderboardEntry(TypedDict):
     date: str
@@ -396,9 +396,11 @@ class StatsController:
         for incorrect_text in incorrect_list:
             found = False
             for q_data in self.game_state.questions:
+                # Cast q_data to QuestionData to help type checker
+                q_data_typed = cast(QuestionData, q_data)
                 if (isinstance(q_data, (list, tuple)) and 
-                    len(q_data) > 0 and q_data[0] == incorrect_text):
-                    questions_to_review.append(q_data)
+                    len(q_data_typed) > 0 and q_data_typed[0] == incorrect_text):
+                    questions_to_review.append(q_data_typed)
                     found = True
                     break
             

@@ -114,15 +114,15 @@ class SnapshotManager:
                             )
                             
                             if not libvirt_access_ok:
-                                issue = {
-                                    'path': disk_path,
-                                    'current_owner': owner,
-                                    'current_group': group,
-                                    'current_perms': oct(current_perms),
-                                    'expected_owner': 'libvirt-qemu',
-                                    'expected_group': 'libvirt',
-                                    'expected_perms': oct(expected_perms)
-                                }
+                                issue = PermissionIssue(
+                                    path=disk_path,
+                                    current_owner=owner,
+                                    current_group=group,
+                                    current_perms=oct(current_perms),
+                                    expected_owner='libvirt-qemu',
+                                    expected_group='libvirt',
+                                    expected_perms=oct(expected_perms)
+                                )
                                 permission_issues.append(issue)
                                 
                             # Also check for snapshot files in the same directory
@@ -146,15 +146,15 @@ class SnapshotManager:
                                 )
                                 
                                 if not snap_access_ok:
-                                    snap_issue = {
-                                        'path': snap_file,
-                                        'current_owner': snap_owner,
-                                        'current_group': snap_group,
-                                        'current_perms': oct(snap_perms),
-                                        'expected_owner': 'libvirt-qemu',
-                                        'expected_group': 'libvirt',
-                                        'expected_perms': oct(expected_perms)
-                                    }
+                                    snap_issue = PermissionIssue(
+                                        path=snap_file,
+                                        current_owner=snap_owner,
+                                        current_group=snap_group,
+                                        current_perms=oct(snap_perms),
+                                        expected_owner='libvirt-qemu',
+                                        expected_group='libvirt',
+                                        expected_perms=oct(expected_perms)
+                                    )
                                     permission_issues.append(snap_issue)
             
             if not permission_issues:
@@ -562,6 +562,7 @@ class SnapshotManager:
                 console.print(f"[yellow]Warning: Could not fix all permission issues, attempting snapshot creation anyway...[/]")
         
         was_frozen_by_agent = False
+        quiesce_flag_used = False  # Initialize here to ensure it's always defined
         
         try:
             # 1. Filesystem Freeze (if VM is running)
