@@ -33,6 +33,16 @@ except ImportError:
 
 RICH_AVAILABLE = _rich_available
 
+try:
+    from rich.console import Console
+    from rich.table import Table
+    RICH_AVAILABLE = True
+    console = Console()
+except ImportError:
+    RICH_AVAILABLE = False
+    console = None
+    Table = None
+    Panel = None
 
 from typing import Any
 

@@ -14,7 +14,7 @@ class VMPlayground {
     }
     
     bindEvents() {
-        const input = document.getElementById('vmInput');
+        const input = document.getElementById('terminalInput');
         if (input) {
             input.addEventListener('keydown', (e) => this.handleKeyDown(e));
         }
@@ -133,12 +133,12 @@ class VMPlayground {
         this.addToTerminal(`Selected VM: ${vmName}`, 'info');
         
         // Enable input
-        document.getElementById('vmInput').disabled = false;
-        document.getElementById('vmInput').focus();
+        document.getElementById('terminalInput').disabled = false;
+        document.getElementById('terminalInput').focus();
     }
     
     updatePrompt() {
-        const prompt = document.getElementById('vmPrompt');
+        const prompt = document.getElementById('terminalPrompt');
         if (this.selectedVM) {
             prompt.textContent = `${this.selectedVM}:~$`;
         } else {
@@ -215,7 +215,7 @@ class VMPlayground {
             return;
         }
         
-        const input = document.getElementById('vmInput');
+        const input = document.getElementById('terminalInput');
         const command = input.value.trim();
         
         if (!command) return;
@@ -499,7 +499,7 @@ class VMPlayground {
     }
 
     navigateHistory(direction) {
-        const input = document.getElementById('vmInput');
+        const input = document.getElementById('terminalInput');
         
         if (direction === 'up' && this.historyIndex > 0) {
             this.historyIndex--;
@@ -516,7 +516,7 @@ class VMPlayground {
     }
     
     addToTerminal(text, type = 'output') {
-        const terminal = document.getElementById('vmTerminal');
+        const terminal = document.getElementById('terminalOutput');
         const output = document.createElement('div');
         
         let color = '#ffffff';
@@ -544,7 +544,7 @@ class VMPlayground {
     }
     
     clearTerminal() {
-        const terminal = document.getElementById('vmTerminal');
+        const terminal = document.getElementById('terminalOutput');
         terminal.innerHTML = `
             <div style="color: #00ff00;">Terminal cleared.</div>
             <div style="color: #ffff00;">Selected VM: ${this.selectedVM || 'None'}</div>
