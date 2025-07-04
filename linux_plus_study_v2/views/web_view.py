@@ -2183,7 +2183,7 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
-    def handle_api_errors(f: Callable[..., Any]) -> Callable[..., Any]:
+    def handle_api_errors(self, f: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return f(*args, **kwargs)
