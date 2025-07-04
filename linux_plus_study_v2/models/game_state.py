@@ -184,17 +184,19 @@ class GameState:
         if is_correct:
             q_stats["correct"] += 1
             # Remove from review list if answered correctly
-            if isinstance(history.get("incorrect_review"), list) and question_text in history["incorrect_review"]:
+            incorrect_review = history.get("incorrect_review", [])
+            if question_text in incorrect_review:
                 try:
-                    history["incorrect_review"].remove(question_text)
+                    incorrect_review.remove(question_text)
+                    history["incorrect_review"] = incorrect_review  # Update the dictionary
                 except ValueError:
-                    pass  # Ignore if somehow not present
+                    pass
         else:
             # Add to review list if incorrect and not already there
-            if not isinstance(history.get("incorrect_review"), list):
-                history["incorrect_review"] = []
-            if question_text not in history["incorrect_review"]:
-                history["incorrect_review"].append(question_text)
+            incorrect_review = history.get("incorrect_review", [])
+            if question_text not in incorrect_review:
+                incorrect_review.append(question_text)
+                history["incorrect_review"] = incorrect_review  # Update the dictionary
         
         # Ensure history list exists and add entry
         if not isinstance(q_stats.get("history"), list):

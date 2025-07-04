@@ -95,6 +95,10 @@ class DatabasePoolManager:
     def _test_connection(self) -> None:
         """Test database connection to ensure it's working."""
         try:
+            if self.engine is None:
+                self.logger.error("Cannot test connection: database engine is not initialized")
+                return
+                
             with self.engine.connect() as conn:
                 # Execute a simple query to test connection
                 conn.execute(text("SELECT 1"))
@@ -111,6 +115,10 @@ class DatabasePoolManager:
         Yields:
             SQLAlchemy Session: Database session for transactions
         """
+        if self.session_factory is None:
+            self.logger.error("Session factory is not initialized")
+            raise RuntimeError("Database session factory is not initialized. Make sure the database engine was properly configured.")
+            
         session = self.session_factory()
         try:
             yield session
@@ -149,15 +157,16 @@ class DatabasePoolManager:
         Returns:
             dict: Pool status information
         """
-        if not self.enable_pooling or not hasattr(self.engine.pool, 'size'):
+        if not self.enable_pooling or self.engine is None or not hasattr(self.engine, 'pool'):
             return {"pooling_enabled": False}
         
         pool = self.engine.pool
+        
         return {
             "pooling_enabled": True,
-            "pool_size": pool.size(),
-            "checked_in": pool.checkedin(),
-            "checked_out": pool.checkedout(),
+            "pool_size": getattr(pool, 'size', 0),
+            "checked_in": getattr(pool, 'checkedin', 0),
+            "checked_out": getattr(pool, 'checkedout', 0),
             "overflow": getattr(pool, 'overflow', 0),
             "invalid": getattr(pool, 'invalid', 0),
         }
