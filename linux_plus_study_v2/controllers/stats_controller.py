@@ -7,13 +7,82 @@ and achievement tracking logic.
 """
 
 from datetime import datetime
+from typing import Dict, List, Union, Any, TypedDict, Optional, Literal, Tuple, cast
 from utils.config import *
 
+
+class LeaderboardEntry(TypedDict):
+    date: str
+    score: int
+    total: int
+    accuracy: float
+    points: int
+
+class FormattedLeaderboardEntry(TypedDict):
+    rank: int
+    date: str
+    score: int
+    total: int
+    score_display: str
+    accuracy: float
+    accuracy_display: str
+    points: int
+    accuracy_level: str
+
+class AchievementDict(TypedDict):
+    badge: str
+    description: str
+
+class ProgressItem(TypedDict):
+    current: int
+    target: int
+    percentage: float
+
+class OverallStats(TypedDict):
+    total_attempts: int
+    total_correct: int
+    overall_accuracy: float
+    accuracy_level: Literal['good', 'average', 'poor']
+
+class CategoryStat(TypedDict):
+    category: str
+    attempts: int
+    correct: int
+    accuracy: float
+    accuracy_level: Literal['good', 'average', 'poor']
+
+class QuestionPerformance(TypedDict):
+    rank: int
+    question_text: str
+    question_display: str
+    attempts: int
+    correct: int
+    accuracy: float
+    accuracy_level: Literal['good', 'average', 'poor']
+    last_result: str
+    last_result_correct: Optional[bool]
+
+class DetailedStatistics(TypedDict):
+    overall: OverallStats
+    categories: List[CategoryStat]
+    questions: List[QuestionPerformance]
+    has_category_data: bool
+    has_question_data: bool
+
+class CategoryData(TypedDict):
+    """Data structure for category statistics."""
+    attempts: int
+    correct: int
+
+class ReviewQuestionsData(TypedDict):
+    has_questions: bool
+    questions: List[Any]  # Using Any since question structure is variable
+    missing_questions: List[str]
 
 class StatsController:
     """Handles statistics calculations and data aggregation."""
     
-    def __init__(self, game_state):
+    def __init__(self, game_state: Any):
         """
         Initialize the stats controller.
         
@@ -21,8 +90,11 @@ class StatsController:
             game_state: GameState instance for data access
         """
         self.game_state = game_state
+        # Ensure leaderboard is initialized
+        if not hasattr(self.game_state, 'leaderboard') or self.game_state.leaderboard is None:
+            self.game_state.leaderboard = []
     
-    def get_progress_summary(self):
+    def get_progress_summary(self) -> Dict[str, Union[int, List[str]]]:
         """
         Get current progress summary data.
         
@@ -38,20 +110,20 @@ class StatsController:
             'days_studied': len(self.game_state.achievements.get('days_studied', []))
         }
     
-    def get_leaderboard_data(self):
+    def get_leaderboard_data(self) -> List[FormattedLeaderboardEntry]:
         """
         Get formatted leaderboard data.
         
         Returns:
             list: List of leaderboard entries sorted by performance
         """
-        if not self.game_state.leaderboard:
+        if not hasattr(self.game_state, 'leaderboard') or not self.game_state.leaderboard:
             return []
         
         # Return sorted leaderboard with formatted data
-        formatted_entries = []
+        formatted_entries: List[FormattedLeaderboardEntry] = []
         for i, entry in enumerate(self.game_state.leaderboard, 1):
-            formatted_entry = {
+            formatted_entry: FormattedLeaderboardEntry = {
                 'rank': i,
                 'date': entry["date"][:10],  # Just the date part
                 'score': entry['score'],
@@ -66,7 +138,7 @@ class StatsController:
         
         return formatted_entries
     
-    def get_achievements_data(self):
+    def get_achievements_data(self) -> Dict[str, Union[List[AchievementDict], Dict[str, ProgressItem], int]]:
         """
         Get comprehensive achievements data.
         
@@ -86,7 +158,7 @@ class StatsController:
         unlocked_badges = self.game_state.achievements.get('badges', [])
         
         # Create unlocked achievements with descriptions
-        unlocked_achievements = []
+        unlocked_achievements: List[AchievementDict] = []
         for badge in unlocked_badges:
             unlocked_achievements.append({
                 'badge': badge,
@@ -94,7 +166,7 @@ class StatsController:
             })
         
         # Create available achievements
-        available_achievements = []
+        available_achievements: List[AchievementDict] = []
         for badge, description in all_achievements.items():
             if badge not in unlocked_badges:
                 available_achievements.append({
@@ -107,7 +179,7 @@ class StatsController:
         points_earned = self.game_state.achievements.get('points_earned', 0)
         days_studied = len(self.game_state.achievements.get('days_studied', []))
         
-        progress_data = {
+        progress_data: Dict[str, ProgressItem] = {
             'questions_progress': {
                 'current': questions_answered,
                 'target': 100,
@@ -134,7 +206,7 @@ class StatsController:
             'days_studied': days_studied
         }
     
-    def get_detailed_statistics(self):
+    def get_detailed_statistics(self) -> DetailedStatistics:
         """
         Get comprehensive statistics data.
         
@@ -148,7 +220,7 @@ class StatsController:
         total_correct = history.get("total_correct", 0)
         overall_accuracy = (total_correct / total_attempts * 100) if total_attempts > 0 else 0
         
-        overall_stats = {
+        overall_stats: OverallStats = {
             'total_attempts': total_attempts,
             'total_correct': total_correct,
             'overall_accuracy': overall_accuracy,
@@ -157,12 +229,12 @@ class StatsController:
         
         # Category performance calculations
         categories_data = history.get("categories", {})
-        category_stats = []
+        category_stats: List[CategoryStat] = []
         
         # Filter and sort categories with attempts
-        categories_with_attempts = [
-            (cat, stats) for cat, stats in categories_data.items() 
-            if isinstance(stats, dict) and stats.get("attempts", 0) > 0
+        categories_with_attempts: List[Tuple[str, CategoryData]] = [
+            (cat, cast(CategoryData, stats)) for cat, stats in categories_data.items() 
+            if isinstance(stats, dict) and "attempts" in stats and stats.get("attempts", 0) > 0
         ]
         
         for category, stats in sorted(categories_with_attempts, key=lambda x: x[0]):
@@ -180,15 +252,15 @@ class StatsController:
         
         # Question-specific performance calculations
         question_stats = history.get("questions", {})
-        question_performance = []
+        question_performance: List[QuestionPerformance] = []
         
         # Filter questions with attempts and sort by accuracy (lowest first)
-        attempted_questions = {
+        attempted_questions: Dict[str, Dict[str, Any]] = {
             q: stats for q, stats in question_stats.items() 
             if isinstance(stats, dict) and stats.get("attempts", 0) > 0
         }
         
-        def sort_key(item):
+        def sort_key(item: Tuple[str, Dict[str, Any]]) -> Tuple[float, int]:
             q_text, stats = item
             attempts = stats.get("attempts", 0)
             correct = stats.get("correct", 0)
@@ -223,13 +295,13 @@ class StatsController:
                 'last_result_correct': last_result_correct
             })
         
-        return {
+        return cast(DetailedStatistics, {
             'overall': overall_stats,
             'categories': category_stats,
             'questions': question_performance,
             'has_category_data': len(category_stats) > 0,
             'has_question_data': len(question_performance) > 0
-        }
+        })
     
     def clear_statistics(self):
         """
@@ -289,12 +361,12 @@ class StatsController:
         # Update in history
         self.game_state.study_history["leaderboard"] = self.game_state.leaderboard
     
-    def get_review_questions_data(self):
+    def get_review_questions_data(self) -> ReviewQuestionsData:
         """
         Get data for questions marked as incorrect for review.
         
         Returns:
-            dict: Review questions data with found and missing questions
+            ReviewQuestionsData: Review questions data with found and missing questions
         """
         incorrect_list = self.game_state.study_history.get("incorrect_review", [])
         
@@ -379,7 +451,7 @@ class StatsController:
             print(f"Error cleaning up review questions: {e}")
             return 0
     
-    def _get_accuracy_level(self, accuracy):
+    def _get_accuracy_level(self, accuracy: float) -> Literal['good', 'average', 'poor']:
         """
         Get accuracy level classification.
         

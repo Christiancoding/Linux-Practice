@@ -9,7 +9,7 @@ reversion, and QEMU guest agent filesystem operations for consistent snapshots.
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Dict, TypedDict, Optional
 import logging
 import json
 from .config import LibvirtErrorCodes
@@ -43,6 +43,15 @@ if RICH_AVAILABLE:
 else:
     Panel = None  # Prevent unbound errors if RICH_AVAILABLE is False
 
+# Define TypedDict for permission issues
+class PermissionIssue(TypedDict):
+    path: Path
+    current_owner: str
+    current_group: str
+    current_perms: str
+    expected_owner: str
+    expected_group: str
+    expected_perms: str
 
 class SnapshotManager:
     """
@@ -71,7 +80,7 @@ class SnapshotManager:
             raw_xml = domain.XMLDesc(0)
             tree = ET.fromstring(raw_xml)
             
-            permission_issues = []
+            permission_issues: List[PermissionIssue] = []
             
             # Check each disk device
             for device in tree.findall('devices/disk'):

@@ -10,15 +10,8 @@ import time
 import random
 import hashlib
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
-
-# Define default constants
-POINTS_PER_CORRECT = 10
-POINTS_PER_INCORRECT = 0
-STREAK_BONUS_THRESHOLD = 3
-STREAK_BONUS_MULTIPLIER = 2
-
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -28,6 +21,7 @@ class QuizController:
     max_streak_bonus: int
     debug_mode: bool
     current_streak_bonus: int  # Only if used elsewhere
+    session_answers: List[Tuple[Tuple[str, List[str], int, str, str], int, bool]]  # Add this type annotation
 
     def __init__(self, game_state: Any):
         """
@@ -246,7 +240,7 @@ class QuizController:
             return {'valid': False, 'reason': 'Invalid quiz mode'}
         
         return {'valid': True}
-    def submit_answer(self, question_data, user_answer_index, original_index) -> dict[str, Any]:
+    def submit_answer(self, question_data: tuple[str, list[str], int, str, str], user_answer_index: int, original_index: int) -> dict[str, Any]:
         """
         Process a submitted answer.
         
@@ -293,7 +287,7 @@ class QuizController:
         new_badges = self.game_state.check_achievements(is_correct, self.current_streak)
         
         # Handle mode-specific logic
-        result = {
+        result: Dict[str, Any] = {
             'is_correct': is_correct,
             'correct_answer_index': correct_answer_index,
             'user_answer_index': user_answer_index,
@@ -607,7 +601,7 @@ class QuizController:
             print(f"Error generating session summary: {e}")
             return None
     
-    def _calculate_points(self, is_correct, current_streak):
+    def _calculate_points(self, is_correct: bool, current_streak: int) -> int:
         """Calculate points earned for an answer."""
         if is_correct:
             points = POINTS_PER_CORRECT
@@ -625,7 +619,7 @@ class QuizController:
             return sum(1 for q in self.game_state.questions 
                       if len(q) > 3 and q[3] == category_filter)
     
-    def _get_quick_fire_remaining(self):
+    def _get_quick_fire_remaining(self) -> Optional[Dict[str, Union[float, int]]]:
         """Get remaining Quick Fire questions and time."""
         if not self.quick_fire_active:
             return None

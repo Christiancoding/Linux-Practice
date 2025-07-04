@@ -24,26 +24,31 @@ import shlex
 from vm_integration.utils.vm_manager import VMManager
 from vm_integration.utils.ssh_manager import SSHManager
 try:
-    import libvirt
+    import libvirt  # type: ignore
 except ImportError:
     libvirt = None
     logging.warning("libvirt-python not available. VM functionality will be limited.")
 
-from utils.config import (
-    QUICK_FIRE_QUESTIONS, QUICK_FIRE_TIME_LIMIT, MINI_QUIZ_QUESTIONS,
-    POINTS_PER_CORRECT, POINTS_PER_INCORRECT, STREAK_BONUS_THRESHOLD, STREAK_BONUS_MULTIPLIER
-)
+# Add proper type imports
+from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal
+
+# Define DatabasePoolManager type for typing purposes
+class DatabasePoolManager:
+    """Type stub for DatabasePoolManager."""
+    db_type: str
+    def get_pool_status(self) -> Dict[str, Any]: ...
+    scoped_session_factory: Any = None
 
 try:
     from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections
 except ImportError as e:
     logging.error(f"Database utilities import failed: {e}")
-    # Define fallback functions
-    def initialize_database_pool(*args, **kwargs):
+    # Define fallback functions with proper type annotations
+    def initialize_database_pool(db_type: str = "sqlite", enable_pooling: bool = True) -> Optional[DatabasePoolManager]:
         return None
-    def get_database_manager():
+    def get_database_manager() -> Optional[DatabasePoolManager]:
         return None
-    def cleanup_database_connections():
+    def cleanup_database_connections() -> None:
         pass
 
 from utils.config import get_config_value
@@ -53,7 +58,8 @@ import mimetypes
 from typing import Any, Dict, Optional
 
 cli_playground = get_cli_playground()
-def setup_database_for_web():
+
+def setup_database_for_web() -> Optional[DatabasePoolManager]:
     """Initialize database connection pooling for web mode."""
     try:
         # Determine database type from configuration or environment
@@ -64,26 +70,36 @@ def setup_database_for_web():
         db_manager = initialize_database_pool(db_type, enable_pooling)
         
         # Log pool status
-        pool_status = db_manager.get_pool_status()
-        if pool_status.get("pooling_enabled"):
-            print(f"Database pooling enabled - Pool size: {pool_status.get('pool_size', 'N/A')}")
+        if db_manager is not None:
+            pool_status = db_manager.get_pool_status()
+            if pool_status.get("pooling_enabled"):
+                print(f"Database pooling enabled - Pool size: {pool_status.get('pool_size', 'N/A')}")
+            else:
+                print("Database pooling disabled (SQLite or manual override)")
         else:
-            print("Database pooling disabled (SQLite or manual override)")
+            print("Database manager not initialized")
             
         return db_manager
     except Exception as e:
         print(f"Failed to setup database pooling: {e}")
         return None
+
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
     
-    def __init__(self, game_state: Any, debug=False):  # <-- Add type annotation
+    def __init__(self, game_state: Any, debug: bool = False):
         self.game_state = game_state
         self.app = Flask(__name__, 
                         template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
                         static_folder=os.path.join(os.path.dirname(__file__), '..', 'static'))
         self.debug = debug
         self.window = None
+        
+        # Initialize with proper type annotations
+        self.cli_history: List[str] = []
+        self.current_category_filter: Optional[str] = None
+        self.current_question_data: Any = None
+        self.current_question_index: int = -1
         
         # Initialize logger
         self.logger = logging.getLogger(__name__)
@@ -120,11 +136,6 @@ class LinuxPlusStudyWeb:
             self.logger.error(f"Failed to initialize controllers: {e}")
             raise RuntimeError(f"Controller initialization failed: {e}")
     
-        # Initialize state variables
-        self.current_category_filter = None
-        self.current_question_data = None
-        self.current_question_index = -1
-        
         # Setup CLI playground routes first
         self.setup_cli_playground_routes(self.app)
         
@@ -243,7 +254,7 @@ class LinuxPlusStudyWeb:
     def setup_cli_playground_routes(self, app: Flask) -> None:
         """Setup CLI playground API routes"""
         
-        # Store command history in memory (you could also use a file)
+        # Store command history in memory with proper type annotation
         self.cli_history = []
         
         @app.route('/api/cli/execute', methods=['POST'])
@@ -432,7 +443,7 @@ class LinuxPlusStudyWeb:
                 filename = f"Linux_plus_QA_{timestamp}.md"
                 
                 # Create content in memory instead of temporary file
-                content_lines = []
+                content_lines: List[str] = []
                 
                 # Write Questions Section
                 content_lines.append("# Questions\n")
@@ -468,7 +479,7 @@ class LinuxPlusStudyWeb:
                         content_lines.append(f"**A{i+1}.** Error: Invalid correct answer index.")
                         content_lines.append("")
                 
-                # Join content
+                # Join content with proper type annotation
                 content = '\n'.join(content_lines)
                 
                 # Create response with proper headers
@@ -508,7 +519,7 @@ class LinuxPlusStudyWeb:
                 filename = f"Linux_plus_QA_{timestamp}.json"
                 
                 # Prepare questions data for JSON export
-                questions_data = []
+                questions_data: List[Dict[str, Any]] = []
                 for i, q_data in enumerate(self.game_state.questions):
                     if len(q_data) < 5: 
                         continue
@@ -577,7 +588,8 @@ class LinuxPlusStudyWeb:
                 if file.filename == '':
                     return jsonify({'success': False, 'message': 'No file was selected.'}), 400
                 
-                filename = secure_filename(file.filename)
+                # Handle potentially None filename
+                filename = secure_filename(file.filename or "")
                 file_ext = filename.lower().split('.')[-1] if '.' in filename else ''
                 
                 if file_ext not in ['json', 'md']:
@@ -606,7 +618,8 @@ class LinuxPlusStudyWeb:
                         'message': 'File encoding error. Please ensure the file is UTF-8 encoded.'
                     }), 400
                 
-                # Parse questions
+                # Parse questions with proper type handling
+                imported_questions: List[Dict[str, Any]] = []
                 if file_ext == 'json':
                     imported_questions = self._parse_json_questions(file_content)
                 elif file_ext == 'md':
@@ -680,22 +693,22 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'message': f'Error importing questions: {str(e)}'
                 }), 500
-    def _parse_json_questions(self, content):
+    def _parse_json_questions(self, content: str) -> List[Dict[str, Any]]:
         """
         Parse questions from JSON content with comprehensive format support.
         
         Args:
-            content (str): JSON content string
+            content: JSON content string
             
         Returns:
-            List[dict]: Normalized question dictionaries
+            List of normalized question dictionaries
             
         Raises:
             ValueError: If JSON format is invalid or unsupported
         """
         try:
             data = json.loads(content)
-            questions = []
+            questions: List[Dict[str, Any]] = []
             
             # Handle different JSON formats
             if isinstance(data, list):
@@ -738,165 +751,161 @@ class LinuxPlusStudyWeb:
         except Exception as e:
             raise ValueError(f"Error parsing JSON content: {e}")
 
-    def _parse_markdown_questions(self, content):
-            """
-            Enhanced markdown parser for Linux+ study format with comprehensive validation.
+    def _parse_markdown_questions(self, content: str) -> List[Dict[str, Any]]:
+        """
+        Enhanced markdown parser for Linux+ study format with comprehensive validation.
+        
+        Args:
+            content: Markdown content string
             
-            Handles format:
-            **Q1.** (Category)
-            Question text
-            A. Option A
-            B. Option B
-            ...
+        Returns:
+            List of normalized question dictionaries
+        """
+        questions: List[Dict[str, Any]] = []
+        lines = content.split('\n')
+        
+        # State tracking variables
+        in_questions_section = False
+        in_answers_section = False
+        current_question: Optional[Dict[str, Any]] = None
+        current_options: List[str] = []
+        answers_dict: Dict[int, int] = {}
+        explanations_dict: Dict[int, str] = {}
+        
+        # Enhanced parsing with robust error handling
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
             
-            **A1.** C. Option text
-            *Explanation:* Detailed explanation
-            """
-            questions = []
-            lines = content.split('\n')
-            
-            # State tracking variables
-            in_questions_section = False
-            in_answers_section = False
-            current_question = None
-            current_options = []
-            answers_dict = {}
-            explanations_dict = {}
-            
-            # Enhanced parsing with robust error handling
-            i = 0
-            while i < len(lines):
-                line = lines[i].strip()
-                
-                try:
-                    # Section detection
-                    if line == "# Questions":
-                        in_questions_section = True
-                        in_answers_section = False
-                        i += 1
-                        continue
-                    elif line == "# Answers":
-                        in_questions_section = False
-                        in_answers_section = True
-                        i += 1
-                        continue
-                    elif line == "---":
-                        in_questions_section = False
-                        i += 1
-                        continue
-                    
-                    # Question parsing
-                    elif in_questions_section and line.startswith("**Q"):
-                        # Save previous question if exists
-                        if current_question and current_options:
-                            questions.append({
-                                'question_number': current_question['number'],
-                                'question': current_question['text'],
-                                'options': current_options.copy(),
-                                'category': current_question['category'],
-                                'correct_answer_index': 0,  # Will be set from answers
-                                'explanation': ''  # Will be set from answers
-                            })
-                        
-                        # Parse new question header
-                        # Format: **Q1.** (Category)
-                        import re
-                        match = re.match(r'\*\*Q(\d+)\.\*\*\s*\(([^)]*)\)', line)
-                        if match:
-                            question_number = int(match.group(1))
-                            category = match.group(2).strip()
-                            
-                            # Read question text (next line)
-                            i += 1
-                            if i < len(lines):
-                                question_text = lines[i].strip()
-                                current_question = {
-                                    'number': question_number,
-                                    'text': question_text,
-                                    'category': category
-                                }
-                                current_options = []
-                        
-                    # Option parsing
-                    elif in_questions_section and current_question and re.match(r'^\s*[A-Z]\.\s*', line):
-                        option_text = re.sub(r'^\s*[A-Z]\.\s*', '', line).strip()
-                        if option_text:
-                            current_options.append(option_text)
-                    
-                    # Answer parsing
-                    elif in_answers_section and line.startswith("**A"):
-                        # Format: **A1.** C. Option text
-                        import re
-                        match = re.match(r'\*\*A(\d+)\.\*\*\s*([A-Z])\.\s*(.*)', line)
-                        if match:
-                            answer_number = int(match.group(1))
-                            correct_letter = match.group(2)
-                            correct_option_text = match.group(3).strip()
-                            
-                            # Convert letter to index (A=0, B=1, etc.)
-                            correct_index = ord(correct_letter) - ord('A')
-                            answers_dict[answer_number] = correct_index;
-                            
-                            # Look for explanation in next lines
-                            explanation_lines = []
-                            j = i + 1
-                            while j < len(lines):
-                                next_line = lines[j].strip()
-                                if next_line.startswith('*Explanation:*'):
-                                    j += 1
-                                    while j < len(lines) and not lines[j].strip().startswith('**A'):
-                                        explanation_lines.append(lines[j].strip())
-                                        j += 1
-                                    break
-                                elif next_line.startswith('**A'):
-                                    break
-                                j += 1
-                            
-                            if explanation_lines:
-                                explanations_dict[answer_number] = '\n'.join(explanation_lines).strip()
-                    
-                    i += 1
-                    
-                except Exception as e:
-                    print(f"Warning: Error parsing line {i}: {line[:50]}... - {str(e)}")
+            try:
+                # Section detection
+                if line == "# Questions":
+                    in_questions_section = True
+                    in_answers_section = False
                     i += 1
                     continue
-            
-            # Save last question if exists
-            if current_question and current_options:
-                questions.append({
-                    'question_number': current_question['number'],
-                    'question': current_question['text'],
-                    'options': current_options.copy(),
-                    'category': current_question['category'],
-                    'correct_answer_index': 0,
-                    'explanation': ''
-                })
-            
-            # Apply answers and explanations
-            for question in questions:
-                q_num = question['question_number']
-                if q_num in answers_dict:
-                    question['correct_answer_index'] = answers_dict[q_num]
-                if q_num in explanations_dict:
-                    question['explanation'] = explanations_dict[q_num]
-            
-            return questions
+                elif line == "# Answers":
+                    in_questions_section = False
+                    in_answers_section = True
+                    i += 1
+                    continue
+                elif line == "---":
+                    in_questions_section = False
+                    i += 1
+                    continue
+                
+                # Question parsing
+                elif in_questions_section and line.startswith("**Q"):
+                    # Save previous question if exists
+                    if current_question and current_options:
+                        questions.append({
+                            'question_number': current_question['number'],
+                            'question': current_question['text'],
+                            'options': current_options.copy(),
+                            'category': current_question['category'],
+                            'correct_answer_index': 0,  # Will be set from answers
+                            'explanation': ''  # Will be set from answers
+                        })
+                    
+                    # Parse new question header
+                    # Format: **Q1.** (Category)
+                    import re
+                    match = re.match(r'\*\*Q(\d+)\.\*\*\s*\(([^)]*)\)', line)
+                    if match:
+                        question_number = int(match.group(1))
+                        category = match.group(2).strip()
+                        
+                        # Read question text (next line)
+                        i += 1
+                        if i < len(lines):
+                            question_text = lines[i].strip()
+                            current_question = {
+                                'number': question_number,
+                                'text': question_text,
+                                'category': category
+                            }
+                            current_options = []
+                
+                # Option parsing
+                elif in_questions_section and current_question and re.match(r'^\s*[A-Z]\.\s*', line):
+                    option_text = re.sub(r'^\s*[A-Z]\.\s*', '', line).strip()
+                    if option_text:
+                        current_options.append(option_text)
+                
+                # Answer parsing
+                elif in_answers_section and line.startswith("**A"):
+                    # Format: **A1.** C. Option text
+                    import re
+                    match = re.match(r'\*\*A(\d+)\.\*\*\s*([A-Z])\.\s*(.*)', line)
+                    if match:
+                        answer_number = int(match.group(1))
+                        correct_letter = match.group(2)
+                        correct_option_text = match.group(3).strip()
+                        
+                        # Convert letter to index (A=0, B=1, etc.)
+                        correct_index = ord(correct_letter) - ord('A')
+                        answers_dict[answer_number] = correct_index;
+                        
+                        # Look for explanation in next lines
+                        explanation_lines = []
+                        j = i + 1
+                        while j < len(lines):
+                            next_line = lines[j].strip()
+                            if next_line.startswith('*Explanation:*'):
+                                j += 1
+                                while j < len(lines) and not lines[j].strip().startswith('**A'):
+                                    explanation_lines.append(lines[j].strip())
+                                    j += 1
+                                break
+                            elif next_line.startswith('**A'):
+                                break
+                            j += 1
+                        
+                        if explanation_lines:
+                            explanations_dict[answer_number] = '\n'.join(explanation_lines).strip()
+                
+                i += 1
+                
+            except Exception as e:
+                print(f"Warning: Error parsing line {i}: {line[:50]}... - {str(e)}")
+                i += 1
+                continue
+        
+        # Save last question if exists
+        if current_question and current_options:
+            questions.append({
+                'question_number': current_question['number'],
+                'question': current_question['text'],
+                'options': current_options.copy(),
+                'category': current_question['category'],
+                'correct_answer_index': 0,
+                'explanation': ''
+            })
+        
+        # Apply answers and explanations
+        for question in questions:
+            q_num = question['question_number']
+            if q_num in answers_dict:
+                question['correct_answer_index'] = answers_dict[q_num]
+            if q_num in explanations_dict:
+                question['explanation'] = explanations_dict[q_num]
+        
+        return questions
 
-    def _detect_and_eliminate_duplicates(self, imported_questions):
+    def _detect_and_eliminate_duplicates(self, imported_questions: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
         """
         Detect and eliminate duplicate questions based on question text similarity.
         
         Args:
-            imported_questions (List[dict]): List of imported questions
+            imported_questions: List of imported questions
             
         Returns:
-            Tuple[List[dict], dict]: (filtered_questions, duplicate_report)
+            Tuple containing filtered questions and duplicate report
         """
         existing_questions = [q[0] if isinstance(q, (list, tuple)) else q.get('text', '') 
                             for q in self.game_state.questions]
         
-        unique_questions = []
+        unique_questions: List[Dict[str, Any]] = []
         duplicates_found = 0
         total_processed = len(imported_questions)
         
@@ -906,15 +915,15 @@ class LinuxPlusStudyWeb:
             # Check against existing questions
             is_duplicate = False
             for existing_text in existing_questions:
-                if self._is_similar_question(question_text, existing_text.lower()):
+                if isinstance(existing_text, str) and self._is_similar_question(question_text, existing_text.lower()):
                     is_duplicate = True
                     break
             
             # Check against already processed questions in this import
             if not is_duplicate:
                 for processed_question in unique_questions:
-                    if self._is_similar_question(question_text, 
-                                               processed_question.get('question', '').strip().lower()):
+                    processed_text = processed_question.get('question', '').strip().lower()
+                    if self._is_similar_question(question_text, processed_text):
                         is_duplicate = True
                         break
             
@@ -1011,17 +1020,17 @@ class LinuxPlusStudyWeb:
             'explanation': explanation
         }
 
-    def _is_similar_question(self, text1, text2, threshold=0.8):
+    def _is_similar_question(self, text1: str, text2: str, threshold: float = 0.8) -> bool:
         """
         Check if two question texts are similar enough to be considered duplicates.
         
         Args:
-            text1 (str): First question text
-            text2 (str): Second question text
-            threshold (float): Similarity threshold (0.0 to 1.0)
+            text1: First question text
+            text2: Second question text
+            threshold: Similarity threshold (0.0 to 1.0)
             
         Returns:
-            bool: True if questions are similar enough to be duplicates
+            True if questions are similar enough to be duplicates
         """
         if not text1 or not text2:
             return False
@@ -1115,7 +1124,7 @@ class LinuxPlusStudyWeb:
         except Exception as e:
             print(f"Error adding question to pool: {str(e)}")
             return False
-    def _simulate_command(self, command):
+    def _simulate_command(self, command: str):
         """Simulate common commands with educational examples"""
         
         # Create sample files content
@@ -1324,7 +1333,7 @@ class LinuxPlusStudyWeb:
 
         # Add a health check route for monitoring
         @self.app.route('/health/db')
-        def database_health():
+        def database_health() -> Union[Dict[str, Any], Tuple[Dict[str, str], int]]:
             """Database health check endpoint."""
             try:
                 db_manager = get_database_manager()
@@ -1601,45 +1610,13 @@ class LinuxPlusStudyWeb:
                 return jsonify({'error': str(e)}), 500
         
         @self.app.errorhandler(404)
-        def not_found_error(error):
+        def not_found_error(error: Any) -> Tuple[Any, int]:
             return render_template('error.html', error="Page not found"), 404
 
         @self.app.errorhandler(500)
-        def internal_error(error):
+        def internal_error(error: Any) -> Tuple[Any, int]:
             return render_template('error.html', error="Internal server error"), 500
         
-        @self.app.route('/api/save_settings', methods=['POST'])
-        def api_save_settings():
-            try:
-                data = request.get_json()
-                
-                # Comprehensive settings model with validation
-                settings: dict[str, Any] = {
-                    'focusMode': data.get('focusMode', False),
-                    'breakReminder': max(1, min(50, data.get('breakReminder', 10))),
-                    'debugMode': data.get('debugMode', False),
-                    'pointsPerQuestion': max(1, min(100, data.get('pointsPerQuestion', 10))),
-                    'streakBonus': max(0, min(50, data.get('streakBonus', 5))),
-                    'maxStreakBonus': max(0, min(200, data.get('maxStreakBonus', 50))),
-                    'timestamp': time.time()
-                }
-                
-                # Validate numeric settings
-                if settings['maxStreakBonus'] < settings['streakBonus']:
-                    settings['maxStreakBonus'] = settings['streakBonus']
-                
-                # Save to file
-                import json
-                with open('web_settings.json', 'w') as f:
-                    json.dump(settings, f, indent=2)
-                
-                # Apply settings to current game state
-                self._apply_settings_to_game_state(settings)
-                
-                return jsonify({'success': True, 'settings': settings})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-
         @self.app.route('/api/load_settings')
         def api_load_settings():
             try:
@@ -1649,7 +1626,7 @@ class LinuxPlusStudyWeb:
                         settings = json.load(f)
                     
                     # Ensure all required fields exist with defaults
-                    default_settings = {
+                    default_settings: Dict[str, Union[bool, int]] = {
                         'focusMode': False,
                         'breakReminder': 10,
                         'debugMode': False,
@@ -1665,7 +1642,7 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': True, 'settings': settings})
                 except FileNotFoundError:
                     # Return comprehensive defaults
-                    default_settings = {
+                    default_settings: Dict[str, Union[bool, int]] = {
                         'focusMode': False,
                         'breakReminder': 10,
                         'debugMode': False,
@@ -1767,7 +1744,7 @@ class LinuxPlusStudyWeb:
             try:
                 # Check if libvirt is available
                 try:
-                    import libvirt
+                    import libvirt  # type: ignore
                 except ImportError:
                     return jsonify({
                         'success': False, 
@@ -1792,14 +1769,14 @@ class LinuxPlusStudyWeb:
                         'error': f'Failed to connect to libvirt: {str(e)}. Make sure libvirt is running.'
                     })
                 
-                vms = []
+                vms: List[Dict[str, Any]] = []
                 try:
                     # Get defined VMs
-                    defined_vms = conn.listDefinedDomains()
+                    defined_vms: List[str] = conn.listDefinedDomains()
                     
                     # Get running VMs  
                     running_vm_ids = conn.listDomainsID()
-                    running_vms = []
+                    running_vms: List[str] = []
                     for vm_id in running_vm_ids:
                         try:
                             domain = conn.lookupByID(vm_id)
@@ -1809,14 +1786,14 @@ class LinuxPlusStudyWeb:
                                 self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
             
                     # Combine all VMs
-                    all_vm_names = set(defined_vms + running_vms)
+                    all_vm_names: Set[str] = set(defined_vms + running_vms)
             
                     for vm_name in all_vm_names:
                         try:
                             domain = conn.lookupByName(vm_name)
-                            is_active = domain.isActive()
+                            is_active: bool = domain.isActive()
                             
-                            vm_info = {
+                            vm_info: Dict[str, Any] = {
                                 'name': vm_name,
                                 'status': 'running' if is_active else 'stopped',
                                 'id': domain.ID() if is_active else None
@@ -1858,7 +1835,7 @@ class LinuxPlusStudyWeb:
             
                 return jsonify({
                     'success': True, 
-                    'vms': sorted(vms, key=lambda x: x['name'])
+                    'vms': sorted(vms, key=lambda x: x.get('name', ''))
                 })
                 
             except Exception as e:
@@ -1985,8 +1962,8 @@ class LinuxPlusStudyWeb:
                 conn = vm_manager.connect_libvirt()
                 domain = vm_manager.find_vm(conn, vm_name)
                 
-                is_active = domain.isActive()
-                status_info = {
+                is_active: bool = domain.isActive()
+                status_info: Dict[str, Any] = {
                     'name': vm_name,
                     'status': 'running' if is_active else 'stopped',
                     'id': domain.ID() if is_active else None,
@@ -1994,6 +1971,7 @@ class LinuxPlusStudyWeb:
                     'uptime': None
                 }
                 
+                # Try to get IP if running
                 if is_active:
                     try:
                         status_info['ip'] = vm_manager.get_vm_ip(conn, domain)
@@ -2014,7 +1992,8 @@ class LinuxPlusStudyWeb:
                 if not challenges_dir.exists():
                     return jsonify({'success': True, 'challenges': []})
                 
-                challenges = []
+                challenges: List[Dict[str, Any]] = []
+                return jsonify({'success': True, 'challenges': challenges})
                 
             except Exception as e:
                 self.logger.error(f"Error listing challenges: {e}", exc_info=True)
@@ -2045,7 +2024,11 @@ class LinuxPlusStudyWeb:
                 
                 # Create snapshot for safety
                 snapshot_manager = SnapshotManager()
-                snapshot_manager.create_snapshot(domain, snapshot_name)
+                # Add type annotation for create_snapshot method
+                if hasattr(snapshot_manager, 'create_snapshot') and callable(snapshot_manager.create_snapshot):
+                    snapshot_manager.create_snapshot(domain, snapshot_name)
+                else:
+                    raise AttributeError("SnapshotManager has no method 'create_snapshot'")
                 
                 # Run the challenge
                 challenge_path = Path('challenges') / f"{challenge_name}.yaml"
@@ -2082,11 +2065,11 @@ class LinuxPlusStudyWeb:
                 domain = vm_manager.find_vm(conn, vm_name)
                 
                 # Get snapshots
-                snapshots = []
+                snapshots: List[Dict[str, Any]] = []
                 try:
                     snapshot_names = domain.listAllSnapshots()
                     for snapshot in snapshot_names:
-                        snapshot_info = {
+                        snapshot_info: Dict[str, Any] = {
                             'name': snapshot.getName(),
                             'description': snapshot.getXMLDesc(),
                             'creation_time': snapshot.getName(),  # Parse from XML if needed
@@ -2100,7 +2083,7 @@ class LinuxPlusStudyWeb:
                 
                 return jsonify({
                     'success': True,
-                    'snapshots': sorted(snapshots, key=lambda x: x['name'])
+                    'snapshots': sorted(snapshots, key=lambda x: x.get('name', ''))
                 })
                 
             except Exception as e:
@@ -2108,6 +2091,7 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': False, 'error': str(e)})
 
         @self.app.route('/api/vm/create_snapshot', methods=['POST'])
+       
         def api_vm_create_snapshot():
             """API endpoint to create a VM snapshot."""
             try:
@@ -2196,8 +2180,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
-    def handle_api_errors(f):
-        def wrapper(*args, **kwargs):
+    def handle_api_errors(f: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
                 return f(*args, **kwargs)
             except Exception as e:
@@ -2209,17 +2193,6 @@ class LinuxPlusStudyWeb:
                 }), 500
         wrapper.__name__ = f.__name__
         return wrapper
-    def _get_help_text(self):
-        """Get help text for CLI playground commands."""
-        help_func = cli_playground.safe_commands.get('help', lambda args: "No help available")
-        return help_func([])  # Pass empty args list
-
-    def _simulate_command(self, command):
-        """Simulate command execution using the CLI playground."""
-        try:
-            return cli_playground.process_command(command)
-        except Exception as e:
-            return f"Error executing command: {str(e)}"
     
     def run_flask_app(self):
         """Run the Flask app in a separate thread."""

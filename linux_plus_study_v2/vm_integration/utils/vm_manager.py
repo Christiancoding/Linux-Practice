@@ -10,7 +10,7 @@ Provides robust error handling and user-friendly status reporting.
 import sys
 import time
 import logging
-from typing import Optional, Dict, List, Any, Tuple, cast
+from typing import Optional, Dict, List, Any, Tuple, cast, TypeVar, Union
 from pathlib import Path
 import os
 import stat
@@ -41,8 +41,14 @@ from .console_helper import console, Table, RICH_AVAILABLE
 from typing import Any
 from rich.console import Console
 
+# Type definitions for libvirt API
+T = TypeVar('T')
+DomainID = int
+DomainName = str
+DomainInfo = Tuple[int, int, int, int, int]
+DomainState = int
+
 console: Console  # type annotation for static analysis
-domain_info: Tuple[int, int, int, int, int]  # type annotation for static analysis
 
 class VMManager:
     """
@@ -94,7 +100,7 @@ class VMManager:
             
             # Verify connection functionality
             try:
-                hostname: str = conn.getHostname()
+                hostname = cast(str, conn.getHostname())
                 self.logger.info(f"Successfully connected to libvirt host: {hostname}")
             except libvirt.libvirtError as e:
                 self.logger.warning(f"Connection established but hostname query failed: {e}")
@@ -156,12 +162,13 @@ class VMManager:
             self.logger.debug(f"Searching for VM: {vm_name}")
             
             # Add explicit type annotation for the lookup result
-            domain: libvirt.virDomain = conn.lookupByName(vm_name)
+            domain = cast(libvirt.virDomain, conn.lookupByName(vm_name))
             
             # Verify domain accessibility
             try:
-                domain_info: tuple[int, int, int, int, int] = domain.info()
-                self.logger.info(f"VM '{vm_name}' found with state: {self._get_domain_state_name(domain_info[0])}")
+                domain_info = cast(DomainInfo, domain.info())
+                state_code = cast(int, domain_info[0])
+                self.logger.info(f"VM '{vm_name}' found with state: {self._get_domain_state_name(state_code)}")
             except libvirt.libvirtError as e:
                 self.logger.warning(f"VM found but info query failed: {e}")
             
@@ -191,8 +198,8 @@ class VMManager:
             self.logger.info("Retrieving VM list from libvirt")
             
             # Get all domains (running and defined)
-            active_domains: List[int] = conn.listDomainsID()
-            defined_domains: List[str] = conn.listDefinedDomains()
+            active_domains = cast(List[DomainID], conn.listDomainsID())
+            defined_domains = cast(List[DomainName], conn.listDefinedDomains())
             
             if not active_domains and not defined_domains:
                 console.print("[yellow]No virtual machines found in libvirt.[/]")
@@ -215,15 +222,17 @@ class VMManager:
             # Process active (running) domains
             for domain_id in active_domains:
                 try:
-                    domain = conn.lookupByID(domain_id)
-                    self._add_vm_to_display(domain, table, domain_id)
+                    domain_id_int = cast(int, domain_id)
+                    domain = cast(libvirt.virDomain, conn.lookupByID(domain_id_int))
+                    self._add_vm_to_display(domain, table, domain_id_int)
                 except libvirt.libvirtError as e:
                     self.logger.warning(f"Error accessing active domain ID {domain_id}: {e}")
             
             # Process defined (inactive) domains
             for domain_name in defined_domains:
                 try:
-                    domain = conn.lookupByName(domain_name)
+                    domain_name_str = cast(str, domain_name)
+                    domain = cast(libvirt.virDomain, conn.lookupByName(domain_name_str))
                     self._add_vm_to_display(domain, table)
                 except libvirt.libvirtError as e:
                     self.logger.warning(f"Error accessing defined domain '{domain_name}': {e}")
@@ -248,11 +257,11 @@ class VMManager:
             domain_id: Optional domain ID for active domains
         """
         try:
-            name: str = domain.name()
-            info: Tuple[int, int, int, int, int] = domain.info()
-            state = self._get_domain_state_name(info[0])
+            name = cast(str, domain.name())
+            info = cast(DomainInfo, domain.info())
+            state = self._get_domain_state_name(cast(int, info[0]))
             max_mem = f"{info[1] // 1024} MB"
-            cpu_count = str(info[3])
+            cpu_count = str(cast(int, info[3]))
             vm_id = str(domain_id) if domain_id is not None else "-"
             
             # Color coding for states
@@ -305,57 +314,59 @@ class VMManager:
         Returns:
             bool: True if permissions are correct or successfully fixed
         """
-        vm_name = domain.name()
+        vm_name = cast(str, domain.name())
         
         try:
             # Get VM XML to find disk files
-            raw_xml = domain.XMLDesc(0)
+            raw_xml = cast(str, domain.XMLDesc(0))
             tree = ET.fromstring(raw_xml)
             
-            permission_issues = []
+            permission_issues: List[Dict[str, Any]] = []
             
             # Check each disk device
             for device in tree.findall('devices/disk'):
                 if device.get('type') == 'file' and device.get('device') == 'disk':
                     source_node = device.find('source')
                     if source_node is not None and 'file' in source_node.attrib:
-                        disk_path = Path(source_node.get('file'))
-                        
-                        if disk_path.exists():
-                            # Check file ownership and permissions
-                            stat_info = disk_path.stat()
+                        file_path = source_node.get('file')
+                        if file_path is not None:
+                            disk_path = Path(file_path)
                             
-                            # Get file owner and group
-                            import pwd
-                            import grp
-                            try:
-                                owner = pwd.getpwuid(stat_info.st_uid).pw_name
-                                group = grp.getgrgid(stat_info.st_gid).gr_name
-                            except KeyError:
-                                owner = str(stat_info.st_uid)
-                                group = str(stat_info.st_gid)
-                            
-                            # Check if permissions are correct
-                            expected_perms = 0o660  # rw-rw----
-                            current_perms = stat.S_IMODE(stat_info.st_mode)
-                            
-                            # Check if libvirt can access the file
-                            libvirt_access_ok = (
-                                (owner == 'libvirt-qemu' or group == 'libvirt') and
-                                (current_perms & 0o660) == 0o660
-                            )
-                            
-                            if not libvirt_access_ok:
-                                issue = {
-                                    'path': disk_path,
-                                    'current_owner': owner,
-                                    'current_group': group,
-                                    'current_perms': oct(current_perms),
-                                    'expected_owner': 'libvirt-qemu',
-                                    'expected_group': 'libvirt',
-                                    'expected_perms': oct(expected_perms)
-                                }
-                                permission_issues.append(issue)
+                            if disk_path.exists():
+                                # Check file ownership and permissions
+                                stat_info = disk_path.stat()
+                                
+                                # Get file owner and group
+                                import pwd
+                                import grp
+                                try:
+                                    owner = pwd.getpwuid(stat_info.st_uid).pw_name
+                                    group = grp.getgrgid(stat_info.st_gid).gr_name
+                                except KeyError:
+                                    owner = str(stat_info.st_uid)
+                                    group = str(stat_info.st_gid)
+                                
+                                # Check if permissions are correct
+                                expected_perms = 0o660  # rw-rw----
+                                current_perms = stat.S_IMODE(stat_info.st_mode)
+                                
+                                # Check if libvirt can access the file
+                                libvirt_access_ok = (
+                                    (owner == 'libvirt-qemu' or group == 'libvirt') and
+                                    (current_perms & 0o660) == 0o660
+                                )
+                                
+                                if not libvirt_access_ok:
+                                    issue = {
+                                        'path': disk_path,
+                                        'current_owner': owner,
+                                        'current_group': group,
+                                        'current_perms': oct(current_perms),
+                                        'expected_owner': 'libvirt-qemu',
+                                        'expected_group': 'libvirt',
+                                        'expected_perms': oct(expected_perms)
+                                    }
+                                    permission_issues.append(issue)
             
             if not permission_issues:
                 self.logger.debug(f"VM '{vm_name}' disk permissions are correct")
@@ -390,7 +401,7 @@ class VMManager:
             success_count = 0
             for issue in permission_issues:
                 try:
-                    disk_path = issue['path']
+                    disk_path = cast(Path, issue['path'])
                     
                     # Fix ownership
                     chown_cmd = ['sudo', 'chown', 'libvirt-qemu:libvirt', str(disk_path)]
@@ -404,8 +415,10 @@ class VMManager:
                     success_count += 1
                     
                 except subprocess.CalledProcessError as e:
-                    console.print(f"[red]Failed to fix permissions for {disk_path}: {e}[/]")
-                    self.logger.error(f"Permission fix failed for {disk_path}: {e}")
+                    # Ensure disk_path is defined before using it
+                    path_str = str(issue.get('path', 'unknown path'))
+                    console.print(f"[red]Failed to fix permissions for {path_str}: {e}[/]")
+                    self.logger.error(f"Permission fix failed for {path_str}: {e}")
             
             if success_count == len(permission_issues):
                 console.print(f"[green]Successfully fixed all {success_count} permission issues.[/]")
@@ -441,12 +454,12 @@ class VMManager:
         Raises:
             PracticeToolError: If VM startup fails
         """
-        vm_name = domain.name()
+        vm_name = cast(str, domain.name())
         
         try:
             # Check current VM state
-            info: tuple = domain.info()
-            current_state = info[0]
+            info = cast(Tuple[Any, ...], domain.info())
+            current_state = cast(int, info[0])
             
             if current_state == libvirt.VIR_DOMAIN_RUNNING:
                 console.print(f"[green]VM '{vm_name}' is already running.[/]")
@@ -457,7 +470,7 @@ class VMManager:
             
             # First attempt to start
             try:
-                result = domain.create()
+                result = cast(int, domain.create())
                 if result == 0:
                     console.print(f"[green]VM '{vm_name}' started successfully.[/]")
                     self.logger.info(f"VM '{vm_name}' started successfully")
@@ -563,7 +576,7 @@ class VMManager:
         Raises:
             PracticeToolError: If shutdown fails completely
         """
-        vm_name = domain.name()
+        vm_name = cast(str, domain.name())
         
         try:
             # Check current VM state
@@ -577,7 +590,7 @@ class VMManager:
             # Attempt graceful ACPI shutdown
             shutdown_failed = False
             try:
-                result = domain.shutdown()
+                result = cast(int, domain.shutdown())
                 if result < 0:
                     shutdown_failed = True
                     console.print(f"[yellow]ACPI shutdown command failed for VM '{vm_name}'. Will try force destroy if needed.[/]")
@@ -709,7 +722,7 @@ class VMManager:
                 error_code="INVALID_CONNECTION_TYPE"
             )
         
-        vm_name = domain.name()
+        vm_name = cast(str, domain.name())
         self.logger.info(f"Attempting to get IP address for VM: {vm_name}")
         
         try:
@@ -717,7 +730,7 @@ class VMManager:
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT)  # type: ignore
                 if interfaces_raw and isinstance(interfaces_raw, dict):
-                    interfaces: Dict[str, Any] = interfaces_raw
+                    interfaces = cast(Dict[str, Any], interfaces_raw)
                     ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                     if ip_address:
                         self.logger.info(f"Got IP from guest agent for '{vm_name}': {ip_address}")
@@ -729,7 +742,7 @@ class VMManager:
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_LEASE)  # type: ignore
                 if interfaces_raw and isinstance(interfaces_raw, dict):
-                    interfaces: Dict[str, Any] = interfaces_raw
+                    interfaces = cast(Dict[str, Any], interfaces_raw)
                     ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                     if ip_address:
                         self.logger.info(f"Got IP from DHCP lease for '{vm_name}': {ip_address}")
@@ -741,7 +754,7 @@ class VMManager:
             try:
                 interfaces_raw = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP)  # type: ignore
                 if interfaces_raw and isinstance(interfaces_raw, dict):
-                    interfaces: Dict[str, Any] = interfaces_raw
+                    interfaces = cast(Dict[str, Any], interfaces_raw)
                     ip_address = self._extract_ip_from_interfaces(interfaces, vm_name)
                     if ip_address:
                         self.logger.info(f"Got IP from ARP for '{vm_name}': {ip_address}")
