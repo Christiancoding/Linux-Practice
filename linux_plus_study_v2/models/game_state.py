@@ -67,7 +67,7 @@ class GameState:
         self.quick_fire_active = False
         self.quick_fire_start_time: Optional[float] = None
         self.quick_fire_questions_answered = 0
-        
+        self.quick_fire_results: List[Dict[str, Any]] = []
         # Daily challenge state
         self.daily_challenge_completed = False
         self.last_daily_challenge_date: Optional[str] = None
@@ -141,7 +141,24 @@ class GameState:
             print(f"Error loading history file '{self.history_file}': {e}")
             print("Warning: Starting with empty history.")
             return self._default_history()
-    
+    def get_quick_fire_stats(self) -> Dict[str, Any]:
+        """Get quick fire statistics from stored results."""
+        if not self.quick_fire_results:
+            return {
+                'total_sessions': 0,
+                'completed_sessions': 0,
+                'average_questions': 0,
+                'best_time': 0
+            }
+        
+        completed = [r for r in self.quick_fire_results if not r.get('time_up', False)]
+        
+        return {
+            'total_sessions': len(self.quick_fire_results),
+            'completed_sessions': len(completed),
+            'average_questions': sum(r.get('questions_answered', 0) for r in self.quick_fire_results) / len(self.quick_fire_results),
+            'best_time': min(r.get('duration', float('inf')) for r in completed) if completed else 0
+        }
     def save_history(self):
         """Save study history to file."""
         try:

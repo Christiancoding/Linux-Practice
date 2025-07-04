@@ -30,7 +30,7 @@ except ImportError:
     logging.warning("libvirt-python not available. VM functionality will be limited.")
 
 # Add proper type imports
-from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal
+from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal, Protocol
 
 # Define DatabasePoolManager type for typing purposes
 class DatabasePoolManager:
@@ -84,6 +84,16 @@ def setup_database_for_web() -> Optional[DatabasePoolManager]:
         print(f"Failed to setup database pooling: {e}")
         return None
 
+# Add this class definition after the other type definitions
+class StatsControllerProtocol(Protocol):
+    """Protocol defining the interface for StatsController."""
+    def get_detailed_statistics(self) -> Dict[str, Any]: ...
+    def get_achievements_data(self) -> Dict[str, Any]: ...
+    def get_leaderboard_data(self) -> Dict[str, Any]: ...
+    def clear_statistics(self) -> bool: ...
+    def get_review_questions_data(self) -> Dict[str, Any]: ...
+    def remove_from_review_list(self, question_text: str) -> bool: ...
+
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
     
@@ -128,7 +138,7 @@ class LinuxPlusStudyWeb:
             from controllers.stats_controller import StatsController
             
             self.quiz_controller = QuizController(game_state)
-            self.stats_controller = StatsController(game_state)
+            self.stats_controller: StatsControllerProtocol = StatsController(game_state)
         except ImportError as e:
             self.logger.error(f"Failed to import controllers: {e}")
             raise ImportError(f"Controller import failed: {e}")
@@ -1240,26 +1250,38 @@ class LinuxPlusStudyWeb:
         @self.app.route('/')
         def index():
             return render_template('index.html')
+        # Store reference to make it clear the route is being used
+        self.index_handler = index
         
         @self.app.route('/quiz')
         def quiz_page():
             return render_template('quiz.html')
+        # Store reference to make it clear the route is being used
+        self.quiz_page_handler = quiz_page
         
         @self.app.route('/stats')
         def stats_page():
             return render_template('stats.html')
+        # Store reference to make it clear the route is being used
+        self.stats_page_handler = stats_page
         
         @self.app.route('/achievements')
         def achievements_page():
             return render_template('achievements.html')
+        # Store reference to make it clear the route is being used
+        self.achievements_page_handler = achievements_page
         
         @self.app.route('/review')
         def review_page():
             return render_template('review.html')
+        # Store reference to make it clear the route is being used
+        self.review_page_handler = review_page
         
         @self.app.route('/settings')
         def settings_page():
             return render_template('settings.html')
+        # Store reference to make it clear the route is being used
+        self.settings_page_handler = settings_page
         
         @self.app.route('/api/status')
         @self.app.route('/api/status')
@@ -1291,12 +1313,17 @@ class LinuxPlusStudyWeb:
                     'quiz_mode': None,
                     'error': str(e)
                 })
+        # Store reference to make it clear the route is being used
+        self.api_status_handler = api_status
+
         @self.app.route('/cli-playground')
         def cli_playground_page():
             """CLI Playground page"""
             return render_template('cli_playground.html', 
                                 title='CLI Playground',
                                 active_page='cli_playground')
+        # Store reference to make it clear the route is being used
+        self.cli_playground_page_handler = cli_playground_page
         
         @self.app.route('/api/start_quiz', methods=['POST'])
         def api_start_quiz():
@@ -1328,8 +1355,13 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 print(f"Error starting quiz: {e}")
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_start_quiz_handler = api_start_quiz
+
         # Initialize database pooling for web mode
         db_manager = setup_database_for_web()
+        # Store reference to make it clear the variable is being used
+        self.db_manager = db_manager
 
         # Setup teardown handlers
         self.setup_app_teardown(self.app)
@@ -1351,6 +1383,9 @@ class LinuxPlusStudyWeb:
                     return {"status": "no_pooling", "message": "Database pooling not initialized"}
             except Exception as e:
                 return {"status": "error", "message": str(e)}, 500
+        # Store reference to make it clear the route is being used
+        self.database_health_handler = database_health
+
         @self.app.route('/api/get_question')
         def api_get_question():
             try:
@@ -1417,6 +1452,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 print(f"Error in get_question: {e}")
                 return jsonify({'error': str(e), 'quiz_complete': True})
+        # Store reference to make it clear the route is being used
+        self.api_get_question_handler = api_get_question
+
         @self.app.route('/api/acknowledge_break', methods=['POST'])
         def api_acknowledge_break():
             """Reset break counter when user acknowledges break reminder."""
@@ -1460,6 +1498,9 @@ class LinuxPlusStudyWeb:
                 print(f"Error in submit_answer: {e}")
                 return jsonify({'error': str(e)})
         
+        # Store reference to the route function
+        self.api_submit_answer_handler = api_submit_answer
+        
         @self.app.route('/api/end_quiz', methods=['POST'])
         def api_end_quiz():
             try:
@@ -1474,6 +1515,9 @@ class LinuxPlusStudyWeb:
                 print(f"Error in end_quiz: {e}")
                 return jsonify({'success': False, 'error': str(e)})
         
+        # Store reference to the route function
+        self.api_end_quiz_handler = api_end_quiz
+        
         @self.app.route('/api/quick_fire_status')
         def api_quick_fire_status():
             try:
@@ -1485,7 +1529,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'active': False, 'error': str(e)})
         
-        # Special mode starters - simplified
+        # Store reference to the route function
+        self.api_quick_fire_status_handler = api_quick_fire_status
+        
         @self.app.route('/api/start_quick_fire', methods=['POST'])
         def api_start_quick_fire():
             try:
@@ -1499,6 +1545,9 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': True, **result})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to the route function
+        self.api_start_quick_fire_handler = api_start_quick_fire
 
         @self.app.route('/api/start_daily_challenge', methods=['POST'])
         def api_start_daily_challenge():
@@ -1514,6 +1563,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
 
+        # Store reference to the route function
+        self.api_start_daily_challenge_handler = api_start_daily_challenge
+
         @self.app.route('/api/start_pop_quiz', methods=['POST'])
         def api_start_pop_quiz():
             try:
@@ -1527,6 +1579,9 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': True, **result})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to the route function
+        self.api_start_pop_quiz_handler = api_start_pop_quiz
 
         @self.app.route('/api/start_mini_quiz', methods=['POST'])
         def api_start_mini_quiz():
@@ -1542,13 +1597,18 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
         
-        # Other API routes remain the same...
+        # Store reference to the route function
+        self.api_start_mini_quiz_handler = api_start_mini_quiz
+        
         @self.app.route('/api/statistics')
         def api_statistics():
             try:
                 return jsonify(self.stats_controller.get_detailed_statistics())
             except Exception as e:
                 return jsonify({'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_statistics_handler = api_statistics
         
         @self.app.route('/api/achievements')
         def api_achievements():
@@ -1557,12 +1617,18 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'error': str(e)})
         
+        # Store reference to the route function
+        self.api_achievements_handler = api_achievements
+        
         @self.app.route('/api/leaderboard')
         def api_leaderboard():
             try:
                 return jsonify(self.stats_controller.get_leaderboard_data())
             except Exception as e:
                 return jsonify({'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_leaderboard_handler = api_leaderboard
         
         @self.app.route('/api/clear_statistics', methods=['POST'])
         def api_clear_statistics():
@@ -1572,12 +1638,18 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
         
+        # Store reference to the route function
+        self.api_clear_statistics_handler = api_clear_statistics
+        
         @self.app.route('/api/review_incorrect')
         def api_review_incorrect():
             try:
                 return jsonify(self.stats_controller.get_review_questions_data())
             except Exception as e:
                 return jsonify({'error': str(e)})
+
+        # Store reference to the route function
+        self.api_review_incorrect_handler = api_review_incorrect
 
         @self.app.route('/api/remove_from_review', methods=['POST'])
         def api_remove_from_review():
@@ -1591,6 +1663,9 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': success})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to the route function
+        self.api_remove_from_review_handler = api_remove_from_review
 
         @self.app.route('/api/export_history')
         def api_export_history():
@@ -1611,7 +1686,7 @@ class LinuxPlusStudyWeb:
                 return response
             except Exception as e:
                 return jsonify({'error': str(e)}), 500
-        
+        self.export_history_handler = api_export_history
         @self.app.errorhandler(404)
         def not_found_error(error: Any) -> Tuple[Any, int]:
             return render_template('error.html', error="Page not found"), 404
@@ -1619,7 +1694,11 @@ class LinuxPlusStudyWeb:
         @self.app.errorhandler(500)
         def internal_error(error: Any) -> Tuple[Any, int]:
             return render_template('error.html', error="Internal server error"), 500
-        
+            
+        # Store references to error handlers to prevent "not accessed" warnings
+        self.not_found_error_handler = not_found_error
+        self.internal_error_handler = internal_error
+
         @self.app.route('/api/load_settings')
         def api_load_settings():
             try:
@@ -1656,6 +1735,41 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': True, 'settings': default_settings})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+        self.api_load_settings_handler = api_load_settings
+        @self.app.route('/api/save_settings', methods=['POST'])
+        def api_save_settings():
+            try:
+                data = request.get_json()
+                if not data:
+                    return jsonify({'success': False, 'error': 'No data provided'})
+                
+                # Validate required fields
+                required_fields = ['focusMode', 'breakReminder', 'debugMode', 'pointsPerQuestion', 'streakBonus', 'maxStreakBonus']
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'success': False, 'error': f'Missing field: {field}'})
+                
+                # Validate values
+                if data['maxStreakBonus'] < data['streakBonus']:
+                    data['maxStreakBonus'] = data['streakBonus']
+                
+                # Save to web_settings.json
+                import json
+                with open('web_settings.json', 'w') as f:
+                    json.dump(data, f, indent=2)
+                
+                # Apply settings to controllers and game state
+                success = self._apply_settings_to_game_state(data)
+                if not success:
+                    return jsonify({'success': False, 'error': 'Failed to apply settings to game state'})
+                
+                return jsonify({'success': True, 'settings': data})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+                
+        # Store reference to make it clear the route is being used
+        self.api_save_settings_handler = api_save_settings
 
         @self.app.route('/api/set_fullscreen', methods=['POST'])
         def api_set_fullscreen():
@@ -1666,6 +1780,8 @@ class LinuxPlusStudyWeb:
                 return jsonify(result)
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_set_fullscreen_handler = api_set_fullscreen
 
         @self.app.route('/api/get_fullscreen_status')
         def api_get_fullscreen_status():
@@ -1674,6 +1790,9 @@ class LinuxPlusStudyWeb:
                 return jsonify(result)
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_get_fullscreen_status_handler = api_get_fullscreen_status
+                
         @self.app.route('/api/question-count')
         def get_question_count():
             """Get the current number of questions available."""
@@ -1688,6 +1807,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 }), 500
+        # Store reference to make it clear the route is being used
+        self.get_question_count_handler = get_question_count
+        
         @self.app.route('/api/quiz_results')
         def api_quiz_results():
             """Get the results of the completed quiz session."""
@@ -1712,6 +1834,8 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 })
+        # Store reference to make it clear the route is being used
+        self.api_quiz_results_handler = api_quiz_results
 
         @self.app.route('/api/session_summary')
         def api_session_summary():
@@ -1736,10 +1860,15 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 })
+        # Store reference to make it clear the route is being used
+        self.api_session_summary_handler = api_session_summary
+        
         @self.app.route('/vm_playground')
         def vm_playground():
             """Render VM management playground interface."""
             return render_template('vm_playground.html')
+        # Store reference to make it clear the route is being used
+        self.vm_playground_handler = vm_playground
 
         @self.app.route('/api/vm/list', methods=['GET'])
         def api_vm_list():
@@ -1774,27 +1903,29 @@ class LinuxPlusStudyWeb:
                 
                 vms: List[Dict[str, Any]] = []
                 try:
-                    # Get defined VMs
-                    defined_vms: List[str] = conn.listDefinedDomains()
+                    # Get defined VMs with proper type annotation
+                    defined_vms: List[str] = cast(List[str], conn.listDefinedDomains())
                     
-                    # Get running VMs  
-                    running_vm_ids = conn.listDomainsID()
+                    # Get running VMs with proper type annotation
+                    running_vm_ids = cast(List[int], conn.listDomainsID())
                     running_vms: List[str] = []
                     for vm_id in running_vm_ids:
                         try:
-                            domain = conn.lookupByID(vm_id)
-                            running_vms.append(domain.name())
+                            # Add proper type annotation for libvirt function
+                            domain = cast(Any, conn).lookupByID(vm_id)
+                            running_vms.append(str(domain.name()))
                         except Exception as e:
                             if hasattr(self, 'logger'):
                                 self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
             
-                    # Combine all VMs
+                    # Combine all VMs with proper typing
                     all_vm_names: Set[str] = set(defined_vms + running_vms)
             
                     for vm_name in all_vm_names:
                         try:
-                            domain = conn.lookupByName(vm_name)
-                            is_active: bool = domain.isActive()
+                            # Add proper type annotation for libvirt function
+                            domain = cast(Any, conn).lookupByName(vm_name)
+                            is_active = bool(domain.isActive())
                             
                             vm_info: Dict[str, Any] = {
                                 'name': vm_name,
@@ -1848,6 +1979,8 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': f'Unexpected error: {str(e)}'
                 })
+        # Store reference to make it clear the route is being used
+        self.api_vm_list_handler = api_vm_list
 
         @self.app.route('/api/vm/start', methods=['POST'])
         def api_vm_start():
@@ -1873,6 +2006,9 @@ class LinuxPlusStudyWeb:
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to make it clear the route is being used
+        self.api_vm_start_handler = api_vm_start
 
         @self.app.route('/api/vm/stop', methods=['POST'])
         def api_vm_stop():
@@ -1904,6 +2040,9 @@ class LinuxPlusStudyWeb:
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to make it clear the route is being used
+        self.api_vm_stop_handler = api_vm_stop
 
         @self.app.route('/api/vm/execute', methods=['POST'])
         def api_vm_execute():
@@ -1938,7 +2077,7 @@ class LinuxPlusStudyWeb:
                     username='ubuntu',  # Adjust as needed
                     key_path=ssh_key_path,
                     command=command,
-                    timeout=30,
+                                       timeout=30,
                     verbose=True
                 )
                 
@@ -1951,6 +2090,9 @@ class LinuxPlusStudyWeb:
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to make it clear the route is being used
+        self.api_vm_execute_handler = api_vm_execute
 
         @self.app.route('/api/vm/status', methods=['GET'])
         def api_vm_status():
@@ -1965,7 +2107,7 @@ class LinuxPlusStudyWeb:
                 conn = vm_manager.connect_libvirt()
                 domain = vm_manager.find_vm(conn, vm_name)
                 
-                is_active: bool = domain.isActive()
+                is_active = bool(domain.isActive())
                 status_info: Dict[str, Any] = {
                     'name': vm_name,
                     'status': 'running' if is_active else 'stopped',
@@ -1987,6 +2129,9 @@ class LinuxPlusStudyWeb:
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_status_handler = api_vm_status
+        
         @self.app.route('/api/vm/challenges', methods=['GET'])
         def api_vm_challenges():
             """API endpoint to list available challenges."""
@@ -2001,6 +2146,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error listing challenges: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to make it clear the route is being used
+        self.api_vm_challenges_handler = api_vm_challenges
 
         @self.app.route('/api/vm/run_challenge', methods=['POST'])
         def api_vm_run_challenge():
@@ -2027,9 +2175,10 @@ class LinuxPlusStudyWeb:
                 
                 # Create snapshot for safety
                 snapshot_manager = SnapshotManager()
-                # Add type annotation for create_snapshot method
-                if hasattr(snapshot_manager, 'create_snapshot') and callable(snapshot_manager.create_snapshot):
-                    snapshot_manager.create_snapshot(domain, snapshot_name)
+                # Use cast to help type checker understand the method exists
+                create_snapshot = cast(Callable[[Any, str, str], None], getattr(snapshot_manager, 'create_snapshot', None))
+                if create_snapshot:
+                    create_snapshot(domain, snapshot_name)
                 else:
                     raise AttributeError("SnapshotManager has no method 'create_snapshot'")
                 
@@ -2053,6 +2202,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error running challenge: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_run_challenge_handler = api_vm_run_challenge
 
         @self.app.route('/api/vm/snapshots', methods=['GET'])
         def api_vm_snapshots():
@@ -2072,6 +2223,7 @@ class LinuxPlusStudyWeb:
                 try:
                     snapshot_names = domain.listAllSnapshots()
                     for snapshot in snapshot_names:
+                        # Initialize snapshot_info before using it
                         snapshot_info: Dict[str, Any] = {
                             'name': snapshot.getName(),
                             'description': snapshot.getXMLDesc(),
@@ -2092,9 +2244,10 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error listing snapshots: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_snapshots_handler = api_vm_snapshots
 
         @self.app.route('/api/vm/create_snapshot', methods=['POST'])
-       
         def api_vm_create_snapshot():
             """API endpoint to create a VM snapshot."""
             try:
@@ -2111,7 +2264,12 @@ class LinuxPlusStudyWeb:
                 domain = vm_manager.find_vm(conn, vm_name)
                 
                 snapshot_manager = SnapshotManager()
-                snapshot_manager.create_snapshot(domain, snapshot_name, description)
+                # Use cast to help type checker understand the method exists
+                create_snapshot = cast(Callable[[Any, str, str], None], getattr(snapshot_manager, 'create_snapshot', None))
+                if create_snapshot:
+                    create_snapshot(domain, snapshot_name, description)
+                else:
+                    raise AttributeError("SnapshotManager has no method 'create_snapshot'")
                 
                 conn.close()
                 
@@ -2123,6 +2281,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error creating snapshot: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_create_snapshot_handler = api_vm_create_snapshot
 
         @self.app.route('/api/vm/restore_snapshot', methods=['POST'])
         def api_vm_restore_snapshot():
@@ -2139,9 +2299,9 @@ class LinuxPlusStudyWeb:
                 conn = vm_manager.connect_libvirt()
                 domain = vm_manager.find_vm(conn, vm_name)
                 
-                # Find and restore snapshot
-                snapshot = domain.snapshotLookupByName(snapshot_name)
-                domain.revertToSnapshot(snapshot)
+                # Find and restore snapshot with proper type casting
+                snapshot = cast(Any, domain).snapshotLookupByName(snapshot_name)
+                cast(Any, domain).revertToSnapshot(snapshot)
                 
                 conn.close()
                 
@@ -2153,6 +2313,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error restoring snapshot: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_restore_snapshot_handler = api_vm_restore_snapshot
 
         @self.app.route('/api/vm/delete_snapshot', methods=['POST'])
         def api_vm_delete_snapshot():
@@ -2169,8 +2331,8 @@ class LinuxPlusStudyWeb:
                 conn = vm_manager.connect_libvirt()
                 domain = vm_manager.find_vm(conn, vm_name)
                 
-                # Find and delete snapshot
-                snapshot = domain.snapshotLookupByName(snapshot_name)
+                # Find and delete snapshot with proper type casting
+                snapshot = cast(Any, domain).snapshotLookupByName(snapshot_name)
                 snapshot.delete()
                 
                 conn.close()
@@ -2183,6 +2345,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
                 return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_delete_snapshot_handler = api_vm_delete_snapshot
     def handle_api_errors(self, f: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
