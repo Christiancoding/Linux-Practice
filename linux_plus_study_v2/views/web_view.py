@@ -248,6 +248,9 @@ class LinuxPlusStudyWeb:
                     db_manager.scoped_session_factory.remove()
             except Exception as e:
                 logging.error(f"Error closing database session: {e}")
+        
+        # Store reference to prevent "not accessed" warning
+        self.close_db_session_handler = close_db_session
 
         @app.teardown_request
         def cleanup_request(exception: Optional[BaseException] = None) -> None:
@@ -257,6 +260,9 @@ class LinuxPlusStudyWeb:
                     logging.error(f"Request error: {exception}")
             except Exception as e:
                 logging.error(f"Error in request cleanup: {e}")
+        
+        # Store reference to prevent "not accessed" warning
+        self.cleanup_request_handler = cleanup_request
     
     # Register cleanup on application shutdown
     import atexit
@@ -315,6 +321,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'success': False, 'error': f'Server error: {str(e)}'})
 
+        # Store reference to prevent "not accessed" warning
+        self.execute_cli_command_handler = execute_cli_command
+
         @app.route('/api/cli/clear', methods=['POST'])
         def clear_cli_history():
             """Clear CLI command history"""
@@ -331,6 +340,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': f'Server error: {str(e)}'
                 })
+
+        # Store reference to prevent "not accessed" warning
+        self.clear_cli_history_handler = clear_cli_history
 
         @app.route('/api/cli/commands', methods=['GET'])
         def get_available_commands():
@@ -420,6 +432,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': f'Error loading commands: {str(e)}'
                 })
+        
+        # Store reference to prevent "not accessed" warning
+        self.get_available_commands_handler = get_available_commands
 
         @app.route('/api/cli/history', methods=['GET'])
         def get_cli_history():
@@ -435,6 +450,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': f'Error loading history: {str(e)}'
                 })
+        
+        # Store reference to prevent "not accessed" warning
+        self.get_cli_history_handler = get_cli_history
     def setup_export_import_routes(self):
         """Setup routes for export and import functionality."""
         
@@ -988,7 +1006,7 @@ class LinuxPlusStudyWeb:
         signature_string = '###'.join(signature_components)
         return hashlib.md5(signature_string.encode('utf-8')).hexdigest()
 
-    def _normalize_question_dict(self, question_dict):
+    def _normalize_question_dict(self, question_dict: Dict[str, Any]) -> Dict[str, Union[str, List[str], int]]:
         """
         Normalize a question dictionary to standard format.
         
@@ -1464,6 +1482,9 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 print(f"Error acknowledging break: {e}")
                 return jsonify({'success': False, 'error': str(e)})
+                
+        # Store reference to make it clear the route is being used
+        self.api_acknowledge_break_handler = api_acknowledge_break
 
         @self.app.route('/api/submit_answer', methods=['POST'])
         def api_submit_answer():
@@ -2070,7 +2091,7 @@ class LinuxPlusStudyWeb:
                 
                 # Execute command via SSH
                 from pathlib import Path
-                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'  # Adjust as needed
+                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'   # Adjust as needed
                 
                 result = ssh_manager.run_ssh_command(
                     host=vm_ip,
@@ -2136,74 +2157,44 @@ class LinuxPlusStudyWeb:
         def api_vm_challenges():
             """API endpoint to list available challenges."""
             try:
-                challenges_dir = Path('challenges')  # Adjust path as needed
-                if not challenges_dir.exists():
-                    return jsonify({'success': True, 'challenges': []})
-                
-                challenges: List[Dict[str, Any]] = []
-                return jsonify({'success': True, 'challenges': challenges})
-                
+                from vm_integration.controllers.vm_controller import list_available_challenges
+                challenges = list_available_challenges()
+                return jsonify({
+                    'success': True,
+                    'challenges': challenges
+                })
             except Exception as e:
-                self.logger.error(f"Error listing challenges: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to make it clear the route is being used
-        self.api_vm_challenges_handler = api_vm_challenges
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
 
         @self.app.route('/api/vm/run_challenge', methods=['POST'])
         def api_vm_run_challenge():
-            """API endpoint to run a challenge on a VM."""
+            """API endpoint to run a challenge."""
             try:
                 data = request.get_json()
-                vm_name = data.get('vm_name')
-                challenge_name = data.get('challenge_name')
+                challenge_id = data.get('challenge_id')
+                vm_name = data.get('vm_name', 'ubuntu-practice')
                 
-                if not vm_name or not challenge_name:
-                    return jsonify({'success': False, 'error': 'VM name and challenge name are required'})
+                if not challenge_id:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Challenge ID is required'
+                    }), 400
                 
-                # Import challenge runner
-                from vm_integration.controllers.challenge_runner import ChallengeRunner
-                
-                challenge_runner = ChallengeRunner()
-                
-                # Create snapshot before running challenge
-                snapshot_name = f"before_{challenge_name}_{int(time.time())}"
-                
-                vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
-                
-                # Create snapshot for safety
-                snapshot_manager = SnapshotManager()
-                # Use cast to help type checker understand the method exists
-                create_snapshot = cast(Callable[[Any, str, str], None], getattr(snapshot_manager, 'create_snapshot', None))
-                if create_snapshot:
-                    create_snapshot(domain, snapshot_name)
-                else:
-                    raise AttributeError("SnapshotManager has no method 'create_snapshot'")
-                
-                # Run the challenge
-                challenge_path = Path('challenges') / f"{challenge_name}.yaml"
-                result = challenge_runner.run_challenge(
-                    challenge_path=challenge_path,
-                    vm_name=vm_name,
-                    libvirt_uri=vm_manager.libvirt_uri
-                )
-                
-                conn.close()
+                from vm_integration.controllers.vm_controller import run_challenge_workflow
+                result = run_challenge_workflow(challenge_id=challenge_id, vm_name=vm_name)
                 
                 return jsonify({
                     'success': True,
-                    'message': f'Challenge {challenge_name} started on VM {vm_name}',
-                    'snapshot_created': snapshot_name,
-                    'challenge_result': result
+                    'result': result
                 })
-                
             except Exception as e:
-                self.logger.error(f"Error running challenge: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_run_challenge_handler = api_vm_run_challenge
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
 
         @self.app.route('/api/vm/snapshots', methods=['GET'])
         def api_vm_snapshots():
@@ -2347,6 +2338,78 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': False, 'error': str(e)})
         # Store reference to make it clear the route is being used
         self.api_vm_delete_snapshot_handler = api_vm_delete_snapshot
+        @self.app.route('/api/vm/setup_user', methods=['POST'])
+        def api_vm_setup_user():
+            """API endpoint to setup VM user."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name', 'ubuntu-practice')
+                new_user = data.get('new_user', 'student')
+                
+                from vm_integration.controllers.vm_controller import setup_vm_user
+                result = setup_vm_user(vm_name=vm_name, new_user=new_user)
+                
+                return jsonify({
+                    'success': True,
+                    'result': result
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
+        @self.app.route('/api/vm/create_template', methods=['POST'])
+        def api_vm_create_template():
+            """API endpoint to create challenge template."""
+            try:
+                data = request.get_json()
+                template_name = data.get('template_name')
+                
+                if not template_name:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Template name is required'
+                    }), 400
+                
+                from vm_integration.controllers.vm_controller import create_challenge_template
+                result = create_challenge_template(template_name)
+                
+                return jsonify({
+                    'success': True,
+                    'result': result
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
+
+        @self.app.route('/api/vm/validate_challenge', methods=['POST'])
+        def api_vm_validate_challenge():
+            """API endpoint to validate challenge file."""
+            try:
+                data = request.get_json()
+                challenge_path = data.get('challenge_path')
+                
+                if not challenge_path:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Challenge path is required'
+                    }), 400
+                
+                from vm_integration.controllers.vm_controller import validate_challenge
+                result = validate_challenge(challenge_path)
+                
+                return jsonify({
+                    'success': True,
+                    'result': result
+                })
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                }), 500
     def handle_api_errors(self, f: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:

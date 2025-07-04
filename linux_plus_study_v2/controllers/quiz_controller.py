@@ -315,7 +315,21 @@ class QuizController:
         
         # Check for session completion
         result['session_complete'] = self._check_session_complete()
-        
+                # Ensure results are saved if session is complete
+        if not self.quiz_active and self.session_total > 0:
+            self.last_session_results = {
+                'session_score': self.session_score,
+                'session_total': self.session_total,
+                'accuracy': (self.session_score / self.session_total * 100) if self.session_total > 0 else 0.0,
+                'session_points': self.game_state.session_points,
+                'mode': self.current_quiz_mode
+            }
+        # Cache the current question
+        self.last_question = {
+            'question_data': question_data,
+            'user_answer_index': user_answer_index,
+            'is_correct': is_correct
+        }
         return result
     
     def skip_question(self) -> Dict[str, Any]:
@@ -378,7 +392,7 @@ class QuizController:
         self.game_state.save_history()
         self.game_state.save_achievements()
         
-        session_results: Dict[str, Union[int, float, str, List[Tuple[Tuple[str, List[str], int, str, str], int, bool]], None]] = {
+        session_results: Dict[str, Any] = {
             'session_score': self.session_score,
             'session_total': self.session_total,
             'accuracy': accuracy,
@@ -387,7 +401,18 @@ class QuizController:
             'mode': self.current_quiz_mode,
             'verify_answers': self.session_answers if self.current_quiz_mode == QUIZ_MODE_VERIFY else None
         }
+        
+        # Save results for API retrieval
         self.last_session_results = session_results
+        
+        # Reset session variables
+        self.session_score = 0
+        self.session_total = 0
+        self.session_answers = []
+        self.current_streak = 0
+        self.questions_since_break = 0
+        self.current_quiz_mode = QUIZ_MODE_STANDARD
+        
         return session_results
     
     def start_quick_fire_mode(self) -> Dict[str, Any]:
@@ -560,12 +585,19 @@ class QuizController:
             question_index = date_hash % len(self.game_state.questions)
             self.last_daily_challenge_date = today
             
-            return {
-                'question_data': self.game_state.questions[question_index],
+            question_data = self.game_state.questions[question_index]
+            
+            result = {
+                'question_data': question_data,
                 'original_index': question_index,
+                'question_number': 1,
+                'streak': self.current_streak,
                 'is_daily_challenge': True,
                 'date': today
             }
+            # Cache the current question
+            self.cache_current_question(result)
+            return result
         
         return None
     
