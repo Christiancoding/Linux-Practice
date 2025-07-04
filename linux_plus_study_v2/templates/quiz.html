@@ -393,7 +393,7 @@ function showFeedback(data) {
         <div class="alert ${feedbackClass}">
             <strong>${feedbackText}</strong>
             ${data.explanation && currentMode !== 'verify' ? `<br><small><strong>Explanation:</strong> ${data.explanation}</small>` : ''}
-            ${data.points_earned ? `<br><small>Points earned: ${data.points_earned}</small>` : ''}
+            ${data.points_earned && currentMode !== 'verify' ? `<br><small>Points earned: ${data.points_earned}</small>` : ''}
         </div>
     `;
 
