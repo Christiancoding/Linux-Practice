@@ -376,12 +376,7 @@ class StatsController:
             ReviewQuestionsData: Review questions data with found and missing questions
         """
         incorrect_list: List[str] = self.game_state.study_history.get("incorrect_review", [])
-        
-        # Ensure it's a list
-        if not isinstance(incorrect_list, list):
-            incorrect_list = []
-            self.game_state.study_history["incorrect_review"] = []
-        
+
         if not incorrect_list:
             return {
                 'has_questions': False,
@@ -413,7 +408,7 @@ class StatsController:
             'missing_questions': missing_questions
         }
     
-    def remove_from_review_list(self, question_text):
+    def remove_from_review_list(self, question_text: str):
         """
         Remove a question from the incorrect review list.
         
@@ -435,7 +430,7 @@ class StatsController:
             print(f"Error removing question from review list: {e}")
             return False
     
-    def cleanup_missing_review_questions(self, missing_questions):
+    def cleanup_missing_review_questions(self, missing_questions: List[str]) -> int:
         """
         Remove questions from review list that no longer exist in the question pool.
         
