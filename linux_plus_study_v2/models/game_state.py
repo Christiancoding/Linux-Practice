@@ -26,7 +26,7 @@ class GameState:
     It manages questions, achievements, history, and current session state.
     """
     
-    def __init__(self, history_file: str = HISTORY_FILE):
+    def __init__(self, history_file: str = str(HISTORY_FILE)):
         """
         Initialize the game state.
         

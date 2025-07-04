@@ -77,7 +77,7 @@ def setup_database_for_web():
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
     
-    def __init__(self, game_state, debug=False):
+    def __init__(self, game_state: Any, debug=False):  # <-- Add type annotation
         self.game_state = game_state
         self.app = Flask(__name__, 
                         template_folder=os.path.join(os.path.dirname(__file__), '..', 'templates'),
@@ -2254,7 +2254,9 @@ class LinuxPlusStudyWeb:
         """Clean shutdown of the application."""
         # Save any pending data
         self.game_state.save_history()
-        self.game_state.save_achievements()
+        # Add runtime check for save_achievements
+        if hasattr(self.game_state, "save_achievements") and callable(self.game_state.save_achievements):
+            self.game_state.save_achievements()
         
         # Close the webview window
         if self.window:
