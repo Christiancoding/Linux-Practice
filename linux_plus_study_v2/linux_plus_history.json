@@ -3,7 +3,7 @@
   "questions": {
     "Which command installs the GRUB2 bootloader to a specified device?": {
       "correct": 5,
-      "attempts": 18,
+      "attempts": 19,
       "history": [
         {
           "timestamp": "2025-06-05T22:45:14.387936",
@@ -75,6 +75,10 @@
         },
         {
           "timestamp": "2025-07-03T13:29:15.903587",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-04T10:24:25.685798",
           "correct": false
         }
       ]
@@ -263,7 +267,7 @@
     },
     "What is the primary function of the `mkinitrd` command?": {
       "correct": 0,
-      "attempts": 12,
+      "attempts": 13,
       "history": [
         {
           "timestamp": "2025-06-06T15:09:55.321148",
@@ -311,6 +315,10 @@
         },
         {
           "timestamp": "2025-07-03T13:29:26.963692",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-04T10:24:21.545626",
           "correct": false
         }
       ]
@@ -362,8 +370,8 @@
       ]
     },
     "In Kubernetes, what is an Ambassador container?": {
-      "correct": 0,
-      "attempts": 8,
+      "correct": 1,
+      "attempts": 9,
       "history": [
         {
           "timestamp": "2025-06-09T23:01:18.920785",
@@ -396,6 +404,10 @@
         {
           "timestamp": "2025-07-03T14:07:05.193842",
           "correct": false
+        },
+        {
+          "timestamp": "2025-07-04T10:24:02.487929",
+          "correct": true
         }
       ]
     },
@@ -446,16 +458,56 @@
           "correct": false
         }
       ]
+    },
+    "A system administrator has noticed that over time, a Linux server's available memory decreases, even when the workload on the server remains consistent. The 'top' command shows a particular process gradually increasing its memory usage without releasing it back to the system. Which of the following tools should the administrator use to further investigate this suspected memory leak in the problematic process?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-04T10:34:27.284632",
+          "correct": true
+        }
+      ]
+    },
+    "A system administrator needs to create a compressed backup of the /var/log directory. Which command should they use to create a gzip-compressed archive file named log_backup.tar.gz?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-04T10:34:29.946620",
+          "correct": false
+        }
+      ]
+    },
+    "An organization is looking to improve its software development lifecycle by automatically building, testing, and deploying applications following code commits. Which of the following would BEST implement this requirement?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-04T10:34:32.796655",
+          "correct": false
+        }
+      ]
+    },
+    "A Linux system administrator notices that the journal logs on a production server are not persistent across reboots, which is necessary for troubleshooting ongoing issues that occur after system restarts. What's the BEST step the administrator should take to ensure journal logs are retained after a reboot?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-04T10:34:35.346575",
+          "correct": false
+        }
+      ]
     }
   },
   "categories": {
     "Commands (System Management)": {
       "correct": 10,
-      "attempts": 47
+      "attempts": 49
     },
     "Concepts & Terms (Containers)": {
-      "correct": 0,
-      "attempts": 8
+      "correct": 1,
+      "attempts": 9
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
@@ -470,23 +522,37 @@
       "attempts": 14
     },
     "Troubleshooting": {
-      "correct": 5,
-      "attempts": 17
+      "correct": 6,
+      "attempts": 19
+    },
+    "Scripting, Containers, and Automation": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Security": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "System Management": {
+      "correct": 0,
+      "attempts": 1
     }
   },
-  "total_correct": 25,
-  "total_attempts": 95,
+  "total_correct": 27,
+  "total_attempts": 102,
   "incorrect_review": [
     "What is the primary function of the `mkinitrd` command?",
     "What is an AppImage?",
-    "In Kubernetes, what is an Ambassador container?",
     "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?",
     "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?",
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?",
     "What is the purpose of the `grub2-mkconfig` command?",
     "What is AppArmor?",
     "What is Ansible primarily used for?",
-    "Which command installs the GRUB2 bootloader to a specified device?"
+    "Which command installs the GRUB2 bootloader to a specified device?",
+    "A system administrator needs to create a compressed backup of the /var/log directory. Which command should they use to create a gzip-compressed archive file named log_backup.tar.gz?",
+    "An organization is looking to improve its software development lifecycle by automatically building, testing, and deploying applications following code commits. Which of the following would BEST implement this requirement?",
+    "A Linux system administrator notices that the journal logs on a production server are not persistent across reboots, which is necessary for troubleshooting ongoing issues that occur after system restarts. What's the BEST step the administrator should take to ensure journal logs are retained after a reboot?"
   ],
   "leaderboard": [
     {
@@ -575,7 +641,7 @@
     }
   ],
   "settings": {
-    "points_per_question": 100,
+    "points_per_question": 1,
     "streak_bonus": 5,
     "max_streak_bonus": 50
   }
