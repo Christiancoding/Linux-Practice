@@ -5,15 +5,14 @@ Handles input validation, data validation, and user choice validation.
 """
 
 import os
-import re
-from utils.config import COLOR_INFO, COLOR_ERROR, COLOR_RESET
+from typing import Union, Tuple, Optional, List, Dict, Any, Type, Literal
 
 
 class InputValidator:
     """Handles validation of user inputs and data structures."""
     
     @staticmethod
-    def validate_quiz_answer(user_input, num_options, allow_skip=True, allow_quit=True):
+    def validate_quiz_answer(user_input: str, num_options: int, allow_skip: bool = True, allow_quit: bool = True) -> Tuple[bool, Optional[Union[int, str]], str]:
         """
         Validate user answer input for quiz questions.
         
@@ -26,7 +25,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_value: int|str, error_message: str)
         """
-        if not isinstance(user_input, str):
+        if not user_input:
             return False, None, "Input must be a string"
         
         cleaned_input = user_input.lower().strip()
@@ -55,7 +54,7 @@ class InputValidator:
             return False, None, f"Invalid input. Please enter {' or '.join(valid_options)}"
 
     @staticmethod
-    def validate_category_choice(user_input, num_categories, allow_back=True):
+    def validate_category_choice(user_input: str, num_categories: int, allow_back: bool = True) -> Tuple[bool, Optional[Union[int, str]], str]:
         """
         Validate category selection input.
         
@@ -67,7 +66,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_value: int|str, error_message: str)
         """
-        if not isinstance(user_input, str):
+        if not user_input:
             return False, None, "Input must be a string"
         
         cleaned_input = user_input.lower().strip()
@@ -91,7 +90,7 @@ class InputValidator:
             return False, None, f"Invalid input. Please enter {' or '.join(valid_options)}"
 
     @staticmethod
-    def validate_yes_no(user_input, default=None):
+    def validate_yes_no(user_input: str, default: Optional[str] = None) -> Tuple[bool, Optional[bool], str]:
         """
         Validate yes/no input.
         
@@ -102,7 +101,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_value: bool, error_message: str)
         """
-        if not isinstance(user_input, str):
+        if not user_input:
             return False, None, "Input must be a string"
         
         cleaned_input = user_input.lower().strip()
@@ -123,7 +122,7 @@ class InputValidator:
             return False, None, "Please enter 'yes' or 'no'"
 
     @staticmethod
-    def validate_menu_choice(user_input, valid_choices):
+    def validate_menu_choice(user_input: str, valid_choices: List[str]) -> Tuple[bool, Optional[str], str]:
         """
         Validate menu choice against a list of valid options.
         
@@ -134,7 +133,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_value: str, error_message: str)
         """
-        if not isinstance(user_input, str):
+        if not user_input:
             return False, None, "Input must be a string"
         
         cleaned_input = user_input.strip()
@@ -145,7 +144,7 @@ class InputValidator:
             return False, None, f"Please enter one of: {', '.join(valid_choices)}"
 
     @staticmethod
-    def validate_filename(filename, required_extension=None):
+    def validate_filename(filename: str, required_extension: Optional[str] = None) -> Tuple[bool, Optional[str], str]:
         """
         Validate filename for export operations.
         
@@ -156,7 +155,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_filename: str, error_message: str)
         """
-        if not isinstance(filename, str):
+        if not filename:
             return False, None, "Filename must be a string"
         
         cleaned_filename = filename.strip()
@@ -177,7 +176,8 @@ class InputValidator:
         return True, cleaned_filename, ""
 
     @staticmethod
-    def validate_number_range(user_input, min_val, max_val, input_type=int):
+    def validate_number_range(user_input: str, min_val: Union[int, float], max_val: Union[int, float], 
+                              input_type: Type = int) -> Tuple[bool, Optional[Union[int, float]], str]:
         """
         Validate numeric input within a specified range.
         
@@ -190,7 +190,7 @@ class InputValidator:
         Returns:
             tuple: (is_valid: bool, processed_value: int|float, error_message: str)
         """
-        if not isinstance(user_input, str):
+        if not user_input:
             return False, None, "Input must be a string"
         
         cleaned_input = user_input.strip()
@@ -209,7 +209,7 @@ class DataValidator:
     """Handles validation of data structures and game state."""
     
     @staticmethod
-    def validate_question_data(question_data):
+    def validate_question_data(question_data: Union[List, Tuple]) -> Tuple[bool, str]:
         """
         Validate question data structure.
         
@@ -253,7 +253,7 @@ class DataValidator:
         return True, ""
 
     @staticmethod
-    def validate_history_data(history_data):
+    def validate_history_data(history_data: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Validate history data structure.
         
@@ -290,7 +290,7 @@ class DataValidator:
         return True, ""
 
     @staticmethod
-    def validate_achievements_data(achievements_data):
+    def validate_achievements_data(achievements_data: Dict[str, Any]) -> Tuple[bool, str]:
         """
         Validate achievements data structure.
         
@@ -321,7 +321,7 @@ class DataValidator:
         return True, ""
 
     @staticmethod
-    def validate_quiz_mode(mode):
+    def validate_quiz_mode(mode: str) -> Tuple[bool, str]:
         """
         Validate quiz mode.
         
@@ -348,7 +348,7 @@ class DataValidator:
             return False, f"Invalid quiz mode. Must be one of: {valid_modes}"
 
     @staticmethod
-    def sanitize_input(user_input, max_length=1000):
+    def sanitize_input(user_input: str, max_length: int = 1000) -> str:
         """
         Sanitize user input to prevent issues.
         
@@ -371,7 +371,7 @@ class DataValidator:
         return sanitized
 
     @staticmethod
-    def validate_file_path(file_path, must_exist=False, must_be_writable=False):
+    def validate_file_path(file_path: str, must_exist: bool = False, must_be_writable: bool = False) -> Tuple[bool, str]:
         """
         Validate file path.
         

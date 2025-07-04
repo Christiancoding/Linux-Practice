@@ -7,8 +7,9 @@ error handling and logging infrastructure.
 """
 
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Sequence, Generator
 from pathlib import Path
+import libvirt  # Import libvirt for type annotations
 
 from vm_integration.utils.vm_manager import VMManager
 from vm_integration.utils.ssh_manager import SSHManager
@@ -31,8 +32,8 @@ class VMService:
             Dict containing success status and VM list
         """
         try:
-            conn = self.vm_manager.connect_libvirt()
-            vms = []
+            conn: libvirt.virConnect = self.vm_manager.connect_libvirt()
+            vms: List[Dict[str, Any]] = []
             
             # Get all defined VMs
             for vm_name in conn.listDefinedDomains():
@@ -41,8 +42,8 @@ class VMService:
             
             # Get all running VMs
             for vm_id in conn.listDomainsID():
-                domain = conn.lookupByID(vm_id)
-                vm_name = domain.name()
+                domain: libvirt.virDomain = conn.lookupByID(vm_id)
+                vm_name: str = domain.name()
                 
                 # Skip if already processed
                 if not any(vm['name'] == vm_name for vm in vms):
@@ -63,13 +64,13 @@ class VMService:
                 'error': str(e)
             }
     
-    def _get_vm_info(self, conn, vm_name: str) -> Dict[str, Any]:
+    def _get_vm_info(self, conn: libvirt.virConnect, vm_name: str) -> Dict[str, Any]:
         """Get detailed information about a specific VM."""
         try:
-            domain = conn.lookupByName(vm_name)
-            is_active = domain.isActive()
+            domain: libvirt.virDomain = conn.lookupByName(vm_name)
+            is_active: bool = domain.isActive()
             
-            vm_info = {
+            vm_info: Dict[str, Any] = {
                 'name': vm_name,
                 'status': 'running' if is_active else 'stopped',
                 'id': domain.ID() if is_active else None,
@@ -128,8 +129,8 @@ class VMService:
             self.logger.error(f"Error getting challenges: {e}", exc_info=True)
             return {'success': False, 'error': str(e)}
 
-    def manage_snapshots(self, vm_name: str, action: str, snapshot_name: str = None, 
-                        description: str = None) -> Dict[str, Any]:
+    def manage_snapshots(self, vm_name: str, action: str, snapshot_name: Optional[str] = None, 
+                        description: Optional[str] = None) -> Dict[str, Any]:
         """
         Comprehensive snapshot management operations.
         
@@ -142,9 +143,10 @@ class VMService:
         Returns:
             Dict containing operation results
         """
+        conn: Optional[libvirt.virConnect] = None
         try:
             conn = self.vm_manager.connect_libvirt()
-            domain = self.vm_manager.find_vm(conn, vm_name)
+            domain: libvirt.virDomain = self.vm_manager.find_vm(conn, vm_name)
             
             if action == 'list':
                 return self._list_snapshots(domain)
@@ -162,18 +164,19 @@ class VMService:
             return {'success': False, 'error': str(e)}
         finally:
             try:
-                conn.close()
+                if conn:
+                    conn.close()
             except:
                 pass
 
-    def _list_snapshots(self, domain) -> Dict[str, Any]:
+    def _list_snapshots(self, domain: libvirt.virDomain) -> Dict[str, Any]:
         """List all snapshots for a domain."""
         try:
-            snapshots = []
-            snapshot_objects = domain.listAllSnapshots()
+            snapshots: List[Dict[str, Any]] = []
+            snapshot_objects: Sequence[libvirt.virDomainSnapshot] = domain.listAllSnapshots()
             
             for snapshot in snapshot_objects:
-                snapshot_info = {
+                snapshot_info: Dict[str, Any] = {
                     'name': snapshot.getName(),
                     'current': snapshot.isCurrent(),
                     'description': self._extract_description(snapshot.getXMLDesc())
@@ -189,7 +192,8 @@ class VMService:
             self.logger.error(f"Error listing snapshots: {e}")
             return {'success': False, 'error': str(e)}
 
-    def _create_snapshot(self, domain, snapshot_name: str, description: str = None) -> Dict[str, Any]:
+    def _create_snapshot(self, domain: libvirt.virDomain, snapshot_name: str, 
+                         description: Optional[str] = None) -> Dict[str, Any]:
         """Create a new snapshot."""
         try:
             from vm_integration.utils.snapshot_manager import SnapshotManager
@@ -206,10 +210,10 @@ class VMService:
             self.logger.error(f"Error creating snapshot {snapshot_name}: {e}")
             return {'success': False, 'error': str(e)}
 
-    def _restore_snapshot(self, domain, snapshot_name: str) -> Dict[str, Any]:
+    def _restore_snapshot(self, domain: libvirt.virDomain, snapshot_name: str) -> Dict[str, Any]:
         """Restore VM from snapshot."""
         try:
-            snapshot = domain.snapshotLookupByName(snapshot_name)
+            snapshot: libvirt.virDomainSnapshot = domain.snapshotLookupByName(snapshot_name)
             domain.revertToSnapshot(snapshot)
             
             return {
@@ -221,10 +225,10 @@ class VMService:
             self.logger.error(f"Error restoring snapshot {snapshot_name}: {e}")
             return {'success': False, 'error': str(e)}
 
-    def _delete_snapshot(self, domain, snapshot_name: str) -> Dict[str, Any]:
+    def _delete_snapshot(self, domain: libvirt.virDomain, snapshot_name: str) -> Dict[str, Any]:
         """Delete a snapshot."""
         try:
-            snapshot = domain.snapshotLookupByName(snapshot_name)
+            snapshot: libvirt.virDomainSnapshot = domain.snapshotLookupByName(snapshot_name)
             snapshot.delete()
             
             return {
@@ -246,3 +250,38 @@ class VMService:
             return match.group(1) if match else ''
         except Exception:
             return ''
+
+"""
+VM Integration Service - Manages virtual machine environments for practice sessions.
+"""
+
+class VMIntegrationService:
+    """Service for integrating with VM environments for practical learning."""
+    
+    def __init__(self):
+        """Initialize VM integration service."""
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("VMIntegrationService initialized")
+        
+    def start_practice_session(self, user_id: int, challenge_type: str) -> Dict[str, Any]:
+        """
+        Start a VM-based practice session for a user.
+        
+        Args:
+            user_id: The ID of the user starting the session
+            challenge_type: The type of challenge to initialize
+            
+        Returns:
+            A dictionary containing session information including connection details
+        """
+        # Implementation details here
+        self.logger.info(f"Starting {challenge_type} practice session for user {user_id}")
+        return {
+            "session_id": f"session_{user_id}_{challenge_type}",
+            "vm_address": "192.168.1.100",
+            "connection_details": {
+                "protocol": "ssh",
+                "port": 22
+            },
+            "challenge_data": {}
+        }

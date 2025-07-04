@@ -8,6 +8,7 @@ import sys
 import time
 import json
 from datetime import datetime
+from typing import List, Any, Union, Optional, Set, Dict, Tuple, Callable, TypeVar, Protocol, Literal, cast, Generator, Iterator
 
 from utils.config import (
     COLOR_QUESTION, COLOR_OPTIONS, COLOR_OPTION_NUM, COLOR_CATEGORY,
@@ -20,13 +21,54 @@ from utils.config import (
     QUICK_FIRE_QUESTIONS, QUICK_FIRE_TIME_LIMIT, MINI_QUIZ_QUESTIONS
 )
 
+# Type definitions
+QuestionData = Tuple[str, List[str], int, str, str]  # question_text, options, correct_index, category, explanation
+T = TypeVar('T')
+CategoryType = str
+UserAnswer = Union[int, Literal['q', 's']]
+
+# Define a Protocol for game_logic to specify its expected interface
+class GameLogic(Protocol):
+    categories: Set[str]
+    questions: List[QuestionData]
+    score: int
+    total_questions_session: int
+    session_points: int
+    verify_session_answers: List[Tuple[QuestionData, int, bool]]
+    answered_indices_session: List[int]
+    quick_fire_active: bool
+    quick_fire_questions_answered: int
+    quick_fire_start_time: float
+    study_history: Dict[str, Any]
+    achievements: Dict[str, Any]
+    leaderboard: List[Dict[str, Any]]
+    last_daily_challenge_date: str
+    daily_challenge_completed: bool
+    POINTS_PER_CORRECT: int
+    POINTS_PER_INCORRECT: int
+    STREAK_BONUS_THRESHOLD: int
+    STREAK_BONUS_MULTIPLIER: float
+    
+    def save_history(self) -> None: ...
+    def save_achievements(self) -> None: ...
+    def update_history(self, question_text: str, category: str, is_correct: bool) -> None: ...
+    def update_points(self, points: int) -> None: ...
+    def check_achievements(self, is_correct: bool, streak: int) -> List[str]: ...
+    def get_achievement_description(self, badge: str) -> str: ...
+    def select_question(self, category_filter: Optional[str]) -> Tuple[Optional[QuestionData], int]: ...
+    def start_quick_fire_mode(self) -> None: ...
+    def end_quick_fire_mode(self, time_up: bool = False) -> None: ...
+    def check_quick_fire_status(self) -> bool: ...
+    def get_daily_challenge_question(self) -> Tuple[Optional[QuestionData], int]: ...
+    def update_leaderboard(self, score: int, total: int, points: int) -> None: ...
+    def _default_history(self) -> Dict[str, Any]: ...
 
 # --- CLI Helper Functions ---
-def cli_print_separator(char='-', length=60, color=COLOR_BORDER):
+def cli_print_separator(char: str = '-', length: int = 60, color: str = COLOR_BORDER) -> None:
     """Prints a colored separator line."""
     print(f"{color}{char * length}{COLOR_RESET}")
 
-def cli_print_welcome():
+def cli_print_welcome() -> None:
     """Prints the welcome message."""
     print(f"{COLOR_WELCOME_BORDER}{'=' * 60}{COLOR_RESET}")
     print(f"{COLOR_WELCOME_TITLE}Welcome to the Linux+ Study Game!{COLOR_RESET}")
@@ -34,26 +76,28 @@ def cli_print_welcome():
     print(f"{COLOR_WELCOME_BORDER}{'=' * 60}{COLOR_RESET}\n")
     print(f"{COLOR_INFO}Type 'help' for a list of commands.{COLOR_RESET}") 
 
-def cli_print_error(message):
+def cli_print_error(message: str) -> None:
     """Prints an error message in red."""
     print(f"{COLOR_ERROR}Error: {message}{COLOR_RESET}")
 
-def cli_print_info(message):
+def cli_print_info(message: str) -> None:
     """Prints an informational message in cyan."""
     print(f"{COLOR_INFO}{message}{COLOR_RESET}")
 
-def cli_print_warning(message):
+def cli_print_warning(message: str) -> None:
     """Prints a warning message in bold yellow."""
     print(f"{COLOR_WARNING}Warning: {message}{COLOR_RESET}")
 
-def cli_print_header(text, char='=', length=60, color=COLOR_HEADER):
+def cli_print_header(text: Any, char: str = '=', length: int = 60, color: str = COLOR_HEADER) -> None:
     """Prints a centered header with separators."""
     text_str = str(text)
     padding = (length - len(text_str) - 2) // 2
     if padding < 0: padding = 0
     print(f"{color}{char * padding} {text_str} {char * (length - len(text_str) - 2 - padding)}{COLOR_RESET}")
 
-def cli_print_box(lines, title="", width=60, border_color=COLOR_BORDER, title_color=COLOR_HEADER, text_color=COLOR_WELCOME_TEXT):
+def cli_print_box(lines: List[str], title: str = "", width: int = 60, 
+                 border_color: str = COLOR_BORDER, title_color: str = COLOR_HEADER, 
+                 text_color: str = COLOR_WELCOME_TEXT) -> None:
     """Prints text within a colored box."""
     border = f"{border_color}{'=' * width}{COLOR_RESET}"
     print(border)
@@ -83,15 +127,15 @@ def cli_print_box(lines, title="", width=60, border_color=COLOR_BORDER, title_co
 class LinuxPlusStudyCLI:
     """Handles the Command-Line Interface for the study game."""
     
-    def __init__(self, game_logic):
+    def __init__(self, game_logic: GameLogic):
         self.game_logic = game_logic
         self.current_streak = 0
 
-    def clear_screen(self):
+    def clear_screen(self) -> None:
         """Clear the terminal screen."""
         os.system('cls' if os.name == 'nt' else 'clear')
 
-    def display_welcome_message(self):
+    def display_welcome_message(self) -> None:
         """Displays the initial welcome screen for the CLI."""
         self.clear_screen()
         title = "LINUX+ STUDY GAME"
@@ -115,7 +159,7 @@ class LinuxPlusStudyCLI:
             self.game_logic.save_history()
             sys.exit(0)
 
-    def main_menu(self):
+    def main_menu(self) -> None:
         """Display the main menu and handle user choices for CLI."""
         while True:
             self.clear_screen()
@@ -183,7 +227,7 @@ class LinuxPlusStudyCLI:
             elif choice == '15':
                 self.clear_stats()
 
-    def display_question(self, question_data, question_num=None, total_questions=None):
+    def display_question(self, question_data: QuestionData, question_num: Optional[int] = None, total_questions: Optional[int] = None) -> None:
         """Display the question and options with enhanced CLI formatting."""
         if len(question_data) < 5:
             cli_print_error("Invalid question data format.")
@@ -203,7 +247,7 @@ class LinuxPlusStudyCLI:
         cli_print_separator(length=40, color=COLOR_BORDER + C["dim"])
         print()
 
-    def get_user_answer(self, num_options):
+    def get_user_answer(self, num_options: int) -> UserAnswer:
         """Get and validate user input for CLI with better prompting."""
         while True:
             try:
@@ -228,7 +272,7 @@ class LinuxPlusStudyCLI:
                 print(f"\n{COLOR_WARNING} Session interrupted by user. Quitting session. {COLOR_RESET}")
                 return 'q'
 
-    def show_feedback(self, question_data, user_answer_index, original_index):
+    def show_feedback(self, question_data: QuestionData, user_answer_index: int, original_index: int) -> None:
         """Show feedback based on the user's answer with enhanced CLI formatting."""
         if len(question_data) < 5:
             cli_print_error("Invalid question data format for feedback.")
@@ -306,11 +350,11 @@ class LinuxPlusStudyCLI:
         except KeyboardInterrupt:
             print(f"\n{COLOR_WARNING} Interrupted. Continuing... {COLOR_RESET}")
 
-    def select_category(self):
+    def select_category(self) -> Optional[Union[str, Literal['b']]]:
         """Allow the user to select a category to focus on, using enhanced CLI."""
         self.clear_screen()
         cli_print_header("Select a Category")
-        sorted_categories = sorted(list(self.game_logic.categories))
+        sorted_categories: List[str] = sorted(list(self.game_logic.categories))
         if not sorted_categories:
             cli_print_error("No categories found!")
             time.sleep(2)
@@ -343,7 +387,7 @@ class LinuxPlusStudyCLI:
                 print(f"\n{COLOR_WARNING} Interrupted. Returning to main menu. {COLOR_RESET}")
                 return 'b'
 
-    def _handle_daily_challenge(self):
+    def _handle_daily_challenge(self) -> None:
         """Handle daily challenge from CLI menu."""
         self.clear_screen()
         cli_print_header("🗓️ Daily Challenge")
@@ -401,7 +445,7 @@ class LinuxPlusStudyCLI:
             cli_print_info("Today's daily challenge is currently unavailable.")
             time.sleep(2)
 
-    def _handle_pop_quiz(self):
+    def _handle_pop_quiz(self) -> None:
         """Handle random pop quiz from CLI menu."""
         question_data, original_index = self.game_logic.select_question(None)
         if question_data:
@@ -414,7 +458,7 @@ class LinuxPlusStudyCLI:
             print(f"{COLOR_WARNING}No questions available for pop quiz.{COLOR_RESET}")
             time.sleep(2)
 
-    def run_quiz(self, category_filter=None, mode=QUIZ_MODE_STANDARD):
+    def run_quiz(self, category_filter: Optional[str] = None, mode: str = QUIZ_MODE_STANDARD) -> None:
         """Run the main quiz loop for the CLI with enhanced display and modes."""
         self.game_logic.score = 0
         self.game_logic.total_questions_session = 0
@@ -600,7 +644,7 @@ class LinuxPlusStudyCLI:
         except (EOFError, KeyboardInterrupt):
             print(f"\n{COLOR_WARNING} Returning to menu... {COLOR_RESET}")
 
-    def show_verify_results(self):
+    def show_verify_results(self) -> None:
         """Displays the results after a 'Verify Knowledge' session."""
         self.clear_screen()
         cli_print_header("Verification Results")
@@ -643,7 +687,7 @@ class LinuxPlusStudyCLI:
                 cli_print_separator(char='.', length=50, color=COLOR_BORDER + C["dim"])
             else:
                 cli_print_error("Error displaying details for this question: Invalid index.")
-    def show_progress_summary(self):
+    def show_progress_summary(self) -> None:
         """Show gamification progress summary."""
         print(f"\n{COLOR_HEADER}📊 Progress Summary{COLOR_RESET}")
         print(f"  {COLOR_STATS_LABEL}Session Points: {COLOR_STATS_VALUE}{self.game_logic.session_points}{COLOR_RESET}")
@@ -656,7 +700,7 @@ class LinuxPlusStudyCLI:
             for badge in self.game_logic.achievements["badges"]:
                 print(f"    {self.game_logic.get_achievement_description(badge)}")
 
-    def show_leaderboard(self):
+    def show_leaderboard(self) -> None:
         """Display the leaderboard."""
         print(f"\n{COLOR_HEADER}🏆 Personal Leaderboard (Top Sessions){COLOR_RESET}")
         if not self.game_logic.leaderboard:
@@ -676,7 +720,7 @@ class LinuxPlusStudyCLI:
             
             print(f"  {COLOR_STATS_VALUE}{str(i).rjust(4)}{COLOR_RESET} │ {date_str} │ {COLOR_STATS_VALUE}{score_str.rjust(8)}{COLOR_RESET} │ {acc_color}{accuracy_str.rjust(8)}{COLOR_RESET} │ {COLOR_STATS_VALUE}{points_str.rjust(7)}{COLOR_RESET}")
 
-    def show_achievements_and_leaderboard(self):
+    def show_achievements_and_leaderboard(self) -> None:
         """Display achievements and leaderboard in one view."""
         self.clear_screen()
         cli_print_header("Achievements & Leaderboard")
@@ -719,7 +763,7 @@ class LinuxPlusStudyCLI:
         except (EOFError, KeyboardInterrupt):
             print(f"\n{COLOR_WARNING} Returning to menu... {COLOR_RESET}")
 
-    def show_stats(self):
+    def show_stats(self) -> None:
         """Display overall and category-specific statistics with enhanced CLI formatting."""
         self.clear_screen()
         cli_print_header("Study Statistics")
@@ -766,11 +810,11 @@ class LinuxPlusStudyCLI:
         if not attempted_questions:
             print(f"  {COLOR_EXPLANATION}No specific question data recorded yet (or no attempts made).{COLOR_RESET}")
         else:
-            def sort_key(item):
+            def sort_key(item: Tuple[str, Dict[str, Any]]) -> Tuple[float, int]:
                 q_text, stats = item
                 attempts = stats.get("attempts", 0)
                 correct = stats.get("correct", 0)
-                accuracy = correct / attempts
+                accuracy = correct / attempts if attempts > 0 else 0
                 return (accuracy, -attempts)
 
             sorted_questions = sorted(attempted_questions.items(), key=sort_key)
@@ -804,7 +848,7 @@ class LinuxPlusStudyCLI:
         except KeyboardInterrupt:
             print(f"\n{COLOR_WARNING} Interrupted. Returning to menu... {COLOR_RESET}")
 
-    def review_incorrect_answers(self):
+    def review_incorrect_answers(self) -> None:
         """Allows the user to review questions they previously answered incorrectly (CLI - Basic View)."""
         self.clear_screen()
         cli_print_header("Review Incorrect Answers")
@@ -984,7 +1028,7 @@ class LinuxPlusStudyCLI:
         if history_changed:
             self.game_logic.save_history()
 
-    def clear_stats(self):
+    def clear_stats(self) -> None:
         """Clear all stored statistics after confirmation with enhanced CLI."""
         self.clear_screen()
         cli_print_header("Clear Statistics", char='!', color=COLOR_ERROR)
@@ -1014,7 +1058,7 @@ class LinuxPlusStudyCLI:
         except (EOFError, KeyboardInterrupt):
             print(f"\n{COLOR_WARNING} Returning to menu... {COLOR_RESET}")
 
-    def export_study_data(self):
+    def export_study_data(self) -> None:
         """Exports study history data (JSON export)."""
         self.clear_screen()
         cli_print_header("Export Study Data (History)")
@@ -1053,7 +1097,7 @@ class LinuxPlusStudyCLI:
         except (EOFError, KeyboardInterrupt):
             print(f"\n{COLOR_WARNING} Returning to menu... {COLOR_RESET}")
 
-    def export_questions_answers_md(self):
+    def export_questions_answers_md(self) -> None:
         """Exports all loaded questions and answers to a Markdown file."""
         self.clear_screen()
         cli_print_header("Export Questions & Answers to Markdown")
@@ -1138,7 +1182,7 @@ class LinuxPlusStudyCLI:
         except (EOFError, KeyboardInterrupt):
             print(f"\n{COLOR_WARNING} Returning to menu... {COLOR_RESET}")
 
-    def export_questions_answers_json(self):
+    def export_questions_answers_json(self) -> None:
         """Exports all loaded questions and answers to a JSON file."""
         self.clear_screen()
         cli_print_header("Export Questions & Answers to JSON")

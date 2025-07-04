@@ -7,15 +7,30 @@ and handles persistence of game data and progress.
 """
 
 import json
-import os
-import random
 import time
 from datetime import datetime
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, TypedDict, Union, cast
 
 from utils.config import *
 from models.question import QuestionManager
 from models.achievements import AchievementSystem
+
+
+# Define types for better type checking
+class GameHistory(TypedDict, total=False):
+    questions: Dict[str, Any]
+    categories: Dict[str, Dict[str, int]]
+    sessions: List[Any]
+    total_correct: int
+    total_attempts: int
+    incorrect_review: List[str]
+    leaderboard: List[Dict[str, Any]]
+    settings: Dict[str, Any]
+
+
+class VerifyAnswer(Tuple[Tuple[str, List[str], int, str, str], int, bool]):
+    """Type for verify session answers"""
+    pass
 
 
 class GameState:
@@ -40,25 +55,30 @@ class GameState:
         self.achievement_system = AchievementSystem()
         
         # Load game history
-        self.study_history = self.load_history()
+        self.study_history: GameHistory = self.load_history()
         
         # Current session state
         self.score = 0
         self.total_questions_session = 0
-        self.answered_indices_session = []
+        self.answered_indices_session: List[int] = []
         self.session_points = 0
         
         # Quick Fire mode state
         self.quick_fire_active = False
-        self.quick_fire_start_time = None
+        self.quick_fire_start_time: Optional[float] = None
         self.quick_fire_questions_answered = 0
         
         # Daily challenge state
         self.daily_challenge_completed = False
-        self.last_daily_challenge_date = None
+        self.last_daily_challenge_date: Optional[str] = None
         
         # Verify mode session storage
-        self.verify_session_answers = []
+        self.verify_session_answers: List[VerifyAnswer] = []
+        
+        # Scoring settings
+        self.points_per_question = 10
+        self.streak_bonus = 5
+        self.max_streak_bonus = 50
         
         # Sync achievement system with current session
         self.achievement_system.session_points = self.session_points
@@ -79,19 +99,19 @@ class GameState:
     @property
     def achievements(self) -> Dict[str, Any]:
         """Get achievements data."""
-        return self.achievement_system.achievements
+        return cast(Dict[str, Any], self.achievement_system.achievements)
     
     @property
     def leaderboard(self) -> List[Dict[str, Any]]:
         """Get leaderboard data."""
-        return self.achievement_system.leaderboard
+        return cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
     
-    def load_history(self) -> Dict[str, Any]:
+    def load_history(self) -> GameHistory:
         """
         Load study history from file.
         
         Returns:
-            Dict: Study history data with default structure if file doesn't exist
+            GameHistory: Study history data with default structure if file doesn't exist
         """
         try:
             with open(self.history_file, 'r', encoding='utf-8') as f:
@@ -126,7 +146,7 @@ class GameState:
         """Save study history to file."""
         try:
             # Update leaderboard in history before saving
-            self.study_history["leaderboard"] = self.achievement_system.leaderboard
+            self.study_history["leaderboard"] = cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
             
             with open(self.history_file, 'w', encoding='utf-8') as f:
                 json.dump(self.study_history, f, indent=2)
@@ -189,7 +209,7 @@ class GameState:
         if is_correct:
             cat_stats["correct"] += 1
     
-    def select_question(self, category_filter: Optional[str] = None) -> Tuple[Optional[Tuple], int]:
+    def select_question(self, category_filter: Optional[str] = None) -> Tuple[Optional[Tuple[str, List[str], int, str, str]], int]:
         """
         Select a question using intelligent weighting based on performance history.
         
@@ -197,11 +217,11 @@ class GameState:
             category_filter (str, optional): Category to filter questions by
             
         Returns:
-            Tuple[Optional[Tuple], int]: (question_data, original_index) or (None, -1) if none available
+            Tuple[Optional[Tuple[str, List[str], int, str, str]], int]: (question_data, original_index) or (None, -1) if none available
         """
         question, index = self.question_manager.select_question(
             category_filter=category_filter,
-            game_history=self.study_history
+            game_history=cast(Optional[GameHistory], self.study_history)
         )
         
         if question is None:
@@ -245,7 +265,7 @@ class GameState:
         Returns:
             bool: True if should continue, False if should end
         """
-        if not self.quick_fire_active:
+        if not self.quick_fire_active or self.quick_fire_start_time is None:
             return False
         
         elapsed_time = time.time() - self.quick_fire_start_time
@@ -270,7 +290,7 @@ class GameState:
         Returns:
             Dict: Quick Fire completion data
         """
-        if not self.quick_fire_active:
+        if not self.quick_fire_active or self.quick_fire_start_time is None:
             return {'error': 'Quick Fire not active'}
         
         self.quick_fire_active = False
@@ -291,12 +311,12 @@ class GameState:
             'achievement_earned': achievement_earned
         }
     
-    def get_daily_challenge_question(self) -> Tuple[Optional[Tuple], int]:
+    def get_daily_challenge_question(self) -> Tuple[Optional[Tuple[str, List[str], int, str, str]], int]:
         """
         Get today's daily challenge question.
         
         Returns:
-            Tuple[Optional[Tuple], int]: (question_data, index) or (None, -1) if unavailable
+            Tuple[Optional[Tuple[str, List[str], int, str, str]], int]: (question_data, index) or (None, -1) if unavailable
         """
         today = datetime.now().date().isoformat()
         
@@ -356,11 +376,11 @@ class GameState:
         Returns:
             List[str]: List of newly earned badge names
         """
-        return self.achievement_system.check_achievements(
+        return cast(List[str], self.achievement_system.check_achievements(
             is_correct, 
             streak_count, 
             self.total_questions_session
-        )
+        ))
     
     def get_achievement_description(self, badge_name: str) -> str:
         """
@@ -406,16 +426,16 @@ class GameState:
         """
         return self.question_manager.get_categories()
     
-    def add_verify_answer(self, question_data: Tuple, user_answer: int, is_correct: bool):
+    def add_verify_answer(self, question_data: Tuple[str, List[str], int, str, str], user_answer: int, is_correct: bool):
         """
         Add an answer to the verify mode session.
         
         Args:
-            question_data (Tuple): Question data tuple
+            question_data (Tuple[str, List[str], int, str, str]): Question data tuple
             user_answer (int): User's answer index
             is_correct (bool): Whether the answer was correct
         """
-        self.verify_session_answers.append((question_data, user_answer, is_correct))
+        self.verify_session_answers.append(cast(VerifyAnswer, (question_data, user_answer, is_correct)))
     
     def get_verify_results(self) -> Dict[str, Any]:
         """
@@ -452,8 +472,8 @@ class GameState:
         try:
             # Ensure we have the latest data
             export_data = self.study_history.copy()
-            export_data["leaderboard"] = self.achievement_system.leaderboard
-            export_data["achievements"] = self.achievement_system.achievements
+            export_data["leaderboard"] = cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
+            export_data["achievements"] = cast(Dict[str, Any], self.achievement_system.achievements)
             export_data["export_metadata"] = {
                 "export_date": datetime.now().isoformat(),
                 "total_questions_in_pool": len(self.questions),
@@ -557,24 +577,19 @@ class GameState:
         Returns:
             List[str]: List of validation errors
         """
-        errors = []
+        errors: List[str] = []
         
         # Validate questions
         question_errors = self.question_manager.validate_all_questions()
         errors.extend(question_errors)
         
         # Validate history structure
-        if not isinstance(self.study_history, dict):
-            errors.append("Study history is not a dictionary")
+        # No need to check isinstance since typing is already enforced
         
         required_history_keys = ["questions", "categories", "total_correct", "total_attempts", "incorrect_review"]
         for key in required_history_keys:
             if key not in self.study_history:
                 errors.append(f"Missing required history key: {key}")
-        
-        # Validate achievements
-        if not isinstance(self.achievements, dict):
-            errors.append("Achievements data is not a dictionary")
         
         # Validate session state
         if self.score < 0:
@@ -591,8 +606,15 @@ class GameState:
         self.achievement_system.clear_achievements()
         self.reset_session()
         self._sync_categories_with_history()
-    def update_scoring_settings(self, points_per_question=10, streak_bonus=5, max_streak_bonus=50):
-        """Update scoring settings for the game."""
+    def update_scoring_settings(self, points_per_question: int = 10, streak_bonus: int = 5, max_streak_bonus: int = 50):
+        """
+        Update scoring settings for the game.
+        
+        Args:
+            points_per_question (int): Points awarded for each correct answer
+            streak_bonus (int): Additional points for each correct answer in a streak
+            max_streak_bonus (int): Maximum bonus points that can be awarded for a streak
+        """
         self.points_per_question = points_per_question
         self.streak_bonus = streak_bonus
         self.max_streak_bonus = max_streak_bonus

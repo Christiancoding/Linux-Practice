@@ -10,9 +10,21 @@ import json
 import random
 import os
 from datetime import datetime
-from typing import List, Tuple, Optional, Dict, Any
+from typing import List, Tuple, Optional, Dict, Any, TypeVar, Union, cast, Set, TypedDict
+
 from utils.config import SAMPLE_QUESTIONS
 
+# Define a type alias for the question tuple structure
+QuestionTuple = Tuple[str, List[str], int, str, str]
+
+# TypedDict for question statistics
+class QuestionStats(TypedDict, total=False):
+    correct: int
+    attempts: int
+
+# TypedDict for game history
+class GameHistory(TypedDict, total=False):
+    questions: Dict[str, QuestionStats]
 
 class Question:
     """Represents a single quiz question."""
@@ -38,7 +50,7 @@ class Question:
         # Validate the question data
         self._validate()
     
-    def _validate(self):
+    def _validate(self) -> None:
         """Validate question data integrity."""
         if not self.text or not self.text.strip():
             raise ValueError("Question text cannot be empty")
@@ -57,7 +69,7 @@ class Question:
             if not option or not option.strip():
                 raise ValueError(f"Option {i} cannot be empty")
     
-    def to_tuple(self) -> Tuple[str, List[str], int, str, str]:
+    def to_tuple(self) -> QuestionTuple:
         """
         Convert question to tuple format for backwards compatibility.
         
@@ -82,7 +94,8 @@ class Question:
         }
     
     @classmethod
-    def from_tuple(cls, question_tuple: Tuple) -> 'Question':
+    def from_tuple(cls, question_tuple: Union[Tuple[str, List[str], int, str], 
+                                            Tuple[str, List[str], int, str, str]]) -> 'Question':
         """
         Create Question from tuple format.
         
@@ -95,11 +108,11 @@ class Question:
         if len(question_tuple) < 4:
             raise ValueError(f"Question tuple must have at least 4 elements, got {len(question_tuple)}")
         
-        text = question_tuple[0]
-        options = question_tuple[1]
-        correct_index = question_tuple[2]
-        category = question_tuple[3]
-        explanation = question_tuple[4] if len(question_tuple) > 4 else ""
+        text: str = question_tuple[0]
+        options: List[str] = question_tuple[1]
+        correct_index: int = question_tuple[2]
+        category: str = question_tuple[3]
+        explanation: str = question_tuple[4] if len(question_tuple) > 4 else ""
         
         return cls(text, options, correct_index, category, explanation)
     
@@ -175,7 +188,7 @@ class QuestionManager:
     def __init__(self):
         """Initialize the question manager."""
         self.questions: List[Question] = []
-        self.categories: set = set()
+        self.categories: Set[str] = set()
         self.answered_indices_session: List[int] = []
         
         # Load questions from various sources
@@ -277,10 +290,10 @@ class QuestionManager:
         Returns:
             List[Question]: List of loaded questions
         """
-        questions = []
+        questions: List[Question] = []
         
         with open(filename, 'r', encoding='utf-8') as f:
-            data = json.load(f)
+            data: Union[List[Any], Dict[str, Any]] = json.load(f)
         
         # Handle different JSON formats
         if isinstance(data, list):
@@ -288,7 +301,9 @@ class QuestionManager:
             for item in data:
                 try:
                     if isinstance(item, (list, tuple)):
-                        question = Question.from_tuple(item)
+                        # Convert to the expected tuple type for from_tuple
+                        question = Question.from_tuple(cast(Union[Tuple[str, List[str], int, str], 
+                                                        Tuple[str, List[str], int, str, str]], item))
                     elif isinstance(item, dict):
                         question = Question.from_dict(item)
                     else:
@@ -308,7 +323,9 @@ class QuestionManager:
                         if isinstance(item, dict):
                             question = Question.from_dict(item)
                         else:
-                            question = Question.from_tuple(item)
+                            # Convert to the expected tuple type
+                            question = Question.from_tuple(cast(Union[Tuple[str, List[str], int, str], 
+                                                            Tuple[str, List[str], int, str, str]], item))
                         questions.append(question)
                     except ValueError as e:
                         print(f"Warning: Invalid question in file {filename}: {e}")
@@ -340,7 +357,7 @@ class QuestionManager:
         return sorted(list(self.categories))
     
     def select_question(self, category_filter: Optional[str] = None, 
-                       game_history: Optional[Dict] = None) -> Tuple[Optional[Question], int]:
+                       game_history: Optional[GameHistory] = None) -> Tuple[Optional[Question], int]:
         """
         Select a question using intelligent weighting based on performance history.
         
@@ -383,7 +400,7 @@ class QuestionManager:
         return self.questions[chosen_index], chosen_index
     
     def _select_weighted_question(self, available_indices: List[int], 
-                                 game_history: Dict) -> int:
+                                 game_history: GameHistory) -> int:
         """
         Select question using performance-based weighting.
         
@@ -394,25 +411,25 @@ class QuestionManager:
         Returns:
             int: Selected question index
         """
-        weights = []
-        question_history = game_history.get("questions", {})
+        weights: List[float] = []
+        question_history: Dict[str, QuestionStats] = game_history.get("questions", {})
         
         for q_idx in available_indices:
             if q_idx < 0 or q_idx >= len(self.questions):
                 continue  # Safety check
             
             question = self.questions[q_idx]
-            q_stats = question_history.get(question.text, {"correct": 0, "attempts": 0})
+            q_stats: QuestionStats = question_history.get(question.text, {"correct": 0, "attempts": 0})
             
-            attempts = q_stats.get("attempts", 0)
-            correct = q_stats.get("correct", 0)
+            attempts: int = q_stats.get("attempts", 0)
+            correct: int = q_stats.get("correct", 0)
             
             # Calculate accuracy (default to 50% for unasked questions)
-            accuracy = (correct / attempts) if attempts > 0 else 0.5
+            accuracy: float = (correct / attempts) if attempts > 0 else 0.5
             
             # Weight calculation: favor incorrect answers and less attempted questions
             # Higher weight for lower accuracy and fewer attempts
-            weight = (1.0 - accuracy) * 10 + (1.0 / (attempts + 1)) * 3
+            weight: float = (1.0 - accuracy) * 10 + (1.0 / (attempts + 1)) * 3
             weights.append(max(0.1, weight))  # Ensure minimum weight
         
         # Weighted random selection
@@ -600,7 +617,7 @@ class QuestionManager:
         Returns:
             List[str]: List of validation error messages
         """
-        errors = []
+        errors: List[str] = []
         
         for i, question in enumerate(self.questions):
             try:

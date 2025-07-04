@@ -6,7 +6,7 @@ and integration with modern learning algorithms.
 """
 
 import logging
-from typing import Optional, Dict, List, Any
+from typing import Dict, List, Any
 from services.vm_service import VMIntegrationService
 
 logger = logging.getLogger(__name__)
@@ -24,7 +24,7 @@ class PracticeController:
         """Get available practice modes including VM environments."""
         return ["quiz", "flashcards", "vm_practice", "simulation"]
     
-    def start_vm_practice(self, user_id: int, challenge_type: str) -> Any:
+    def start_vm_practice(self, user_id: int, challenge_type: str) -> Dict[str, Any]:
         """Start VM-based practice session."""
         try:
             return self.vm_service.start_practice_session(user_id, challenge_type)
