@@ -578,7 +578,7 @@ class ChallengeManager:
             challenge: The challenge data dictionary
             challenge_id: The challenge identifier
         """
-        if RICH_AVAILABLE:
+        if RICH_AVAILABLE and Table is not None and Panel is not None and Markdown is not None:
             # Create detailed challenge information display
             info_table = Table.grid(padding=(0, 2))
             info_table.add_column(style="bold")
@@ -598,7 +598,7 @@ class ChallengeManager:
             
             # Display description
             description = challenge.get('description', 'No description provided.')
-            description_content = Markdown(description) if RICH_AVAILABLE else description
+            description_content = Markdown(description)
             console.print(Panel(description_content, title="Objective", border_style="cyan"))
         else:
             # Fallback display
