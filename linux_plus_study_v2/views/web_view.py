@@ -21,7 +21,10 @@ import atexit
 from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
-from vm_integration.utils.vm_manager import VMManager
+try:
+    from vm_integration.utils.vm_manager import VMManager
+except ImportError:
+    VMManager = None
 from vm_integration.utils.ssh_manager import SSHManager
 try:
     import libvirt  # type: ignore
@@ -1894,6 +1897,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/list', methods=['GET'])
         def api_vm_list():
             """API endpoint to list all VMs with enhanced error handling."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 # Check if libvirt is available
                 try:

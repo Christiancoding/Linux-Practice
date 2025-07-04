@@ -49,7 +49,7 @@ class PracticeToolError(Exception):
             base_msg += f" (Context: {context_info})"
         
         return base_msg
-class LibvirtConnectionError(PracticeToolError):
+class LibvirtConnectionError(PracticeToolError, Exception):
     """
     Raised when libvirt connection establishment fails.
     
@@ -78,7 +78,7 @@ class LibvirtConnectionError(PracticeToolError):
         self.original_error = original_error
 
 
-class NetworkError(PracticeToolError):
+class NetworkError(PracticeToolError, Exception):
     """
     Raised when network-related operations fail.
     
@@ -186,7 +186,7 @@ class AgentCommandError(PracticeToolError):
         self.vm_name = vm_name
         self.agent_error = agent_error
 
-class VMNotFoundError(PracticeToolError):
+class VMNotFoundError(PracticeToolError, Exception):
     """
     Raised when a specified virtual machine cannot be found in libvirt.
     
@@ -396,7 +396,6 @@ def format_exception_for_user(exception: Exception) -> str:
         return exception.get_detailed_report()
     else:
         return f"Unexpected error: {exception}"
-
 
 # Export all exception classes
 __all__ = [
