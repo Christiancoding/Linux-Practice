@@ -204,8 +204,9 @@ class SnapshotManager:
                     success_count += 1
                     
                 except subprocess.CalledProcessError as e:
-                    console.print(f"[red]Failed to fix permissions for {file_path}: {e}[/]")
-                    self.logger.error(f"Permission fix failed for {file_path}: {e}")
+                    path_str = str(issue.get('path', 'unknown path'))
+                    console.print(f"[red]Failed to fix permissions for {path_str}: {e}[/]")
+                    self.logger.error(f"Permission fix failed for {path_str}: {e}")
             
             if success_count == len(permission_issues):
                 console.print(f"[green]Successfully fixed all {success_count} permission issues.[/]")
