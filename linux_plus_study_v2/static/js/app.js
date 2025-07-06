@@ -523,16 +523,24 @@ function exportQuestionsJSON() {
 }
 
 function updateQuestionCount() {
+    const questionCountElement = document.getElementById('question-count');
+    
+    // Only proceed if the element exists
+    if (!questionCountElement) {
+        console.log('Element with ID "question-count" not found in the DOM');
+        return;
+    }
+    
     fetch('/api/question-count')
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                document.getElementById('question-count').textContent = data.count;
+                questionCountElement.textContent = data.count;
             }
         })
         .catch(error => {
             console.error('Error fetching question count:', error);
-            document.getElementById('question-count').textContent = 'Unknown';
+            questionCountElement.textContent = 'Unknown';
         });
 }
 

@@ -141,6 +141,9 @@ function endBreak() {
 }
 
 function acknowledgeBreak() {
+    // Move focus outside the modal before hiding it
+    document.getElementById('quiz-card').focus();
+    
     const modal = bootstrap.Modal.getInstance(document.getElementById('breakReminderModal'));
     if (modal) {
         modal.hide();
@@ -362,6 +365,8 @@ function submitAnswer() {
 
             if (data.session_complete || isSingleQuestionMode) {
                 clearInterval(quickFireTimer);
+                quickFireTimer = null;
+                
                 setTimeout(() => {
                     showQuizComplete(data);
                 }, isSingleQuestionMode ? 3000 : 2000); // Longer delay for single question feedback
@@ -422,25 +427,10 @@ function showFeedback(data) {
 function nextQuestion() {
     loadNextQuestion();
 }
-
 function endQuiz() {
     if (confirm('Are you sure you want to end the quiz?')) {
         clearInterval(quickFireTimer);
-        fetch('/api/end_quiz', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showQuizResults(data);
-                } else {
-                    showError(data.error || 'Failed to end quiz');
-                }
-            })
-            .catch(error => {
-                console.error('Error ending quiz:', error);
-                showError('Failed to end quiz');
-            });
+        handleQuizEnd();
     }
 }
 
@@ -450,28 +440,32 @@ function showQuizComplete(data = null) {
     if (data) {
         showQuizResults(data);
     } else {
-        fetch('/api/end_quiz', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(resultsData => {
-                showQuizResults(resultsData);
-            })
-            .catch(error => {
-                console.error('Error getting quiz results:', error);
-                showError('Failed to get quiz results');
-            });
+        handleQuizEnd();
     }
 }
 
-function showQuizResults(data) {
-    exitQuizFullscreen();
-    let modeTitle = 'Quiz Complete!';
-    let modeEmoji = '🎉';
+// Centralized function to handle ending the quiz and showing results
+function handleQuizEnd() {
+    fetch('/api/end_quiz', {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(resultsData => {
+            showQuizResults(resultsData);
+        })
+        .catch(error => {
+            console.error('Error getting quiz results:', error);
+            showError('Failed to get quiz results');
+        });
+}
 
+function showQuizResults(data) {
+    let modeTitle = 'Quiz Complete!';
+    let modeEmoji = '🎯';
+    
     switch (currentMode) {
         case 'quick_fire':
-            modeTitle = 'Quick Fire Complete!';
+            modeTitle = 'Quick Fire Challenge Complete!';
             modeEmoji = '⚡';
             break;
         case 'daily_challenge':
@@ -484,11 +478,26 @@ function showQuizResults(data) {
             break;
     }
 
+    // Set default values or calculate if missing
+    const sessionScore = data?.session_score ?? 0;
+    const sessionTotal = data?.session_total ?? 0;
+    const sessionPoints = data?.session_points ?? 0;
+    
+    // Calculate accuracy if not provided
+    let accuracy = data?.accuracy;
+    if (accuracy === undefined && sessionTotal > 0) {
+        accuracy = (sessionScore / sessionTotal) * 100;
+    } else if (accuracy === undefined) {
+        accuracy = 0;
+    }
+    
+    const accuracyDisplay = typeof accuracy === 'number' ? accuracy.toFixed(1) : '0.0';
+
     const resultsHtml = `
         <div class="alert alert-info text-center">
             <h4>${modeEmoji} ${modeTitle}</h4>
-            <p>Final Score: ${data.session_score} / ${data.session_total} (${data.accuracy.toFixed(1)}%)</p>
-            <p>Points Earned: ${data.session_points}</p>
+            <p>Final Score: ${sessionScore} / ${sessionTotal} (${accuracyDisplay}%)</p>
+            <p>Points Earned: ${sessionPoints}</p>
             <button class="btn btn-primary" onclick="window.location.href='/'">Return to Home</button>
         </div>
     `;
