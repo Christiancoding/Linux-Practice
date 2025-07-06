@@ -35,22 +35,24 @@ except ImportError:
 # Add proper type imports
 from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal, Protocol
 
-# Define DatabasePoolManager type for typing purposes
-class DatabasePoolManager:
-    """Type stub for DatabasePoolManager."""
-    db_type: str
-    def get_pool_status(self) -> Dict[str, Any]: ...
-    scoped_session_factory: Any = None
-
 try:
-    from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections
+    from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections, DatabasePoolManager
 except ImportError as e:
     logging.error(f"Database utilities import failed: {e}")
+    # Import the real DatabasePoolManager for type hints
+    from typing import TYPE_CHECKING
+    if TYPE_CHECKING:
+        from utils.database import DatabasePoolManager
+        from controllers.stats_controller import DetailedStatistics, FormattedLeaderboardEntry, ReviewQuestionsData
+    
     # Define fallback functions with proper type annotations
-    def initialize_database_pool(db_type: str = "sqlite", enable_pooling: bool = True) -> Optional[DatabasePoolManager]:
+    def initialize_database_pool(db_type: str = "sqlite", enable_pooling: bool = True) -> "DatabasePoolManager":
+        # This will never actually return None in practice, but we need to satisfy the type checker
+        raise ImportError("Database utilities not available")
+    
+    def get_database_manager() -> Optional["DatabasePoolManager"]:
         return None
-    def get_database_manager() -> Optional[DatabasePoolManager]:
-        return None
+    
     def cleanup_database_connections() -> None:
         pass
 
@@ -62,7 +64,7 @@ from typing import Any, Dict, Optional
 
 cli_playground = get_cli_playground()
 
-def setup_database_for_web() -> Optional[DatabasePoolManager]:
+def setup_database_for_web() -> Optional["DatabasePoolManager"]:
     """Initialize database connection pooling for web mode."""
     try:
         # Determine database type from configuration or environment
@@ -83,6 +85,9 @@ def setup_database_for_web() -> Optional[DatabasePoolManager]:
             print("Database manager not initialized")
             
         return db_manager
+    except ImportError:
+        print("Database utilities not available - running without connection pooling")
+        return None
     except Exception as e:
         print(f"Failed to setup database pooling: {e}")
         return None
@@ -90,11 +95,11 @@ def setup_database_for_web() -> Optional[DatabasePoolManager]:
 # Add this class definition after the other type definitions
 class StatsControllerProtocol(Protocol):
     """Protocol defining the interface for StatsController."""
-    def get_detailed_statistics(self) -> Dict[str, Any]: ...
-    def get_achievements_data(self) -> Dict[str, Any]: ...
-    def get_leaderboard_data(self) -> Dict[str, Any]: ...
+    def get_detailed_statistics(self) -> "DetailedStatistics": ...
+    def get_achievements_data(self) -> Dict[str, Union[List[Any], Dict[str, Any], int]]: ...
+    def get_leaderboard_data(self) -> List[Any]: ...
     def clear_statistics(self) -> bool: ...
-    def get_review_questions_data(self) -> Dict[str, Any]: ...
+    def get_review_questions_data(self) -> Dict[str, Union[bool, List[Any]]]: ...
     def remove_from_review_list(self, question_text: str) -> bool: ...
 
 class LinuxPlusStudyWeb:

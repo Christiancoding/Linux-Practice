@@ -56,7 +56,7 @@ let isSingleQuestionMode = false;
 
 function showBreakReminder(questionsSinceBreak, breakInterval) {
     const modalHtml = `
-        <div class="modal fade" id="breakReminderModal" tabindex="-1" aria-labelledby="breakReminderModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal fade" id="breakReminderModal" tabindex="-1" aria-labelledby="breakReminderModalLabel" data-bs-backdrop="static" data-bs-keyboard="false">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content bg-dark">
                     <div class="modal-header border-secondary">
@@ -96,7 +96,29 @@ function showBreakReminder(questionsSinceBreak, breakInterval) {
     }
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modal = new bootstrap.Modal(document.getElementById('breakReminderModal'));
+    const modalElement = document.getElementById('breakReminderModal');
+    const modal = new bootstrap.Modal(modalElement);
+    
+    // Handle modal events for accessibility
+    modalElement.addEventListener('shown.bs.modal', function() {
+        // Remove aria-hidden when modal is shown
+        modalElement.removeAttribute('aria-hidden');
+        // Set focus to the first button for better accessibility
+        const firstButton = modalElement.querySelector('.btn');
+        if (firstButton) {
+            firstButton.focus();
+        }
+    });
+    
+    modalElement.addEventListener('hidden.bs.modal', function() {
+        // Clean up modal from DOM after hiding
+        setTimeout(() => {
+            if (modalElement.parentElement) {
+                modalElement.remove();
+            }
+        }, 150);
+    });
+    
     modal.show();
 }
 
@@ -141,21 +163,30 @@ function endBreak() {
 }
 
 function acknowledgeBreak() {
-    // Move focus outside the modal before hiding it
-    document.getElementById('quiz-card').focus();
+    const modalElement = document.getElementById('breakReminderModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
     
-    const modal = bootstrap.Modal.getInstance(document.getElementById('breakReminderModal'));
-    if (modal) {
+    if (modal && modalElement) {
+        // Before hiding modal, ensure focus returns to a safe element
+        const quizCard = document.getElementById('quiz-card');
+        if (quizCard && quizCard.style.display !== 'none') {
+            // Make quiz card focusable temporarily
+            quizCard.setAttribute('tabindex', '-1');
+            quizCard.focus();
+            // Remove tabindex after focus to maintain normal tab flow
+            setTimeout(() => {
+                quizCard.removeAttribute('tabindex');
+            }, 100);
+        } else {
+            // Fallback: focus on document body
+            document.body.focus();
+        }
+        
+        // Hide the modal
         modal.hide();
     }
     
-    setTimeout(() => {
-        const modalElement = document.getElementById('breakReminderModal');
-        if (modalElement) {
-            modalElement.remove();
-        }
-    }, 300);
-    
+    // API call to acknowledge break
     fetch('/api/acknowledge_break', {
         method: 'POST',
         headers: {
