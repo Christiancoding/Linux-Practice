@@ -1,6 +1,6 @@
 {
   "focusMode": false,
-  "breakReminder": 10,
+  "breakReminder": 1,
   "debugMode": true,
   "pointsPerQuestion": 1,
   "streakBonus": 5,

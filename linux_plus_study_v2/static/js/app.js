@@ -523,11 +523,13 @@ function exportQuestionsJSON() {
 }
 
 function updateQuestionCount() {
-    const questionCountElement = document.getElementById('question-count');
+    // Try both possible element IDs for compatibility
+    const questionCountElement = document.getElementById('question-count') || 
+                                 document.getElementById('question-counter');
     
     // Only proceed if the element exists
     if (!questionCountElement) {
-        console.log('Element with ID "question-count" not found in the DOM');
+        console.log('Question count element not found in the DOM');
         return;
     }
     
@@ -535,11 +537,26 @@ function updateQuestionCount() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                questionCountElement.textContent = data.count;
+                // Update text content appropriately based on element type
+                if (questionCountElement.id === 'question-counter') {
+                    // This is the badge element, keep existing format
+                    const currentText = questionCountElement.textContent;
+                    if (currentText.includes('of')) {
+                        const parts = currentText.split(' of ');
+                        questionCountElement.textContent = `${parts[0]} of ${data.count}`;
+                    }
+                } else {
+                    // This is a plain count element
+                    questionCountElement.textContent = data.count;
+                }
             }
         })
         .catch(error => {
             console.error('Error fetching question count:', error);
+            if (questionCountElement.id === 'question-counter') {
+                // Don't update badge format on error
+                return;
+            }
             questionCountElement.textContent = 'Unknown';
         });
 }
