@@ -172,6 +172,12 @@ class LinuxPlusStudyWeb:
             from controllers.stats_controller import StatsController, ReviewQuestionsData  # Import the type
             
             self.quiz_controller = QuizController(game_state)
+            
+            # Load and apply settings to quiz controller
+            settings = self._load_web_settings()
+            if hasattr(self.quiz_controller, 'update_settings'):
+                self.quiz_controller.update_settings(settings)
+            
             self.stats_controller: StatsControllerProtocol = StatsController(game_state)
             # Runtime check is now valid since we added @runtime_checkable
             if not isinstance(self.stats_controller, StatsControllerProtocol):
@@ -1479,6 +1485,7 @@ class LinuxPlusStudyWeb:
                         'options': options,
                         'category': category,
                         'question_number': current_question.get('question_number', 1),
+                        'total_questions': current_question.get('total_questions'),
                         'streak': current_question.get('streak', 0),
                         'mode': self.quiz_controller.current_quiz_mode,
                         'is_single_question': self.quiz_controller.current_quiz_mode in ['daily_challenge', 'pop_quiz'],
@@ -1506,6 +1513,7 @@ class LinuxPlusStudyWeb:
                     'options': options,
                     'category': category,
                     'question_number': result.get('question_number', 1),
+                    'total_questions': result.get('total_questions'),
                     'streak': result.get('streak', 0),
                     'mode': self.quiz_controller.current_quiz_mode,
                     'is_single_question': self.quiz_controller.current_quiz_mode in ['daily_challenge', 'pop_quiz'],
@@ -1571,9 +1579,14 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/end_quiz', methods=['POST'])
         def api_end_quiz():
             try:
+                # If quiz is not active but we have saved results, return those
                 if not self.quiz_controller.quiz_active:
-                    return jsonify({'success': True, 'message': 'No active quiz session'})
+                    if hasattr(self.quiz_controller, 'last_session_results') and self.quiz_controller.last_session_results:
+                        return jsonify({'success': True, **self.quiz_controller.last_session_results})
+                    else:
+                        return jsonify({'success': True, 'message': 'No active quiz session'})
                 
+                # Quiz is still active, force end it
                 result = self.quiz_controller.force_end_session()
                 
                 return jsonify({'success': True, **result})

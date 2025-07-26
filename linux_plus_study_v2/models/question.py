@@ -48,9 +48,9 @@ class Question:
         self.explanation = explanation
         
         # Validate the question data
-        self._validate()
+        self.validate()
     
-    def _validate(self) -> None:
+    def validate(self) -> None:
         """Validate question data integrity."""
         if not self.text or not self.text.strip():
             raise ValueError("Question text cannot be empty")
@@ -305,7 +305,7 @@ class QuestionManager:
                         question = Question.from_tuple(cast(Union[Tuple[str, List[str], int, str], 
                                                         Tuple[str, List[str], int, str, str]], item))
                     elif isinstance(item, dict):
-                        question = Question.from_dict(item)
+                        question = Question.from_dict(cast(Dict[str, Any], item))
                     else:
                         print(f"Warning: Unknown question format: {type(item)}")
                         continue
@@ -321,7 +321,7 @@ class QuestionManager:
                 for item in questions_data:
                     try:
                         if isinstance(item, dict):
-                            question = Question.from_dict(item)
+                            question = Question.from_dict(cast(Dict[str, Any], item))
                         else:
                             # Convert to the expected tuple type
                             question = Question.from_tuple(cast(Union[Tuple[str, List[str], int, str], 
@@ -621,7 +621,7 @@ class QuestionManager:
         
         for i, question in enumerate(self.questions):
             try:
-                question._validate()
+                question.validate()
             except ValueError as e:
                 errors.append(f"Question {i + 1}: {e}")
         

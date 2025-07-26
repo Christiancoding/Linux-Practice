@@ -15,6 +15,9 @@
                     <div class="col-auto">
                         <span class="badge bg-info" id="question-counter">Question 1 of 10</span>
                     </div>
+                    <div class="col-auto">
+                        <span class="badge bg-success" id="score-counter">Score: 0/0</span>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -53,6 +56,49 @@ let selectedAnswer = null;
 let currentMode = 'standard';
 let quickFireTimer = null;
 let isSingleQuestionMode = false;
+
+function updateScoreDisplay(score, total) {
+    const scoreElement = document.getElementById('score-counter');
+    if (scoreElement) {
+        // Hide score for verify mode - it should only show at the end
+        if (currentMode === 'verify') {
+            scoreElement.style.display = 'none';
+            return;
+        }
+        
+        // Show score for all other modes
+        scoreElement.style.display = 'inline-block';
+        scoreElement.textContent = `Score: ${score}/${total}`;
+        
+        // Update color based on performance
+        scoreElement.className = 'badge ';
+        if (total === 0) {
+            scoreElement.className += 'bg-secondary';
+        } else {
+            const percentage = (score / total) * 100;
+            if (percentage >= 80) {
+                scoreElement.className += 'bg-success';
+            } else if (percentage >= 60) {
+                scoreElement.className += 'bg-warning';
+            } else {
+                scoreElement.className += 'bg-danger';
+            }
+        }
+    }
+}
+
+function updateSessionScore() {
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            if (data.session_score !== undefined && data.session_total !== undefined) {
+                updateScoreDisplay(data.session_score, data.session_total);
+            }
+        })
+        .catch(error => {
+            console.log('Error fetching session status for score update:', error);
+        });
+}
 
 function showBreakReminder(questionsSinceBreak, breakInterval) {
     const modalHtml = `
@@ -273,6 +319,12 @@ function loadNextQuestion() {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
+                console.log('Error from get_question:', data.error);
+                // If no active session, automatically end the quiz
+                if (data.error.includes('No active quiz session')) {
+                    showQuizComplete();
+                    return;
+                }
                 showError(data.error);
                 return;
             }
@@ -294,9 +346,25 @@ function loadNextQuestion() {
 
             displayQuestion(data);
 
-            // Start Quick Fire timer if it's the right mode and not already running
-            if (currentMode === 'quick_fire' && !quickFireTimer) {
+            // Start Quick Fire timer if it's the right mode
+            if (currentMode === 'quick_fire') {
+                // Clear any existing timer first
+                if (quickFireTimer) {
+                    clearInterval(quickFireTimer);
+                    quickFireTimer = null;
+                }
                 startQuickFireTimer();
+            } else {
+                // Clear timer if not in Quick Fire mode
+                if (quickFireTimer) {
+                    clearInterval(quickFireTimer);
+                    quickFireTimer = null;
+                }
+                // Hide timer display for non-Quick Fire modes
+                const timerContainer = document.getElementById('timer-display-container');
+                if (timerContainer) {
+                    timerContainer.innerHTML = '';
+                }
             }
         })
         .catch(error => {
@@ -342,7 +410,14 @@ function displayQuestion(data) {
     `;
 
     // Display question counter
-    document.getElementById('question-counter').textContent = `Question ${data.question_number}`;
+    let counterText = `Question ${data.question_number}`;
+    if (data.total_questions) {
+        counterText = `Question ${data.question_number} of ${data.total_questions}`;
+    }
+    document.getElementById('question-counter').textContent = counterText;
+
+    // Update score display - fetch current session status
+    updateSessionScore();
 
     // Display options
     let optionsHtml = '';
@@ -392,15 +467,23 @@ function submitAnswer() {
                 return;
             }
 
+            console.log('Submit answer response:', data); // Debug logging
+
             showFeedback(data);
 
-            if (data.session_complete || isSingleQuestionMode) {
-                clearInterval(quickFireTimer);
-                quickFireTimer = null;
+            // Check completion conditions
+            const shouldComplete = data.session_complete || isSingleQuestionMode;
+            console.log('Should complete quiz:', shouldComplete, 'session_complete:', data.session_complete, 'isSingleQuestionMode:', isSingleQuestionMode);
+
+            if (shouldComplete) {
+                if (quickFireTimer) {
+                    clearInterval(quickFireTimer);
+                    quickFireTimer = null;
+                }
                 
-                setTimeout(() => {
-                    showQuizComplete(data);
-                }, isSingleQuestionMode ? 3000 : 2000); // Longer delay for single question feedback
+                // Hide quiz controls and show view results button
+                document.getElementById('quiz-controls').style.display = 'none';
+                showViewResultsButton();
             }
         })
         .catch(error => {
@@ -445,12 +528,31 @@ function showFeedback(data) {
     document.getElementById('feedback-container').innerHTML = feedbackHtml;
     document.getElementById('feedback-container').style.display = 'block';
 
+    // Update score display if available
+    if (data.session_score !== undefined && data.session_total !== undefined) {
+        updateScoreDisplay(data.session_score, data.session_total);
+    }
+
     document.querySelectorAll('input[name="answer"]').forEach(input => input.disabled = true);
     document.getElementById('submit-btn').style.display = 'none';
 
-    if (!isSingleQuestionMode && !data.session_complete) {
+    // Only show Next Question button if session is not complete and not single question mode
+    const shouldShowNext = !isSingleQuestionMode && !data.session_complete;
+    console.log('Should show next button:', shouldShowNext, 'session_complete:', data.session_complete, 'isSingleQuestionMode:', isSingleQuestionMode);
+    
+    if (shouldShowNext) {
         document.getElementById('next-btn').style.display = 'inline-block';
         document.getElementById('next-btn').disabled = false;
+    } else {
+        document.getElementById('next-btn').style.display = 'none';
+    }
+    
+    // Hide the End Quiz button if the session is complete
+    if (data.session_complete || isSingleQuestionMode) {
+        const endQuizBtn = document.querySelector('button[onclick="endQuiz()"]');
+        if (endQuizBtn) {
+            endQuizBtn.style.display = 'none';
+        }
     }
 }
 
@@ -458,15 +560,31 @@ function showFeedback(data) {
 function nextQuestion() {
     loadNextQuestion();
 }
+
+function showViewResultsButton() {
+    // Add a "View Results" button to the feedback container
+    const feedbackContainer = document.getElementById('feedback-container');
+    const viewResultsBtn = document.createElement('div');
+    viewResultsBtn.className = 'mt-3 text-center';
+    viewResultsBtn.innerHTML = '<button class="btn btn-primary btn-lg" onclick="showQuizComplete()">📊 View Results</button>';
+    feedbackContainer.appendChild(viewResultsBtn);
+}
+
 function endQuiz() {
     if (confirm('Are you sure you want to end the quiz?')) {
-        clearInterval(quickFireTimer);
+        if (quickFireTimer) {
+            clearInterval(quickFireTimer);
+            quickFireTimer = null;
+        }
         handleQuizEnd();
     }
 }
 
 function showQuizComplete(data = null) {
-    clearInterval(quickFireTimer);
+    if (quickFireTimer) {
+        clearInterval(quickFireTimer);
+        quickFireTimer = null;
+    }
 
     if (data) {
         showQuizResults(data);
@@ -542,7 +660,13 @@ function showQuizResults(data) {
 
 function startQuickFireTimer() {
     const timerContainer = document.getElementById('timer-display-container');
-    timerContainer.innerHTML = '<span class="badge bg-danger" id="timer-badge">3:00</span>';
+    timerContainer.innerHTML = '<span class="badge bg-info" id="timer-badge">Loading...</span>';
+
+    // Clear any existing timer first
+    if (quickFireTimer) {
+        clearInterval(quickFireTimer);
+        quickFireTimer = null;
+    }
 
     quickFireTimer = setInterval(() => {
         fetch('/api/quick_fire_status')
@@ -550,11 +674,13 @@ function startQuickFireTimer() {
             .then(data => {
                 if (!data.active) {
                     clearInterval(quickFireTimer);
+                    quickFireTimer = null;
                     return;
                 }
 
                 if (data.should_end) {
                     clearInterval(quickFireTimer);
+                    quickFireTimer = null;
                     showQuizComplete();
                     return;
                 }
@@ -566,13 +692,31 @@ function startQuickFireTimer() {
 
                 if (timerBadge) {
                     timerBadge.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-                    if (timeRemaining <= 30) timerBadge.className = 'badge bg-danger';
-                    else if (timeRemaining <= 60) timerBadge.className = 'badge bg-warning';
-                    else timerBadge.className = 'badge bg-info';
+                    
+                    // Update badge color based on time remaining
+                    if (timeRemaining <= 30) {
+                        timerBadge.className = 'badge bg-danger';
+                    } else if (timeRemaining <= 60) {
+                        timerBadge.className = 'badge bg-warning';
+                    } else {
+                        timerBadge.className = 'badge bg-info';
+                    }
+                }
+
+                // Auto-end if time runs out
+                if (timeRemaining <= 0) {
+                    clearInterval(quickFireTimer);
+                    quickFireTimer = null;
+                    showQuizComplete();
                 }
             })
             .catch(error => {
                 console.error('Error checking Quick Fire status:', error);
+                const timerBadge = document.getElementById('timer-badge');
+                if (timerBadge) {
+                    timerBadge.textContent = 'Error';
+                    timerBadge.className = 'badge bg-danger';
+                }
             });
     }, 1000);
 }

@@ -145,7 +145,7 @@
     },
     "What is the purpose of the `grub2-mkconfig` command?": {
       "correct": 3,
-      "attempts": 9,
+      "attempts": 10,
       "history": [
         {
           "timestamp": "2025-06-06T11:15:26.279818",
@@ -181,6 +181,10 @@
         },
         {
           "timestamp": "2025-06-11T23:21:04.013781",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:34.268271",
           "correct": false
         }
       ]
@@ -228,8 +232,8 @@
       ]
     },
     "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
-      "correct": 2,
-      "attempts": 8,
+      "correct": 3,
+      "attempts": 9,
       "history": [
         {
           "timestamp": "2025-06-06T15:08:23.469017",
@@ -262,6 +266,10 @@
         {
           "timestamp": "2025-06-11T22:40:26.056552",
           "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:30.616278",
+          "correct": true
         }
       ]
     },
@@ -324,8 +332,8 @@
       ]
     },
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
-      "correct": 3,
-      "attempts": 11,
+      "correct": 4,
+      "attempts": 15,
       "history": [
         {
           "timestamp": "2025-06-09T21:11:51.536114",
@@ -369,6 +377,22 @@
         },
         {
           "timestamp": "2025-07-26T12:12:11.723360",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:04.853253",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:19.501393",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-07-26T13:57:48.518218",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:58:06.166356",
           "correct": false
         }
       ]
@@ -420,8 +444,8 @@
       ]
     },
     "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
-      "correct": 2,
-      "attempts": 8,
+      "correct": 5,
+      "attempts": 11,
       "history": [
         {
           "timestamp": "2025-06-10T02:21:25.451175",
@@ -454,12 +478,24 @@
         {
           "timestamp": "2025-07-26T12:12:15.660340",
           "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:01.501357",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-07-26T13:57:52.951314",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-07-26T13:58:11.146245",
+          "correct": true
         }
       ]
     },
     "What is Ansible primarily used for?": {
       "correct": 0,
-      "attempts": 2,
+      "attempts": 3,
       "history": [
         {
           "timestamp": "2025-06-11T23:31:23.640090",
@@ -467,6 +503,10 @@
         },
         {
           "timestamp": "2025-07-03T13:29:11.529086",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-26T13:57:27.781195",
           "correct": false
         }
       ]
@@ -514,8 +554,8 @@
   },
   "categories": {
     "Commands (System Management)": {
-      "correct": 10,
-      "attempts": 49
+      "correct": 11,
+      "attempts": 51
     },
     "Concepts & Terms (Containers)": {
       "correct": 2,
@@ -523,7 +563,7 @@
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
-      "attempts": 2
+      "attempts": 3
     },
     "Concepts & Terms (System Management)": {
       "correct": 1,
@@ -534,8 +574,8 @@
       "attempts": 14
     },
     "Troubleshooting": {
-      "correct": 6,
-      "attempts": 21
+      "correct": 10,
+      "attempts": 28
     },
     "Scripting, Containers, and Automation": {
       "correct": 0,
@@ -550,21 +590,19 @@
       "attempts": 1
     }
   },
-  "total_correct": 28,
-  "total_attempts": 105,
+  "total_correct": 33,
+  "total_attempts": 115,
   "incorrect_review": [
     "What is the primary function of the `mkinitrd` command?",
     "What is an AppImage?",
-    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?",
-    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?",
-    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?",
     "What is the purpose of the `grub2-mkconfig` command?",
     "What is AppArmor?",
     "What is Ansible primarily used for?",
     "Which command installs the GRUB2 bootloader to a specified device?",
     "A system administrator needs to create a compressed backup of the /var/log directory. Which command should they use to create a gzip-compressed archive file named log_backup.tar.gz?",
     "An organization is looking to improve its software development lifecycle by automatically building, testing, and deploying applications following code commits. Which of the following would BEST implement this requirement?",
-    "A Linux system administrator notices that the journal logs on a production server are not persistent across reboots, which is necessary for troubleshooting ongoing issues that occur after system restarts. What's the BEST step the administrator should take to ensure journal logs are retained after a reboot?"
+    "A Linux system administrator notices that the journal logs on a production server are not persistent across reboots, which is necessary for troubleshooting ongoing issues that occur after system restarts. What's the BEST step the administrator should take to ensure journal logs are retained after a reboot?",
+    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?"
   ],
   "leaderboard": [
     {

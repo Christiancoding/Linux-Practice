@@ -61,6 +61,13 @@ class QuizController:
         
         # Last question cache
         self.last_question: Optional[Dict[str, Any]] = None
+        
+        # Initialize scoring settings with defaults
+        self.points_per_question: int = 10
+        self.points_per_incorrect: int = 0
+        self.streak_bonus: int = 5
+        self.max_streak_bonus: int = 50
+        self.debug_mode: bool = False
 
     def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
@@ -163,10 +170,24 @@ class QuizController:
         
         if question_data is not None:
             quick_fire_remaining = self._get_quick_fire_remaining() if self.quick_fire_active else None
+            
+            # Determine total questions for progress display
+            total_questions = None
+            if self.current_quiz_mode == "mini_quiz":
+                total_questions = MINI_QUIZ_QUESTIONS
+            elif self.current_quiz_mode == "quick_fire":
+                total_questions = QUICK_FIRE_QUESTIONS
+            elif self.current_quiz_mode in ["daily_challenge", "pop_quiz"]:
+                total_questions = 1
+            else:
+                # For standard quiz and category quizzes, show total available questions
+                total_questions = self._get_available_questions_count(self.category_filter)
+            
             result: Dict[str, Any] = {
                 'question_data': question_data,
                 'original_index': original_index,
                 'question_number': self.session_total + 1,
+                'total_questions': total_questions,
                 'streak': self.current_streak,
                 'quick_fire_remaining': quick_fire_remaining
             }
@@ -318,13 +339,29 @@ class QuizController:
         
         # Check for session completion
         result['session_complete'] = self._check_session_complete()
-                # Ensure results are saved if session is complete
-        if not self.quiz_active and self.session_total > 0:
+        
+        # If session is complete, automatically end the session
+        if result['session_complete']:
+            self.quiz_active = False
+            # Save session results
+            accuracy = (self.session_score / self.session_total * 100) if self.session_total > 0 else 0.0
+            self.last_session_results = {
+                'session_score': self.session_score,
+                'session_total': self.session_total,
+                'accuracy': accuracy,
+                'session_points': getattr(self.game_state, 'session_points', 0),
+                'mode': self.current_quiz_mode
+            }
+            # Add final results to the response
+            result.update(self.last_session_results)
+                
+        # Ensure results are saved if session is complete
+        if not self.quiz_active and self.session_total > 0 and not result['session_complete']:
             self.last_session_results = {
                 'session_score': self.session_score,
                 'session_total': self.session_total,
                 'accuracy': (self.session_score / self.session_total * 100) if self.session_total > 0 else 0.0,
-                'session_points': self.game_state.session_points,
+                'session_points': getattr(self.game_state, 'session_points', 0),
                 'mode': self.current_quiz_mode
             }
         # Cache the current question
@@ -594,6 +631,7 @@ class QuizController:
                 'question_data': question_data,
                 'original_index': question_index,
                 'question_number': 1,
+                'total_questions': 1,
                 'streak': self.current_streak,
                 'is_daily_challenge': True,
                 'date': today
@@ -714,12 +752,20 @@ class QuizController:
     def _calculate_points(self, is_correct: bool, current_streak: int) -> int:
         """Calculate points earned for an answer."""
         if is_correct:
-            points = POINTS_PER_CORRECT
-            if current_streak >= STREAK_BONUS_THRESHOLD:
-                points = int(points * STREAK_BONUS_MULTIPLIER)
+            # Use quiz controller settings if available, otherwise fall back to constants
+            base_points = getattr(self, 'points_per_question', POINTS_PER_CORRECT)
+            streak_threshold = getattr(self, 'streak_bonus', STREAK_BONUS_THRESHOLD)
+            streak_multiplier = getattr(self, 'max_streak_bonus', STREAK_BONUS_MULTIPLIER)
+            
+            points = base_points
+            if current_streak >= streak_threshold:
+                # Apply streak bonus (but cap it to reasonable limits)
+                bonus_multiplier = min(2.0, 1.0 + (streak_multiplier / 100.0))
+                points = int(points * bonus_multiplier)
             return points
         else:
-            return POINTS_PER_INCORRECT
+            # For incorrect answers, use negative points or 0 based on settings
+            return getattr(self, 'points_per_incorrect', POINTS_PER_INCORRECT)
     
     def _get_available_questions_count(self, category_filter: Optional[str] = None) -> int:
         """Get count of available questions for the filter."""
@@ -770,14 +816,38 @@ class QuizController:
             print(f"DEBUG: Single question mode - complete: {complete}")
             return complete
         
+        # For standard and verify quizzes, check if there are more questions available
+        if self.current_quiz_mode in ["standard", "verify"]:
+            # Try to see if we can get another question without actually selecting it
+            try:
+                # Check available questions count without modifying session state
+                available_count = self._get_available_questions_count(self.category_filter)
+                answered_count = len(self.game_state.question_manager.answered_indices_session)
+                questions_remaining = available_count - answered_count
+                
+                print(f"DEBUG: Standard/verify quiz - available: {available_count}, answered: {answered_count}, remaining: {questions_remaining}")
+                
+                if questions_remaining <= 0:
+                    print(f"DEBUG: No more questions available - completing session")
+                    return True
+            except Exception as e:
+                print(f"DEBUG: Error checking remaining questions: {e}")
+                # If we can't determine, assume quiz continues
+                pass
+        
+        # Standard and verify quizzes continue until manually ended or no questions available
         print(f"DEBUG: Session not complete - continuing")
         return False
     def update_settings(self, settings: Dict[str, Any]) -> None:
         """Update quiz controller with new settings."""
-        self.points_per_question: int = settings.get('pointsPerQuestion', 10)
-        self.streak_bonus: int = settings.get('streakBonus', 5)
-        self.max_streak_bonus: int = settings.get('maxStreakBonus', 50)
-        self.debug_mode: bool = settings.get('debugMode', False)
+        self.points_per_question = settings.get('pointsPerQuestion', 10)
+        self.points_per_incorrect = settings.get('pointsPerIncorrect', 0)
+        self.streak_bonus = settings.get('streakBonus', 5)
+        self.max_streak_bonus = settings.get('maxStreakBonus', 50)
+        self.debug_mode = settings.get('debugMode', False)
+        
+        if self.debug_mode:
+            print(f"DEBUG: Updated quiz controller settings - points per question: {self.points_per_question}, streak bonus: {self.streak_bonus}")
         
         # Update any active scoring calculations
         if hasattr(self, 'current_streak_bonus'):

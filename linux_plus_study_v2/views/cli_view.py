@@ -8,7 +8,7 @@ import sys
 import time
 import json
 from datetime import datetime
-from typing import List, Any, Union, Optional, Set, Dict, Tuple, Callable, TypeVar, Protocol, Literal, cast, Generator, Iterator
+from typing import List, Any, Union, Optional, Set, Dict, Tuple, TypeVar, Protocol, Literal, cast
 
 from utils.config import (
     COLOR_QUESTION, COLOR_OPTIONS, COLOR_OPTION_NUM, COLOR_CATEGORY,
@@ -26,6 +26,17 @@ QuestionData = Tuple[str, List[str], int, str, str]  # question_text, options, c
 T = TypeVar('T')
 CategoryType = str
 UserAnswer = Union[int, Literal['q', 's']]
+
+# Type aliases for better clarity
+QuestionDataUnknown = Union[QuestionData, Tuple[Any, ...], List[Any]]  # For runtime validation
+HistoryList = List[str]
+AchievementsList = List[str]
+
+# Typed dictionaries for better type inference
+CategoryStats = Dict[str, int]  # {"correct": int, "attempts": int}
+QuestionStats = Dict[str, Any]  # {"attempts": int, "correct": int, "history": List[Dict]}
+StudyHistoryData = Dict[str, Any]  # Main history structure
+AchievementsData = Dict[str, Any]  # Main achievements structure
 
 # Define a Protocol for game_logic to specify its expected interface
 class GameLogic(Protocol):
@@ -241,10 +252,10 @@ class LinuxPlusStudyCLI:
         cli_print_separator(char='~', color=COLOR_CATEGORY)
 
         print(f"\n{COLOR_QUESTION}Q: {question_text}{COLOR_RESET}\n")
-        cli_print_separator(length=40, color=COLOR_BORDER + C["dim"])
+        cli_print_separator(length=40, color=COLOR_BORDER)
         for i, option in enumerate(options):
             print(f"  {COLOR_OPTION_NUM}{i + 1}.{COLOR_RESET} {COLOR_OPTIONS}{option}{COLOR_RESET}")
-        cli_print_separator(length=40, color=COLOR_BORDER + C["dim"])
+        cli_print_separator(length=40, color=COLOR_BORDER)
         print()
 
     def get_user_answer(self, num_options: int) -> UserAnswer:
@@ -425,10 +436,11 @@ class LinuxPlusStudyCLI:
                     if isinstance(self.game_logic.achievements["daily_warrior_dates"], set):
                         self.game_logic.achievements["daily_warrior_dates"] = list(self.game_logic.achievements["daily_warrior_dates"])
 
-                    if today_iso not in self.game_logic.achievements["daily_warrior_dates"]:
-                        self.game_logic.achievements["daily_warrior_dates"].append(today_iso)
+                    daily_dates = self.game_logic.achievements["daily_warrior_dates"]
+                    if isinstance(daily_dates, list) and today_iso not in daily_dates:
+                        daily_dates.append(today_iso)
                     
-                    if "daily_warrior" not in self.game_logic.achievements["badges"] and len(self.game_logic.achievements["daily_warrior_dates"]) >= 1:
+                    if "daily_warrior" not in self.game_logic.achievements["badges"] and isinstance(daily_dates, list) and len(daily_dates) >= 1:
                         self.game_logic.achievements["badges"].append("daily_warrior")
                         print(f"\n{COLOR_CORRECT}{self.game_logic.get_achievement_description('daily_warrior')}{COLOR_RESET}")
                 
@@ -684,7 +696,7 @@ class LinuxPlusStudyCLI:
                         explanation_lines = explanation.split('\n')
                         for line in explanation_lines:
                             print(f"    {COLOR_EXPLANATION}{line}{COLOR_RESET}")
-                cli_print_separator(char='.', length=50, color=COLOR_BORDER + C["dim"])
+                cli_print_separator(char='.', length=50, color=COLOR_BORDER)
             else:
                 cli_print_error("Error displaying details for this question: Invalid index.")
     def show_progress_summary(self) -> None:
@@ -784,7 +796,8 @@ class LinuxPlusStudyCLI:
         print(f"\n{COLOR_SUBHEADER}Performance by Category:{COLOR_RESET}")
         categories_data = history.get("categories", {})
         sorted_categories = sorted(
-            [(cat, stats) for cat, stats in categories_data.items() if isinstance(stats, dict) and stats.get("attempts", 0) > 0],
+            [(cat, cast(CategoryStats, stats)) for cat, stats in categories_data.items() 
+             if isinstance(stats, dict) and stats.get("attempts", 0) > 0],
             key=lambda item: item[0]
         )
 
@@ -798,19 +811,20 @@ class LinuxPlusStudyCLI:
             for category, stats in sorted_categories:
                 cat_attempts = stats.get("attempts", 0)
                 cat_correct = stats.get("correct", 0)
-                cat_accuracy = (cat_correct / cat_attempts * 100)
+                cat_accuracy = (cat_correct / cat_attempts * 100) if cat_attempts > 0 else 0
                 acc_color = COLOR_STATS_ACC_GOOD if cat_accuracy >= 75 else (COLOR_STATS_ACC_AVG if cat_accuracy >= 50 else COLOR_STATS_ACC_BAD)
                 print(f"  {category.ljust(max_len)} │ {COLOR_STATS_VALUE}{str(cat_correct).rjust(7)}{COLOR_RESET} │ {COLOR_STATS_VALUE}{str(cat_attempts).rjust(8)}{COLOR_RESET} │ {acc_color}{f'{cat_accuracy:.1f}%'.rjust(9)}{COLOR_RESET}")
 
         # Performance on Specific Questions
         print(f"\n{COLOR_SUBHEADER}Performance on Specific Questions (All History):{COLOR_RESET}")
         question_stats = history.get("questions", {})
-        attempted_questions = {q: stats for q, stats in question_stats.items() if isinstance(stats, dict) and stats.get("attempts", 0) > 0}
+        attempted_questions = {q: cast(QuestionStats, stats) for q, stats in question_stats.items() 
+                              if isinstance(stats, dict) and stats.get("attempts", 0) > 0}
 
         if not attempted_questions:
             print(f"  {COLOR_EXPLANATION}No specific question data recorded yet (or no attempts made).{COLOR_RESET}")
         else:
-            def sort_key(item: Tuple[str, Dict[str, Any]]) -> Tuple[float, int]:
+            def sort_key(item: Tuple[str, QuestionStats]) -> Tuple[float, int]:
                 q_text, stats = item
                 attempts = stats.get("attempts", 0)
                 correct = stats.get("correct", 0)
@@ -823,7 +837,7 @@ class LinuxPlusStudyCLI:
             for i, (q_text, stats) in enumerate(sorted_questions):
                 attempts = stats.get("attempts", 0)
                 correct = stats.get("correct", 0)
-                accuracy = (correct / attempts * 100)
+                accuracy = (correct / attempts * 100) if attempts > 0 else 0
                 acc_color = COLOR_STATS_ACC_GOOD if accuracy >= 75 else (COLOR_STATS_ACC_AVG if accuracy >= 50 else COLOR_STATS_ACC_BAD)
 
                 last_result = "N/A"
@@ -867,10 +881,10 @@ class LinuxPlusStudyCLI:
             return
 
         # Find the full question data based on the text stored in incorrect_review
-        questions_to_review = []
-        not_found_questions = []
-        incorrect_list_copy = list(incorrect_list)
-        questions_to_remove_from_history = []
+        questions_to_review: List[QuestionData] = []
+        not_found_questions: List[str] = []
+        incorrect_list_copy = cast(List[str], list(incorrect_list))
+        questions_to_remove_from_history: List[str] = []
 
         for incorrect_text in incorrect_list_copy:
             found = False
@@ -1044,7 +1058,14 @@ class LinuxPlusStudyCLI:
             confirm = 'no'
 
         if confirm == 'yes':
-            self.game_logic.study_history = self.game_logic._default_history()
+            # Reset history to default structure
+            self.game_logic.study_history = {
+                "total_attempts": 0,
+                "total_correct": 0,
+                "categories": {},
+                "questions": {},
+                "incorrect_review": []
+            }
             for category in self.game_logic.categories:
                 self.game_logic.study_history["categories"].setdefault(category, {"correct": 0, "attempts": 0})
             self.game_logic.save_history()
@@ -1218,12 +1239,12 @@ class LinuxPlusStudyCLI:
             cli_print_info(f"Attempting to export Q&A to: {COLOR_STATS_VALUE}{export_path}{COLOR_RESET}")
 
             # Prepare questions data for JSON export
-            questions_data = []
+            questions_data: List[Dict[str, Any]] = []
             for i, q_data in enumerate(self.game_logic.questions):
                 if len(q_data) < 5: continue
                 question_text, options, correct_answer_index, category, explanation = q_data
                 
-                question_obj = {
+                question_obj: Dict[str, Any] = {
                     "id": i + 1,
                     "question": question_text,
                     "category": category,
@@ -1236,12 +1257,12 @@ class LinuxPlusStudyCLI:
                 questions_data.append(question_obj)
 
             # Create the final JSON structure
-            export_data = {
+            export_data: Dict[str, Any] = {
                 "metadata": {
                     "title": "Linux+ Study Questions",
                     "export_date": datetime.now().isoformat(),
                     "total_questions": len(questions_data),
-                    "categories": sorted(list(set(q["category"] for q in questions_data)))
+                    "categories": sorted(list(set(str(q["category"]) for q in questions_data)))
                 },
                 "questions": questions_data
             }
