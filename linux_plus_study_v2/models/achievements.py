@@ -7,27 +7,52 @@ and leaderboard functionality.
 """
 
 import json
-import os
 from datetime import datetime
+from typing import List, Dict, Any, Set, Optional, TypedDict, cast
 from utils.config import *
+
+
+class LeaderboardEntry(TypedDict):
+    """Type definition for leaderboard entries."""
+    date: str
+    score: int
+    total: int
+    accuracy: float
+    points: int
+
+
+class AchievementData(TypedDict, total=False):
+    """Type definition for achievement data structure."""
+    badges: List[str]
+    points_earned: int
+    days_studied: Set[str]
+    questions_answered: int
+    streaks_achieved: int
+    perfect_sessions: int
+    daily_warrior_dates: List[str]
+    leaderboard: List[LeaderboardEntry]
 
 
 class AchievementSystem:
     """Manages achievements, badges, points, and leaderboard."""
     
-    def __init__(self, achievements_file=ACHIEVEMENTS_FILE):
+    achievements: Dict[str, Any]
+    leaderboard: List[Dict[str, Any]]
+    session_points: int
+    
+    def __init__(self, achievements_file: Any = ACHIEVEMENTS_FILE):
         """
         Initialize the achievement system.
         
         Args:
-            achievements_file (str): Path to achievements data file
+            achievements_file: Path to achievements data file
         """
-        self.achievements_file = achievements_file
+        self.achievements_file = str(achievements_file)
         self.achievements = self.load_achievements()
         self.leaderboard = self.load_leaderboard()
         self.session_points = 0
     
-    def load_achievements(self):
+    def load_achievements(self) -> Dict[str, Any]:
         """
         Load achievements from file.
         
@@ -57,7 +82,7 @@ class AchievementSystem:
             print(f"Error loading achievements: {e}")
             return self._get_default_achievements()
     
-    def save_achievements(self):
+    def save_achievements(self) -> None:
         """Save achievements to file."""
         try:
             # Convert set to list for JSON serialization
@@ -71,7 +96,7 @@ class AchievementSystem:
         except Exception as e:
             print(f"Error saving achievements: {e}")
     
-    def load_leaderboard(self):
+    def load_leaderboard(self) -> List[Dict[str, Any]]:
         """
         Load leaderboard data.
         
@@ -81,9 +106,13 @@ class AchievementSystem:
         # For now, leaderboard is stored within achievements or loaded separately
         # This can be modified to use a separate file if needed
         leaderboard_data = self.achievements.get("leaderboard", [])
-        return leaderboard_data if isinstance(leaderboard_data, list) else []
+        if isinstance(leaderboard_data, list):
+            # Use cast to tell the type checker this is the correct type
+            return cast(List[Dict[str, Any]], leaderboard_data)
+        else:
+            return []
     
-    def update_points(self, points_change):
+    def update_points(self, points_change: int) -> None:
         """
         Update points and session points.
         
@@ -96,7 +125,7 @@ class AchievementSystem:
         if points_change > 0:
             self.achievements["points_earned"] = self.achievements.get("points_earned", 0) + points_change
     
-    def check_achievements(self, is_correct, streak_count, questions_answered=None):
+    def check_achievements(self, is_correct: bool, streak_count: int, questions_answered: Optional[int] = None) -> List[str]:
         """
         Check and award achievements based on performance.
         
@@ -108,13 +137,14 @@ class AchievementSystem:
         Returns:
             list: List of newly earned badge names
         """
-        new_badges = []
+        new_badges: List[str] = []
         today = datetime.now().date().isoformat()
         
         # Add today to days studied
         if not isinstance(self.achievements.get("days_studied"), set):
             self.achievements["days_studied"] = set()
-        self.achievements["days_studied"].add(today)
+        days_studied = cast(Set[str], self.achievements["days_studied"])
+        days_studied.add(today)
         
         # Update questions answered
         if questions_answered is not None:
@@ -130,7 +160,8 @@ class AchievementSystem:
             self.achievements["streaks_achieved"] = self.achievements.get("streaks_achieved", 0) + 1
         
         # Check for dedicated learner achievement
-        if (len(self.achievements["days_studied"]) >= 3 and 
+        days_studied = cast(Set[str], self.achievements["days_studied"])
+        if (len(days_studied) >= 3 and 
             "dedicated_learner" not in self.achievements["badges"]):
             new_badges.append("dedicated_learner")
             self.achievements["badges"].append("dedicated_learner")
@@ -149,7 +180,7 @@ class AchievementSystem:
         
         return new_badges
     
-    def award_badge(self, badge_name):
+    def award_badge(self, badge_name: str) -> bool:
         """
         Award a specific badge.
         
@@ -164,7 +195,7 @@ class AchievementSystem:
             return True
         return False
     
-    def check_perfect_session(self, session_score, session_total):
+    def check_perfect_session(self, session_score: int, session_total: int) -> bool:
         """
         Check and award perfect session achievement.
         
@@ -184,7 +215,7 @@ class AchievementSystem:
             return True
         return False
     
-    def complete_daily_challenge(self):
+    def complete_daily_challenge(self) -> bool:
         """
         Mark daily challenge completion and award badge if appropriate.
         
@@ -198,21 +229,23 @@ class AchievementSystem:
         
         # Convert set to list if needed
         if isinstance(self.achievements["daily_warrior_dates"], set):
-            self.achievements["daily_warrior_dates"] = list(self.achievements["daily_warrior_dates"])
+            daily_dates_set = cast(Set[str], self.achievements["daily_warrior_dates"])
+            self.achievements["daily_warrior_dates"] = list(daily_dates_set)
         
         # Add today's date if not already present
-        if today_iso not in self.achievements["daily_warrior_dates"]:
-            self.achievements["daily_warrior_dates"].append(today_iso)
+        daily_dates = cast(List[str], self.achievements["daily_warrior_dates"])
+        if today_iso not in daily_dates:
+            daily_dates.append(today_iso)
         
         # Award badge if criteria met
         if ("daily_warrior" not in self.achievements["badges"] and 
-            len(self.achievements["daily_warrior_dates"]) >= 1):
+            len(daily_dates) >= 1):
             self.achievements["badges"].append("daily_warrior")
             return True
         
         return False
     
-    def complete_quick_fire(self):
+    def complete_quick_fire(self) -> bool:
         """
         Award Quick Fire champion badge.
         
@@ -221,7 +254,7 @@ class AchievementSystem:
         """
         return self.award_badge("quick_fire_champion")
     
-    def get_achievement_description(self, badge_name):
+    def get_achievement_description(self, badge_name: str) -> str:
         """
         Get description for achievement badge.
         
@@ -243,7 +276,7 @@ class AchievementSystem:
         
         return descriptions.get(badge_name, f"🏆 Achievement: {badge_name}")
     
-    def get_all_achievement_definitions(self):
+    def get_all_achievement_definitions(self) -> Dict[str, str]:
         """
         Get all available achievement definitions.
         
@@ -260,14 +293,14 @@ class AchievementSystem:
             "perfect_session": "Get 100% accuracy in a session (3+ questions)"
         }
     
-    def get_progress_toward_achievements(self):
+    def get_progress_toward_achievements(self) -> Dict[str, Dict[str, Any]]:
         """
         Get progress data toward unearned achievements.
         
         Returns:
             dict: Progress data for each unearned achievement
         """
-        progress = {}
+        progress: Dict[str, Dict[str, Any]] = {}
         unlocked_badges = set(self.achievements.get("badges", []))
         
         # Questions progress (century club)
@@ -299,7 +332,7 @@ class AchievementSystem:
         
         return progress
     
-    def update_leaderboard(self, session_score, session_total, session_points):
+    def update_leaderboard(self, session_score: int, session_total: int, session_points: int) -> None:
         """
         Update leaderboard with session performance.
         
@@ -312,7 +345,7 @@ class AchievementSystem:
             return
         
         accuracy = (session_score / session_total) * 100
-        entry = {
+        entry: Dict[str, Any] = {
             "date": datetime.now().isoformat(),
             "score": session_score,
             "total": session_total,
@@ -332,7 +365,7 @@ class AchievementSystem:
         # Store in achievements for persistence
         self.achievements["leaderboard"] = self.leaderboard
     
-    def get_leaderboard(self):
+    def get_leaderboard(self) -> List[Dict[str, Any]]:
         """
         Get current leaderboard data.
         
@@ -341,7 +374,7 @@ class AchievementSystem:
         """
         return self.leaderboard.copy()
     
-    def get_statistics_summary(self):
+    def get_statistics_summary(self) -> Dict[str, Any]:
         """
         Get summary statistics for achievements.
         
@@ -359,11 +392,11 @@ class AchievementSystem:
             "daily_challenges": len(self.achievements.get("daily_warrior_dates", []))
         }
     
-    def reset_session_points(self):
+    def reset_session_points(self) -> None:
         """Reset session points counter."""
         self.session_points = 0
     
-    def has_badge(self, badge_name):
+    def has_badge(self, badge_name: str) -> bool:
         """
         Check if a specific badge has been earned.
         
@@ -375,7 +408,7 @@ class AchievementSystem:
         """
         return badge_name in self.achievements.get("badges", [])
     
-    def get_badges(self):
+    def get_badges(self) -> List[str]:
         """
         Get list of earned badges.
         
@@ -384,13 +417,13 @@ class AchievementSystem:
         """
         return self.achievements.get("badges", []).copy()
     
-    def clear_achievements(self):
+    def clear_achievements(self) -> None:
         """Clear all achievement data."""
         self.achievements = self._get_default_achievements()
         self.leaderboard = []
         self.session_points = 0
     
-    def _get_default_achievements(self):
+    def _get_default_achievements(self) -> Dict[str, Any]:
         """
         Get default achievement structure.
         

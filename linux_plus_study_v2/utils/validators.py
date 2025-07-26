@@ -5,7 +5,7 @@ Handles input validation, data validation, and user choice validation.
 """
 
 import os
-from typing import Union, Tuple, Optional, List, Dict, Any, Type, Literal
+from typing import Union, Tuple, Optional, List, Dict, Any, Type, cast
 
 
 class InputValidator:
@@ -177,7 +177,7 @@ class InputValidator:
 
     @staticmethod
     def validate_number_range(user_input: str, min_val: Union[int, float], max_val: Union[int, float], 
-                              input_type: Type = int) -> Tuple[bool, Optional[Union[int, float]], str]:
+                              input_type: Type[Union[int, float]] = int) -> Tuple[bool, Optional[Union[int, float]], str]:
         """
         Validate numeric input within a specified range.
         
@@ -209,7 +209,7 @@ class DataValidator:
     """Handles validation of data structures and game state."""
     
     @staticmethod
-    def validate_question_data(question_data: Union[List, Tuple]) -> Tuple[bool, str]:
+    def validate_question_data(question_data: Union[List[Any], Tuple[Any, ...]]) -> Tuple[bool, str]:
         """
         Validate question data structure.
         
@@ -219,35 +219,41 @@ class DataValidator:
         Returns:
             tuple: (is_valid: bool, error_message: str)
         """
-        if not isinstance(question_data, (list, tuple)):
+        # Runtime validation for safety (even though type annotation should ensure correct type)
+        if not isinstance(question_data, (list, tuple)):  # type: ignore
             return False, "Question data must be a list or tuple"
         
         if len(question_data) < 5:
             return False, "Question data must have at least 5 elements"
         
-        question_text, options, correct_idx, category, explanation = question_data[:5]
+        # Type casting to help type checker understand the unpacking
+        question_text = cast(str, question_data[0])
+        options = cast(List[str], question_data[1])
+        correct_idx = cast(int, question_data[2])
+        category = cast(str, question_data[3])
+        explanation = cast(Optional[str], question_data[4] if len(question_data) > 4 else None)
         
         # Validate question text
-        if not isinstance(question_text, str) or not question_text.strip():
+        if not isinstance(question_text, str) or not question_text.strip():  # type: ignore
             return False, "Question text must be a non-empty string"
         
         # Validate options
-        if not isinstance(options, list) or len(options) < 2:
+        if not isinstance(options, list) or len(options) < 2:  # type: ignore
             return False, "Options must be a list with at least 2 items"
         
-        if not all(isinstance(opt, str) and opt.strip() for opt in options):
+        if not all(isinstance(opt, str) and opt.strip() for opt in options):  # type: ignore
             return False, "All options must be non-empty strings"
         
         # Validate correct answer index
-        if not isinstance(correct_idx, int) or not (0 <= correct_idx < len(options)):
+        if not isinstance(correct_idx, int) or not (0 <= correct_idx < len(options)):  # type: ignore
             return False, f"Correct answer index must be an integer between 0 and {len(options)-1}"
         
         # Validate category
-        if not isinstance(category, str) or not category.strip():
+        if not isinstance(category, str) or not category.strip():  # type: ignore
             return False, "Category must be a non-empty string"
         
         # Validate explanation (can be empty)
-        if explanation is not None and not isinstance(explanation, str):
+        if explanation is not None and not isinstance(explanation, str):  # type: ignore
             return False, "Explanation must be a string or None"
         
         return True, ""
@@ -263,7 +269,7 @@ class DataValidator:
         Returns:
             tuple: (is_valid: bool, error_message: str)
         """
-        if not isinstance(history_data, dict):
+        if not isinstance(history_data, dict):  # type: ignore
             return False, "History data must be a dictionary"
         
         required_keys = ["sessions", "questions", "categories", "total_correct", "total_attempts"]
@@ -300,7 +306,7 @@ class DataValidator:
         Returns:
             tuple: (is_valid: bool, error_message: str)
         """
-        if not isinstance(achievements_data, dict):
+        if not isinstance(achievements_data, dict):  # type: ignore
             return False, "Achievements data must be a dictionary"
         
         required_keys = ["badges", "points_earned", "questions_answered"]
@@ -359,7 +365,7 @@ class DataValidator:
         Returns:
             str: Sanitized input
         """
-        if not isinstance(user_input, str):
+        if not isinstance(user_input, str):  # type: ignore
             return ""
         
         # Truncate if too long
@@ -383,7 +389,7 @@ class DataValidator:
         Returns:
             tuple: (is_valid: bool, error_message: str)
         """
-        if not isinstance(file_path, str) or not file_path.strip():
+        if not isinstance(file_path, str) or not file_path.strip():  # type: ignore
             return False, "File path cannot be empty"
         
         if must_exist and not os.path.exists(file_path):

@@ -508,7 +508,7 @@ class ChallengeManager:
         
         # Summary
         total_files = loaded_count + skipped_count
-        if RICH_AVAILABLE:
+        if RICH_AVAILABLE and Table is not None and Panel is not None:
             summary_table = Table.grid(padding=(0, 2))
             summary_table.add_column(style="bold")
             summary_table.add_column()

@@ -12,12 +12,12 @@ from datetime import datetime
 from typing import Optional, Dict, List, Tuple, Any, TypedDict, Union, cast
 
 from utils.config import *
-from models.question import QuestionManager
+from models.question import QuestionManager, GameHistory as QuestionGameHistory
 from models.achievements import AchievementSystem
 
 
 # Define types for better type checking
-class GameHistory(TypedDict, total=False):
+class GameStateHistory(TypedDict, total=False):
     questions: Dict[str, Any]
     categories: Dict[str, Dict[str, int]]
     sessions: List[Any]
@@ -26,6 +26,8 @@ class GameHistory(TypedDict, total=False):
     incorrect_review: List[str]
     leaderboard: List[Dict[str, Any]]
     settings: Dict[str, Any]
+    export_metadata: Dict[str, Any]
+    achievements: Dict[str, Any]
 
 
 class VerifyAnswer(Tuple[Tuple[str, List[str], int, str, str], int, bool]):
@@ -55,7 +57,7 @@ class GameState:
         self.achievement_system = AchievementSystem()
         
         # Load game history
-        self.study_history: GameHistory = self.load_history()
+        self.study_history: GameStateHistory = self.load_history()
         
         # Current session state
         self.score = 0
@@ -99,19 +101,19 @@ class GameState:
     @property
     def achievements(self) -> Dict[str, Any]:
         """Get achievements data."""
-        return cast(Dict[str, Any], self.achievement_system.achievements)
+        return self.achievement_system.achievements
     
     @property
     def leaderboard(self) -> List[Dict[str, Any]]:
         """Get leaderboard data."""
-        return cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
+        return self.achievement_system.leaderboard
     
-    def load_history(self) -> GameHistory:
+    def load_history(self) -> GameStateHistory:
         """
         Load study history from file.
         
         Returns:
-            GameHistory: Study history data with default structure if file doesn't exist
+            GameStateHistory: Study history data with default structure if file doesn't exist
         """
         try:
             with open(self.history_file, 'r', encoding='utf-8') as f:
@@ -240,7 +242,7 @@ class GameState:
         """
         question, index = self.question_manager.select_question(
             category_filter=category_filter,
-            game_history=cast(Optional[GameHistory], self.study_history)
+            game_history=QuestionGameHistory(questions=self.study_history.get('questions', {}))
         )
         
         if question is None:
@@ -491,8 +493,8 @@ class GameState:
         try:
             # Ensure we have the latest data
             export_data = self.study_history.copy()
-            export_data["leaderboard"] = cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
-            export_data["achievements"] = cast(Dict[str, Any], self.achievement_system.achievements)
+            export_data["leaderboard"] = self.achievement_system.leaderboard
+            export_data["achievements"] = self.achievement_system.achievements
             export_data["export_metadata"] = {
                 "export_date": datetime.now().isoformat(),
                 "total_questions_in_pool": len(self.questions),
@@ -522,10 +524,10 @@ class GameState:
         Returns:
             Dict: Statistics summary including history and achievements
         """
-        history_stats = {
+        history_stats: Dict[str, Union[int, float]] = {
             'total_attempts': self.study_history.get('total_attempts', 0),
             'total_correct': self.study_history.get('total_correct', 0),
-            'overall_accuracy': 0,
+            'overall_accuracy': 0.0,
             'categories_attempted': 0,
             'questions_for_review': len(self.study_history.get('incorrect_review', []))
         }
@@ -547,7 +549,7 @@ class GameState:
         achievement_stats = self.achievement_system.get_statistics_summary()
         
         # Combine session stats
-        session_stats = {
+        session_stats: Dict[str, Union[int, bool]] = {
             'current_session_score': self.score,
             'current_session_total': self.total_questions_session,
             'current_session_points': self.session_points,
@@ -565,12 +567,12 @@ class GameState:
             }
         }
     
-    def _default_history(self) -> Dict[str, Any]:
+    def _default_history(self) -> GameStateHistory:
         """
         Get the default structure for study history.
         
         Returns:
-            Dict: Default history structure
+            GameHistory: Default history structure
         """
         return {
             "sessions": [],
@@ -579,15 +581,22 @@ class GameState:
             "total_correct": 0,
             "total_attempts": 0,
             "incorrect_review": [],
-            "leaderboard": []
+            "leaderboard": [],
+            "settings": {},
+            "export_metadata": {},
+            "achievements": {}
         }
     
     def _sync_categories_with_history(self):
         """Ensure all categories from questions exist in history."""
+        if "categories" not in self.study_history:
+            self.study_history["categories"] = {}
+        
         for category in self.categories:
-            self.study_history["categories"].setdefault(
-                category, {"correct": 0, "attempts": 0}
-            )
+            if isinstance(self.study_history["categories"], dict):
+                self.study_history["categories"].setdefault(
+                    category, {"correct": 0, "attempts": 0}
+                )
     
     def validate_state(self) -> List[str]:
         """

@@ -42,93 +42,128 @@ MINI_QUIZ_QUESTIONS = 3
 MINI_QUIZ_TIME_LIMIT = 30  # 30 seconds
 
 # --- Colorama Setup (CLI Colors) ---
-COLOR_QUESTION = ""
-COLOR_OPTIONS = ""
-COLOR_OPTION_NUM = ""
-COLOR_CATEGORY = ""
-COLOR_CORRECT = ""
-COLOR_INCORRECT = ""
-COLOR_EXPLANATION = ""
-COLOR_PROMPT = ""
-COLOR_HEADER = ""
-COLOR_SUBHEADER = ""
-COLOR_STATS_LABEL = ""
-COLOR_STATS_VALUE = ""
-COLOR_STATS_ACC_GOOD = ""
-COLOR_STATS_ACC_AVG = ""
-COLOR_STATS_ACC_BAD = ""
-COLOR_BORDER = ""
-COLOR_INPUT = ""
-COLOR_ERROR = ""
-COLOR_WARNING = ""
-COLOR_INFO = ""
-COLOR_WELCOME_BORDER = ""
-COLOR_WELCOME_TEXT = ""
-COLOR_WELCOME_TITLE = ""
-COLOR_RESET = ""
-
-try:
-    import colorama
-    colorama.init(autoreset=True)
-    # Define a richer color palette using colorama styles
-    C = {
-        "reset": colorama.Style.RESET_ALL,
-        "bold": colorama.Style.BRIGHT,
-        "dim": colorama.Style.DIM,
-        # Foreground Colors
-        "fg_black": colorama.Fore.BLACK,
-        "fg_red": colorama.Fore.RED,
-        "fg_green": colorama.Fore.GREEN,
-        "fg_yellow": colorama.Fore.YELLOW,
-        "fg_blue": colorama.Fore.BLUE,
-        "fg_magenta": colorama.Fore.MAGENTA,
-        "fg_cyan": colorama.Fore.CYAN,
-        "fg_white": colorama.Fore.WHITE,
-        "fg_lightblack_ex": colorama.Fore.LIGHTBLACK_EX,
-        # Bright Foreground Colors
-        "fg_bright_red": colorama.Fore.LIGHTRED_EX,
-        "fg_bright_green": colorama.Fore.LIGHTGREEN_EX,
-        "fg_bright_yellow": colorama.Fore.LIGHTYELLOW_EX,
-        "fg_bright_blue": colorama.Fore.LIGHTBLUE_EX,
-        "fg_bright_magenta": colorama.Fore.LIGHTMAGENTA_EX,
-        "fg_bright_cyan": colorama.Fore.LIGHTCYAN_EX,
-        "fg_bright_white": colorama.Fore.LIGHTWHITE_EX,
-        # Background Colors
-        "bg_red": colorama.Back.RED,
-        "bg_green": colorama.Back.GREEN,
-        "bg_yellow": colorama.Back.YELLOW,
-        "bg_blue": colorama.Back.BLUE,
-        "bg_magenta": colorama.Back.MAGENTA,
-        "bg_cyan": colorama.Back.CYAN,
-        "bg_white": colorama.Back.WHITE,
+def _initialize_colors():
+    """Initialize color constants with colorama support."""
+    colors = {
+        'COLOR_QUESTION': "",
+        'COLOR_OPTIONS': "",
+        'COLOR_OPTION_NUM': "",
+        'COLOR_CATEGORY': "",
+        'COLOR_CORRECT': "",
+        'COLOR_INCORRECT': "",
+        'COLOR_EXPLANATION': "",
+        'COLOR_PROMPT': "",
+        'COLOR_HEADER': "",
+        'COLOR_SUBHEADER': "",
+        'COLOR_STATS_LABEL': "",
+        'COLOR_STATS_VALUE': "",
+        'COLOR_STATS_ACC_GOOD': "",
+        'COLOR_STATS_ACC_AVG': "",
+        'COLOR_STATS_ACC_BAD': "",
+        'COLOR_BORDER': "",
+        'COLOR_INPUT': "",
+        'COLOR_ERROR': "",
+        'COLOR_WARNING': "",
+        'COLOR_INFO': "",
+        'COLOR_WELCOME_BORDER': "",
+        'COLOR_WELCOME_TEXT': "",
+        'COLOR_WELCOME_TITLE': "",
+        'COLOR_RESET': "",
     }
-    # Assign semantic colors using the palette
-    COLOR_QUESTION = C["fg_bright_cyan"] + C["bold"]
-    COLOR_OPTIONS = C["fg_white"]
-    COLOR_OPTION_NUM = C["fg_yellow"] + C["bold"]
-    COLOR_CATEGORY = C["fg_bright_yellow"] + C["bold"]
-    COLOR_CORRECT = C["fg_bright_green"] + C["bold"]
-    COLOR_INCORRECT = C["fg_bright_red"] + C["bold"]
-    COLOR_EXPLANATION = C["fg_lightblack_ex"]
-    COLOR_PROMPT = C["fg_bright_magenta"] + C["bold"]
-    COLOR_HEADER = C["fg_bright_blue"] + C["bold"]
-    COLOR_SUBHEADER = C["fg_blue"] + C["bold"]
-    COLOR_STATS_LABEL = C["fg_white"]
-    COLOR_STATS_VALUE = C["fg_bright_yellow"]
-    COLOR_STATS_ACC_GOOD = C["fg_bright_green"]
-    COLOR_STATS_ACC_AVG = C["fg_yellow"]
-    COLOR_STATS_ACC_BAD = C["fg_bright_red"]
-    COLOR_BORDER = C["fg_blue"]
-    COLOR_INPUT = C["fg_bright_white"]
-    COLOR_ERROR = C["fg_white"] + C["bg_red"] + C["bold"]
-    COLOR_WARNING = C["fg_bright_yellow"] + C["bold"]
-    COLOR_INFO = C["fg_bright_cyan"]
-    COLOR_WELCOME_BORDER = C["fg_bright_yellow"] + C["bold"]
-    COLOR_WELCOME_TEXT = C["fg_white"]
-    COLOR_WELCOME_TITLE = C["fg_bright_yellow"] + C["bold"]
-    COLOR_RESET = C["reset"]
-except ImportError:
-    print("Warning: Colorama not found. Colored output will be disabled in CLI.")
+    
+    try:
+        import colorama
+        colorama.init(autoreset=True)
+        # Define a richer color palette using colorama styles
+        C = {
+            "reset": colorama.Style.RESET_ALL,
+            "bold": colorama.Style.BRIGHT,
+            "dim": colorama.Style.DIM,
+            # Foreground Colors
+            "fg_black": colorama.Fore.BLACK,
+            "fg_red": colorama.Fore.RED,
+            "fg_green": colorama.Fore.GREEN,
+            "fg_yellow": colorama.Fore.YELLOW,
+            "fg_blue": colorama.Fore.BLUE,
+            "fg_magenta": colorama.Fore.MAGENTA,
+            "fg_cyan": colorama.Fore.CYAN,
+            "fg_white": colorama.Fore.WHITE,
+            "fg_lightblack_ex": colorama.Fore.LIGHTBLACK_EX,
+            # Bright Foreground Colors
+            "fg_bright_red": colorama.Fore.LIGHTRED_EX,
+            "fg_bright_green": colorama.Fore.LIGHTGREEN_EX,
+            "fg_bright_yellow": colorama.Fore.LIGHTYELLOW_EX,
+            "fg_bright_blue": colorama.Fore.LIGHTBLUE_EX,
+            "fg_bright_magenta": colorama.Fore.LIGHTMAGENTA_EX,
+            "fg_bright_cyan": colorama.Fore.LIGHTCYAN_EX,
+            "fg_bright_white": colorama.Fore.LIGHTWHITE_EX,
+            # Background Colors
+            "bg_red": colorama.Back.RED,
+            "bg_green": colorama.Back.GREEN,
+            "bg_yellow": colorama.Back.YELLOW,
+            "bg_blue": colorama.Back.BLUE,
+            "bg_magenta": colorama.Back.MAGENTA,
+            "bg_cyan": colorama.Back.CYAN,
+            "bg_white": colorama.Back.WHITE,
+        }
+        # Assign semantic colors using the palette
+        colors.update({
+            'COLOR_QUESTION': C["fg_bright_cyan"] + C["bold"],
+            'COLOR_OPTIONS': C["fg_white"],
+            'COLOR_OPTION_NUM': C["fg_yellow"] + C["bold"],
+            'COLOR_CATEGORY': C["fg_bright_yellow"] + C["bold"],
+            'COLOR_CORRECT': C["fg_bright_green"] + C["bold"],
+            'COLOR_INCORRECT': C["fg_bright_red"] + C["bold"],
+            'COLOR_EXPLANATION': C["fg_lightblack_ex"],
+            'COLOR_PROMPT': C["fg_bright_magenta"] + C["bold"],
+            'COLOR_HEADER': C["fg_bright_blue"] + C["bold"],
+            'COLOR_SUBHEADER': C["fg_blue"] + C["bold"],
+            'COLOR_STATS_LABEL': C["fg_white"],
+            'COLOR_STATS_VALUE': C["fg_bright_yellow"],
+            'COLOR_STATS_ACC_GOOD': C["fg_bright_green"],
+            'COLOR_STATS_ACC_AVG': C["fg_yellow"],
+            'COLOR_STATS_ACC_BAD': C["fg_bright_red"],
+            'COLOR_BORDER': C["fg_blue"],
+            'COLOR_INPUT': C["fg_bright_white"],
+            'COLOR_ERROR': C["fg_white"] + C["bg_red"] + C["bold"],
+            'COLOR_WARNING': C["fg_bright_yellow"] + C["bold"],
+            'COLOR_INFO': C["fg_bright_cyan"],
+            'COLOR_WELCOME_BORDER': C["fg_bright_yellow"] + C["bold"],
+            'COLOR_WELCOME_TEXT': C["fg_white"],
+            'COLOR_WELCOME_TITLE': C["fg_bright_yellow"] + C["bold"],
+            'COLOR_RESET': C["reset"],
+        })
+    except ImportError:
+        print("Warning: Colorama not found. Colored output will be disabled in CLI.")
+    
+    return colors
+
+# Initialize colors and extract to module level
+_colors = _initialize_colors()
+COLOR_QUESTION = _colors['COLOR_QUESTION']
+COLOR_OPTIONS = _colors['COLOR_OPTIONS']
+COLOR_OPTION_NUM = _colors['COLOR_OPTION_NUM']
+COLOR_CATEGORY = _colors['COLOR_CATEGORY']
+COLOR_CORRECT = _colors['COLOR_CORRECT']
+COLOR_INCORRECT = _colors['COLOR_INCORRECT']
+COLOR_EXPLANATION = _colors['COLOR_EXPLANATION']
+COLOR_PROMPT = _colors['COLOR_PROMPT']
+COLOR_HEADER = _colors['COLOR_HEADER']
+COLOR_SUBHEADER = _colors['COLOR_SUBHEADER']
+COLOR_STATS_LABEL = _colors['COLOR_STATS_LABEL']
+COLOR_STATS_VALUE = _colors['COLOR_STATS_VALUE']
+COLOR_STATS_ACC_GOOD = _colors['COLOR_STATS_ACC_GOOD']
+COLOR_STATS_ACC_AVG = _colors['COLOR_STATS_ACC_AVG']
+COLOR_STATS_ACC_BAD = _colors['COLOR_STATS_ACC_BAD']
+COLOR_BORDER = _colors['COLOR_BORDER']
+COLOR_INPUT = _colors['COLOR_INPUT']
+COLOR_ERROR = _colors['COLOR_ERROR']
+COLOR_WARNING = _colors['COLOR_WARNING']
+COLOR_INFO = _colors['COLOR_INFO']
+COLOR_WELCOME_BORDER = _colors['COLOR_WELCOME_BORDER']
+COLOR_WELCOME_TEXT = _colors['COLOR_WELCOME_TEXT']
+COLOR_WELCOME_TITLE = _colors['COLOR_WELCOME_TITLE']
+COLOR_RESET = _colors['COLOR_RESET']
 
 # CLI Configuration Settings
 CLI_SETTINGS: Dict[str, Any] = {

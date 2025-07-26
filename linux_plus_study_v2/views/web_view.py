@@ -21,6 +21,7 @@ import atexit
 from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
+import re  # Add the missing import for regular expressions
 try:
     from vm_integration.utils.vm_manager import VMManager
 except ImportError:
@@ -33,7 +34,7 @@ except ImportError:
     logging.warning("libvirt-python not available. VM functionality will be limited.")
 
 # Add proper type imports
-from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal, Protocol
+from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal, Protocol, runtime_checkable
 
 try:
     from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections, DatabasePoolManager
@@ -61,6 +62,30 @@ from werkzeug.utils import secure_filename
 import tempfile
 import mimetypes
 from typing import Any, Dict, Optional
+
+# Define TypedDict for question object structure
+class QuestionExportDict(TypedDict):
+    """Type definition for question export data structure."""
+    id: int
+    question: str
+    category: str
+    options: List[str]
+    correct_answer_index: int
+    correct_answer_letter: str
+    correct_answer_text: str
+    explanation: str
+
+class ExportMetadataDict(TypedDict):
+    """Type definition for export metadata structure."""
+    title: str
+    export_date: str
+    total_questions: int
+    categories: List[str]
+
+class ExportDataDict(TypedDict):
+    """Type definition for full export data structure."""
+    metadata: ExportMetadataDict
+    questions: List[QuestionExportDict]
 
 cli_playground = get_cli_playground()
 
@@ -93,13 +118,14 @@ def setup_database_for_web() -> Optional["DatabasePoolManager"]:
         return None
 
 # Add this class definition after the other type definitions
+@runtime_checkable
 class StatsControllerProtocol(Protocol):
     """Protocol defining the interface for StatsController."""
     def get_detailed_statistics(self) -> "DetailedStatistics": ...
     def get_achievements_data(self) -> Dict[str, Union[List[Any], Dict[str, Any], int]]: ...
     def get_leaderboard_data(self) -> List[Any]: ...
     def clear_statistics(self) -> bool: ...
-    def get_review_questions_data(self) -> Dict[str, Union[bool, List[Any]]]: ...
+    def get_review_questions_data(self) -> "ReviewQuestionsData": ...  # Updated return type
     def remove_from_review_list(self, question_text: str) -> bool: ...
 
 class LinuxPlusStudyWeb:
@@ -143,10 +169,13 @@ class LinuxPlusStudyWeb:
         # Initialize controllers with proper error handling
         try:
             from controllers.quiz_controller import QuizController
-            from controllers.stats_controller import StatsController
+            from controllers.stats_controller import StatsController, ReviewQuestionsData  # Import the type
             
             self.quiz_controller = QuizController(game_state)
             self.stats_controller: StatsControllerProtocol = StatsController(game_state)
+            # Runtime check is now valid since we added @runtime_checkable
+            if not isinstance(self.stats_controller, StatsControllerProtocol):
+                raise TypeError("StatsController does not implement StatsControllerProtocol")
         except ImportError as e:
             self.logger.error(f"Failed to import controllers: {e}")
             raise ImportError(f"Controller import failed: {e}")
@@ -461,7 +490,7 @@ class LinuxPlusStudyWeb:
         
         # Store reference to prevent "not accessed" warning
         self.get_cli_history_handler = get_cli_history
-    def setup_export_import_routes(self):
+    def setup_export_import_routes(self) -> None:
         """Setup routes for export and import functionality."""
         
         @self.app.route('/export/qa/md')
@@ -555,13 +584,13 @@ class LinuxPlusStudyWeb:
                 filename = f"Linux_plus_QA_{timestamp}.json"
                 
                 # Prepare questions data for JSON export
-                questions_data: List[Dict[str, Any]] = []
+                questions_data: List[QuestionExportDict] = []
                 for i, q_data in enumerate(self.game_state.questions):
                     if len(q_data) < 5: 
                         continue
                     question_text, options, correct_answer_index, category, explanation = q_data
                     
-                    question_obj = {
+                    question_obj: QuestionExportDict = {
                         "id": i + 1,
                         "question": question_text,
                         "category": category,
@@ -574,7 +603,7 @@ class LinuxPlusStudyWeb:
                     questions_data.append(question_obj)
 
                 # Create the final JSON structure
-                export_data = {
+                export_data: ExportDataDict = {
                     "metadata": {
                         "title": "Linux+ Study Questions",
                         "export_date": datetime.now().isoformat(),
@@ -672,7 +701,7 @@ class LinuxPlusStudyWeb:
                 
                 # Add questions to system
                 total_added = 0
-                errors = []
+                errors: List[str] = []
                 
                 for question_data in filtered_questions:
                     try:
@@ -752,36 +781,48 @@ class LinuxPlusStudyWeb:
             # Handle different JSON formats
             if isinstance(data, list):
                 # Direct list of questions
-                for item in data:
+                data_list = cast(List[Any], data)
+                for item in data_list:
                     if isinstance(item, dict):
-                        questions.append(self._normalize_question_dict(item))
-                    elif isinstance(item, (list, tuple)) and len(item) >= 4:
+                        # Cast to expected dict type to help type checker
+                        item_dict = cast(Dict[str, Any], item)
+                        questions.append(self._normalize_question_dict(item_dict))
+                    elif isinstance(item, (list, tuple)):
                         # Handle tuple format: (question, options, correct_index, category, explanation)
-                        questions.append({
-                            'question': str(item[0]),
-                            'options': list(item[1]) if len(item) > 1 else [],
-                            'correct_answer_index': int(item[2]) if len(item) > 2 else 0,
-                            'category': str(item[3]) if len(item) > 3 else 'General',
-                            'explanation': str(item[4]) if len(item) > 4 else ''
-                        })
+                        # Cast to sequence of Any to help type checker
+                        item_seq = cast(Tuple[Any, ...], item)
+                        if len(item_seq) >= 4:
+                            questions.append({
+                                'question': str(item_seq[0]),
+                                'options': list(item_seq[1]) if len(item_seq) > 1 else [],
+                                'correct_answer_index': int(item_seq[2]) if len(item_seq) > 2 else 0,
+                                'category': str(item_seq[3]) if len(item_seq) > 3 else 'General',
+                                'explanation': str(item_seq[4]) if len(item_seq) > 4 else ''
+                            })
                             
             elif isinstance(data, dict):
                 if 'questions' in data:
                     # Structured format with metadata
-                    for item in data['questions']:
+                    questions_data = cast(List[Any], data['questions'])
+                    for item in questions_data:
                         if isinstance(item, dict):
-                            questions.append(self._normalize_question_dict(item))
-                        elif isinstance(item, (list, tuple)) and len(item) >= 4:
-                            questions.append({
-                                'question': str(item[0]),
-                                'options': list(item[1]) if len(item) > 1 else [],
-                                'correct_answer_index': int(item[2]) if len(item) > 2 else 0,
-                                'category': str(item[3]) if len(item) > 3 else 'General',
-                                'explanation': str(item[4]) if len(item) > 4 else ''
-                            })
+                            item_dict = cast(Dict[str, Any], item)
+                            questions.append(self._normalize_question_dict(item_dict))
+                        elif isinstance(item, (list, tuple)):
+                            # Handle tuple format: (question, options, correct_index, category, explanation)
+                            item_seq = cast(Tuple[Any, ...], item)
+                            if len(item_seq) >= 4:
+                                questions.append({
+                                    'question': str(item_seq[0]),
+                                    'options': list(item_seq[1]) if len(item_seq) > 1 else [],
+                                    'correct_answer_index': int(item_seq[2]) if len(item_seq) > 2 else 0,
+                                    'category': str(item_seq[3]) if len(item_seq) > 3 else 'General',
+                                    'explanation': str(item_seq[4]) if len(item_seq) > 4 else ''
+                                })
                 else:
                     # Single question object
-                    questions.append(self._normalize_question_dict(data))
+                    single_question = cast(Dict[str, Any], data)
+                    questions.append(self._normalize_question_dict(single_question))
             
             return questions
             
@@ -848,7 +889,6 @@ class LinuxPlusStudyWeb:
                     
                     # Parse new question header
                     # Format: **Q1.** (Category)
-                    import re
                     match = re.match(r'\*\*Q(\d+)\.\*\*\s*\(([^)]*)\)', line)
                     if match:
                         question_number = int(match.group(1))
@@ -874,7 +914,6 @@ class LinuxPlusStudyWeb:
                 # Answer parsing
                 elif in_answers_section and line.startswith("**A"):
                     # Format: **A1.** C. Option text
-                    import re
                     match = re.match(r'\*\*A(\d+)\.\*\*\s*([A-Z])\.\s*(.*)', line)
                     if match:
                         answer_number = int(match.group(1))
@@ -886,7 +925,7 @@ class LinuxPlusStudyWeb:
                         answers_dict[answer_number] = correct_index;
                         
                         # Look for explanation in next lines
-                        explanation_lines = []
+                        explanation_lines: List[str] = []
                         j = i + 1
                         while j < len(lines):
                             next_line = lines[j].strip()
@@ -941,7 +980,7 @@ class LinuxPlusStudyWeb:
         Returns:
             Tuple containing filtered questions and duplicate report
         """
-        existing_questions = [q[0] if isinstance(q, (list, tuple)) else q.get('text', '') 
+        existing_questions: List[str] = [q[0] if isinstance(q, (list, tuple)) else q.get('text', '') 
                             for q in self.game_state.questions]
         
         unique_questions: List[Dict[str, Any]] = []
@@ -954,7 +993,7 @@ class LinuxPlusStudyWeb:
             # Check against existing questions
             is_duplicate = False
             for existing_text in existing_questions:
-                if isinstance(existing_text, str) and self._is_similar_question(question_text, existing_text.lower()):
+                if self._is_similar_question(question_text, existing_text.lower()):
                     is_duplicate = True
                     break
             
@@ -979,7 +1018,7 @@ class LinuxPlusStudyWeb:
         
         return unique_questions, duplicate_report
 
-    def _create_question_signature(self, question_text, options, category):
+    def _create_question_signature(self, question_text: str, options: List[str], category: str) -> str:
         """
         Generate normalized signature for duplicate detection.
         
@@ -996,7 +1035,7 @@ class LinuxPlusStudyWeb:
         normalized_question = re.sub(r'[^\w\s]', '', normalized_question)  # Remove punctuation
         
         # Normalize options
-        normalized_options = []
+        normalized_options: List[str] = []
         for option in options:
             normalized_option = re.sub(r'\s+', ' ', option.lower().strip())
             normalized_option = re.sub(r'[^\w\s]', '', normalized_option)
@@ -1078,7 +1117,7 @@ class LinuxPlusStudyWeb:
         # Remove common words and punctuation for comparison
         import re
         
-        def clean_text(text):
+        def clean_text(text: str) -> str:
             # Remove punctuation and extra spaces
             text = re.sub(r'[^\w\s]', ' ', text.lower())
             # Remove common words
@@ -1108,7 +1147,7 @@ class LinuxPlusStudyWeb:
         similarity = intersection / union
         return similarity >= threshold
 
-    def _add_question_to_pool(self, question_tuple):
+    def _add_question_to_pool(self, question_tuple: Tuple[str, List[str], int, str, str]) -> bool:
         """
         Add a question tuple to the game state question pool.
         
@@ -1120,8 +1159,8 @@ class LinuxPlusStudyWeb:
             bool: True if question was added successfully
         """
         try:
-            # Validate tuple format
-            if not isinstance(question_tuple, (tuple, list)) or len(question_tuple) < 4:
+            # Validate tuple format (length check only since type is guaranteed)
+            if len(question_tuple) < 4:
                 return False
             
             text, options, correct_index, category = question_tuple[:4]
@@ -1163,12 +1202,13 @@ class LinuxPlusStudyWeb:
         except Exception as e:
             print(f"Error adding question to pool: {str(e)}")
             return False
-    def _simulate_command(self, command: str):
+    def _simulate_command(self, command: str) -> Optional[str]:
         """Simulate common commands with educational examples"""
         
         # Create sample files content
         sample_files = {
             'sample.txt': 'Hello Linux Plus student!\nThis is a sample text file.\nPractice your command line skills here.\nGood luck with your certification!',
+            'log.txt': 'INFO: System started\nERROR: Failed to connect\nINFO: Retrying connection\nWARNING: Low disk space\nINFO: Connection established',
             'log.txt': 'INFO: System started\nERROR: Failed to connect\nINFO: Retrying connection\nWARNING: Low disk space\nINFO: Connection established',
             'data.csv': 'name,age,city\nJohn,25,New York\nJane,30,Los Angeles\nBob,35,Chicago',
             'config.conf': '[database]\nhost=localhost\nport=5432\nname=mydb\n\n[logging]\nlevel=INFO\nfile=/var/log/app.log'
@@ -1220,7 +1260,7 @@ class LinuxPlusStudyWeb:
         
         return None  # Command not simulated, try real execution
 
-    def _get_help_text(self):
+    def _get_help_text(self) -> str:
         """Get comprehensive help text"""
         return """Linux Plus CLI Playground - Available Commands:
 
@@ -1260,7 +1300,7 @@ class LinuxPlusStudyWeb:
 
     This is a safe educational environment. Not all Linux commands are available.
     Type commands above to practice Linux command line skills!"""
-    def reset_quiz_state(self):
+    def reset_quiz_state(self) -> None:
         """Reset quiz state variables."""
         self.quiz_active = False
         self.current_quiz_mode = None
@@ -1270,7 +1310,7 @@ class LinuxPlusStudyWeb:
         self.current_streak = 0
         self.quick_fire_start_time = None
         self.quick_fire_questions_answered = 0
-    def setup_routes(self):
+    def setup_routes(self) -> None:
         """Setup Flask routes for the web interface."""
         
         @self.app.route('/')
@@ -1491,8 +1531,6 @@ class LinuxPlusStudyWeb:
                 print(f"Error acknowledging break: {e}")
                 return jsonify({'success': False, 'error': str(e)})
                 
-        # Store reference to make it clear the route is being used
-        self.api_acknowledge_break_handler = api_acknowledge_break
 
         @self.app.route('/api/submit_answer', methods=['POST'])
         def api_submit_answer():
@@ -2019,6 +2057,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/start', methods=['POST'])
         def api_vm_start():
             """API endpoint to start a VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')
@@ -2047,6 +2090,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/stop', methods=['POST'])
         def api_vm_stop():
             """API endpoint to stop a VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')
@@ -2081,6 +2129,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/execute', methods=['POST'])
         def api_vm_execute():
             """API endpoint to execute commands on a VM via SSH."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')
@@ -2131,6 +2184,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/status', methods=['GET'])
         def api_vm_status():
             """API endpoint to get detailed VM status."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 vm_name = request.args.get('vm_name')
                 
@@ -2212,6 +2270,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/snapshots', methods=['GET'])
         def api_vm_snapshots():
             """API endpoint to list VM snapshots."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 vm_name = request.args.get('vm_name')
                 
@@ -2254,6 +2317,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/create_snapshot', methods=['POST'])
         def api_vm_create_snapshot():
             """API endpoint to create a VM snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')
@@ -2268,12 +2336,14 @@ class LinuxPlusStudyWeb:
                 domain = vm_manager.find_vm(conn, vm_name)
                 
                 snapshot_manager = SnapshotManager()
-                # Use cast to help type checker understand the method exists
-                create_snapshot = cast(Callable[[Any, str, str], None], getattr(snapshot_manager, 'create_snapshot', None))
-                if create_snapshot:
-                    create_snapshot(domain, snapshot_name, description)
-                else:
+                # Check if method exists before casting
+                create_snapshot_method = getattr(snapshot_manager, 'create_snapshot', None)
+                if create_snapshot_method is None:
                     raise AttributeError("SnapshotManager has no method 'create_snapshot'")
+                
+                # Use cast to help type checker understand the method signature
+                create_snapshot = cast(Callable[[Any, str, str], None], create_snapshot_method)
+                create_snapshot(domain, snapshot_name, description)
                 
                 conn.close()
                 
@@ -2291,6 +2361,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/restore_snapshot', methods=['POST'])
         def api_vm_restore_snapshot():
             """API endpoint to restore a VM from snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')
@@ -2323,6 +2398,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/delete_snapshot', methods=['POST'])
         def api_vm_delete_snapshot():
             """API endpoint to delete a VM snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('vm_name')

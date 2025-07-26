@@ -7,7 +7,6 @@ and game mode implementations.
 """
 
 import time
-import random
 import hashlib
 from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
@@ -25,6 +24,7 @@ class QuizController:
     quick_fire_start_time: Optional[float]  # Time when quick fire mode started
     quick_fire_end_time: Optional[float]    # Time when quick fire mode ended
     quick_fire_duration: Optional[float]    # Duration of quick fire mode session
+    last_question: Optional[Dict[str, Any]]  # Cache for the last processed question
 
     def __init__(self, game_state: Any):
         """
@@ -58,6 +58,9 @@ class QuizController:
 
         # Last session results
         self.last_session_results: Optional[Dict[str, Any]] = None
+        
+        # Last question cache
+        self.last_question: Optional[Dict[str, Any]] = None
 
     def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
@@ -70,14 +73,15 @@ class QuizController:
         
         return None
 
-    def cache_current_question(self, question_data: Dict[str, Any]):
+    def cache_current_question(self, question_data: Dict[str, Any]) -> None:
         """Cache the current question for repeated access."""
         self._current_question_cache = question_data
-    def clear_current_question_cache(self):
+    def clear_current_question_cache(self) -> None:
         """Clear the cached current question."""
         if hasattr(self, '_current_question_cache'):
             delattr(self, '_current_question_cache')
-    def has_cached_question(self):
+            
+    def has_cached_question(self) -> bool:
         """Check if there's a cached current question."""
         return hasattr(self, '_current_question_cache') and self._current_question_cache is not None
     
@@ -92,6 +96,7 @@ class QuizController:
         Returns:
             dict: Session initialization data
         """
+        print(f"DEBUG: Starting quiz session with mode: '{mode}'")
         self.current_quiz_mode = mode
         self.quiz_active = True
         self.session_score = 0
@@ -101,10 +106,7 @@ class QuizController:
         self.questions_since_break = 0
         
         # Reset session-specific counters in game state
-        self.game_state.score = 0
-        self.game_state.total_questions_session = 0
-        self.game_state.answered_indices_session = []
-        self.game_state.session_points = 0
+        self.game_state.reset_session()
         
         # Handle special modes
         if mode == "quick_fire":
@@ -121,6 +123,7 @@ class QuizController:
         # Clear any stale question cache
         self.clear_current_question_cache()
         
+        print(f"DEBUG: Quiz mode set to: '{self.current_quiz_mode}'")
         return {
             'mode': mode,
             'category_filter': category_filter,
@@ -155,17 +158,17 @@ class QuizController:
             return self.get_daily_challenge_question()
         
         # Regular question selection
-        question_data: Tuple[str, List[str], int, str, str]
-        original_index: int
-        question_data, original_index = self.game_state.select_question(category_filter)
+        question_result = self.game_state.select_question(category_filter)
+        question_data, original_index = question_result
         
-        if question_data:
+        if question_data is not None:
+            quick_fire_remaining = self._get_quick_fire_remaining() if self.quick_fire_active else None
             result: Dict[str, Any] = {
                 'question_data': question_data,
                 'original_index': original_index,
                 'question_number': self.session_total + 1,
                 'streak': self.current_streak,
-                'quick_fire_remaining': self._get_quick_fire_remaining() if self.quick_fire_active else None
+                'quick_fire_remaining': quick_fire_remaining
             }
             # Cache the current question
             self.cache_current_question(result)
@@ -258,7 +261,7 @@ class QuizController:
         if not self.quiz_active or len(question_data) < 5:
             return {'error': 'Invalid quiz state or question data'}
         
-        q_text, options, correct_answer_index, category, explanation = question_data
+        _, options, correct_answer_index, category, explanation = question_data
         is_correct = (user_answer_index == correct_answer_index)
         
         # Update streak
@@ -587,7 +590,7 @@ class QuizController:
             
             question_data = self.game_state.questions[question_index]
             
-            result = {
+            result: Dict[str, Any] = {
                 'question_data': question_data,
                 'original_index': question_index,
                 'question_number': 1,
@@ -747,20 +750,27 @@ class QuizController:
     
     def _check_session_complete(self):
         """Check if the current session should end."""
+        print(f"DEBUG: Checking session complete - mode: '{self.current_quiz_mode}', total: {self.session_total}")
+        
         # Quick Fire completion
         if (self.quick_fire_active and 
             self.quick_fire_questions_answered >= QUICK_FIRE_QUESTIONS):
+            print(f"DEBUG: Quick fire complete")
             return True
         
         # Mini quiz completion
         if (self.current_quiz_mode == "mini_quiz" and 
             self.session_total >= MINI_QUIZ_QUESTIONS):
+            print(f"DEBUG: Mini quiz complete")
             return True
         
         # Single question modes (daily challenge, pop quiz)
         if self.current_quiz_mode in ["daily_challenge", "pop_quiz"]:
-            return self.session_total >= 1
+            complete = self.session_total >= 1
+            print(f"DEBUG: Single question mode - complete: {complete}")
+            return complete
         
+        print(f"DEBUG: Session not complete - continuing")
         return False
     def update_settings(self, settings: Dict[str, Any]) -> None:
         """Update quiz controller with new settings."""

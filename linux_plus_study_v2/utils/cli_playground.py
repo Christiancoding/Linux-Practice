@@ -985,8 +985,7 @@ tmpfs            2048000  102400   1945600   5% /dev/shm'''
     
     def _cmd_free(self, args: List[str]) -> str:
         """Display memory usage (simulated)"""
-        return 
-    '''              total        used        free      shared  buff/cache   available
+        return '''              total        used        free      shared  buff/cache   available
 Mem:        8192000     2048000     4096000      102400     2048000     5632000
 Swap:       2048000           0     2048000
 '''

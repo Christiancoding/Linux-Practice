@@ -14,12 +14,11 @@ from typing import Optional, Dict, Any
 from sqlalchemy import create_engine, MetaData, text
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.pool import QueuePool, StaticPool
-from sqlalchemy.exc import SQLAlchemyError, DisconnectionError
 
 # Add project root to path for imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from utils.config import get_database_config, get_file_path
+from utils.config import get_database_config
 
 class DatabasePoolManager:
     """Manages database connections with pooling for web applications."""
@@ -205,7 +204,7 @@ def cleanup_database_connections() -> None:
         _db_manager = None
 
 # Keep existing JSON-based functions for backward compatibility
-def load_json_file(file_path: str) -> Dict:
+def load_json_file(file_path: str) -> Dict[str, Any]:
     """Load data from JSON file (backward compatibility)."""
     import json
     try:
@@ -218,7 +217,7 @@ def load_json_file(file_path: str) -> Dict:
         logging.error(f"Invalid JSON in file {file_path}: {e}")
         return {}
 
-def save_json_file(file_path: str, data: Dict) -> bool:
+def save_json_file(file_path: str, data: Dict[str, Any]) -> bool:
     """Save data to JSON file (backward compatibility)."""
     import json
     import os
