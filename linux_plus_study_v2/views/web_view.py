@@ -1950,6 +1950,13 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.vm_playground_handler = vm_playground
 
+        @self.app.route('/vm_test')
+        def vm_test():
+            """Render VM test page for debugging."""
+            return render_template('vm_test.html')
+        # Store reference to make it clear the route is being used
+        self.vm_test_handler = vm_test
+
         @self.app.route('/api/vm/list', methods=['GET'])
         def api_vm_list():
             """API endpoint to list all VMs with enhanced error handling."""
@@ -2021,7 +2028,7 @@ class LinuxPlusStudyWeb:
                             # Try to get IP if running
                             if is_active:
                                 try:
-                                    vm_info['ip'] = vm_manager.get_vm_ip(conn, domain)
+                                    vm_info['ip'] = vm_manager.get_vm_ip(vm_name)
                                 except Exception as e:
                                     if hasattr(self, 'logger'):
                                         self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
@@ -2083,14 +2090,12 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name is required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
                 if domain.isActive():
                     return jsonify({'success': False, 'error': f'VM {vm_name} is already running'})
                 
-                vm_manager.start_vm(domain)
-                conn.close()
+                vm_manager.start_vm(vm_name)
                 
                 return jsonify({'success': True, 'message': f'VM {vm_name} started successfully'})
                 
@@ -2117,18 +2122,12 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name is required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
                 if not domain.isActive():
                     return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
                 
-                if force:
-                    domain.destroy()  # Force shutdown
-                else:
-                    domain.shutdown()  # Graceful shutdown
-                
-                conn.close()
+                vm_manager.shutdown_vm(vm_name, force=force)
                 
                 action = 'force stopped' if force else 'shutdown initiated'
                 return jsonify({'success': True, 'message': f'VM {vm_name} {action}'})
@@ -2158,15 +2157,13 @@ class LinuxPlusStudyWeb:
                 vm_manager = VMManager()
                 ssh_manager = SSHManager()
                 
-                # Get VM IP
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                # Get VM and check if running
+                domain = vm_manager.find_vm(vm_name)
                 
                 if not domain.isActive():
                     return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
                 
-                vm_ip = vm_manager.get_vm_ip(conn, domain)
-                conn.close()
+                vm_ip = vm_manager.get_vm_ip(vm_name)
                 
                 # Execute command via SSH
                 from pathlib import Path
@@ -2177,7 +2174,7 @@ class LinuxPlusStudyWeb:
                     username='ubuntu',  # Adjust as needed
                     key_path=ssh_key_path,
                     command=command,
-                                       timeout=30,
+                    timeout=30,
                     verbose=True
                 )
                 
@@ -2209,8 +2206,7 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name is required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
                 is_active = bool(domain.isActive())
                 status_info: Dict[str, Any] = {
@@ -2224,11 +2220,9 @@ class LinuxPlusStudyWeb:
                 # Try to get IP if running
                 if is_active:
                     try:
-                        status_info['ip'] = vm_manager.get_vm_ip(conn, domain)
+                        status_info['ip'] = vm_manager.get_vm_ip(vm_name)
                     except Exception:
                         status_info['ip'] = 'Unknown'
-                
-                conn.close()
                 
                 return jsonify({'success': True, 'status': status_info})
                 
@@ -2237,6 +2231,54 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_vm_status_handler = api_vm_status
         
+        @self.app.route('/api/vm/details', methods=['GET'])
+        def api_vm_details():
+            """API endpoint to get detailed VM information."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                vm_name = request.args.get('vm_name')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                domain = vm_manager.find_vm(vm_name)
+                
+                is_active = bool(domain.isActive())
+                
+                # Get VM info
+                info = domain.info()
+                
+                vm_details = {
+                    'name': vm_name,
+                    'status': 'running' if is_active else 'stopped',
+                    'id': domain.ID() if is_active else None,
+                    'memory': f"{info[1] // 1024} MB" if info else 'Unknown',
+                    'cpu': str(info[3]) if info else 'Unknown',
+                    'ip': None
+                }
+                
+                # Try to get IP if running
+                if is_active:
+                    try:
+                        vm_details['ip'] = vm_manager.get_vm_ip(vm_name)
+                    except Exception:
+                        vm_details['ip'] = 'Unknown'
+                
+                return jsonify({
+                    'success': True, 
+                    'vm': vm_details
+                })
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_details_handler = api_vm_details
+
         @self.app.route('/api/vm/challenges', methods=['GET'])
         def api_vm_challenges():
             """API endpoint to list available challenges."""
@@ -2295,26 +2337,17 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name is required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
-                # Get snapshots
-                snapshots: List[Dict[str, Any]] = []
+                # Get snapshots using the SnapshotManager
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
+                
                 try:
-                    snapshot_names = domain.listAllSnapshots()
-                    for snapshot in snapshot_names:
-                        # Initialize snapshot_info before using it
-                        snapshot_info: Dict[str, Any] = {
-                            'name': snapshot.getName(),
-                            'description': snapshot.getXMLDesc(),
-                            'creation_time': snapshot.getName(),  # Parse from XML if needed
-                            'current': snapshot.isCurrent()
-                        }
-                        snapshots.append(snapshot_info)
+                    snapshots = snapshot_manager.list_snapshots(domain)
                 except Exception as e:
                     self.logger.debug(f"Error listing snapshots: {e}")
-                
-                conn.close()
+                    snapshots = []
                 
                 return jsonify({
                     'success': True,
@@ -2345,25 +2378,24 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
+                from vm_integration.utils.snapshot_manager import SnapshotManager
                 snapshot_manager = SnapshotManager()
-                # Check if method exists before casting
-                create_snapshot_method = getattr(snapshot_manager, 'create_snapshot', None)
-                if create_snapshot_method is None:
-                    raise AttributeError("SnapshotManager has no method 'create_snapshot'")
                 
-                # Use cast to help type checker understand the method signature
-                create_snapshot = cast(Callable[[Any, str, str], None], create_snapshot_method)
-                create_snapshot(domain, snapshot_name, description)
+                # Use the create_external_snapshot method
+                success = snapshot_manager.create_external_snapshot(domain, snapshot_name, description)
                 
-                conn.close()
-                
-                return jsonify({
-                    'success': True,
-                    'message': f'Snapshot {snapshot_name} created for VM {vm_name}'
-                })
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'Snapshot {snapshot_name} created for VM {vm_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to create snapshot'
+                    })
                 
             except Exception as e:
                 self.logger.error(f"Error creating snapshot: {e}", exc_info=True)
@@ -2388,19 +2420,24 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
-                # Find and restore snapshot with proper type casting
-                snapshot = cast(Any, domain).snapshotLookupByName(snapshot_name)
-                cast(Any, domain).revertToSnapshot(snapshot)
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
                 
-                conn.close()
+                # Use the revert_to_snapshot method
+                success = snapshot_manager.revert_to_snapshot(domain, snapshot_name)
                 
-                return jsonify({
-                    'success': True,
-                    'message': f'VM {vm_name} restored from snapshot {snapshot_name}'
-                })
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'VM {vm_name} restored from snapshot {snapshot_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to restore snapshot'
+                    })
                 
             except Exception as e:
                 self.logger.error(f"Error restoring snapshot: {e}", exc_info=True)
@@ -2425,19 +2462,24 @@ class LinuxPlusStudyWeb:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
                 
                 vm_manager = VMManager()
-                conn = vm_manager.connect_libvirt()
-                domain = vm_manager.find_vm(conn, vm_name)
+                domain = vm_manager.find_vm(vm_name)
                 
-                # Find and delete snapshot with proper type casting
-                snapshot = cast(Any, domain).snapshotLookupByName(snapshot_name)
-                snapshot.delete()
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
                 
-                conn.close()
+                # Use the delete_external_snapshot method
+                success = snapshot_manager.delete_external_snapshot(domain, snapshot_name)
                 
-                return jsonify({
-                    'success': True,
-                    'message': f'Snapshot {snapshot_name} deleted from VM {vm_name}'
-                })
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'Snapshot {snapshot_name} deleted from VM {vm_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to delete snapshot'
+                    })
                 
             except Exception as e:
                 self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)

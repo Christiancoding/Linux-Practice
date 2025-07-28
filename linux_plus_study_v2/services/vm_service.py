@@ -32,25 +32,8 @@ class VMService:
             Dict containing success status and VM list
         """
         try:
-            conn: libvirt.virConnect = self.vm_manager.connect_libvirt()
-            vms: List[Dict[str, Any]] = []
-            
-            # Get all defined VMs
-            for vm_name in conn.listDefinedDomains():
-                vm_info = self._get_vm_info(conn, vm_name)
-                vms.append(vm_info)
-            
-            # Get all running VMs
-            for vm_id in conn.listDomainsID():
-                domain: libvirt.virDomain = conn.lookupByID(vm_id)
-                vm_name: str = domain.name()
-                
-                # Skip if already processed
-                if not any(vm['name'] == vm_name for vm in vms):
-                    vm_info = self._get_vm_info(conn, vm_name)
-                    vms.append(vm_info)
-            
-            conn.close()
+            # Use VMManager's list_vms method which handles the connection internally
+            vms = self.vm_manager.list_vms()
             
             return {
                 'success': True,
@@ -67,7 +50,7 @@ class VMService:
     def _get_vm_info(self, conn: libvirt.virConnect, vm_name: str) -> Dict[str, Any]:
         """Get detailed information about a specific VM."""
         try:
-            domain: libvirt.virDomain = conn.lookupByName(vm_name)
+            domain: libvirt.virDomain = self.vm_manager.find_vm(vm_name)
             is_active: bool = domain.isActive()
             
             vm_info: Dict[str, Any] = {
@@ -80,7 +63,7 @@ class VMService:
             # Get IP address if running
             if is_active:
                 try:
-                    vm_info['ip'] = self.vm_manager.get_vm_ip(conn, domain)
+                    vm_info['ip'] = self.vm_manager.get_vm_ip(vm_name)
                 except Exception as e:
                     self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
                     vm_info['ip'] = 'Unknown'
@@ -145,8 +128,7 @@ class VMService:
         """
         conn: Optional[libvirt.virConnect] = None
         try:
-            conn = self.vm_manager.connect_libvirt()
-            domain: libvirt.virDomain = self.vm_manager.find_vm(conn, vm_name)
+            domain: libvirt.virDomain = self.vm_manager.find_vm(vm_name)
             
             if action == 'list':
                 return self._list_snapshots(domain)
@@ -199,12 +181,18 @@ class VMService:
             from vm_integration.utils.snapshot_manager import SnapshotManager
             
             snapshot_manager = SnapshotManager()
-            snapshot_manager.create_snapshot(domain, snapshot_name, description)
+            success = snapshot_manager.create_external_snapshot(domain, snapshot_name, description or "")
             
-            return {
-                'success': True,
-                'message': f'Snapshot {snapshot_name} created successfully'
-            }
+            if success:
+                return {
+                    'success': True,
+                    'message': f'Snapshot {snapshot_name} created successfully'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Failed to create snapshot'
+                }
             
         except Exception as e:
             self.logger.error(f"Error creating snapshot {snapshot_name}: {e}")
@@ -213,13 +201,21 @@ class VMService:
     def _restore_snapshot(self, domain: libvirt.virDomain, snapshot_name: str) -> Dict[str, Any]:
         """Restore VM from snapshot."""
         try:
-            snapshot: libvirt.virDomainSnapshot = domain.snapshotLookupByName(snapshot_name)
-            domain.revertToSnapshot(snapshot)
+            from vm_integration.utils.snapshot_manager import SnapshotManager
             
-            return {
-                'success': True,
-                'message': f'Successfully restored from snapshot {snapshot_name}'
-            }
+            snapshot_manager = SnapshotManager()
+            success = snapshot_manager.revert_to_snapshot(domain, snapshot_name)
+            
+            if success:
+                return {
+                    'success': True,
+                    'message': f'Successfully restored from snapshot {snapshot_name}'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Failed to restore snapshot'
+                }
             
         except Exception as e:
             self.logger.error(f"Error restoring snapshot {snapshot_name}: {e}")
@@ -228,13 +224,21 @@ class VMService:
     def _delete_snapshot(self, domain: libvirt.virDomain, snapshot_name: str) -> Dict[str, Any]:
         """Delete a snapshot."""
         try:
-            snapshot: libvirt.virDomainSnapshot = domain.snapshotLookupByName(snapshot_name)
-            snapshot.delete()
+            from vm_integration.utils.snapshot_manager import SnapshotManager
             
-            return {
-                'success': True,
-                'message': f'Snapshot {snapshot_name} deleted successfully'
-            }
+            snapshot_manager = SnapshotManager()
+            success = snapshot_manager.delete_external_snapshot(domain, snapshot_name)
+            
+            if success:
+                return {
+                    'success': True,
+                    'message': f'Snapshot {snapshot_name} deleted successfully'
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': 'Failed to delete snapshot'
+                }
             
         except Exception as e:
             self.logger.error(f"Error deleting snapshot {snapshot_name}: {e}")

@@ -136,3 +136,13 @@ Traceback (most recent call last):
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 ValueError: not enough values to unpack (expected 2, got 0)
 2025-06-30 19:23:22,538 - __main__ - INFO: LPEM Application shutdown complete
+2025-07-27 08:39:28,630 - __main__ - INFO: LPEM Application logging initialized
+2025-07-27 08:39:28,636 - __main__ - INFO: Starting Linux+ Practice Environment Manager
+2025-07-27 08:39:28,734 - __main__ - ERROR: Failed to import required modules: No module named 'vm_integration'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/main.py", line 132, in run_application
+    from controllers.vm_controller import app
+  File "/home/retiredfan/Documents/github/Linux-Practice/linux_plus_study_v2/vm_integration/controllers/vm_controller.py", line 34, in <module>
+    from vm_integration.utils.challenge_manager import ChallengeManager
+ModuleNotFoundError: No module named 'vm_integration'
+2025-07-27 08:39:28,734 - __main__ - INFO: LPEM Application shutdown complete
