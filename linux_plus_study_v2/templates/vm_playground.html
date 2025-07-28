@@ -1027,67 +1027,11 @@
 </div>
 
 <script>
-// Global reference for event handlers
-let vmPlayground = null;
-
-// Wait for both DOM and VMPlayground class to be ready
-function waitForVMPlayground() {
-    if (window.vmPlayground) {
-        bindEventHandlers();
-    } else {
-        setTimeout(waitForVMPlayground, 50);
-    }
-}
-
-function bindEventHandlers() {
-    const vmPlayground = window.vmPlayground;
-    
-    // Bind event handlers to prevent onclick errors
-    const refreshBtn = document.getElementById('refreshVMsBtn');
-    if (refreshBtn) {
-        refreshBtn.onclick = () => vmPlayground.refreshVMs();
-    }
-    
-    const createBtn = document.getElementById('createVMBtn');
-    if (createBtn) {
-        createBtn.onclick = () => vmPlayground.showCreateVM();
-    }
-    
-    const startBtn = document.getElementById('startBtn');
-    if (startBtn) {
-        startBtn.onclick = () => vmPlayground.startVM();
-    }
-    
-    const stopBtn = document.getElementById('stopBtn');
-    if (stopBtn) {
-        stopBtn.onclick = () => vmPlayground.stopVM();
-    }
-    
-    const restartBtn = document.getElementById('restartBtn');
-    if (restartBtn) {
-        restartBtn.onclick = () => vmPlayground.restartVM();
-    }
-    
-    const clearBtn = document.getElementById('clearBtn');
-    if (clearBtn) {
-        clearBtn.onclick = () => vmPlayground.clearTerminal();
-    }
-    
-    const snapshotBtn = document.getElementById('snapshotBtn');
-    if (snapshotBtn) {
-        snapshotBtn.onclick = () => vmPlayground.showSnapshots();
-    }
-    
-    const closeDetailsBtn = document.getElementById('closeDetailsBtn');
-    if (closeDetailsBtn) {
-        closeDetailsBtn.onclick = () => vmPlayground.hideDetails();
-    }
-    
-    console.log('VM Playground event handlers bound successfully');
-}
-
-// Start waiting for initialization
-document.addEventListener('DOMContentLoaded', waitForVMPlayground);
+// Simplified initialization - let vm_playground.js handle everything
+document.addEventListener('DOMContentLoaded', function() {
+    // The VMPlayground class will self-initialize from vm_playground.js
+    console.log('VM Playground page loaded - initialization handled by vm_playground.js');
+});
 </script>
 {% endblock %}
 {% block scripts %}

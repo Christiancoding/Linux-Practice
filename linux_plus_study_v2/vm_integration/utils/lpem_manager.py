@@ -124,7 +124,7 @@ class Config:
     VM_SHUTDOWN_TIMEOUT_SECONDS: int = 120
 
     # SSH Defaults
-    DEFAULT_SSH_USER: str = "root"  # Update if needed
+    DEFAULT_SSH_USER: str = "roo"  # Updated to correct VM username
     DEFAULT_SSH_KEY_PATH: Path = Path("~/.ssh/id_ed25519").expanduser()  # Update if needed
     SSH_CONNECT_TIMEOUT_SECONDS: int = 10
     SSH_COMMAND_TIMEOUT_SECONDS: int = 30
@@ -230,7 +230,7 @@ class LPEMManager:
             for domain in all_domains:
                 vm_info = {
                     'name': domain.name(),
-                    'state': 'running' if domain.isActive() else 'stopped',
+                    'status': 'running' if domain.isActive() else 'stopped',  # Changed from 'state' to 'status'
                     'id': domain.ID() if domain.isActive() else None
                 }
                 
@@ -904,14 +904,22 @@ class LPEMManager:
             raise SnapshotOperationError(error_msg)
 
     # --- Cleanup ---
-    def __enter__(self):
-        """Context manager entry."""
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        """Context manager exit with cleanup."""
-        self.close_libvirt()
-
+    def cleanup(self):
+        """Clean up connections properly"""
+        try:
+            if hasattr(self, '_conn') and self._conn is not None:
+                try:
+                    self._conn.close()
+                except Exception as e:
+                    logger.warning(f"Error closing libvirt connection: {e}")
+                finally:
+                    self._conn = None
+        except Exception as e:
+            logger.warning(f"Error during cleanup: {e}")
+            
     def __del__(self):
-        """Destructor with cleanup."""
-        self.close_libvirt()
+        """Destructor to ensure cleanup"""
+        try:
+            self.cleanup()
+        except Exception:
+            pass  # Ignore errors during destruction

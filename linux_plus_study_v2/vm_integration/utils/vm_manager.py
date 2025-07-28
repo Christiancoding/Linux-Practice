@@ -136,8 +136,13 @@ class VMManager:
         self.close_libvirt()
 
     def __del__(self):
-        """Destructor with cleanup."""
-        self.close_libvirt()
+        """Destructor to clean up libvirt connection"""
+        try:
+            if hasattr(self, 'conn') and self.conn is not None:
+                self.conn.close()
+                self.conn = None
+        except Exception:
+            pass  # Ignore cleanup errors during destruction
 
 # Legacy function wrappers for backward compatibility
 def connect_libvirt(uri: str = Config.LIBVIRT_URI) -> libvirt.virConnect:

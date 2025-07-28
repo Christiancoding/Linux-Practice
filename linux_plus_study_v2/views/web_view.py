@@ -2171,17 +2171,20 @@ class LinuxPlusStudyWeb:
                 
                 result = ssh_manager.run_ssh_command(
                     host=vm_ip,
-                    username='ubuntu',  # Adjust as needed
+                    username='roo',  # Updated to correct VM username
                     key_path=ssh_key_path,
                     command=command,
                     timeout=30,
                     verbose=True
                 )
                 
+                # Check if SSH command was successful
+                success = result.get('error') is None and result.get('exit_status') == 0
+                
                 return jsonify({
-                    'success': result['success'],
+                    'success': success,
                     'output': result.get('stdout', ''),
-                    'error': result.get('stderr', ''),
+                    'error': result.get('stderr', '') or result.get('error', ''),
                     'exit_status': result.get('exit_status', 0)
                 })
                 
@@ -2278,6 +2281,33 @@ class LinuxPlusStudyWeb:
                 return jsonify({'success': False, 'error': str(e)})
         # Store reference to make it clear the route is being used
         self.api_vm_details_handler = api_vm_details
+
+        @self.app.route('/api/vm/create', methods=['POST'])
+        def api_vm_create():
+            """API endpoint to create a new VM."""
+            try:
+                data = request.get_json()
+                vm_name = data.get('name')
+                template = data.get('template', 'ubuntu-22.04')
+                memory = data.get('memory', 2)
+                cpus = data.get('cpus', 1)
+                disk = data.get('disk', 20)
+                auto_start = data.get('auto_start', False)
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                # For now, return a placeholder response since actual VM creation
+                # requires complex libvirt configuration and templates
+                return jsonify({
+                    'success': False,
+                    'error': 'VM creation functionality is not yet implemented. Please create VMs using virt-manager or virsh.'
+                })
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_create_handler = api_vm_create
 
         @self.app.route('/api/vm/challenges', methods=['GET'])
         def api_vm_challenges():
