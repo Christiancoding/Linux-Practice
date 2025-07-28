@@ -22,6 +22,25 @@ class VMPlayground {
             input.addEventListener('input', (e) => this.handleInput(e));
         }
         
+        // Button event bindings
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const snapshotBtn = document.getElementById('snapshotBtn');
+        const refreshVMsBtn = document.getElementById('refreshVMsBtn');
+        const createVMBtn = document.getElementById('createVMBtn');
+        const closeDetailsBtn = document.getElementById('closeDetailsBtn');
+        
+        if (startBtn) startBtn.addEventListener('click', () => this.startVM());
+        if (stopBtn) stopBtn.addEventListener('click', () => this.stopVM());
+        if (restartBtn) restartBtn.addEventListener('click', () => this.restartVM());
+        if (clearBtn) clearBtn.addEventListener('click', () => this.clearTerminal());
+        if (snapshotBtn) snapshotBtn.addEventListener('click', () => this.showSnapshots());
+        if (refreshVMsBtn) refreshVMsBtn.addEventListener('click', () => this.refreshVMs());
+        if (createVMBtn) createVMBtn.addEventListener('click', () => this.showCreateVM());
+        if (closeDetailsBtn) closeDetailsBtn.addEventListener('click', () => this.hideDetails());
+        
         // Global shortcuts
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.metaKey) {
@@ -223,14 +242,17 @@ class VMPlayground {
         const runningCount = vms.filter(vm => vm.status === 'running').length;
         const stoppedCount = vms.filter(vm => vm.status === 'stopped').length;
         const errorCount = vms.filter(vm => vm.status === 'error').length;
+        const totalCount = vms.length;
         
         const runningElement = document.getElementById('running-vms');
         const stoppedElement = document.getElementById('stopped-vms');
         const errorElement = document.getElementById('error-vms');
+        const totalElement = document.getElementById('total-vms');
         
         if (runningElement) runningElement.textContent = runningCount;
         if (stoppedElement) stoppedElement.textContent = stoppedCount;
         if (errorElement) errorElement.textContent = errorCount;
+        if (totalElement) totalElement.textContent = totalCount;
     }
     
     selectVM(vmName) {

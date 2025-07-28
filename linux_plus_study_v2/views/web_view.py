@@ -2256,11 +2256,24 @@ class LinuxPlusStudyWeb:
                 # Get VM info
                 info = domain.info()
                 
+                # Format memory more intelligently
+                def format_memory(memory_kb):
+                    """Format memory from KB to human readable format"""
+                    if not memory_kb:
+                        return 'Unknown'
+                    
+                    memory_mb = memory_kb // 1024
+                    if memory_mb >= 1024:
+                        memory_gb = memory_mb / 1024
+                        return f"{memory_gb:.1f} GB"
+                    else:
+                        return f"{memory_mb} MB"
+                
                 vm_details = {
                     'name': vm_name,
                     'status': 'running' if is_active else 'stopped',
                     'id': domain.ID() if is_active else None,
-                    'memory': f"{info[1] // 1024} MB" if info else 'Unknown',
+                    'memory': format_memory(info[1]) if info else 'Unknown',
                     'cpu': str(info[3]) if info else 'Unknown',
                     'ip': None
                 }
