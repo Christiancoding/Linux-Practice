@@ -393,6 +393,18 @@
         color: white;
     }
 
+    .btn-terminal.full {
+        background: #10b981;
+        color: white;
+        font-weight: bold;
+    }
+
+    .btn-terminal.full:hover {
+        background: #059669;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, 0.3);
+    }
+
     .btn-terminal:disabled {
         opacity: 0.5;
         cursor: not-allowed;
@@ -994,6 +1006,10 @@
                         <i class="fas fa-camera"></i>
                         <span>Snapshots</span>
                     </button>
+                    <button class="btn-terminal full" id="fullTerminalBtn" onclick="openFullTerminal()" title="Open full terminal with vim support">
+                        <i class="fas fa-external-link-alt"></i>
+                        <span>Full Terminal</span>
+                    </button>
                 </div>
             </div>
             
@@ -1032,6 +1048,78 @@ document.addEventListener('DOMContentLoaded', function() {
     // The VMPlayground class will self-initialize from vm_playground.js
     console.log('VM Playground page loaded - initialization handled by vm_playground.js');
 });
+
+// Full Terminal Access Function
+async function openFullTerminal() {
+    const playground = window.vmPlayground;
+    
+    // Check if a VM is selected
+    if (!playground || !playground.selectedVM) {
+        alert('Please select a VM first before opening the full terminal.');
+        return;
+    }
+    
+    // Show loading message
+    if (playground && playground.addToTerminal) {
+        playground.addToTerminal(`🔄 Starting terminal server on ${playground.selectedVM}...`, 'info');
+    }
+    
+    try {
+        // First, start ttyd on the selected VM
+        const response = await fetch('/api/vm/start_ttyd', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                vm_name: playground.selectedVM,
+                port: 7682 
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (playground && playground.addToTerminal) {
+                playground.addToTerminal('✅ Terminal server started successfully!', 'success');
+                playground.addToTerminal(`🔗 Terminal URL: ${data.url}`, 'info');
+            }
+            
+            // Open full terminal in new window/tab
+            const width = Math.min(1400, screen.width * 0.9);
+            const height = Math.min(900, screen.height * 0.9);
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            
+            const features = `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no,toolbar=no,menubar=no,location=no,status=no`;
+            
+            const terminalWindow = window.open(`/full_terminal?url=${encodeURIComponent(data.url)}`, 'FullTerminal', features);
+            
+            if (terminalWindow) {
+                terminalWindow.focus();
+                
+                // Show success message
+                setTimeout(() => {
+                    if (playground && playground.addToTerminal) {
+                        playground.addToTerminal('🚀 Full terminal opened in new window!', 'success');
+                        playground.addToTerminal('💡 You can now use vim, nano, htop, and other interactive programs!', 'info');
+                        playground.addToTerminal(`Command: sudo ttyd -p 7682 -W -R bash`, 'info');
+                    }
+                }, 500);
+            } else {
+                alert('Failed to open terminal window. Please allow popups for this site.');
+            }
+        } else {
+            if (playground && playground.addToTerminal) {
+                playground.addToTerminal(`❌ Failed to start terminal server: ${data.error}`, 'error');
+            }
+            alert(`Failed to start terminal server: ${data.error}`);
+        }
+    } catch (error) {
+        if (playground && playground.addToTerminal) {
+            playground.addToTerminal(`❌ Error starting terminal server: ${error.message}`, 'error');
+        }
+        alert(`Error starting terminal server: ${error.message}`);
+    }
+}
 </script>
 {% endblock %}
 {% block scripts %}

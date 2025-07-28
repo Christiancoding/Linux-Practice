@@ -1950,6 +1950,141 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.vm_playground_handler = vm_playground
 
+        @self.app.route('/api/vm/start_ttyd', methods=['POST'])
+        def api_start_ttyd():
+            """API endpoint to start ttyd server on the VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json() or {}
+                vm_name = data.get('vm_name', 'ubuntu-practice')  # Default VM name
+                port = data.get('port', 7682)  # Default ttyd port
+                
+                vm_manager = VMManager()
+                ssh_manager = SSHManager()
+                
+                # Get VM and check if running
+                try:
+                    domain = vm_manager.find_vm(vm_name)
+                except Exception as e:
+                    return jsonify({'success': False, 'error': f'VM {vm_name} not found: {e}'})
+                
+                if not domain.isActive():
+                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
+                
+                vm_ip = vm_manager.get_vm_ip(vm_name)
+                
+                # SSH key path (adjust as needed)
+                from pathlib import Path
+                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'
+                
+                # Check if ttyd is already running
+                check_cmd = f"pgrep -f 'ttyd.*{port}'"
+                check_result = ssh_manager.run_ssh_command(
+                    host=vm_ip,
+                    username='roo',
+                    key_path=ssh_key_path,
+                    command=check_cmd,
+                    timeout=10
+                )
+                
+                if check_result.get('exit_status') == 0:
+                    return jsonify({
+                        'success': True,
+                        'message': f'ttyd is already running on port {port}',
+                        'url': f'http://{vm_ip}:{port}'
+                    })
+                
+                # Install ttyd if not present (run in background)
+                install_cmd = "which ttyd || (sudo apt update && sudo apt install -y ttyd)"
+                install_result = ssh_manager.run_ssh_command(
+                    host=vm_ip,
+                    username='roo',
+                    key_path=ssh_key_path,
+                    command=install_cmd,
+                    timeout=120  # Allow time for package installation
+                )
+                
+                if install_result.get('exit_status') != 0:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to install ttyd: {install_result.get("stderr", "Unknown error")}'
+                    })
+                
+                # Start ttyd in background with the requested command
+                ttyd_cmd = f"sudo ttyd -p {port} -W -R bash"
+                start_cmd = f"nohup {ttyd_cmd} > /dev/null 2>&1 & echo $!"
+                
+                start_result = ssh_manager.run_ssh_command(
+                    host=vm_ip,
+                    username='roo',
+                    key_path=ssh_key_path,
+                    command=start_cmd,
+                    timeout=10
+                )
+                
+                if start_result.get('exit_status') == 0:
+                    # Give ttyd a moment to start up
+                    import time
+                    time.sleep(2)
+                    
+                    # Verify ttyd is running
+                    verify_result = ssh_manager.run_ssh_command(
+                        host=vm_ip,
+                        username='roo',
+                        key_path=ssh_key_path,
+                        command=check_cmd,
+                        timeout=5
+                    )
+                    
+                    if verify_result.get('exit_status') == 0:
+                        return jsonify({
+                            'success': True,
+                            'message': f'ttyd started successfully on port {port}',
+                            'url': f'http://{vm_ip}:{port}',
+                            'pid': start_result.get('stdout', '').strip()
+                        })
+                    else:
+                        return jsonify({
+                            'success': False,
+                            'error': 'ttyd failed to start or is not responding'
+                        })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to start ttyd: {start_result.get("stderr", "Unknown error")}'
+                    })
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to make it clear the route is being used
+        self.api_start_ttyd_handler = api_start_ttyd
+
+        @self.app.route('/full_terminal')
+        def full_terminal():
+            """Render full terminal access with ttyd integration."""
+            return render_template('full_terminal.html')
+        # Store reference to make it clear the route is being used
+        self.full_terminal_handler = full_terminal
+
+        @self.app.route('/debug_terminal')
+        def debug_terminal():
+            """Debug terminal functionality."""
+            return render_template('debug_terminal.html')
+        # Store reference to make it clear the route is being used
+        self.debug_terminal_handler = debug_terminal
+
+        @self.app.route('/terminal_test')
+        def terminal_test():
+            """Standalone terminal test page."""
+            return render_template('terminal_test.html')
+        # Store reference to make it clear the route is being used
+        self.terminal_test_handler = terminal_test
+
         @self.app.route('/vm_test')
         def vm_test():
             """Render VM test page for debugging."""
@@ -2169,14 +2304,30 @@ class LinuxPlusStudyWeb:
                 from pathlib import Path
                 ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'   # Adjust as needed
                 
-                result = ssh_manager.run_ssh_command(
-                    host=vm_ip,
-                    username='roo',  # Updated to correct VM username
-                    key_path=ssh_key_path,
-                    command=command,
-                    timeout=30,
-                    verbose=True
-                )
+                # Check if the command requires interactive mode (TTY)
+                interactive_commands = ['vim', 'nano', 'htop', 'top', 'man', 'less', 'more', 'vi']
+                is_interactive = any(cmd in command.lower() for cmd in interactive_commands)
+                
+                if is_interactive:
+                    # Use interactive SSH method for commands that need TTY
+                    result = ssh_manager.run_interactive_ssh_command(
+                        host=vm_ip,
+                        username='roo',
+                        key_path=ssh_key_path,
+                        command=command,
+                        timeout=60,  # Longer timeout for interactive commands
+                        verbose=True
+                    )
+                else:
+                    # Use regular SSH method for non-interactive commands
+                    result = ssh_manager.run_ssh_command(
+                        host=vm_ip,
+                        username='roo',
+                        key_path=ssh_key_path,
+                        command=command,
+                        timeout=30,
+                        verbose=True
+                    )
                 
                 # Check if SSH command was successful
                 success = result.get('error') is None and result.get('exit_status') == 0

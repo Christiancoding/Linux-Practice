@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terminal Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #1a1a2e;
+            color: white;
+        }
+        .test-button {
+            background: #10b981;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            margin: 10px;
+            display: inline-block;
+        }
+        .test-button:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+        }
+        .error {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Terminal Test Page</h1>
+    
+    <h2>Click any button to test terminal access:</h2>
+    
+    <button class="test-button" onclick="openDirectTerminal()">
+        🖥️ Direct Terminal (ttyd)
+    </button>
+    
+    <button class="test-button" onclick="openFullTerminalPage()">
+        📄 Full Terminal Page
+    </button>
+    
+    <button class="test-button" onclick="openSimplePopup()">
+        🪟 Simple Popup Test
+    </button>
+    
+    <div id="results" style="margin-top: 30px;"></div>
+    
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+            results.innerHTML += `<div class="${className}">${message}</div>`;
+        }
+        
+        function openDirectTerminal() {
+            log('🔄 Opening direct terminal...', 'info');
+            try {
+                const terminalWindow = window.open('http://192.168.122.182:7682', '_blank');
+                if (terminalWindow) {
+                    log('✅ Terminal opened successfully!', 'success');
+                } else {
+                    log('❌ Failed to open terminal - popup blocked?', 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        function openFullTerminalPage() {
+            log('🔄 Opening full terminal page...', 'info');
+            try {
+                const terminalWindow = window.open('/full_terminal', '_blank');
+                if (terminalWindow) {
+                    log('✅ Full terminal page opened!', 'success');
+                } else {
+                    log('❌ Failed to open page - popup blocked?', 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        function openSimplePopup() {
+            log('🔄 Testing simple popup...', 'info');
+            try {
+                const popup = window.open('', '_blank', 'width=400,height=300');
+                if (popup) {
+                    popup.document.write('<h1>✅ Popup Works!</h1><p>Close this window.</p>');
+                    log('✅ Simple popup works!', 'success');
+                } else {
+                    log('❌ Popup blocked - enable popups for this site', 'error');
+                }
+            } catch (error) {
+                log('❌ Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Initial status
+        log('🌐 Page loaded successfully');
+        log('📍 Testing from: ' + window.location.href);
+    </script>
+</body>
+</html>

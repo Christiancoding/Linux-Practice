@@ -191,6 +191,151 @@ class SSHManager:
 
         return result
 
+    def run_interactive_ssh_command(self, host: str, username: str, key_path: Path, 
+                                   command: str, timeout: int = 30, verbose: bool = False) -> Dict[str, Any]:
+        """
+        Execute an interactive command via SSH with TTY allocation.
+        
+        This method allocates a pseudo-TTY which allows interactive programs
+        like vim, nano, htop, etc. to work properly.
+        
+        Args:
+            host: Target hostname or IP address
+            username: SSH username
+            key_path: Path to SSH private key
+            command: Command to execute (interactive commands supported)
+            timeout: Command timeout in seconds
+            verbose: Print detailed output
+            
+        Returns:
+            Dict containing stdout, stderr, exit_status, and error info
+        """
+        # Validate SSH key
+        key_path = self._validate_ssh_key(key_path)
+        
+        result: Dict[str, Any] = {'stdout': '', 'stderr': '', 'exit_status': None, 'error': None}
+        ssh_client = None
+
+        try:
+            if verbose and _rich_available:
+                console.print(f"🛰️ Connecting to {username}@{host} (TTY mode)...")
+
+            ssh_client = paramiko.SSHClient()
+            ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            
+            # Connect to the host
+            ssh_client.connect(
+                hostname=host,
+                username=username,
+                key_filename=str(key_path),
+                timeout=10,  # Connection timeout
+                banner_timeout=30,
+                auth_timeout=10
+            )
+
+            if verbose and _rich_available:
+                console.print(f"🚀 Executing interactive command: {command}")
+
+            # Get a transport and open a channel with TTY
+            transport = ssh_client.get_transport()
+            if transport is None:
+                raise Exception("Failed to get SSH transport")
+            channel = transport.open_session()
+            
+            # Request a pseudo-TTY
+            channel.get_pty()
+            
+            # Execute the command
+            channel.exec_command(command)
+            
+            # For vim-like editors, we need to send an escape sequence to exit
+            if 'vim' in command.lower():
+                # Send ESC + :q! + Enter to quit vim without saving
+                import time
+                time.sleep(1)  # Give vim time to start
+                channel.send(b'\x1b:q!\n')  # ESC + :q! + Enter (as bytes)
+            
+            # Wait for command to complete
+            channel.settimeout(timeout)
+            
+            # Read output
+            output = b''
+            stderr_output = b''
+            
+            while not channel.exit_status_ready():
+                if channel.recv_ready():
+                    output += channel.recv(1024)
+                if channel.recv_stderr_ready():
+                    stderr_output += channel.recv_stderr(1024)
+            
+            # Get final output
+            while channel.recv_ready():
+                output += channel.recv(1024)
+            while channel.recv_stderr_ready():
+                stderr_output += channel.recv_stderr(1024)
+            
+            result['stdout'] = output.decode('utf-8', errors='replace')
+            result['stderr'] = stderr_output.decode('utf-8', errors='replace')
+            result['exit_status'] = channel.recv_exit_status()
+            
+            channel.close()
+
+            if verbose:
+                if result['exit_status'] == 0:
+                    msg = "✅ Interactive command executed successfully"
+                    if _rich_available:
+                        console.print(msg)
+                    else:
+                        print(msg)
+                else:
+                    msg = f"❌ Interactive command failed with exit code {result['exit_status']}"
+                    if _rich_available:
+                        console.print(msg)
+                    else:
+                        print(msg)
+
+        except paramiko.AuthenticationException as e:
+            error_msg = f"SSH authentication failed for {username}@{host}: {e}"
+            result['error'] = error_msg
+            self.logger.error(error_msg)
+            if verbose:
+                msg = f"❌ {error_msg}"
+                if _rich_available:
+                    console.print(msg)
+                else:
+                    print(msg)
+            
+        except (paramiko.SSHException, socket.timeout, ConnectionRefusedError, OSError) as e:
+            error_msg = f"SSH connection error to {host}: {e}"
+            result['error'] = error_msg
+            self.logger.error(error_msg)
+            if verbose:
+                msg = f"❌ {error_msg}"
+                if _rich_available:
+                    console.print(msg)
+                else:
+                    print(msg)
+            
+        except Exception as e:
+            error_msg = f"Unexpected SSH error: {e}"
+            result['error'] = error_msg
+            self.logger.error(error_msg)
+            if verbose:
+                msg = f"❌ {error_msg}"
+                if _rich_available:
+                    console.print(msg)
+                else:
+                    print(msg)
+            
+        finally:
+            if ssh_client:
+                try:
+                    ssh_client.close()
+                except Exception as e:
+                    self.logger.warning(f"Error closing SSH connection: {e}")
+
+        return result
+
     def test_ssh_connectivity(self, host: str, username: str, key_path: Path, 
                              timeout: int = 10) -> bool:
         """

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Terminal Access - Linux Plus Study</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a2e;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .terminal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .terminal-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            padding: 10px 20px;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            min-height: 50px;
+        }
+        
+        .terminal-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .terminal-iframe {
+            flex: 1;
+            border: none;
+            background: #000;
+        }
+        
+        .status-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: #dc2626;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            color: #94a3b8;
+        }
+        
+        .vim-ready {
+            color: #10b981;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <div>
+                <h5 class="mb-0 text-light">
+                    🖥️ Full Terminal Access - Ubuntu Practice VM
+                </h5>
+                <div class="info-text">
+                    <span class="vim-ready">✅ VIM Ready</span> | 
+                    <span class="status-badge">Connecting...</span> |
+                    <span id="terminal-url">Terminal Server</span>
+                </div>
+            </div>
+            <div class="terminal-controls">
+                <button class="btn btn-sm btn-outline-light" onclick="refreshTerminal()">
+                    🔄 Refresh
+                </button>
+                <button class="close-btn" onclick="closeTerminal()">
+                    ✕ Close
+                </button>
+            </div>
+        </div>
+        
+        <iframe 
+            id="terminalFrame"
+            class="terminal-iframe"
+            src=""
+            title="Full Terminal Access">
+        </iframe>
+    </div>
+
+    <script>
+        function refreshTerminal() {
+            const iframe = document.getElementById('terminalFrame');
+            iframe.src = iframe.src;
+        }
+        
+        function closeTerminal() {
+            if (window.opener) {
+                window.close();
+            } else {
+                window.location.href = '/vm_playground';
+            }
+        }
+        
+        // Show connection status
+        window.addEventListener('load', function() {
+            const iframe = document.getElementById('terminalFrame');
+            
+            // Try to get VM IP dynamically or use default
+            const defaultUrl = 'http://192.168.122.182:7682';
+            
+            // Check if URL was passed from the parent window
+            const urlParams = new URLSearchParams(window.location.search);
+            const terminalUrl = urlParams.get('url') || defaultUrl;
+            
+            // Set the iframe source
+            iframe.src = terminalUrl;
+            
+            // Update the URL display
+            document.getElementById('terminal-url').textContent = `Terminal: ${terminalUrl}`;
+            
+            iframe.onload = function() {
+                console.log('Terminal loaded successfully');
+                document.querySelector('.status-badge').textContent = 'Connected';
+                document.querySelector('.status-badge').style.background = '#10b981';
+            };
+            
+            iframe.onerror = function() {
+                console.error('Failed to load terminal');
+                document.querySelector('.status-badge').textContent = 'Connection Failed';
+                document.querySelector('.status-badge').style.background = '#ef4444';
+            };
+            
+            // Fallback: try to connect after a short delay if initial load fails
+            setTimeout(() => {
+                if (!iframe.contentWindow || iframe.contentWindow.location.href === 'about:blank') {
+                    console.log('Retrying terminal connection...');
+                    iframe.src = terminalUrl;
+                }
+            }, 3000);
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // F11 for fullscreen
+            if (e.key === 'F11') {
+                e.preventDefault();
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    document.documentElement.requestFullscreen();
+                }
+            }
+            
+            // Ctrl+Shift+R for refresh
+            if (e.ctrlKey && e.shiftKey && e.key === 'R') {
+                e.preventDefault();
+                refreshTerminal();
+            }
+        });
+        
+        // Display instructions
+        setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const terminalUrl = urlParams.get('url') || 'http://192.168.122.182:7682';
+            
+            console.log(`
+🚀 FULL TERMINAL ACCESS READY!
+
+✅ This terminal supports ALL interactive programs:
+   • vim - Full text editor with syntax highlighting
+   • nano - Simple text editor  
+   • htop - System monitor
+   • man pages - Documentation
+   • Any Linux command or program
+
+🎯 Pro Tips:
+   • Press F11 for fullscreen mode
+   • Use Ctrl+Shift+R to refresh terminal
+   • This is a REAL terminal - everything works!
+
+🔧 Technical Details:
+   • Running ttyd web terminal server
+   • Command: sudo ttyd -p 7682 -W -R bash
+   • Full PTY support with proper TTY allocation
+   • Connected to: ${terminalUrl}
+            `);
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -49,7 +49,7 @@ class SSHConfiguration:
     
     # SSH Operation Timeouts (in seconds)
     CONNECT_TIMEOUT_SECONDS: int = 10
-    COMMAND_TIMEOUT_SECONDS: int = 30
+    COMMAND_TIMEOUT_SECONDS: int = 120  # Increased for package management operations
     
     # SSH Security Settings
     KEY_PERMISSIONS_MASK: int = 0o077  # Only owner should have access

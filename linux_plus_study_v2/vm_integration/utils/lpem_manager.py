@@ -127,7 +127,7 @@ class Config:
     DEFAULT_SSH_USER: str = "roo"  # Updated to correct VM username
     DEFAULT_SSH_KEY_PATH: Path = Path("~/.ssh/id_ed25519").expanduser()  # Update if needed
     SSH_CONNECT_TIMEOUT_SECONDS: int = 10
-    SSH_COMMAND_TIMEOUT_SECONDS: int = 30
+    SSH_COMMAND_TIMEOUT_SECONDS: int = 120  # Increased for package management operations
     SSH_KEY_PERMISSIONS_MASK: int = 0o077  # Permissions check: only owner should have access
 
     # Challenge Defaults
@@ -518,6 +518,35 @@ class LPEMManager:
                 ssh_client.close()
 
         return result
+
+    def run_interactive_ssh_command(self, ip_address: str, user: str, key_path: Path, 
+                                   command: str, timeout: int = Config.SSH_COMMAND_TIMEOUT_SECONDS) -> Dict[str, Any]:
+        """
+        Execute an interactive command via SSH with TTY allocation.
+        
+        This method enables proper execution of interactive programs like vim, nano, htop.
+        
+        Args:
+            ip_address: Target IP address
+            user: SSH username
+            key_path: Path to SSH private key
+            command: Interactive command to execute
+            timeout: Command timeout in seconds
+            
+        Returns:
+            Dict containing stdout, stderr, exit_status, and error info
+        """
+        from .ssh_manager import SSHManager
+        
+        ssh_manager = SSHManager(debug=self.debug)
+        return ssh_manager.run_interactive_ssh_command(
+            host=ip_address,
+            username=user,
+            key_path=key_path,
+            command=command,
+            timeout=timeout,
+            verbose=self.debug
+        )
 
     def wait_for_vm_ready(self, vm_name: str, user: str = Config.DEFAULT_SSH_USER, 
                          key_path: Path = Config.DEFAULT_SSH_KEY_PATH,
