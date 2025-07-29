@@ -932,6 +932,149 @@ class LPEMManager:
             
             raise SnapshotOperationError(error_msg)
 
+    # --- VM Creation Methods ---
+    def create_vm(self, vm_name: str, memory_gb: int = 2, cpus: int = 1, disk_gb: int = 20) -> bool:
+        """Create a new VM with basic configuration."""
+        try:
+            conn = self.connect_libvirt()
+            
+            # Check if VM already exists
+            try:
+                existing = conn.lookupByName(vm_name)
+                if existing:
+                    raise PracticeToolError(f"VM '{vm_name}' already exists")
+            except libvirt.libvirtError as e:
+                if e.get_error_code() != VIR_ERR_NO_DOMAIN:
+                    raise
+            
+            # Generate MAC address based on VM name
+            import hashlib
+            hash_obj = hashlib.md5(vm_name.encode())
+            mac_suffix = hash_obj.hexdigest()[:6]
+            mac_address = f"52:54:00:{mac_suffix[:2]}:{mac_suffix[2:4]}:{mac_suffix[4:6]}"
+            
+            memory_kb = memory_gb * 1024 * 1024
+            
+            # Use user-accessible directory for VM disk images
+            import os
+            vm_storage_dir = os.path.expanduser('~/vm-storage')
+            os.makedirs(vm_storage_dir, exist_ok=True)
+            disk_path = f'{vm_storage_dir}/{vm_name}.qcow2'
+            
+            # Basic Ubuntu VM XML template
+            vm_xml = f"""<domain type='qemu'>
+  <name>{vm_name}</name>
+  <memory unit='KiB'>{memory_kb}</memory>
+  <currentMemory unit='KiB'>{memory_kb}</currentMemory>
+  <vcpu placement='static'>{cpus}</vcpu>
+  <os>
+    <type arch='x86_64' machine='pc-q35-6.2'>hvm</type>
+    <boot dev='hd'/>
+    <boot dev='cdrom'/>
+  </os>
+  <features>
+    <acpi/>
+    <apic/>
+    <vmport state='off'/>
+  </features>
+  <cpu mode='host-model' check='partial'/>
+  <clock offset='utc'>
+    <timer name='rtc' tickpolicy='catchup'/>
+    <timer name='pit' tickpolicy='delay'/>
+    <timer name='hpet' present='no'/>
+  </clock>
+  <on_poweroff>destroy</on_poweroff>
+  <on_reboot>restart</on_reboot>
+  <on_crash>destroy</on_crash>
+  <devices>
+    <emulator>/usr/bin/qemu-system-x86_64</emulator>
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='{disk_path}'/>
+      <target dev='vda' bus='virtio'/>
+    </disk>
+    <interface type='network'>
+      <mac address='{mac_address}'/>
+      <source network='default'/>
+      <model type='virtio'/>
+    </interface>
+    <serial type='pty'>
+      <target type='isa-serial' port='0'>
+        <model name='isa-serial'/>
+      </target>
+    </serial>
+    <console type='pty'>
+      <target type='serial' port='0'/>
+    </console>
+    <channel type='unix'>
+      <target type='virtio' name='org.qemu.guest_agent.0'/>
+    </channel>
+    <input type='tablet' bus='usb'/>
+    <input type='mouse' bus='ps2'/>
+    <input type='keyboard' bus='ps2'/>
+    <graphics type='vnc' port='-1' autoport='yes' listen='127.0.0.1'>
+      <listen type='address' address='127.0.0.1'/>
+    </graphics>
+    <video>
+      <model type='qxl' ram='65536' vram='65536' vgamem='16384' heads='1' primary='yes'/>
+    </video>
+    <memballoon model='virtio'/>
+    <rng model='virtio'>
+      <backend model='random'>/dev/urandom</backend>
+    </rng>
+  </devices>
+</domain>"""
+            
+            # Create the disk image in user directory
+            import subprocess
+            try:
+                # Create qcow2 disk image
+                create_disk_cmd = [
+                    'qemu-img', 'create', '-f', 'qcow2', 
+                    disk_path, f'{disk_gb}G'
+                ]
+                result = subprocess.run(create_disk_cmd, capture_output=True, text=True, check=True)
+                self.logger.info(f"Created disk image: {disk_path}")
+                
+                # Make sure the file has proper permissions for libvirt access
+                try:
+                    os.chmod(disk_path, 0o644)
+                except OSError as e:
+                    self.logger.warning(f"Could not set disk permissions: {e}")
+                    
+            except subprocess.CalledProcessError as e:
+                error_msg = f"Failed to create disk image: {e.stderr or str(e)}"
+                self.logger.error(error_msg)
+                raise PracticeToolError(error_msg)
+            
+            # Define the VM in libvirt
+            try:
+                conn.defineXML(vm_xml)
+                
+                if RICH_AVAILABLE:
+                    console.print(f":white_check_mark: VM '{vm_name}' created successfully", style="green")
+                
+                self.logger.info(f"Created VM '{vm_name}' with {memory_gb}GB RAM, {cpus} CPU(s), {disk_gb}GB disk")
+                return True
+                
+            except libvirt.libvirtError as e:
+                # Clean up disk if VM definition failed
+                try:
+                    os.remove(disk_path)
+                except OSError:
+                    pass
+                
+                error_msg = f"Failed to define VM: {str(e)}"
+                self.logger.error(error_msg)
+                raise PracticeToolError(error_msg)
+                
+        except libvirt.libvirtError as e:
+            error_msg = f"Libvirt error creating VM '{vm_name}': {e}"
+            self.logger.error(error_msg)
+            if RICH_AVAILABLE:
+                console.print(f":x: {error_msg}", style="red")
+            raise PracticeToolError(error_msg)
+
     # --- Cleanup ---
     def cleanup(self):
         """Clean up connections properly"""
@@ -940,11 +1083,11 @@ class LPEMManager:
                 try:
                     self._conn.close()
                 except Exception as e:
-                    logger.warning(f"Error closing libvirt connection: {e}")
+                    self.logger.warning(f"Error closing libvirt connection: {e}")
                 finally:
                     self._conn = None
         except Exception as e:
-            logger.warning(f"Error during cleanup: {e}")
+            self.logger.warning(f"Error during cleanup: {e}")
             
     def __del__(self):
         """Destructor to ensure cleanup"""

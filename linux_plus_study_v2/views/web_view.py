@@ -1952,7 +1952,7 @@ class LinuxPlusStudyWeb:
 
         @self.app.route('/api/vm/start_ttyd', methods=['POST'])
         def api_start_ttyd():
-            """API endpoint to start ttyd server on the VM."""
+            """API endpoint to start ttyd server on the VM with OS detection."""
             if not VMManager:
                 return jsonify({
                     'success': False,
@@ -1963,6 +1963,41 @@ class LinuxPlusStudyWeb:
                 vm_name = data.get('vm_name', 'ubuntu-practice')  # Default VM name
                 port = data.get('port', 7682)  # Default ttyd port
                 
+                # Detect OS type from VM name
+                vm_name_lower = vm_name.lower()
+                is_windows = any(keyword in vm_name_lower for keyword in ['win', 'windows', 'w10', 'w11'])
+                
+                if is_windows:
+                    vm_manager = VMManager()
+                    try:
+                        domain = vm_manager.find_vm(vm_name)
+                    except Exception as e:
+                        return jsonify({'success': False, 'error': f'VM {vm_name} not found: {e}'})
+                    
+                    if not domain.isActive():
+                        return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
+                    
+                    vm_ip = vm_manager.get_vm_ip(vm_name)
+                    
+                    return jsonify({
+                        'success': False,
+                        'error': 'ttyd is not supported on Windows VMs',
+                        'suggestions': [
+                            'Windows VMs require different remote access methods',
+                            'Enable SSH first with: Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
+                            'Or use Remote Desktop Protocol (RDP)',
+                            f'RDP URL: rdp://{vm_ip}:3389'
+                        ],
+                        'rdp_url': f'rdp://{vm_ip}:3389',
+                        'ssh_setup_commands': [
+                            'Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
+                            'Start-Service sshd',
+                            'Set-Service -Name sshd -StartupType "Automatic"',
+                            'New-NetFirewallRule -Name sshd -DisplayName "OpenSSH Server" -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22'
+                        ]
+                    })
+                
+                # Linux VM ttyd setup (existing logic)
                 vm_manager = VMManager()
                 ssh_manager = SSHManager()
                 
@@ -1981,11 +2016,42 @@ class LinuxPlusStudyWeb:
                 from pathlib import Path
                 ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'
                 
+                # Try different users for Linux VMs
+                users_to_try = ['roo', 'root', 'ubuntu', 'vagrant', 'user']
+                working_user = None
+                
+                # Find a working SSH user
+                for username in users_to_try:
+                    try:
+                        test_result = ssh_manager.run_ssh_command(
+                            host=vm_ip,
+                            username=username,
+                            key_path=ssh_key_path,
+                            command="echo 'test'",
+                            timeout=5
+                        )
+                        if test_result.get('exit_status') == 0:
+                            working_user = username
+                            break
+                    except Exception:
+                        continue
+                
+                if not working_user:
+                    return jsonify({
+                        'success': False,
+                        'error': f'SSH connection failed for all attempted users: {users_to_try}',
+                        'suggestions': [
+                            'Check if SSH service is running: sudo systemctl status ssh',
+                            'Verify SSH key is installed in ~/.ssh/authorized_keys',
+                            'Check firewall rules: sudo ufw status'
+                        ]
+                    })
+                
                 # Check if ttyd is already running
                 check_cmd = f"pgrep -f 'ttyd.*{port}'"
                 check_result = ssh_manager.run_ssh_command(
                     host=vm_ip,
-                    username='roo',
+                    username=working_user,
                     key_path=ssh_key_path,
                     command=check_cmd,
                     timeout=10
@@ -1995,14 +2061,15 @@ class LinuxPlusStudyWeb:
                     return jsonify({
                         'success': True,
                         'message': f'ttyd is already running on port {port}',
-                        'url': f'http://{vm_ip}:{port}'
+                        'url': f'http://{vm_ip}:{port}',
+                        'username': working_user
                     })
                 
                 # Install ttyd if not present (run in background)
                 install_cmd = "which ttyd || (sudo apt update && sudo apt install -y ttyd)"
                 install_result = ssh_manager.run_ssh_command(
                     host=vm_ip,
-                    username='roo',
+                    username=working_user,
                     key_path=ssh_key_path,
                     command=install_cmd,
                     timeout=120  # Allow time for package installation
@@ -2020,7 +2087,7 @@ class LinuxPlusStudyWeb:
                 
                 start_result = ssh_manager.run_ssh_command(
                     host=vm_ip,
-                    username='roo',
+                    username=working_user,
                     key_path=ssh_key_path,
                     command=start_cmd,
                     timeout=10
@@ -2034,7 +2101,7 @@ class LinuxPlusStudyWeb:
                     # Verify ttyd is running
                     verify_result = ssh_manager.run_ssh_command(
                         host=vm_ip,
-                        username='roo',
+                        username=working_user,
                         key_path=ssh_key_path,
                         command=check_cmd,
                         timeout=5
@@ -2045,7 +2112,8 @@ class LinuxPlusStudyWeb:
                             'success': True,
                             'message': f'ttyd started successfully on port {port}',
                             'url': f'http://{vm_ip}:{port}',
-                            'pid': start_result.get('stdout', '').strip()
+                            'pid': start_result.get('stdout', '').strip(),
+                            'username': working_user
                         })
                     else:
                         return jsonify({
@@ -2275,7 +2343,7 @@ class LinuxPlusStudyWeb:
 
         @self.app.route('/api/vm/execute', methods=['POST'])
         def api_vm_execute():
-            """API endpoint to execute commands on a VM via SSH."""
+            """API endpoint to execute commands on a VM via SSH with OS detection."""
             if not VMManager:
                 return jsonify({
                     'success': False,
@@ -2300,44 +2368,87 @@ class LinuxPlusStudyWeb:
                 
                 vm_ip = vm_manager.get_vm_ip(vm_name)
                 
-                # Execute command via SSH
+                # Detect OS type from VM name
+                vm_name_lower = vm_name.lower()
+                is_windows = any(keyword in vm_name_lower for keyword in ['win', 'windows', 'w10', 'w11'])
+                
+                if is_windows:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Windows VMs require SSH to be enabled first',
+                        'suggestions': [
+                            'Enable SSH: Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
+                            'Start SSH service: Start-Service sshd',
+                            'Allow firewall: New-NetFirewallRule -Name sshd -DisplayName "OpenSSH Server" -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22',
+                            f'Alternative: Use RDP at rdp://{vm_ip}:3389'
+                        ],
+                        'rdp_url': f'rdp://{vm_ip}:3389'
+                    })
+                
+                # Execute command via SSH (Linux VMs)
                 from pathlib import Path
-                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'   # Adjust as needed
+                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'
                 
-                # Check if the command requires interactive mode (TTY)
-                interactive_commands = ['vim', 'nano', 'htop', 'top', 'man', 'less', 'more', 'vi']
-                is_interactive = any(cmd in command.lower() for cmd in interactive_commands)
+                # Try different users for Linux VMs
+                users_to_try = ['roo', 'root', 'ubuntu', 'vagrant', 'user']
+                successful_result = None
                 
-                if is_interactive:
-                    # Use interactive SSH method for commands that need TTY
-                    result = ssh_manager.run_interactive_ssh_command(
-                        host=vm_ip,
-                        username='roo',
-                        key_path=ssh_key_path,
-                        command=command,
-                        timeout=60,  # Longer timeout for interactive commands
-                        verbose=True
-                    )
+                for username in users_to_try:
+                    try:
+                        # Check if the command requires interactive mode (TTY)
+                        interactive_commands = ['vim', 'nano', 'htop', 'top', 'man', 'less', 'more', 'vi']
+                        is_interactive = any(cmd in command.lower() for cmd in interactive_commands)
+                        
+                        if is_interactive:
+                            # Use interactive SSH method for commands that need TTY
+                            result = ssh_manager.run_interactive_ssh_command(
+                                host=vm_ip,
+                                username=username,
+                                key_path=ssh_key_path,
+                                command=command,
+                                timeout=60,  # Longer timeout for interactive commands
+                                verbose=True
+                            )
+                        else:
+                            # Use regular SSH method for non-interactive commands
+                            result = ssh_manager.run_ssh_command(
+                                host=vm_ip,
+                                username=username,
+                                key_path=ssh_key_path,
+                                command=command,
+                                timeout=30,
+                                verbose=True
+                            )
+                        
+                        # If successful, break the loop
+                        if result.get('error') is None and result.get('exit_status') == 0:
+                            successful_result = result
+                            successful_result['username'] = username
+                            break
+                            
+                    except Exception as e:
+                        # Try next user
+                        continue
+                
+                if successful_result:
+                    return jsonify({
+                        'success': True,
+                        'output': successful_result.get('stdout', ''),
+                        'error': successful_result.get('stderr', ''),
+                        'exit_status': successful_result.get('exit_status', 0),
+                        'username': successful_result.get('username', 'unknown')
+                    })
                 else:
-                    # Use regular SSH method for non-interactive commands
-                    result = ssh_manager.run_ssh_command(
-                        host=vm_ip,
-                        username='roo',
-                        key_path=ssh_key_path,
-                        command=command,
-                        timeout=30,
-                        verbose=True
-                    )
-                
-                # Check if SSH command was successful
-                success = result.get('error') is None and result.get('exit_status') == 0
-                
-                return jsonify({
-                    'success': success,
-                    'output': result.get('stdout', ''),
-                    'error': result.get('stderr', '') or result.get('error', ''),
-                    'exit_status': result.get('exit_status', 0)
-                })
+                    return jsonify({
+                        'success': False,
+                        'error': f'SSH connection failed for all attempted users: {users_to_try}',
+                        'suggestions': [
+                            'Check if SSH service is running: sudo systemctl status ssh',
+                            'Verify SSH key is installed in ~/.ssh/authorized_keys',
+                            'Check firewall rules: sudo ufw status',
+                            'Verify VM is fully booted and network is configured'
+                        ]
+                    })
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
@@ -2449,6 +2560,11 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/vm/create', methods=['POST'])
         def api_vm_create():
             """API endpoint to create a new VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
             try:
                 data = request.get_json()
                 vm_name = data.get('name')
@@ -2461,12 +2577,70 @@ class LinuxPlusStudyWeb:
                 if not vm_name:
                     return jsonify({'success': False, 'error': 'VM name is required'})
                 
-                # For now, return a placeholder response since actual VM creation
-                # requires complex libvirt configuration and templates
-                return jsonify({
-                    'success': False,
-                    'error': 'VM creation functionality is not yet implemented. Please create VMs using virt-manager or virsh.'
-                })
+                # Validate VM name (alphanumeric, hyphens, underscores only)
+                import re
+                if not re.match(r'^[a-zA-Z0-9_-]+$', vm_name):
+                    return jsonify({
+                        'success': False, 
+                        'error': 'VM name must contain only alphanumeric characters, hyphens, and underscores'
+                    })
+                
+                vm_manager = VMManager()
+                
+                # Check if VM already exists
+                try:
+                    vm_manager.find_vm(vm_name)
+                    return jsonify({
+                        'success': False,
+                        'error': f'VM "{vm_name}" already exists'
+                    })
+                except Exception:
+                    # VM doesn't exist, we can create it
+                    pass
+                
+                # Create VM using VMManager
+                try:
+                    success = vm_manager.create_vm(
+                        vm_name=vm_name,
+                        memory_gb=int(memory),
+                        cpus=int(cpus),
+                        disk_gb=int(disk)
+                    )
+                    
+                    if not success:
+                        return jsonify({
+                            'success': False,
+                            'error': 'Failed to create VM'
+                        })
+                    
+                    # Auto-start if requested
+                    if auto_start:
+                        try:
+                            vm_manager.start_vm(vm_name)
+                            message = f'VM "{vm_name}" created and started successfully'
+                        except Exception as start_error:
+                            message = f'VM "{vm_name}" created successfully but failed to start: {start_error}'
+                    else:
+                        message = f'VM "{vm_name}" created successfully (not started)'
+                    
+                    return jsonify({
+                        'success': True,
+                        'message': message,
+                        'vm_info': {
+                            'name': vm_name,
+                            'template': template,
+                            'memory': f'{memory} GB',
+                            'cpus': cpus,
+                            'disk': f'{disk} GB',
+                            'auto_started': auto_start
+                        }
+                    })
+                    
+                except Exception as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to create VM: {str(e)}'
+                    })
                 
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})

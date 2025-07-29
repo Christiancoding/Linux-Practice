@@ -99,6 +99,11 @@ class VMManager:
             domain = vm_name
         return self.lpem.get_vm_ip(domain)
 
+    def create_vm(self, vm_name: str, memory_gb: int = 2, cpus: int = 1, 
+                 disk_gb: int = 20) -> bool:
+        """Create a new VM."""
+        return self.lpem.create_vm(vm_name, memory_gb, cpus, disk_gb)
+
     def wait_for_vm_ready(self, vm_name: str, user: str = Config.DEFAULT_SSH_USER, 
                          key_path: Path = Config.DEFAULT_SSH_KEY_PATH,
                          timeout: int = Config.VM_READINESS_TIMEOUT_SECONDS) -> str:
