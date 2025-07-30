@@ -453,6 +453,14 @@ function clearHistory() {
             .then(data => {
                 if (data.success) {
                     showAlert('Study history cleared successfully!', 'success');
+                    // Refresh the status display after clearing
+                    if (typeof updateGameStatus === 'function') {
+                        updateGameStatus();
+                    }
+                    // Reload the page after a short delay to ensure everything updates
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     showAlert('Failed to clear study history: ' + (data.error || 'Unknown error'), 'danger');
                 }

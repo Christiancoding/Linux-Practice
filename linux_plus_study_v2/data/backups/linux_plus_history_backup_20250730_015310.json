@@ -1,0 +1,149 @@
+{
+  "sessions": [],
+  "questions": {
+    "Test question for debugging": {
+      "correct": 0,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:46:39.492580",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-30T01:47:05.171410",
+          "correct": false
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 0,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:47:20.464262",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-30T01:50:16.177803",
+          "correct": false
+        }
+      ]
+    },
+    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:47:36.735833",
+          "correct": false
+        }
+      ]
+    },
+    "What is AppArmor?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:50:16.177959",
+          "correct": false
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:51:20.507354",
+          "correct": false
+        }
+      ]
+    },
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 0,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-07-30T01:51:20.507452",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-07-30T01:51:34.598721",
+          "correct": false
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Commands (System Management)": {
+      "correct": 0,
+      "attempts": 4
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Test Category": {
+      "correct": 0,
+      "attempts": 2
+    }
+  },
+  "total_correct": 0,
+  "total_attempts": 9,
+  "incorrect_review": [
+    "Which command installs the GRUB2 bootloader to a specified device?",
+    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?",
+    "What is AppArmor?",
+    "What is Ansible primarily used for?",
+    "What is the purpose of the `grub2-mkconfig` command?"
+  ],
+  "leaderboard": [
+    {
+      "date": "2025-07-30T01:47:36.736971",
+      "score": 0,
+      "total": 1,
+      "accuracy": 0.0,
+      "points": 0
+    },
+    {
+      "date": "2025-07-30T01:50:16.179263",
+      "score": 0,
+      "total": 2,
+      "accuracy": 0.0,
+      "points": 0
+    },
+    {
+      "date": "2025-07-30T01:51:20.507502",
+      "score": 0,
+      "total": 2,
+      "accuracy": 0.0,
+      "points": 0
+    },
+    {
+      "date": "2025-07-30T01:51:34.599696",
+      "score": 0,
+      "total": 1,
+      "accuracy": 0.0,
+      "points": 0
+    }
+  ],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

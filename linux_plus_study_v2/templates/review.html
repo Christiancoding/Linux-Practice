@@ -4,10 +4,13 @@
 <div class="row">
     <div class="col-lg-10 mx-auto">
         <div class="card bg-secondary">
-            <div class="card-header">
-                <h2 class="text-center text-warning mb-0">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="text-warning mb-0">
                     <i class="fas fa-redo"></i> Review Incorrect Answers
                 </h2>
+                <button class="btn btn-outline-info btn-sm" onclick="cleanupReviewList()">
+                    <i class="fas fa-broom"></i> Cleanup
+                </button>
             </div>
             <div class="card-body">
                 <div id="review-container">
@@ -29,10 +32,15 @@ function loadReviewQuestions() {
     fetch('/api/review_incorrect')
         .then(response => response.json())
         .then(data => {
+            // Show cleanup message if questions were cleaned up
+            if (data.cleanup_performed && data.questions_cleaned > 0) {
+                showAlert(`Cleaned up ${data.questions_cleaned} outdated question(s) from your review list.`, 'info');
+            }
             displayReviewQuestions(data);
         })
         .catch(error => {
             console.error('Error loading review questions:', error);
+            showAlert('Error loading review questions', 'danger');
         });
 }
 
@@ -108,6 +116,34 @@ function removeFromReview(questionText, index) {
     })
     .catch(error => {
         showAlert('Error removing question', 'danger');
+    });
+}
+
+function cleanupReviewList() {
+    if (!confirm('Remove any outdated questions that no longer exist in the question pool?')) {
+        return;
+    }
+    
+    fetch('/api/cleanup_review_list', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert(data.message, data.removed_count > 0 ? 'success' : 'info');
+            if (data.removed_count > 0) {
+                loadReviewQuestions(); // Reload the list
+            }
+        } else {
+            showAlert('Error cleaning up review list: ' + (data.error || 'Unknown error'), 'danger');
+        }
+    })
+    .catch(error => {
+        console.error('Error cleaning up review list:', error);
+        showAlert('Error cleaning up review list', 'danger');
     });
 }
 </script>

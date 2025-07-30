@@ -40,21 +40,6 @@
         {% block content %}{% endblock %}
     </div>
 
-    <!-- Status Bar -->
-    <div class="fixed-bottom bg-secondary text-light p-2">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <span id="status-text">Ready</span>
-                </div>
-                <div class="col-md-6 text-end">
-                    <span id="points-display">Points: 0</span> |
-                    <span id="streak-display">Streak: 0</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
     {% block scripts %}{% endblock %}

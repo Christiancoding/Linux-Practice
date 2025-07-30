@@ -315,21 +315,55 @@ class StatsController:
             bool: True if cleared successfully
         """
         try:
+            print("Starting clear statistics...")
+            
             # Reset to default history structure
             self.game_state.study_history = self.game_state._default_history()
+            print("Reset study history")
             
             # Re-populate categories with 0 stats
             for category in self.game_state.categories:
                 self.game_state.study_history["categories"].setdefault(
                     category, {"correct": 0, "attempts": 0}
                 )
+            print("Reset categories")
             
-            # Save the cleared history
+            # Clear achievements properly
+            if hasattr(self.game_state, 'achievement_system') and self.game_state.achievement_system:
+                print("Found achievement system, resetting...")
+                # Reset achievements using the achievement system's default method
+                self.game_state.achievement_system.achievements = self.game_state.achievement_system._get_default_achievements()
+                
+                # Clear leaderboard in achievement system
+                if hasattr(self.game_state.achievement_system, 'achievements') and 'leaderboard' in self.game_state.achievement_system.achievements:
+                    self.game_state.achievement_system.achievements['leaderboard'] = []
+                    
+                # Also clear leaderboard property if it exists
+                if hasattr(self.game_state.achievement_system, 'leaderboard'):
+                    self.game_state.achievement_system.leaderboard = []
+                    
+                print("Reset achievements and leaderboard")
+            
+            # Ensure leaderboard is also cleared in study_history
+            if 'leaderboard' in self.game_state.study_history:
+                self.game_state.study_history['leaderboard'] = []
+                print("Cleared leaderboard in study history")
+            
+            # Save the cleared history and achievements
+            print("Saving history...")
             self.game_state.save_history()
+            
+            print("Saving achievements...")
+            if hasattr(self.game_state, 'save_achievements') and callable(self.game_state.save_achievements):
+                self.game_state.save_achievements()
+                
+            print("Clear statistics completed successfully")
             return True
             
         except Exception as e:
             print(f"Error clearing statistics: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def update_leaderboard_entry(self, session_score: int, session_total: int, session_points: int) -> None:
@@ -353,20 +387,21 @@ class StatsController:
             "points": session_points
         }
         
-        self.game_state.leaderboard.append(entry)
+        # Use the achievement system's leaderboard instead of direct property access
+        self.game_state.achievement_system.leaderboard.append(entry)
         
         # Keep only top 10 sessions, sorted by accuracy then points
         def sort_key(entry: LeaderboardEntry) -> Tuple[float, int]:
             return (float(entry["accuracy"]), int(entry["points"]))
             
-        self.game_state.leaderboard.sort(
+        self.game_state.achievement_system.leaderboard.sort(
             key=sort_key, 
             reverse=True
         )
-        self.game_state.leaderboard = self.game_state.leaderboard[:10]
+        self.game_state.achievement_system.leaderboard = self.game_state.achievement_system.leaderboard[:10]
         
         # Update in history
-        self.game_state.study_history["leaderboard"] = self.game_state.leaderboard
+        self.game_state.study_history["leaderboard"] = self.game_state.achievement_system.leaderboard
     
     def get_review_questions_data(self) -> ReviewQuestionsData:
         """

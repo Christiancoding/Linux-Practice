@@ -63,6 +63,7 @@ from werkzeug.utils import secure_filename
 import tempfile
 import mimetypes
 from typing import Any, Dict, Optional
+from utils.persistence_manager import get_persistence_manager
 
 # Define TypedDict for question object structure
 class QuestionExportDict(TypedDict):
@@ -229,15 +230,23 @@ class LinuxPlusStudyWeb:
             return 10
 
     def _load_web_settings(self) -> Dict[str, Any]:
-        """Load settings from web_settings.json file."""
+        """Load settings from web_settings.json file using persistence manager."""
         try:
-            if os.path.exists('web_settings.json'):
-                with open('web_settings.json', 'r') as f:
-                    return json.load(f)
+            persistence_manager = get_persistence_manager()
+            return persistence_manager.load_settings()
         except Exception as e:
             print(f"Error loading web settings: {e}")
         # Return default settings if file doesn't exist or can't be loaded
         return {'focusMode': False, 'breakReminder': 10}
+
+    def _ensure_settings_applied(self) -> None:
+        """Ensure current settings are applied to quiz controller."""
+        try:
+            settings = self._load_web_settings()
+            if hasattr(self.quiz_controller, 'update_settings'):
+                self.quiz_controller.update_settings(settings)
+        except Exception as e:
+            print(f"Error ensuring settings applied: {e}")
 
     def _apply_settings_to_game_state(self, settings: Dict[str, Any]) -> bool:
         """Apply settings changes to the current game state and controllers."""
@@ -1590,6 +1599,9 @@ class LinuxPlusStudyWeb:
                 # Normalize category filter
                 category_filter = None if category == "All Categories" else category
                 
+                # Ensure current settings are applied to quiz controller
+                self._ensure_settings_applied()
+                
                 # Force end any existing session to ensure clean state
                 if self.quiz_controller.quiz_active:
                     self.quiz_controller.force_end_session()
@@ -1907,7 +1919,25 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/review_incorrect')
         def api_review_incorrect():
             try:
-                return jsonify(self.stats_controller.get_review_questions_data())
+                review_data = self.stats_controller.get_review_questions_data()
+                
+                # Auto-cleanup missing questions if any are found
+                if review_data.get('missing_questions'):
+                    removed_count = self.stats_controller.cleanup_missing_review_questions(
+                        review_data['missing_questions']
+                    )
+                    if removed_count > 0:
+                        # Save the cleanup changes
+                        self.game_state.save_all_data()
+                        # Get updated review data after cleanup
+                        review_data = self.stats_controller.get_review_questions_data()
+                        # Add cleanup info to response (avoiding TypedDict issues)
+                        response_data = dict(review_data)
+                        response_data['cleanup_performed'] = True
+                        response_data['questions_cleaned'] = removed_count
+                        return jsonify(response_data)
+                
+                return jsonify(review_data)
             except Exception as e:
                 return jsonify({'error': str(e)})
 
@@ -1929,6 +1959,35 @@ class LinuxPlusStudyWeb:
 
         # Store reference to the route function
         self.api_remove_from_review_handler = api_remove_from_review
+
+        @self.app.route('/api/cleanup_review_list', methods=['POST'])
+        def api_cleanup_review_list():
+            """Manual cleanup endpoint to remove outdated questions from review list."""
+            try:
+                review_data = self.stats_controller.get_review_questions_data()
+                
+                if review_data.get('missing_questions'):
+                    removed_count = self.stats_controller.cleanup_missing_review_questions(
+                        review_data['missing_questions']
+                    )
+                    # Save the cleanup changes
+                    self.game_state.save_all_data()
+                    return jsonify({
+                        'success': True, 
+                        'removed_count': removed_count,
+                        'message': f'Cleaned up {removed_count} outdated question(s) from your review list.'
+                    })
+                else:
+                    return jsonify({
+                        'success': True, 
+                        'removed_count': 0,
+                        'message': 'No outdated questions found in your review list.'
+                    })
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+
+        # Store reference to the route function  
+        self.api_cleanup_review_list_handler = api_cleanup_review_list
 
         @self.app.route('/api/export_history')
         def api_export_history():
@@ -1971,37 +2030,9 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/load_settings')
         def api_load_settings():
             try:
-                import json
-                try:
-                    with open('web_settings.json', 'r') as f:
-                        settings = json.load(f)
-                    
-                    # Ensure all required fields exist with defaults
-                    default_settings: Dict[str, Union[bool, int]] = {
-                        'focusMode': False,
-                        'breakReminder': 10,
-                        'debugMode': False,
-                        'pointsPerQuestion': 10,
-                        'streakBonus': 5,
-                        'maxStreakBonus': 50
-                    }
-                    
-                    for key, default_value in default_settings.items():
-                        if key not in settings:
-                            settings[key] = default_value
-                    
-                    return jsonify({'success': True, 'settings': settings})
-                except FileNotFoundError:
-                    # Return comprehensive defaults
-                    default_settings: Dict[str, Union[bool, int]] = {
-                        'focusMode': False,
-                        'breakReminder': 10,
-                        'debugMode': False,
-                        'pointsPerQuestion': 10,
-                        'streakBonus': 5,
-                        'maxStreakBonus': 50
-                    }
-                    return jsonify({'success': True, 'settings': default_settings})
+                persistence_manager = get_persistence_manager()
+                settings = persistence_manager.load_settings()
+                return jsonify({'success': True, 'settings': settings})
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
         self.api_load_settings_handler = api_load_settings
@@ -2022,10 +2053,9 @@ class LinuxPlusStudyWeb:
                 if data['maxStreakBonus'] < data['streakBonus']:
                     data['maxStreakBonus'] = data['streakBonus']
                 
-                # Save to web_settings.json
-                import json
-                with open('web_settings.json', 'w') as f:
-                    json.dump(data, f, indent=2)
+                # Save using persistence manager
+                persistence_manager = get_persistence_manager()
+                persistence_manager.save_settings(data)
                 
                 # Apply settings to controllers and game state
                 success = self._apply_settings_to_game_state(data)

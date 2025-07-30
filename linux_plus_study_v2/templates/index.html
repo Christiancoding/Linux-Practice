@@ -86,37 +86,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Game Status -->
-                <div class="mt-4">
-                    <h5>Game Status</h5>
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <div class="h4 text-warning" id="total-questions">-</div>
-                                <div class="small text-muted">Total Questions</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <div class="h4 text-info" id="total-categories">-</div>
-                                <div class="small text-muted">Categories</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <div class="h4 text-success" id="session-score">0/0</div>
-                                <div class="small text-muted">Session Score</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <div class="h4 text-primary" id="total-points">0</div>
-                                <div class="small text-muted">Total Points</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -165,18 +134,6 @@
                         </div>
                         <div class="col-md-3">
                             <div class="card bg-dark border-secondary">
-                                <div class="card-body p-2">
-                                    <h6 class="card-title small text-muted">
-                                        <i class="fas fa-info-circle"></i> Quick Actions
-                                    </h6>
-                                    <div class="text-center">
-                                        <small class="text-muted">Export your progress or add new questions</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="card bg-dark border-secondary">
                                 <div class="card-body text-center p-2">
                                     <div id="export-status" class="small text-muted">
                                         <i class="fas fa-database"></i> 
@@ -218,27 +175,52 @@ let currentQuizMode = 'standard';
 
 // Load status on page load
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    
     updateGameStatus();
     checkDailyChallengeStatus();
 });
 
 function updateGameStatus() {
+    console.log('updateGameStatus called');
     fetch('/api/status')
-        .then(response => response.json())
+        .then(response => {
+            console.log('API response received:', response.status);
+            return response.json();
+        })
         .then(data => {
-            document.getElementById('total-questions').textContent = data.total_questions;
-            document.getElementById('total-categories').textContent = data.categories.length;
-            document.getElementById('session-score').textContent = `${data.session_score}/${data.session_total}`;
-            document.getElementById('total-points').textContent = data.total_points;
-            document.getElementById('points-display').textContent = `Points: ${data.total_points}`;
-            document.getElementById('streak-display').textContent = `Streak: ${data.current_streak}`;
+            console.log('API data:', data);
+            
+            // Update question count in export section
+            const questionCountEl = document.getElementById('question-count');
+            if (questionCountEl) {
+                questionCountEl.textContent = data.total_questions;
+                console.log('Updated question-count:', data.total_questions);
+            }
+            
+            // Only update elements that exist
+            const pointsDisplay = document.getElementById('points-display');
+            if (pointsDisplay) {
+                pointsDisplay.textContent = `Points: ${data.total_points}`;
+            }
+            
+            const streakDisplay = document.getElementById('streak-display');
+            if (streakDisplay) {
+                streakDisplay.textContent = `Streak: ${data.current_streak}`;
+            }
             
             // Populate category select
             const categorySelect = document.getElementById('categorySelect');
-            categorySelect.innerHTML = '<option value="All Categories">All Categories</option>';
-            data.categories.forEach(cat => {
-                categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
+            if (categorySelect) {
+                categorySelect.innerHTML = '<option value="All Categories">All Categories</option>';
+                data.categories.forEach(cat => {
+                    categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+                });
+                console.log('Updated category select with', data.categories.length, 'categories');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating game status:', error);
         });
 }
 

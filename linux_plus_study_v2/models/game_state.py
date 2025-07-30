@@ -14,6 +14,7 @@ from typing import Optional, Dict, List, Tuple, Any, TypedDict, Union, cast
 from utils.config import *
 from models.question import QuestionManager, GameHistory as QuestionGameHistory
 from models.achievements import AchievementSystem
+from utils.persistence_manager import get_persistence_manager
 
 
 # Define types for better type checking
@@ -52,11 +53,14 @@ class GameState:
         """
         self.history_file = history_file
         
+        # Initialize persistence manager
+        self.persistence_manager = get_persistence_manager()
+        
         # Initialize subsystems
         self.question_manager = QuestionManager()
         self.achievement_system = AchievementSystem()
         
-        # Load game history
+        # Load game history using persistence manager
         self.study_history: GameStateHistory = self.load_history()
         
         # Current session state
@@ -84,6 +88,9 @@ class GameState:
         
         # Sync achievement system with current session
         self.achievement_system.session_points = self.session_points
+        
+        # Sync leaderboard from history to achievement system
+        self._sync_leaderboard_from_history()
         
         # Ensure categories in history match loaded questions
         self._sync_categories_with_history()
@@ -162,21 +169,48 @@ class GameState:
             'best_time': min(r.get('duration', float('inf')) for r in completed) if completed else 0
         }
     def save_history(self):
-        """Save study history to file."""
+        """Save study history to file using persistence manager."""
         try:
             # Update leaderboard in history before saving
-            self.study_history["leaderboard"] = cast(List[Dict[str, Any]], self.achievement_system.leaderboard)
+            self.study_history["leaderboard"] = self.achievement_system.leaderboard
             
-            with open(self.history_file, 'w', encoding='utf-8') as f:
-                json.dump(self.study_history, f, indent=2)
-        except IOError as e:
-            print(f"Error saving history: {e}")
+            # Use persistence manager for saving (cast to Dict for compatibility)
+            success = self.persistence_manager.save_history(dict(self.study_history))
+            if not success:
+                print("Warning: Failed to save history using persistence manager")
         except Exception as e:
             print(f"An unexpected error occurred during history save: {e}")
     
     def save_achievements(self):
-        """Save achievements data."""
-        self.achievement_system.save_achievements()
+        """Save achievements data using persistence manager."""
+        try:
+            success = self.persistence_manager.save_achievements(self.achievement_system.achievements)
+            if not success:
+                print("Warning: Failed to save achievements using persistence manager")
+        except Exception as e:
+            print(f"Error saving achievements: {e}")
+    
+    def save_all_data(self):
+        """Save all data (history, achievements, settings) in one operation."""
+        try:
+            # Update leaderboard in history before saving
+            self.study_history["leaderboard"] = self.achievement_system.leaderboard
+            
+            # Save all data using persistence manager (cast to Dict for compatibility)
+            results = self.persistence_manager.save_all_data(
+                history_data=dict(self.study_history),
+                achievements_data=self.achievement_system.achievements
+            )
+            
+            # Check if all saves were successful
+            if not all(results.values()):
+                failed_saves = [key for key, success in results.items() if not success]
+                print(f"Warning: Failed to save some data: {failed_saves}")
+            
+            return all(results.values())
+        except Exception as e:
+            print(f"Error saving all data: {e}")
+            return False
     
     def update_history(self, question_text: str, category: str, is_correct: bool):
         """
@@ -586,6 +620,20 @@ class GameState:
             "export_metadata": {},
             "achievements": {}
         }
+    
+    def _sync_leaderboard_from_history(self):
+        """Sync leaderboard data from history to achievement system."""
+        if "leaderboard" in self.study_history and isinstance(self.study_history["leaderboard"], list):
+            # Load leaderboard from history into achievement system
+            history_leaderboard = self.study_history["leaderboard"]
+            
+            # Update achievement system's leaderboard
+            self.achievement_system.leaderboard = history_leaderboard
+            
+            # Also update achievements data to maintain consistency
+            if "leaderboard" not in self.achievement_system.achievements:
+                self.achievement_system.achievements["leaderboard"] = []
+            self.achievement_system.achievements["leaderboard"] = history_leaderboard
     
     def _sync_categories_with_history(self):
         """Ensure all categories from questions exist in history."""

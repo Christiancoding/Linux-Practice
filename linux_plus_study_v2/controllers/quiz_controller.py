@@ -225,6 +225,16 @@ class QuizController:
         accuracy = (self.session_score / self.session_total * 100) if self.session_total > 0 else 0.0
         session_points = getattr(self.game_state, 'session_points', 0)
         
+        # Save progress before clearing session state
+        if self.session_total > 0:  # Only save if there was actual activity
+            try:
+                # Use the new unified save method
+                success = self.game_state.save_all_data()
+                if not success:
+                    print("Warning: Some data may not have been saved properly")
+            except Exception as e:
+                print(f"Warning: Failed to save progress during force end: {e}")
+        
         # Store results before clearing
         results: Dict[str, Any] = {
             'session_score': self.session_score,
@@ -295,7 +305,7 @@ class QuizController:
         self.session_total += 1
         self.questions_since_break += 1
         
-        # Calculate points
+                # Calculate points
         points_earned = self._calculate_points(is_correct, self.current_streak)
         
         # Update game state
@@ -342,18 +352,11 @@ class QuizController:
         
         # If session is complete, automatically end the session
         if result['session_complete']:
-            self.quiz_active = False
-            # Save session results
-            accuracy = (self.session_score / self.session_total * 100) if self.session_total > 0 else 0.0
-            self.last_session_results = {
-                'session_score': self.session_score,
-                'session_total': self.session_total,
-                'accuracy': accuracy,
-                'session_points': getattr(self.game_state, 'session_points', 0),
-                'mode': self.current_quiz_mode
-            }
+            # Call the proper end_session method to ensure data is saved
+            session_results = self.end_session()
+            self.last_session_results = session_results
             # Add final results to the response
-            result.update(self.last_session_results)
+            result.update(session_results)
                 
         # Ensure results are saved if session is complete
         if not self.quiz_active and self.session_total > 0 and not result['session_complete']:
@@ -428,9 +431,13 @@ class QuizController:
         if self.quick_fire_active:
             self.quick_fire_active = False
         
-        # Save progress
-        self.game_state.save_history()
-        self.game_state.save_achievements()
+        # Save progress using unified save method
+        try:
+            success = self.game_state.save_all_data()
+            if not success:
+                print("Warning: Some data may not have been saved properly")
+        except Exception as e:
+            print(f"Warning: Failed to save progress during session end: {e}")
         
         session_results: Dict[str, Any] = {
             'session_score': self.session_score,
@@ -845,9 +852,6 @@ class QuizController:
         self.streak_bonus = settings.get('streakBonus', 5)
         self.max_streak_bonus = settings.get('maxStreakBonus', 50)
         self.debug_mode = settings.get('debugMode', False)
-        
-        if self.debug_mode:
-            print(f"DEBUG: Updated quiz controller settings - points per question: {self.points_per_question}, streak bonus: {self.streak_bonus}")
         
         # Update any active scoring calculations
         if hasattr(self, 'current_streak_bonus'):
