@@ -116,7 +116,6 @@ class SnapshotManager:
             # Create the snapshot
             domain.snapshotCreateXML(snapshot_xml, 
                                    libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_DISK_ONLY |
-                                   libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_NO_METADATA |
                                    libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_ATOMIC)
             
             # Verify snapshot files were created

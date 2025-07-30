@@ -100,9 +100,13 @@ class VMManager:
         return self.lpem.get_vm_ip(domain)
 
     def create_vm(self, vm_name: str, memory_gb: int = 2, cpus: int = 1, 
-                 disk_gb: int = 20) -> bool:
-        """Create a new VM."""
-        return self.lpem.create_vm(vm_name, memory_gb, cpus, disk_gb)
+                 disk_gb: int = 20, iso_path: Optional[str] = None) -> bool:
+        """Create a new VM with optional ISO attachment."""
+        return self.lpem.create_vm(vm_name, memory_gb, cpus, disk_gb, iso_path)
+
+    def delete_vm(self, vm_name: str, remove_disk: bool = True) -> bool:
+        """Delete a VM and optionally remove its disk file."""
+        return self.lpem.delete_vm(vm_name, remove_disk)
 
     def wait_for_vm_ready(self, vm_name: str, user: str = Config.DEFAULT_SSH_USER, 
                          key_path: Path = Config.DEFAULT_SSH_KEY_PATH,

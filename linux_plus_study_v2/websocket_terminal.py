@@ -12,10 +12,12 @@ import pty
 import subprocess
 import termios
 import websockets
+import websockets.server
+import websockets.exceptions
 from pathlib import Path
-from threading import Thread
 import struct
 import fcntl
+from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,11 @@ class WebSocketTerminal:
         self.vm_ip = vm_ip
         self.vm_user = vm_user
         self.ssh_key_path = ssh_key_path
-        self.process = None
-        self.master_fd = None
-        self.websocket = None
+        self.process: Optional[subprocess.Popen[bytes]] = None
+        self.master_fd: Optional[int] = None
+        self.websocket: Optional[websockets.server.WebSocketServerProtocol] = None
         
-    async def handle_websocket(self, websocket, path):
+    async def handle_websocket(self, websocket: websockets.server.WebSocketServerProtocol, path: str) -> None:
         """Handle WebSocket connection for terminal session."""
         self.websocket = websocket
         logger.info(f"WebSocket terminal connected: {path}")
@@ -92,33 +94,36 @@ class WebSocketTerminal:
             logger.error(f"Failed to start SSH session: {e}")
             raise
     
-    async def read_output(self):
+    async def read_output(self) -> None:
         """Read output from SSH session and send to WebSocket."""
         loop = asyncio.get_event_loop()
         
         while self.process and self.process.poll() is None:
             try:
                 # Read from master fd (non-blocking)
-                output = await loop.run_in_executor(
-                    None, self._read_nonblocking, self.master_fd, 1024
-                )
-                
-                if output:
-                    # Send output to WebSocket
-                    if self.websocket:
-                        await self.websocket.send(json.dumps({
-                            'type': 'output',
-                            'data': output.decode('utf-8', errors='replace')
-                        }))
+                if self.master_fd is not None:
+                    output = await loop.run_in_executor(
+                        None, self._read_nonblocking, self.master_fd, 1024
+                    )
+                    
+                    if output:
+                        # Send output to WebSocket
+                        if self.websocket:
+                            await self.websocket.send(json.dumps({
+                                'type': 'output',
+                                'data': output.decode('utf-8', errors='replace')
+                            }))
+                    else:
+                        # No data available, small delay
+                        await asyncio.sleep(0.01)
                 else:
-                    # No data available, small delay
-                    await asyncio.sleep(0.01)
+                    break
                     
             except Exception as e:
                 logger.error(f"Error reading output: {e}")
                 break
     
-    def _read_nonblocking(self, fd, size):
+    def _read_nonblocking(self, fd: int, size: int) -> bytes:
         """Read from file descriptor in non-blocking mode."""
         try:
             # Set non-blocking mode
@@ -129,7 +134,7 @@ class WebSocketTerminal:
         except OSError:
             return b''
     
-    async def send_input(self, data):
+    async def send_input(self, data: str) -> None:
         """Send input to SSH session."""
         if self.master_fd:
             try:
@@ -140,7 +145,7 @@ class WebSocketTerminal:
             except Exception as e:
                 logger.error(f"Error sending input: {e}")
     
-    async def resize_terminal(self, rows, cols):
+    async def resize_terminal(self, rows: int, cols: int) -> None:
         """Resize the terminal window."""
         if self.master_fd:
             try:
@@ -169,12 +174,9 @@ class WebSocketTerminal:
                 logger.error(f"Error closing master fd: {e}")
 
 # WebSocket server setup
-async def terminal_handler(websocket, path):
+async def terminal_handler(websocket: websockets.server.WebSocketServerProtocol, path: str) -> None:
     """WebSocket handler for terminal connections."""
     try:
-        # Extract VM name from path
-        vm_name = path.split('/')[-1] if '/' in path else 'ubuntu-practice'
-        
         # SSH connection details
         vm_ip = "192.168.122.182"  # Update with actual VM IP
         vm_user = "roo"
@@ -189,7 +191,7 @@ async def terminal_handler(websocket, path):
     except Exception as e:
         logger.error(f"Terminal handler error: {e}")
 
-def start_websocket_server(host='localhost', port=8765):
+def start_websocket_server(host: str = 'localhost', port: int = 8765) -> Any:
     """Start WebSocket server for terminal connections."""
     logger.info(f"Starting WebSocket terminal server on {host}:{port}")
     

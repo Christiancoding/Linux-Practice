@@ -4,11 +4,23 @@ Enhanced VM Manager with Windows Support
 Handles both Linux and Windows VMs with appropriate connection methods.
 """
 
-import os
-import subprocess
 from pathlib import Path
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, TypedDict
 import logging
+
+class VMCommands(TypedDict):
+    """Type definition for VM commands dictionary."""
+    test: str
+    os_info: str
+    install_ttyd: str
+    enable_ssh: str
+
+class VMConfig(TypedDict):
+    """Type definition for VM configuration dictionary."""
+    default_user: str
+    ssh_port: int
+    shell: str
+    commands: VMCommands
 
 class EnhancedVMManager:
     """VM Manager that supports both Linux and Windows VMs."""
@@ -17,7 +29,7 @@ class EnhancedVMManager:
         self.logger = logging.getLogger(__name__)
         
         # Default configurations for different OS types
-        self.vm_configs = {
+        self.vm_configs: Dict[str, VMConfig] = {
             'linux': {
                 'default_user': 'roo',
                 'ssh_port': 22,
@@ -25,17 +37,18 @@ class EnhancedVMManager:
                 'commands': {
                     'test': 'echo "test"',
                     'os_info': 'uname -a',
-                    'install_ttyd': 'sudo apt update && sudo apt install -y ttyd'
+                    'install_ttyd': 'sudo apt update && sudo apt install -y ttyd',
+                    'enable_ssh': 'sudo systemctl enable ssh && sudo systemctl start ssh'
                 }
             },
             'windows': {
                 'default_user': 'Administrator',  # or configured user
                 'ssh_port': 22,
                 'shell': 'powershell',
-                'rdp_port': 3389,
                 'commands': {
                     'test': 'echo "test"',
                     'os_info': 'Get-ComputerInfo | Select-Object WindowsProductName, TotalPhysicalMemory',
+                    'install_ttyd': '',  # Not applicable for Windows
                     'enable_ssh': 'Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0; Start-Service sshd'
                 }
             }
@@ -66,7 +79,7 @@ class EnhancedVMManager:
             domain = vm_manager.find_vm(vm_name)
             
             # Get VM description or metadata
-            desc = domain.metadata(0, None, 0)  # Get description
+            desc: str = str(domain.metadata(0, None, 0))  # Get description
             if desc:
                 if 'windows' in desc.lower():
                     return 'windows'
@@ -78,7 +91,7 @@ class EnhancedVMManager:
         # Default to linux for backward compatibility
         return 'linux'
     
-    def get_vm_config(self, vm_name: str) -> Dict[str, Any]:
+    def get_vm_config(self, vm_name: str) -> VMConfig:
         """Get configuration for a specific VM based on its OS."""
         os_type = self.detect_vm_os(vm_name)
         return self.vm_configs.get(os_type, self.vm_configs['linux'])
@@ -138,7 +151,7 @@ class EnhancedVMManager:
             'suggestions': self._get_connection_suggestions(vm_name)
         }
     
-    def _get_connection_suggestions(self, vm_name: str) -> list:
+    def _get_connection_suggestions(self, vm_name: str) -> list[str]:
         """Get suggestions for connecting to a VM based on its OS."""
         os_type = self.detect_vm_os(vm_name)
         
@@ -171,7 +184,6 @@ class EnhancedVMManager:
         Returns:
             Dictionary with execution results
         """
-        config = self.get_vm_config(vm_name)
         os_type = self.detect_vm_os(vm_name)
         
         # If user not specified, detect working user
@@ -180,6 +192,13 @@ class EnhancedVMManager:
             if not ssh_test['success']:
                 return ssh_test
             user = ssh_test['user']
+        
+        # Ensure user is not None
+        if user is None:
+            return {
+                'success': False,
+                'error': 'No valid user found for SSH connection'
+            }
         
         # Adapt command for Windows if necessary
         if os_type == 'windows':

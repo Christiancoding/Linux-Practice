@@ -289,6 +289,23 @@
         color: white;
     }
 
+    .btn-vm-action.delete {
+        background: #7c2d12;
+        color: #fed7aa;
+        border: 1px solid #ea580c;
+    }
+
+    .btn-vm-action.delete:hover {
+        background: #ea580c;
+        color: white;
+        box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3);
+    }
+
+    .btn-vm-action:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
     .terminal-interface {
         background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         border: 1px solid #475569;
@@ -647,6 +664,263 @@
     }
 
     /* Form Styles */
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.3);
+        border: 1px solid #334155;
+        border-radius: 8px;
+    }
+
+    .section-title {
+        margin: 0 0 1.5rem 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #60a5fa;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        color: #e2e8f0;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        background: #0f172a;
+        border: 2px solid #374151;
+        border-radius: 8px;
+        color: #f1f5f9;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-group input:hover, .form-group select:hover, .form-group textarea:hover {
+        border-color: #4b5563;
+    }
+
+    .form-help {
+        display: block;
+        font-size: 0.75rem;
+        color: #94a3b8;
+        margin-top: 0.25rem;
+        font-style: italic;
+    }
+
+    .input-with-unit {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .input-with-unit input {
+        flex: 1;
+    }
+
+    .input-with-unit select {
+        width: auto;
+        min-width: 80px;
+        flex-shrink: 0;
+    }
+
+    .checkbox-group {
+        margin-bottom: 1rem;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.75rem;
+        border: 1px solid #374151;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        background: rgba(15, 23, 42, 0.3);
+        font-weight: normal;
+        margin-bottom: 0;
+    }
+
+    .checkbox-label:hover {
+        border-color: #4b5563;
+        background: rgba(15, 23, 42, 0.5);
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+        position: relative;
+        cursor: pointer;
+    }
+
+    .checkmark {
+        position: relative;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #374151;
+        border-radius: 4px;
+        background: #0f172a;
+        flex-shrink: 0;
+        transition: all 0.3s ease;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkmark {
+        background: #3b82f6;
+        border-color: #3b82f6;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .label-text {
+        flex: 1;
+    }
+
+    .label-text strong {
+        display: block;
+        color: #e2e8f0;
+        margin-bottom: 0.25rem;
+    }
+
+    .label-text small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+
+    /* Enhanced Modal Styles */
+    .create-vm-modal {
+        max-width: 800px;
+        width: 95%;
+        max-height: 90vh;
+    }
+
+    .modal-header {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        padding: 1.5rem 2rem;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 12px 12px 0 0;
+    }
+
+    .modal-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-title i {
+        font-size: 1.75rem;
+        color: #60a5fa;
+    }
+
+    .btn-close {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg);
+    }
+
+    /* Updated Form Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #334155;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.875rem 2rem;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+        color: #f9fafb;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+    }
+
+    .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(75, 85, 99, 0.3);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
     .form-group {
         margin-bottom: 1.5rem;
     }

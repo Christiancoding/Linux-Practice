@@ -933,8 +933,8 @@ class LPEMManager:
             raise SnapshotOperationError(error_msg)
 
     # --- VM Creation Methods ---
-    def create_vm(self, vm_name: str, memory_gb: int = 2, cpus: int = 1, disk_gb: int = 20) -> bool:
-        """Create a new VM with basic configuration."""
+    def create_vm(self, vm_name: str, memory_gb: int = 2, cpus: int = 1, disk_gb: int = 20, iso_path: Optional[str] = None) -> bool:
+        """Create a new VM with basic configuration and optional ISO attachment."""
         try:
             conn = self.connect_libvirt()
             
@@ -968,7 +968,7 @@ class LPEMManager:
   <currentMemory unit='KiB'>{memory_kb}</currentMemory>
   <vcpu placement='static'>{cpus}</vcpu>
   <os>
-    <type arch='x86_64' machine='pc-q35-6.2'>hvm</type>
+    <type arch='x86_64' machine='pc-q35-noble'>hvm</type>
     <boot dev='hd'/>
     <boot dev='cdrom'/>
   </os>
@@ -1006,6 +1006,9 @@ class LPEMManager:
     <console type='pty'>
       <target type='serial' port='0'/>
     </console>
+    <controller type='sata' index='0'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x1f' function='0x2'/>
+    </controller>
     <channel type='unix'>
       <target type='virtio' name='org.qemu.guest_agent.0'/>
     </channel>
@@ -1051,10 +1054,33 @@ class LPEMManager:
             try:
                 conn.defineXML(vm_xml)
                 
+                # Attach ISO if provided
+                if iso_path and os.path.exists(iso_path):
+                    try:
+                        # Get the newly created domain
+                        domain = conn.lookupByName(vm_name)
+                        
+                        # Create CDROM device XML
+                        cdrom_xml = f"""<disk type='file' device='cdrom'>
+  <driver name='qemu' type='raw'/>
+  <source file='{iso_path}'/>
+  <target dev='sda' bus='sata'/>
+  <readonly/>
+</disk>"""
+                        
+                        # Attach the CDROM device
+                        domain.attachDeviceFlags(cdrom_xml, libvirt.VIR_DOMAIN_AFFECT_CONFIG)
+                        self.logger.info(f"Attached ISO {iso_path} to VM '{vm_name}'")
+                        
+                    except Exception as iso_error:
+                        # Don't fail VM creation if ISO attachment fails
+                        self.logger.warning(f"Failed to attach ISO to VM {vm_name}: {iso_error}")
+                
                 if RICH_AVAILABLE:
                     console.print(f":white_check_mark: VM '{vm_name}' created successfully", style="green")
                 
-                self.logger.info(f"Created VM '{vm_name}' with {memory_gb}GB RAM, {cpus} CPU(s), {disk_gb}GB disk")
+                iso_msg = f" with ISO {iso_path}" if iso_path else ""
+                self.logger.info(f"Created VM '{vm_name}' with {memory_gb}GB RAM, {cpus} CPU(s), {disk_gb}GB disk{iso_msg}")
                 return True
                 
             except libvirt.libvirtError as e:
@@ -1088,6 +1114,64 @@ class LPEMManager:
                     self._conn = None
         except Exception as e:
             self.logger.warning(f"Error during cleanup: {e}")
+    
+    def delete_vm(self, vm_name: str, remove_disk: bool = True) -> bool:
+        """Delete a VM and optionally remove its disk file."""
+        try:
+            conn = self.connect_libvirt()
+            
+            # Find the VM
+            try:
+                domain = conn.lookupByName(vm_name)
+            except libvirt.libvirtError:
+                self.logger.error(f"VM '{vm_name}' not found")
+                return False
+            
+            # Get disk path before destroying
+            disk_path = None
+            if remove_disk:
+                try:
+                    # Get the VM XML to find disk path
+                    vm_xml = domain.XMLDesc(0)
+                    import xml.etree.ElementTree as ET
+                    root = ET.fromstring(vm_xml)
+                    for disk in root.findall('.//disk[@device="disk"]'):
+                        source = disk.find('source')
+                        if source is not None and 'file' in source.attrib:
+                            disk_path = source.attrib['file']
+                            break
+                except Exception as e:
+                    self.logger.warning(f"Could not get disk path for {vm_name}: {e}")
+            
+            # Stop the VM if running
+            try:
+                if domain.isActive():
+                    domain.destroy()  # Force stop
+                    self.logger.info(f"Stopped VM '{vm_name}'")
+            except Exception as e:
+                self.logger.warning(f"Could not stop VM {vm_name}: {e}")
+            
+            # Undefine (delete) the VM
+            try:
+                domain.undefine()
+                self.logger.info(f"Deleted VM '{vm_name}' from libvirt")
+            except Exception as e:
+                self.logger.error(f"Failed to delete VM {vm_name}: {e}")
+                return False
+            
+            # Remove disk file if requested and found
+            if remove_disk and disk_path and os.path.exists(disk_path):
+                try:
+                    os.remove(disk_path)
+                    self.logger.info(f"Removed disk file: {disk_path}")
+                except Exception as e:
+                    self.logger.warning(f"Could not remove disk file {disk_path}: {e}")
+            
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"Error deleting VM {vm_name}: {e}")
+            return False
             
     def __del__(self):
         """Destructor to ensure cleanup"""

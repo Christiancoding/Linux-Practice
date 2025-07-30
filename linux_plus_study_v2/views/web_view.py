@@ -7,8 +7,9 @@ Creates a desktop app with modern web interface.
 import webview
 import threading
 import time
-from flask import Flask, render_template, request, jsonify, send_from_directory, session, send_file, flash, redirect, url_for
 import os
+import requests
+from flask import Flask, render_template, request, jsonify, send_from_directory, session, send_file, flash, redirect, url_for
 from vm_integration.utils.snapshot_manager import SnapshotManager
 from pathlib import Path
 import json
@@ -194,6 +195,9 @@ class LinuxPlusStudyWeb:
         
         # Setup all routes
         self.setup_routes()
+        
+        # Setup VM routes
+        self.setup_vm_routes()
         
         # Setup export/import routes
         self.setup_export_import_routes()
@@ -496,6 +500,185 @@ class LinuxPlusStudyWeb:
         
         # Store reference to prevent "not accessed" warning
         self.get_cli_history_handler = get_cli_history
+    
+    def setup_vm_routes(self) -> None:
+        """Setup routes for VM management functionality."""
+        
+        # Try to import VMManager to check if VM functionality is available
+        try:
+            from vm_integration.utils.vm_manager import VMManager
+        except ImportError:
+            self.logger.warning("VM management features not available - vm_integration module not found")
+            VMManager = None
+        
+        @self.app.route('/api/vm/snapshots', methods=['GET'])
+        def api_vm_snapshots():
+            """API endpoint to list VM snapshots."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                vm_name = request.args.get('vm_name')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                domain = vm_manager.find_vm(vm_name)
+                
+                # Get snapshots using the SnapshotManager
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
+                
+                try:
+                    # Use the correct method name
+                    snapshots = snapshot_manager.list_snapshots(domain)
+                    return jsonify({
+                        'success': True,
+                        'snapshots': snapshots
+                    })
+                except Exception as e:
+                    self.logger.debug(f"Error listing snapshots: {e}")
+                    return jsonify({
+                        'success': True,
+                        'snapshots': []  # Return empty list instead of error
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Error listing snapshots: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_snapshots_handler = api_vm_snapshots
+
+        @self.app.route('/api/vm/create_snapshot', methods=['POST'])
+        def api_vm_create_snapshot():
+            """API endpoint to create a VM snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                description = data.get('description', '')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                domain = vm_manager.find_vm(vm_name)
+                
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
+                
+                # Use the create_external_snapshot method
+                success = snapshot_manager.create_external_snapshot(domain, snapshot_name, description)
+                
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'Snapshot {snapshot_name} created for VM {vm_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to create snapshot'
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Error creating snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_create_snapshot_handler = api_vm_create_snapshot
+
+        @self.app.route('/api/vm/restore_snapshot', methods=['POST'])
+        def api_vm_restore_snapshot():
+            """API endpoint to restore a VM from snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                domain = vm_manager.find_vm(vm_name)
+                
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
+                
+                # Use the revert_to_snapshot method
+                success = snapshot_manager.revert_to_snapshot(domain, snapshot_name)
+                
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'VM {vm_name} restored from snapshot {snapshot_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to restore snapshot'
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Error restoring snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_restore_snapshot_handler = api_vm_restore_snapshot
+
+        @self.app.route('/api/vm/delete_snapshot', methods=['POST'])
+        def api_vm_delete_snapshot():
+            """API endpoint to delete a VM snapshot."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json()
+                vm_name = data.get('vm_name')
+                snapshot_name = data.get('snapshot_name')
+                
+                if not vm_name or not snapshot_name:
+                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
+                
+                vm_manager = VMManager()
+                domain = vm_manager.find_vm(vm_name)
+                
+                from vm_integration.utils.snapshot_manager import SnapshotManager
+                snapshot_manager = SnapshotManager()
+                
+                # Use the delete_external_snapshot method
+                success = snapshot_manager.delete_external_snapshot(domain, snapshot_name)
+                
+                if success:
+                    return jsonify({
+                        'success': True,
+                        'message': f'Snapshot {snapshot_name} deleted from VM {vm_name}'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Failed to delete snapshot'
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_delete_snapshot_handler = api_vm_delete_snapshot
+    
     def setup_export_import_routes(self) -> None:
         """Setup routes for export and import functionality."""
         
@@ -1769,10 +1952,16 @@ class LinuxPlusStudyWeb:
         self.export_history_handler = api_export_history
         @self.app.errorhandler(404)
         def not_found_error(error: Any) -> Tuple[Any, int]:
+            # If it's an API call, return JSON
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'API endpoint not found'}), 404
             return render_template('error.html', error="Page not found"), 404
 
         @self.app.errorhandler(500)
         def internal_error(error: Any) -> Tuple[Any, int]:
+            # If it's an API call, return JSON
+            if request.path.startswith('/api/'):
+                return jsonify({'success': False, 'error': 'Internal server error'}), 500
             return render_template('error.html', error="Internal server error"), 500
             
         # Store references to error handlers to prevent "not accessed" warnings
@@ -2131,6 +2320,198 @@ class LinuxPlusStudyWeb:
 
         # Store reference to make it clear the route is being used
         self.api_start_ttyd_handler = api_start_ttyd
+
+        @self.app.route('/api/vm/create', methods=['POST'])
+        def api_vm_create():
+            """API endpoint to create a new VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json()
+                vm_name = data.get('name')
+                template = data.get('template', 'ubuntu-22.04')
+                memory = data.get('memory', 2048)  # Now in MB
+                memory_unit = data.get('memory_unit', 'MB')
+                cpus = data.get('cpus', 2)
+                disk = data.get('disk', 20)  # In GB
+                disk_unit = data.get('disk_unit', 'GB')
+                auto_start = data.get('auto_start', False)
+                download_iso = data.get('download_iso', True)
+                custom_iso_url = data.get('custom_iso_url')
+                notes = data.get('notes', '')
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                # Validate VM name (alphanumeric, hyphens, underscores only)
+                import re
+                if not re.match(r'^[a-zA-Z0-9_-]+$', vm_name):
+                    return jsonify({
+                        'success': False, 
+                        'error': 'VM name must contain only alphanumeric characters, hyphens, and underscores'
+                    })
+                
+                # Convert memory to GB for VMManager (it expects GB)
+                if memory_unit == 'MB':
+                    memory_gb = memory / 1024
+                elif memory_unit == 'TB':
+                    memory_gb = memory * 1024
+                else:  # GB
+                    memory_gb = memory
+                
+                # Convert disk to GB if needed
+                if disk_unit == 'TB':
+                    disk_gb = disk * 1024
+                else:  # GB
+                    disk_gb = disk
+                
+                # Ensure minimum values and convert to integers
+                memory_gb = max(1, int(round(memory_gb)))  # Minimum 1GB, convert to int
+                disk_gb = max(1, int(round(disk_gb)))      # Minimum 1GB, convert to int
+                
+                vm_manager = VMManager()
+                
+                # Check if VM already exists
+                try:
+                    vm_manager.find_vm(vm_name)
+                    return jsonify({
+                        'success': False,
+                        'error': f'VM "{vm_name}" already exists'
+                    })
+                except Exception:
+                    # VM doesn't exist, we can create it
+                    pass
+                
+                # Handle ISO download if requested
+                iso_path = None
+                if download_iso:
+                    try:
+                        iso_path = self._handle_iso_download(template, custom_iso_url)
+                    except Exception as iso_error:
+                        # Continue without ISO if download fails
+                        print(f"ISO download failed: {iso_error}")
+                
+                # Create VM using VMManager
+                try:
+                    success = vm_manager.create_vm(
+                        vm_name=vm_name,
+                        memory_gb=memory_gb,
+                        cpus=int(cpus),
+                        disk_gb=disk_gb,
+                        iso_path=iso_path
+                    )
+                    
+                    if not success:
+                        return jsonify({
+                            'success': False,
+                            'error': 'Failed to create VM'
+                        })
+                    
+                    # Save VM metadata if notes provided
+                    if notes:
+                        try:
+                            vm_metadata = {
+                                'name': vm_name,
+                                'template': template,
+                                'notes': notes,
+                                'created_at': time.time(),
+                                'memory_mb': memory,
+                                'cpus': cpus,
+                                'disk_gb': disk_gb
+                            }
+                            # Save metadata to file or database
+                            import json
+                            metadata_file = f'/var/lib/vms/metadata/{vm_name}.json'
+                            os.makedirs(os.path.dirname(metadata_file), exist_ok=True)
+                            with open(metadata_file, 'w') as f:
+                                json.dump(vm_metadata, f, indent=2)
+                        except Exception as meta_error:
+                            print(f"Failed to save VM metadata: {meta_error}")
+                    
+                    # Auto-start if requested
+                    if auto_start:
+                        try:
+                            vm_manager.start_vm(vm_name)
+                            message = f'VM "{vm_name}" created and started successfully'
+                        except Exception as start_error:
+                            message = f'VM "{vm_name}" created successfully but failed to start: {start_error}'
+                    else:
+                        message = f'VM "{vm_name}" created successfully (not started)'
+                    
+                    return jsonify({
+                        'success': True,
+                        'message': message,
+                        'vm_info': {
+                            'name': vm_name,
+                            'template': template,
+                            'memory': f'{memory_gb:.1f} GB',
+                            'cpus': cpus,
+                            'disk': f'{disk_gb} GB',
+                            'auto_started': auto_start,
+                            'iso_downloaded': iso_path is not None
+                        }
+                    })
+                    
+                except Exception as e:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to create VM: {str(e)}'
+                    })
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_create_handler = api_vm_create
+
+        @self.app.route('/api/vm/delete', methods=['POST'])
+        def api_vm_delete():
+            """API endpoint to delete a VM."""
+            if not VMManager:
+                return jsonify({
+                    'success': False,
+                    'error': 'VM Manager not available. Please check libvirt installation.'
+                })
+            try:
+                data = request.get_json()
+                vm_name = data.get('name')
+                remove_disk = data.get('remove_disk', True)
+                
+                if not vm_name:
+                    return jsonify({'success': False, 'error': 'VM name is required'})
+                
+                vm_manager = VMManager()
+                
+                # Check if VM exists
+                try:
+                    vm_manager.find_vm(vm_name)
+                except Exception:
+                    return jsonify({
+                        'success': False,
+                        'error': f'VM "{vm_name}" not found'
+                    })
+                
+                # Delete the VM
+                success = vm_manager.delete_vm(vm_name, remove_disk=remove_disk)
+                
+                if success:
+                    disk_msg = " and its disk" if remove_disk else ""
+                    return jsonify({
+                        'success': True,
+                        'message': f'VM "{vm_name}"{disk_msg} deleted successfully'
+                    })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': f'Failed to delete VM "{vm_name}"'
+                    })
+                    
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_vm_delete_handler = api_vm_delete
 
         @self.app.route('/full_terminal')
         def full_terminal():
@@ -2557,95 +2938,125 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_vm_details_handler = api_vm_details
 
-        @self.app.route('/api/vm/create', methods=['POST'])
-        def api_vm_create():
-            """API endpoint to create a new VM."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('name')
-                template = data.get('template', 'ubuntu-22.04')
-                memory = data.get('memory', 2)
-                cpus = data.get('cpus', 1)
-                disk = data.get('disk', 20)
-                auto_start = data.get('auto_start', False)
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                # Validate VM name (alphanumeric, hyphens, underscores only)
-                import re
-                if not re.match(r'^[a-zA-Z0-9_-]+$', vm_name):
-                    return jsonify({
-                        'success': False, 
-                        'error': 'VM name must contain only alphanumeric characters, hyphens, and underscores'
-                    })
-                
-                vm_manager = VMManager()
-                
-                # Check if VM already exists
+    def _handle_iso_download(self, template, custom_iso_url=None):
+        """Handle ISO file download for VM creation."""
+        import os
+        import requests
+        from urllib.parse import urlparse
+        
+        # Load settings to get ISO URLs and download path
+        settings = self._load_web_settings()
+        iso_settings = settings.get('isoDownloads', {})
+        
+        if not iso_settings.get('enabled', True):
+            return None
+            
+        download_path = iso_settings.get('downloadPath', '~/vm-storage/isos')
+        download_path = os.path.expanduser(download_path)  # Expand ~ to home directory
+        iso_urls = iso_settings.get('urls', {})
+        
+        # Determine the ISO URL
+        if custom_iso_url:
+            iso_url = custom_iso_url
+            filename = os.path.basename(urlparse(iso_url).path) or 'custom.iso'
+        else:
+            iso_url = iso_urls.get(template)
+            if not iso_url:
+                return None
+            filename = f"{template}.iso"
+        
+        # Create download directory
+        os.makedirs(download_path, exist_ok=True)
+        iso_path = os.path.join(download_path, filename)
+        
+        # Check if ISO already exists
+        if os.path.exists(iso_path) and os.path.getsize(iso_path) > 1024 * 1024:  # At least 1MB
+            return iso_path
+        
+        try:
+            # Download the ISO
+            print(f"Downloading ISO from {iso_url} to {iso_path}")
+            response = requests.get(iso_url, stream=True, timeout=30)
+            response.raise_for_status()
+            
+            with open(iso_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+            
+            return iso_path
+            
+        except Exception as e:
+            print(f"Failed to download ISO: {e}")
+            # Clean up partial download
+            if os.path.exists(iso_path):
                 try:
-                    vm_manager.find_vm(vm_name)
-                    return jsonify({
-                        'success': False,
-                        'error': f'VM "{vm_name}" already exists'
-                    })
-                except Exception:
-                    # VM doesn't exist, we can create it
+                    os.remove(iso_path)
+                except:
                     pass
+            return None
+
+        @self.app.route('/api/vm/cleanup_isos', methods=['POST'])
+        def api_vm_cleanup_isos():
+            """API endpoint to cleanup unused ISO files."""
+            try:
+                settings = self._load_web_settings()
+                iso_settings = settings.get('isoDownloads', {})
+                download_path = iso_settings.get('downloadPath', '~/vm-storage/isos')
+                download_path = os.path.expanduser(download_path)  # Expand ~ to home directory
                 
-                # Create VM using VMManager
-                try:
-                    success = vm_manager.create_vm(
-                        vm_name=vm_name,
-                        memory_gb=int(memory),
-                        cpus=int(cpus),
-                        disk_gb=int(disk)
-                    )
-                    
-                    if not success:
-                        return jsonify({
-                            'success': False,
-                            'error': 'Failed to create VM'
-                        })
-                    
-                    # Auto-start if requested
-                    if auto_start:
-                        try:
-                            vm_manager.start_vm(vm_name)
-                            message = f'VM "{vm_name}" created and started successfully'
-                        except Exception as start_error:
-                            message = f'VM "{vm_name}" created successfully but failed to start: {start_error}'
-                    else:
-                        message = f'VM "{vm_name}" created successfully (not started)'
-                    
+                if not os.path.exists(download_path):
                     return jsonify({
                         'success': True,
-                        'message': message,
-                        'vm_info': {
-                            'name': vm_name,
-                            'template': template,
-                            'memory': f'{memory} GB',
-                            'cpus': cpus,
-                            'disk': f'{disk} GB',
-                            'auto_started': auto_start
-                        }
-                    })
-                    
-                except Exception as e:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to create VM: {str(e)}'
+                        'message': 'ISO directory does not exist',
+                        'removed_count': 0,
+                        'space_freed': '0 MB'
                     })
                 
+                removed_count = 0
+                space_freed = 0
+                
+                # Get list of ISO files
+                for filename in os.listdir(download_path):
+                    if filename.endswith('.iso'):
+                        iso_path = os.path.join(download_path, filename)
+                        
+                        # Check if file is older than 30 days and not recently used
+                        if os.path.exists(iso_path):
+                            file_size = os.path.getsize(iso_path)
+                            file_age = time.time() - os.path.getmtime(iso_path)
+                            
+                            # Remove if older than 30 days (30 * 24 * 3600 seconds)
+                            if file_age > (30 * 24 * 3600):
+                                try:
+                                    os.remove(iso_path)
+                                    removed_count += 1
+                                    space_freed += file_size
+                                except Exception as e:
+                                    print(f"Failed to remove {iso_path}: {e}")
+                
+                # Format space freed
+                if space_freed < 1024 * 1024:
+                    space_freed_str = f"{space_freed // 1024} KB"
+                elif space_freed < 1024 * 1024 * 1024:
+                    space_freed_str = f"{space_freed // (1024 * 1024)} MB"
+                else:
+                    space_freed_str = f"{space_freed // (1024 * 1024 * 1024):.1f} GB"
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Cleanup completed. Removed {removed_count} old ISO files.',
+                    'removed_count': removed_count,
+                    'space_freed': space_freed_str
+                })
+                
             except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
+                return jsonify({
+                    'success': False,
+                    'error': f'Failed to cleanup ISOs: {str(e)}'
+                })
         # Store reference to make it clear the route is being used
-        self.api_vm_create_handler = api_vm_create
+        self.api_vm_cleanup_isos_handler = api_vm_cleanup_isos
 
         @self.app.route('/api/vm/challenges', methods=['GET'])
         def api_vm_challenges():
@@ -2689,171 +3100,6 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 }), 500
-
-        @self.app.route('/api/vm/snapshots', methods=['GET'])
-        def api_vm_snapshots():
-            """API endpoint to list VM snapshots."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                vm_name = request.args.get('vm_name')
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                # Get snapshots using the SnapshotManager
-                from vm_integration.utils.snapshot_manager import SnapshotManager
-                snapshot_manager = SnapshotManager()
-                
-                try:
-                    snapshots = snapshot_manager.list_snapshots(domain)
-                except Exception as e:
-                    self.logger.debug(f"Error listing snapshots: {e}")
-                    snapshots = []
-                
-                return jsonify({
-                    'success': True,
-                    'snapshots': sorted(snapshots, key=lambda x: x.get('name', ''))
-                })
-                
-            except Exception as e:
-                self.logger.error(f"Error listing snapshots: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_snapshots_handler = api_vm_snapshots
-
-        @self.app.route('/api/vm/create_snapshot', methods=['POST'])
-        def api_vm_create_snapshot():
-            """API endpoint to create a VM snapshot."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
-                description = data.get('description', '')
-                
-                if not vm_name or not snapshot_name:
-                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                from vm_integration.utils.snapshot_manager import SnapshotManager
-                snapshot_manager = SnapshotManager()
-                
-                # Use the create_external_snapshot method
-                success = snapshot_manager.create_external_snapshot(domain, snapshot_name, description)
-                
-                if success:
-                    return jsonify({
-                        'success': True,
-                        'message': f'Snapshot {snapshot_name} created for VM {vm_name}'
-                    })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Failed to create snapshot'
-                    })
-                
-            except Exception as e:
-                self.logger.error(f"Error creating snapshot: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_create_snapshot_handler = api_vm_create_snapshot
-
-        @self.app.route('/api/vm/restore_snapshot', methods=['POST'])
-        def api_vm_restore_snapshot():
-            """API endpoint to restore a VM from snapshot."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
-                
-                if not vm_name or not snapshot_name:
-                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                from vm_integration.utils.snapshot_manager import SnapshotManager
-                snapshot_manager = SnapshotManager()
-                
-                # Use the revert_to_snapshot method
-                success = snapshot_manager.revert_to_snapshot(domain, snapshot_name)
-                
-                if success:
-                    return jsonify({
-                        'success': True,
-                        'message': f'VM {vm_name} restored from snapshot {snapshot_name}'
-                    })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Failed to restore snapshot'
-                    })
-                
-            except Exception as e:
-                self.logger.error(f"Error restoring snapshot: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_restore_snapshot_handler = api_vm_restore_snapshot
-
-        @self.app.route('/api/vm/delete_snapshot', methods=['POST'])
-        def api_vm_delete_snapshot():
-            """API endpoint to delete a VM snapshot."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
-                
-                if not vm_name or not snapshot_name:
-                    return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                from vm_integration.utils.snapshot_manager import SnapshotManager
-                snapshot_manager = SnapshotManager()
-                
-                # Use the delete_external_snapshot method
-                success = snapshot_manager.delete_external_snapshot(domain, snapshot_name)
-                
-                if success:
-                    return jsonify({
-                        'success': True,
-                        'message': f'Snapshot {snapshot_name} deleted from VM {vm_name}'
-                    })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Failed to delete snapshot'
-                    })
-                
-            except Exception as e:
-                self.logger.error(f"Error deleting snapshot: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_delete_snapshot_handler = api_vm_delete_snapshot
         @self.app.route('/api/vm/setup_user', methods=['POST'])
         def api_vm_setup_user():
             """API endpoint to setup VM user."""
@@ -2926,6 +3172,7 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'error': str(e)
                 }), 500
+    
     def handle_api_errors(self, f: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
