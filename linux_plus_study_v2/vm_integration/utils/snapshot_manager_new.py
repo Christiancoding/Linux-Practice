@@ -12,7 +12,7 @@ import time
 import logging
 import json
 import xml.etree.ElementTree as ET
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Dict, List, Any, Tuple
 from pathlib import Path
 
 # Ensure Python 3.8+ compatibility
@@ -29,24 +29,29 @@ except ImportError:
 
 # Rich library for enhanced output
 try:
-    from rich.console import Console
-    from rich.table import Table
-    from rich.progress import Progress, SpinnerColumn, TextColumn
-    RICH_AVAILABLE = True
+    from rich.console import Console as RichConsole
+    from rich.table import Table as RichTable
+    rich_available = True
 except ImportError:
-    RICH_AVAILABLE = False
-    class Console:
-        def print(self, *args, **kwargs): print(*args)
-        def rule(self, *args, **kwargs): print("="*50)
-    class Table:
-        def __init__(self, *args, **kwargs): pass
-        def add_column(self, *args, **kwargs): pass
-        def add_row(self, *args, **kwargs): pass
+    rich_available = False
+    class RichConsole:
+        def print(self, *args: Any, **kwargs: Any) -> None: 
+            print(*args)
+        def rule(self, *args: Any, **kwargs: Any) -> None: 
+            print("="*50)
+    
+    class RichTable:
+        def __init__(self, *args: Any, **kwargs: Any) -> None: 
+            pass
+        def add_column(self, *args: Any, **kwargs: Any) -> None: 
+            pass
+        def add_row(self, *args: Any, **kwargs: Any) -> None: 
+            pass
 
 # Initialize console
-console = Console(highlight=False, stderr=False)
+console = RichConsole()
 
-from .exceptions import SnapshotOperationError, PracticeToolError
+from .exceptions import SnapshotOperationError
 
 # Get libvirt error codes safely
 VIR_ERR_NO_DOMAIN_SNAPSHOT = getattr(libvirt, 'VIR_ERR_NO_DOMAIN_SNAPSHOT', -1)
@@ -91,7 +96,7 @@ class SnapshotManager:
         if not domain:
             raise SnapshotOperationError("Invalid domain object")
         
-        if RICH_AVAILABLE:
+        if rich_available:
             console.rule(f"[bold]Creating EXTERNAL Snapshot: [cyan]{snapshot_name}[/][/]", style="blue")
         
         was_frozen = False
@@ -110,7 +115,7 @@ class SnapshotManager:
             # Generate snapshot XML and get file paths
             snapshot_xml, snapshot_files = self._generate_snapshot_xml(domain, snapshot_name, description)
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":camera: Creating external snapshot '{snapshot_name}'...")
             
             # Create the snapshot
@@ -119,7 +124,7 @@ class SnapshotManager:
                                    libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_ATOMIC)
             
             # Verify snapshot files were created
-            missing_files = []
+            missing_files: List[str] = []
             for file_path in snapshot_files:
                 if not Path(file_path).exists():
                     missing_files.append(file_path)
@@ -127,7 +132,7 @@ class SnapshotManager:
             if missing_files:
                 raise SnapshotOperationError(f"Snapshot files not created: {missing_files}")
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":white_check_mark: External snapshot '{snapshot_name}' created successfully", 
                             style="green")
                 console.print(f"Snapshot files: {', '.join(snapshot_files)}")
@@ -138,14 +143,14 @@ class SnapshotManager:
         except libvirt.libvirtError as e:
             error_msg = f"Failed to create snapshot '{snapshot_name}': {e}"
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
         except Exception as e:
             error_msg = f"Unexpected error creating snapshot '{snapshot_name}': {e}"
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
@@ -175,7 +180,7 @@ class SnapshotManager:
         if not domain:
             raise SnapshotOperationError("Invalid domain object")
         
-        if RICH_AVAILABLE:
+        if rich_available:
             console.rule(f"[bold]Reverting to Snapshot: [cyan]{snapshot_name}[/][/]", style="blue")
         
         snapshot = None
@@ -183,13 +188,13 @@ class SnapshotManager:
             # Find the snapshot
             snapshot = domain.snapshotLookupByName(snapshot_name)
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":rewind: Reverting to snapshot '{snapshot_name}'...")
             
             # Revert to snapshot
             domain.revertToSnapshot(snapshot, 0)
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":white_check_mark: Successfully reverted to snapshot '{snapshot_name}'", 
                             style="green")
             
@@ -203,14 +208,14 @@ class SnapshotManager:
                 error_msg = f"Failed to revert to snapshot '{snapshot_name}': {e}"
             
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
         except Exception as e:
             error_msg = f"Unexpected error reverting to snapshot '{snapshot_name}': {e}"
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
@@ -238,27 +243,27 @@ class SnapshotManager:
         if not domain:
             raise SnapshotOperationError("Invalid domain object")
         
-        if RICH_AVAILABLE:
+        if rich_available:
             console.rule(f"[bold]Deleting Snapshot: [cyan]{snapshot_name}[/][/]", style="red")
         
         snapshot = None
         try:
             # Check if VM is running
             if domain.isActive():
-                if RICH_AVAILABLE:
+                if rich_available:
                     console.print(":warning: Warning: VM is running. External snapshot deletion may require VM shutdown.", 
                                 style="yellow")
             
             # Find the snapshot
             snapshot = domain.snapshotLookupByName(snapshot_name)
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":wastebasket: Deleting snapshot '{snapshot_name}'...")
             
             # Delete the snapshot
             snapshot.delete(libvirt.VIR_DOMAIN_SNAPSHOT_DELETE_METADATA_ONLY)
             
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":white_check_mark: Snapshot '{snapshot_name}' deleted successfully", 
                             style="green")
                 console.print(":information: Note: Snapshot disk files may need manual cleanup.", 
@@ -274,14 +279,14 @@ class SnapshotManager:
                 error_msg = f"Failed to delete snapshot '{snapshot_name}': {e}"
             
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
         except Exception as e:
             error_msg = f"Unexpected error deleting snapshot '{snapshot_name}': {e}"
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
             
@@ -306,7 +311,7 @@ class SnapshotManager:
         if not domain:
             raise SnapshotOperationError("Invalid domain object")
         
-        snapshots = []
+        snapshots: List[Dict[str, Any]] = []
         
         try:
             snapshot_list = domain.listAllSnapshots()
@@ -314,7 +319,7 @@ class SnapshotManager:
             for snapshot in snapshot_list:
                 try:
                     # Get snapshot metadata
-                    snapshot_info = {
+                    snapshot_info: Dict[str, Any] = {
                         'name': snapshot.getName(),
                         'description': '',
                         'creation_time': 'Unknown',
@@ -334,7 +339,7 @@ class SnapshotManager:
                         
                         # Get creation time
                         creation_elem = root.find('creationTime')
-                        if creation_elem is not None:
+                        if creation_elem is not None and creation_elem.text:
                             timestamp = int(creation_elem.text)
                             snapshot_info['creation_time'] = time.strftime('%Y-%m-%d %H:%M:%S', 
                                                                          time.localtime(timestamp))
@@ -376,8 +381,8 @@ class SnapshotManager:
                     })
             
             # Display results if Rich is available
-            if RICH_AVAILABLE and snapshots:
-                table = Table(title=f"[bold blue]Snapshots for VM '[cyan]{domain.name()}[/]'[/]", 
+            if rich_available and snapshots:
+                table = RichTable(title=f"[bold blue]Snapshots for VM '[cyan]{domain.name()}[/]'[/]", 
                             show_header=True, header_style="bold magenta")
                 table.add_column("Snapshot Name", style="cyan")
                 table.add_column("Created", style="dim", justify="center")
@@ -395,7 +400,7 @@ class SnapshotManager:
                     )
                 
                 console.print(table)
-            elif RICH_AVAILABLE:
+            elif rich_available:
                 console.print(f"[yellow]No snapshots found for VM '{domain.name()}'[/]")
             
             return snapshots
@@ -403,14 +408,14 @@ class SnapshotManager:
         except libvirt.libvirtError as e:
             error_msg = f"Failed to list snapshots for VM '{domain.name()}': {e}"
             self.logger.error(error_msg)
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":x: {error_msg}", style="red")
             raise SnapshotOperationError(error_msg)
 
     def _generate_snapshot_xml(self, domain: libvirt.virDomain, snapshot_name: str, 
                               description: str = "") -> Tuple[str, List[str]]:
         """Generate snapshot XML and return XML string and list of snapshot file paths."""
-        snapshot_disk_files = []
+        snapshot_disk_files: List[str] = []
         
         try:
             # Get domain XML to extract disk information
@@ -449,8 +454,8 @@ class SnapshotManager:
                         
                         # Add disk element to snapshot XML
                         disk_elem = ET.SubElement(disks_elem, "disk", name=target_dev, snapshot="external")
-                        driver_elem = ET.SubElement(disk_elem, "driver", type="qcow2")
-                        source_elem = ET.SubElement(disk_elem, "source", file=str(snapshot_file))
+                        ET.SubElement(disk_elem, "driver", type="qcow2")
+                        ET.SubElement(disk_elem, "source", file=str(snapshot_file))
             
             # Convert to XML string
             snapshot_xml = ET.tostring(snapshot_root, encoding='unicode')
@@ -465,7 +470,7 @@ class SnapshotManager:
     def _qemu_agent_fsfreeze(self, domain: libvirt.virDomain) -> bool:
         """Attempt to freeze VM filesystems using QEMU guest agent."""
         try:
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(":snowflake: Attempting filesystem freeze via QEMU agent...")
             
             response = domain.qemuAgentCommand('{"execute": "guest-fsfreeze-freeze"}', 10, 0)
@@ -473,21 +478,21 @@ class SnapshotManager:
             if response:
                 response_data = json.loads(response)
                 if isinstance(response_data, dict) and ('return' in response_data or response_data == {}):
-                    if RICH_AVAILABLE:
+                    if rich_available:
                         console.print(":white_check_mark: Filesystem freeze successful", style="green")
                     return True
             
             return False
             
         except Exception as e:
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":warning: Filesystem freeze failed: {e}", style="yellow")
             return False
 
     def _qemu_agent_fsthaw(self, domain: libvirt.virDomain) -> bool:
         """Attempt to thaw VM filesystems using QEMU guest agent."""
         try:
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(":fire: Attempting filesystem thaw via QEMU agent...")
             
             response = domain.qemuAgentCommand('{"execute": "guest-fsfreeze-thaw"}', 10, 0)
@@ -495,13 +500,13 @@ class SnapshotManager:
             if response:
                 response_data = json.loads(response)
                 if isinstance(response_data, dict) and ('return' in response_data or response_data == {}):
-                    if RICH_AVAILABLE:
+                    if rich_available:
                         console.print(":white_check_mark: Filesystem thaw successful", style="green")
                     return True
             
             return False
             
         except Exception as e:
-            if RICH_AVAILABLE:
+            if rich_available:
                 console.print(f":warning: Filesystem thaw failed: {e}", style="yellow")
             return False

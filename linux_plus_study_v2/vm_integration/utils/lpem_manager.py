@@ -12,12 +12,11 @@ import os
 import time
 import logging
 import json
-import re
 import socket
 import subprocess
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple, Union, cast
+from typing import Dict, List, Any, Optional
 
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
@@ -51,29 +50,23 @@ except ImportError:
 
 # Rich library for enhanced terminal output
 try:
-    from rich.console import Console
-    from rich.panel import Panel
-    from rich.table import Table
-    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TimeElapsedColumn
-    from rich.syntax import Syntax
-    from rich.text import Text
-    RICH_AVAILABLE = True
+    import rich.console
+    rich_available = True
+    
+    # Create console instance
+    console = rich.console.Console()
+    
 except ImportError:
-    RICH_AVAILABLE = False
-    # Provide dummy classes if rich is not available
-    class Console:
-        def print(self, *args, **kwargs): print(*args)
-    class Panel:
-        def __init__(self, *args, **kwargs): pass
-    class Table:
-        def __init__(self, *args, **kwargs): pass
-        def add_column(self, *args, **kwargs): pass
-        def add_row(self, *args, **kwargs): pass
-    class Text:
-        def __init__(self, *args, **kwargs): pass
+    rich_available = False
+    
+    # Provide dummy console implementation
+    class DummyConsole:
+        def print(self, *args: Any, **kwargs: Any) -> None: 
+            print(*args)
+    
+    console = DummyConsole()
 
-# Initialize Rich Console
-console = Console(highlight=False, stderr=False)
+RICH_AVAILABLE = rich_available
 
 # --- Custom Exceptions ---
 class PracticeToolError(Exception):
@@ -110,7 +103,7 @@ class ChallengeLoadError(PracticeToolError):
 
 class ChallengeValidationError(Exception):
     """Validation failed, containing specific reasons."""
-    def __init__(self, reasons: list):
+    def __init__(self, reasons: List[str]):
         self.reasons = reasons
         super().__init__(f"Challenge validation failed: {', '.join(reasons)}")
 
@@ -185,7 +178,7 @@ class LPEMManager:
             if self.conn and self.conn.isAlive():
                 return self.conn
             
-            self.conn = libvirt.open(Config.LIBVIRT_URI)
+            self.conn = libvirt.open(Config.LIBVIRT_URI)  # type: ignore
             if not self.conn:
                 raise LibvirtConnectionError(f"Failed to connect to libvirt at {Config.LIBVIRT_URI}")
             
@@ -199,7 +192,7 @@ class LPEMManager:
         """Find a VM domain by name."""
         conn = self.connect_libvirt()
         try:
-            domain = conn.lookupByName(vm_name)
+            domain = conn.lookupByName(vm_name)  # type: ignore
             return domain
         except libvirt.libvirtError as e:
             if e.get_error_code() == VIR_ERR_NO_DOMAIN:
@@ -221,14 +214,14 @@ class LPEMManager:
     def list_vms(self) -> List[Dict[str, Any]]:
         """List all defined VMs (active and inactive)."""
         conn = self.connect_libvirt()
-        vms = []
+        vms: List[Dict[str, Any]] = []
 
         try:
             # Get all domains (defined and running)
             all_domains = conn.listAllDomains()
             
             for domain in all_domains:
-                vm_info = {
+                vm_info: Dict[str, Any] = {
                     'name': domain.name(),
                     'status': 'running' if domain.isActive() else 'stopped',  # Changed from 'state' to 'status'
                     'id': domain.ID() if domain.isActive() else None
@@ -326,9 +319,9 @@ class LPEMManager:
             raise AgentCommandError("VM is not running - cannot communicate with guest agent")
 
         try:
-            response = domain.qemuAgentCommand(command_json_str, timeout_sec, 0)
+            response: str = domain.qemuAgentCommand(command_json_str, timeout_sec, 0)  # type: ignore
             if response:
-                return json.loads(response)
+                return json.loads(response)  # type: ignore
             return {}
 
         except libvirt.libvirtError as e:
@@ -410,21 +403,21 @@ class LPEMManager:
         try:
             # Try interfaceAddresses if available
             if hasattr(domain, 'interfaceAddresses') and hasattr(libvirt, 'VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT'):
-                interfaces = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT, 0)
-                for interface, data in interfaces.items():
-                    if interface != 'lo' and data.get('addrs'):
-                        for addr in data['addrs']:
-                            if addr['type'] == libvirt.VIR_IP_ADDR_TYPE_IPV4:
-                                return addr['addr']
+                interfaces: Dict[str, Any] = domain.interfaceAddresses(libvirt.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT, 0)  # type: ignore
+                for interface, data in interfaces.items():  # type: ignore
+                    if interface != 'lo' and data.get('addrs'):  # type: ignore
+                        for addr in data['addrs']:  # type: ignore
+                            if addr['type'] == libvirt.VIR_IP_ADDR_TYPE_IPV4:  # type: ignore
+                                return addr['addr']  # type: ignore
 
             # Fallback: Try guest-network-get-interfaces command
             response = self.qemu_agent_command(domain, '{"execute": "guest-network-get-interfaces"}')
             if isinstance(response, dict) and "return" in response:
-                for interface in response["return"]:
-                    if interface.get("name") != "lo" and "ip-addresses" in interface:
-                        for ip_info in interface["ip-addresses"]:
-                            if ip_info.get("ip-address-type") == "ipv4":
-                                return ip_info.get("ip-address")
+                for interface in response["return"]:  # type: ignore
+                    if interface.get("name") != "lo" and "ip-addresses" in interface:  # type: ignore
+                        for ip_info in interface["ip-addresses"]:  # type: ignore
+                            if ip_info.get("ip-address-type") == "ipv4":  # type: ignore
+                                return ip_info.get("ip-address")  # type: ignore
 
         except Exception as e:
             self.logger.debug(f"Agent IP lookup failed: {e}")
@@ -439,8 +432,8 @@ class LPEMManager:
             network_name = None
 
             # Get VM's MAC address from XML
-            xml_desc = domain.XMLDesc(0)
-            root = ET.fromstring(xml_desc)
+            xml_desc: str = domain.XMLDesc(0)  # type: ignore
+            root = ET.fromstring(xml_desc)  # type: ignore
             
             # Find interface with source network
             for interface in root.findall(".//interface[@type='network']"):
@@ -455,12 +448,12 @@ class LPEMManager:
                 return None
 
             # Get DHCP leases for the network
-            network = conn.networkLookupByName(network_name)
-            leases = network.DHCPLeases()
+            network = conn.networkLookupByName(network_name)  # type: ignore
+            leases = network.DHCPLeases()  # type: ignore
             
-            for lease in leases:
-                if lease['mac'].lower() == vm_mac.lower():
-                    return lease['ipaddr']
+            for lease in leases:  # type: ignore
+                if lease['mac'].lower() == vm_mac.lower():  # type: ignore
+                    return lease['ipaddr']  # type: ignore
 
         except Exception as e:
             self.logger.debug(f"DHCP IP lookup failed: {e}")
@@ -486,7 +479,7 @@ class LPEMManager:
         except OSError as e:
             raise SSHCommandError(f"Cannot check SSH key permissions: {e}")
 
-        result = {'stdout': '', 'stderr': '', 'exit_status': None, 'error': None}
+        result: Dict[str, Any] = {'stdout': '', 'stderr': '', 'exit_status': None, 'error': None}
         ssh_client = None
 
         try:
@@ -501,7 +494,7 @@ class LPEMManager:
                 banner_timeout=30
             )
 
-            stdin, stdout, stderr = ssh_client.exec_command(command, timeout=timeout)
+            _, stdout, stderr = ssh_client.exec_command(command, timeout=timeout)
             
             result['stdout'] = stdout.read().decode('utf-8', errors='replace')
             result['stderr'] = stderr.read().decode('utf-8', errors='replace')
@@ -620,7 +613,7 @@ class LPEMManager:
         # Ensure VM is running and ready
         ip_address = self.wait_for_vm_ready(vm_name, user, key_path)
         
-        results = {
+        results: Dict[str, Any] = {
             'challenge_name': challenge_data['name'],
             'vm_name': vm_name,
             'ip_address': ip_address,
@@ -676,7 +669,7 @@ class LPEMManager:
     def _execute_challenge_task(self, ip_address: str, task: Dict[str, Any],
                                user: str, key_path: Path) -> Dict[str, Any]:
         """Execute a single challenge task."""
-        task_result = {
+        task_result: Dict[str, Any] = {
             'name': task.get('name', 'Unnamed Task'),
             'type': task.get('type', 'command'),
             'success': False,
@@ -817,7 +810,7 @@ class LPEMManager:
             """
             
             # Create the snapshot
-            snapshot = domain.snapshotCreateXML(snapshot_xml, 
+            snapshot = domain.snapshotCreateXML(snapshot_xml,   # type: ignore
                 libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_DISK_ONLY |
                 libvirt.VIR_DOMAIN_SNAPSHOT_CREATE_ATOMIC)
             
@@ -849,13 +842,13 @@ class LPEMManager:
     def list_snapshots(self, vm_name: str) -> List[Dict[str, Any]]:
         """List all snapshots for the specified VM."""
         domain = self.find_vm(vm_name)
-        snapshots = []
+        snapshots: List[Dict[str, Any]] = []
         
         try:
             snapshot_names = domain.listAllSnapshots()
             
             for snapshot in snapshot_names:
-                snapshot_info = {
+                snapshot_info: Dict[str, Any] = {
                     'name': snapshot.getName(),
                     'creation_time': snapshot.getXMLDesc(),  # Would need parsing for actual time
                     'state': 'disk-snapshot' if snapshot.isCurrent() else 'available'
@@ -877,10 +870,10 @@ class LPEMManager:
         
         try:
             # Find the snapshot
-            snapshot = domain.snapshotLookupByName(snapshot_name)
+            snapshot = domain.snapshotLookupByName(snapshot_name)  # type: ignore
             
             # Revert to snapshot
-            domain.revertToSnapshot(snapshot)
+            domain.revertToSnapshot(snapshot)  # type: ignore
             
             if RICH_AVAILABLE:
                 console.print(f":white_check_mark: Successfully reverted to snapshot '{snapshot_name}'", style="green")
@@ -909,7 +902,7 @@ class LPEMManager:
         
         try:
             # Find the snapshot
-            snapshot = domain.snapshotLookupByName(snapshot_name)
+            snapshot = domain.snapshotLookupByName(snapshot_name)  # type: ignore
             
             # Delete the snapshot
             snapshot.delete(libvirt.VIR_DOMAIN_SNAPSHOT_DELETE_METADATA_ONLY)
@@ -940,7 +933,7 @@ class LPEMManager:
             
             # Check if VM already exists
             try:
-                existing = conn.lookupByName(vm_name)
+                existing = conn.lookupByName(vm_name)  # type: ignore
                 if existing:
                     raise PracticeToolError(f"VM '{vm_name}' already exists")
             except libvirt.libvirtError as e:
@@ -1029,14 +1022,13 @@ class LPEMManager:
 </domain>"""
             
             # Create the disk image in user directory
-            import subprocess
             try:
                 # Create qcow2 disk image
                 create_disk_cmd = [
                     'qemu-img', 'create', '-f', 'qcow2', 
                     disk_path, f'{disk_gb}G'
                 ]
-                result = subprocess.run(create_disk_cmd, capture_output=True, text=True, check=True)
+                subprocess.run(create_disk_cmd, capture_output=True, text=True, check=True)
                 self.logger.info(f"Created disk image: {disk_path}")
                 
                 # Make sure the file has proper permissions for libvirt access
@@ -1052,13 +1044,13 @@ class LPEMManager:
             
             # Define the VM in libvirt
             try:
-                conn.defineXML(vm_xml)
+                conn.defineXML(vm_xml)  # type: ignore
                 
                 # Attach ISO if provided
                 if iso_path and os.path.exists(iso_path):
                     try:
                         # Get the newly created domain
-                        domain = conn.lookupByName(vm_name)
+                        domain = conn.lookupByName(vm_name)  # type: ignore
                         
                         # Create CDROM device XML
                         cdrom_xml = f"""<disk type='file' device='cdrom'>
@@ -1069,7 +1061,7 @@ class LPEMManager:
 </disk>"""
                         
                         # Attach the CDROM device
-                        domain.attachDeviceFlags(cdrom_xml, libvirt.VIR_DOMAIN_AFFECT_CONFIG)
+                        domain.attachDeviceFlags(cdrom_xml, libvirt.VIR_DOMAIN_AFFECT_CONFIG)  # type: ignore
                         self.logger.info(f"Attached ISO {iso_path} to VM '{vm_name}'")
                         
                     except Exception as iso_error:
@@ -1122,7 +1114,7 @@ class LPEMManager:
             
             # Find the VM
             try:
-                domain = conn.lookupByName(vm_name)
+                domain = conn.lookupByName(vm_name)  # type: ignore
             except libvirt.libvirtError:
                 self.logger.error(f"VM '{vm_name}' not found")
                 return False
@@ -1132,9 +1124,9 @@ class LPEMManager:
             if remove_disk:
                 try:
                     # Get the VM XML to find disk path
-                    vm_xml = domain.XMLDesc(0)
+                    vm_xml: str = domain.XMLDesc(0)  # type: ignore
                     import xml.etree.ElementTree as ET
-                    root = ET.fromstring(vm_xml)
+                    root = ET.fromstring(vm_xml)  # type: ignore
                     for disk in root.findall('.//disk[@device="disk"]'):
                         source = disk.find('source')
                         if source is not None and 'file' in source.attrib:
