@@ -1,2 +1,0 @@
-// Auth module
-// Implementation pending
