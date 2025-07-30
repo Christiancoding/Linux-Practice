@@ -22,3 +22,16 @@ Thumbs.db
 *.log
 .env
 linux_plus.db
+
+# VM Storage and ISOs
+~/vm-storage/
+*.iso
+*.vmdk
+*.vdi
+*.qcow2
+*.img
+
+# Large files
+*.zip
+*.tar.gz
+*.tar.bz2
