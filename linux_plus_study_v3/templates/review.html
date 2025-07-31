@@ -1,0 +1,796 @@
+{% extends "base.html" %}
+
+{% block title %}Review - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Review Page -->
+<div class="page-content active" id="page-review">
+    <!-- Page Header -->
+    <div class="page-header" data-aos="fade-down">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="page-title">
+                    <i class="fas fa-history text-gradient"></i>
+                    Review & Learn
+                </h1>
+                <p class="page-subtitle">Master the questions you found challenging</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="startFocusedPractice()">
+                    <i class="fas fa-brain"></i> Practice These Questions
+                </button>
+                <button class="btn btn-secondary" onclick="cleanupReviewList()">
+                    <i class="fas fa-broom"></i> Cleanup List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Stats Overview -->
+    <section class="review-stats glass mb-4" data-aos="fade-up">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-icon" style="background: var(--gradient-danger);">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-value" id="total-review">0</h3>
+                    <p class="stat-label">Questions to Review</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-value" id="avg-accuracy">0%</h3>
+                    <p class="stat-label">Average Accuracy</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon" style="background: var(--gradient-primary);">
+                    <i class="fas fa-redo"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-value" id="total-attempts">0</h3>
+                    <p class="stat-label">Total Attempts</p>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon" style="background: var(--gradient-success);">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 class="stat-value" id="improvement-rate">0%</h3>
+                    <p class="stat-label">Improvement Rate</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Filters and Search -->
+    <section class="filters-section glass mb-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="filters-header">
+            <h3><i class="fas fa-filter"></i> Filter & Search</h3>
+        </div>
+        <div class="filters-content">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="review-search" placeholder="Search questions..." onkeyup="filterReviewQuestions()">
+            </div>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label>Category</label>
+                    <select class="form-select" id="category-filter" onchange="filterReviewQuestions()">
+                        <option value="">All Categories</option>
+                        <option value="System Administration">System Administration</option>
+                        <option value="Networking">Networking</option>
+                        <option value="Security">Security</option>
+                        <option value="Shell Scripting">Shell Scripting</option>
+                        <option value="File Management">File Management</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Difficulty</label>
+                    <select class="form-select" id="difficulty-filter" onchange="filterReviewQuestions()">
+                        <option value="">All Difficulties</option>
+                        <option value="easy">Easy (>70% accuracy)</option>
+                        <option value="medium">Medium (30-70%)</option>
+                        <option value="hard">Hard (<30%)</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Sort By</label>
+                    <select class="form-select" id="sort-filter" onchange="sortReviewQuestions()">
+                        <option value="recent">Most Recent</option>
+                        <option value="accuracy">Lowest Accuracy</option>
+                        <option value="attempts">Most Attempts</option>
+                        <option value="category">Category</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Review Questions Container -->
+    <div id="review-container">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading review questions...</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state glass" style="display: none;">
+        <div class="empty-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <h3>All Caught Up!</h3>
+        <p>You don't have any questions marked for review.</p>
+        <p class="text-muted">Questions you answer incorrectly will appear here for focused practice.</p>
+        <button class="btn btn-primary mt-3" onclick="location.href='/quiz'">
+            <i class="fas fa-play"></i> Start a Quiz
+        </button>
+    </div>
+</div>
+
+<style>
+/* Review Page Specific Styles */
+.page-header {
+    margin-bottom: 2rem;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* Review Stats */
+.review-stats {
+    padding: 2rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+/* Filters Section */
+.filters-section {
+    padding: 1.5rem;
+}
+
+.filters-header {
+    margin-bottom: 1.5rem;
+}
+
+.filters-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.search-box i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.75rem 1rem 0.75rem 3rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-size: 1rem;
+    transition: var(--transition-base);
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+}
+
+.filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.form-select {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+}
+
+/* Review Questions */
+.review-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.review-card {
+    padding: 2rem;
+    animation: fadeInUp 0.6s ease;
+    transition: all 0.3s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-xl);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.review-meta {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.category-badge,
+.attempts-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+}
+
+.category-badge i,
+.attempts-badge i {
+    color: var(--primary-color);
+}
+
+.review-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+}
+
+.question-content {
+    margin-bottom: 2rem;
+}
+
+.question-text {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.option-item {
+    padding: 1rem 1.25rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: var(--transition-base);
+}
+
+.option-item.correct {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.option-item.incorrect {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.option-letter {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.option-text {
+    flex: 1;
+}
+
+.option-status {
+    margin-left: auto;
+    font-size: 1.25rem;
+}
+
+/* Explanation Box */
+.explanation-box {
+    background: var(--bg-tertiary);
+    border-left: 4px solid var(--accent-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.explanation-box h4 {
+    color: var(--accent-color);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Progress Bar */
+.progress-section {
+    margin-bottom: 1.5rem;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s linear infinite;
+}
+
+/* Loading State */
+.loading-container {
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--text-secondary);
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    animation: spin 1s linear infinite;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-icon {
+    width: 100px;
+    height: 100px;
+    background: var(--gradient-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .header-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .header-actions .btn {
+        width: 100%;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .review-header {
+        flex-direction: column;
+    }
+    
+    .review-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Review page functionality
+let allReviewQuestions = [];
+let filteredQuestions = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadReviewQuestions();
+});
+
+function loadReviewQuestions() {
+    fetch('/api/review_incorrect')
+        .then(response => response.json())
+        .then(data => {
+            // Show cleanup message if questions were cleaned up
+            if (data.cleanup_performed && data.questions_cleaned > 0) {
+                showMessage('info', `Cleaned up ${data.questions_cleaned} outdated question(s) from your review list.`);
+            }
+            allReviewQuestions = data.questions || [];
+            filteredQuestions = [...allReviewQuestions];
+            displayReviewQuestions(data);
+            updateStats();
+        })
+        .catch(error => {
+            console.error('Error loading review questions:', error);
+            showMessage('error', 'Error loading review questions');
+        });
+}
+
+function displayReviewQuestions(data) {
+    const container = document.getElementById('review-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (!data.has_questions || filteredQuestions.length === 0) {
+        container.innerHTML = '';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    
+    let html = '<div class="review-questions">';
+    
+    filteredQuestions.forEach((question, index) => {
+        const [questionText, options, correctIndex, category, explanation] = question;
+        const questionStats = getQuestionStats(questionText); // You'd implement this based on your stats tracking
+        
+        html += `
+            <div class="review-card glass" data-aos="fade-up" data-aos-delay="${index * 50}">
+                <div class="review-header">
+                    <div class="review-meta">
+                        <span class="category-badge">
+                            <i class="fas fa-tag"></i> ${category}
+                        </span>
+                        <span class="attempts-badge">
+                            <i class="fas fa-redo"></i> ${questionStats.attempts || 0} attempts
+                        </span>
+                    </div>
+                    <div class="review-actions">
+                        <button class="btn btn-icon btn-sm btn-primary" onclick="practiceQuestion(${index})" title="Practice This Question">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="btn btn-icon btn-sm btn-danger" onclick="removeFromReview('${questionText.replace(/'/g, "\\'")}', ${index})" title="Remove from Review">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span class="progress-label">Mastery Progress</span>
+                        <span class="progress-label">${questionStats.accuracy || 0}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${questionStats.accuracy || 0}%"></div>
+                    </div>
+                </div>
+                
+                <div class="question-content">
+                    <p class="question-text">${questionText}</p>
+                    
+                    <div class="options-list">
+                        ${options.map((option, i) => `
+                            <div class="option-item ${i === correctIndex ? 'correct' : ''}">
+                                <span class="option-letter">${String.fromCharCode(65 + i)}</span>
+                                <span class="option-text">${option}</span>
+                                ${i === correctIndex ? '<span class="option-status"><i class="fas fa-check-circle"></i></span>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                ${explanation ? `
+                    <div class="explanation-box">
+                        <h4><i class="fas fa-lightbulb"></i> Explanation</h4>
+                        <p>${explanation}</p>
+                    </div>
+                ` : ''}
+                
+                <div class="card-footer">
+                    <small class="text-muted">
+                        Last attempted: ${questionStats.lastAttempt || 'Never'} | 
+                        Success rate: ${questionStats.successRate || 0}%
+                    </small>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Reinitialize AOS for new elements
+    if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+    }
+}
+
+function updateStats() {
+    document.getElementById('total-review').textContent = allReviewQuestions.length;
+    // These would be calculated from actual stats
+    document.getElementById('avg-accuracy').textContent = '45%';
+    document.getElementById('total-attempts').textContent = '127';
+    document.getElementById('improvement-rate').textContent = '+12%';
+}
+
+function filterReviewQuestions() {
+    const searchTerm = document.getElementById('review-search').value.toLowerCase();
+    const categoryFilter = document.getElementById('category-filter').value;
+    const difficultyFilter = document.getElementById('difficulty-filter').value;
+    
+    filteredQuestions = allReviewQuestions.filter(question => {
+        const [questionText, options, correctIndex, category] = question;
+        
+        // Search filter
+        if (searchTerm && !questionText.toLowerCase().includes(searchTerm)) {
+            return false;
+        }
+        
+        // Category filter
+        if (categoryFilter && category !== categoryFilter) {
+            return false;
+        }
+        
+        // Difficulty filter (would need actual stats to implement properly)
+        // For now, just return true
+        
+        return true;
+    });
+    
+    displayReviewQuestions({ has_questions: filteredQuestions.length > 0, questions: filteredQuestions });
+}
+
+function sortReviewQuestions() {
+    const sortBy = document.getElementById('sort-filter').value;
+    
+    switch(sortBy) {
+        case 'recent':
+            // Sort by most recent (would need timestamps)
+            break;
+        case 'accuracy':
+            // Sort by lowest accuracy (would need stats)
+            break;
+        case 'attempts':
+            // Sort by most attempts (would need stats)
+            break;
+        case 'category':
+            filteredQuestions.sort((a, b) => a[3].localeCompare(b[3]));
+            break;
+    }
+    
+    displayReviewQuestions({ has_questions: filteredQuestions.length > 0, questions: filteredQuestions });
+}
+
+function removeFromReview(questionText, index) {
+    if (!confirm('Remove this question from your review list?')) {
+        return;
+    }
+    
+    fetch('/api/remove_from_review', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            question_text: questionText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadReviewQuestions();
+            showMessage('success', 'Question removed from review list');
+        } else {
+            showMessage('error', 'Error removing question');
+        }
+    })
+    .catch(error => {
+        showMessage('error', 'Error removing question');
+    });
+}
+
+function cleanupReviewList() {
+    if (!confirm('Remove any outdated questions that no longer exist in the question pool?')) {
+        return;
+    }
+    
+    fetch('/api/cleanup_review_list', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.removed_count > 0 ? 'success' : 'info', data.message);
+            if (data.removed_count > 0) {
+                loadReviewQuestions();
+            }
+        } else {
+            showMessage('error', 'Error cleaning up review list: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error cleaning up review list:', error);
+        showMessage('error', 'Error cleaning up review list');
+    });
+}
+
+function startFocusedPractice() {
+    // Save the current review questions for focused practice
+    localStorage.setItem('focusedPracticeQuestions', JSON.stringify(filteredQuestions));
+    localStorage.setItem('practiceMode', 'focused');
+    window.location.href = '/quiz';
+}
+
+function practiceQuestion(index) {
+    // Practice a specific question
+    localStorage.setItem('practiceSpecificQuestion', JSON.stringify(filteredQuestions[index]));
+    localStorage.setItem('practiceMode', 'single');
+    window.location.href = '/quiz';
+}
+
+// Mock function to get question stats - you'd implement this based on your stats tracking
+function getQuestionStats(questionText) {
+    return {
+        attempts: Math.floor(Math.random() * 10) + 1,
+        accuracy: Math.floor(Math.random() * 100),
+        successRate: Math.floor(Math.random() * 100),
+        lastAttempt: '2 days ago'
+    };
+}
+
+function showMessage(type, text) {
+    // Create and show a message notification
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} animate-fade-in`;
+    messageDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+        ${text}
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

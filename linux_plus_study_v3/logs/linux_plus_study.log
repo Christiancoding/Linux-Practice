@@ -1,0 +1,525 @@
+2025-07-30 22:38:53,232 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-30 22:38:53,232 - __main__ - INFO: Starting web application mode
+2025-07-30 22:38:53,232 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-30 22:38:53,232 - __main__ - INFO: Web application components loaded successfully
+2025-07-30 22:38:53,236 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-30 22:38:53,341 - utils.database - INFO: Database connection test successful
+2025-07-30 22:38:53,352 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-30 22:39:06,945 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:39:17,528 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:39:28,776 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:39:30,458 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:39:40,164 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:39:45,161 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-30 22:40:02,472 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 11:06:44,514 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 11:06:44,515 - __main__ - INFO: Starting web application mode
+2025-07-31 11:06:44,515 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 11:06:44,516 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 11:06:44,522 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 11:06:44,533 - utils.database - INFO: Database connection test successful
+2025-07-31 11:06:44,545 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 11:06:49,959 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:02:38,618 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:02:38,619 - utils.database - INFO: All database connections closed
+2025-07-31 13:08:32,005 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:08:32,007 - __main__ - INFO: Starting web application mode
+2025-07-31 13:08:32,007 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:08:32,008 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:08:32,013 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:08:32,020 - utils.database - INFO: Database connection test successful
+2025-07-31 13:08:32,033 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:08:40,323 - views.web_view - ERROR: Exception on /vm_playground [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 2168, in vm_playground
+    return render_template('vm_playground.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/vm_playground.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:08:40,407 - root - ERROR: Request error: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:08:40,503 - werkzeug - ERROR: Error on request:
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 2168, in vm_playground
+    return render_template('vm_playground.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/vm_playground.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 331, in execute
+    application_iter = app(environ, start_response)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 860, in handle_exception
+    server_error = self.ensure_sync(handler)(server_error)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 2024, in internal_error
+    return render_template('error.html', error="Internal server error"), 500
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/error.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:08:43,427 - views.web_view - ERROR: Exception on / [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 1516, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:08:43,429 - root - ERROR: Request error: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:08:43,432 - werkzeug - ERROR: Error on request:
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 1516, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 331, in execute
+    application_iter = app(environ, start_response)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 860, in handle_exception
+    server_error = self.ensure_sync(handler)(server_error)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 2024, in internal_error
+    return render_template('error.html', error="Internal server error"), 500
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/error.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 40, in top-level template code
+    <a class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}" href="{{ url_for('quiz') }}" data-page="practice">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:15:42,211 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:15:42,214 - utils.database - INFO: All database connections closed
+2025-07-31 13:15:43,498 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:15:43,498 - __main__ - INFO: Starting web application mode
+2025-07-31 13:15:43,499 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:15:43,499 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:15:43,505 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:15:43,512 - utils.database - INFO: Database connection test successful
+2025-07-31 13:15:43,525 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:15:50,314 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:16:12,779 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:16:39,121 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:26:58,994 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:26:58,994 - utils.database - INFO: All database connections closed
+2025-07-31 13:27:00,150 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:27:00,150 - __main__ - INFO: Starting web application mode
+2025-07-31 13:27:00,151 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:27:00,151 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:27:00,156 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:27:00,165 - utils.database - INFO: Database connection test successful
+2025-07-31 13:27:00,179 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:27:06,955 - views.web_view - ERROR: Exception on / [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 1516, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 41, in top-level template code
+    <a href="{{ url_for('quiz') }}" class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:27:07,043 - root - ERROR: Request error: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:27:07,155 - werkzeug - ERROR: Error on request:
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 1516, in index
+    return render_template('index.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/index.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 41, in top-level template code
+    <a href="{{ url_for('quiz') }}" class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 370, in run_wsgi
+    execute(self.server.app)
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/serving.py", line 331, in execute
+    application_iter = app(environ, start_response)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 860, in handle_exception
+    server_error = self.ensure_sync(handler)(server_error)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/views/web_view.py", line 2024, in internal_error
+    return render_template('error.html', error="Internal server error"), 500
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 150, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 131, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/error.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "/home/retiredfan/Documents/github/Linux-Practice-2/linux_plus_study_v2/templates/base.html", line 41, in top-level template code
+    <a href="{{ url_for('quiz') }}" class="nav-link {% if request.endpoint == 'quiz' %}active{% endif %}">
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/werkzeug/routing/map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'. Did you mean 'quiz_page' instead?
+2025-07-31 13:29:19,327 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:29:19,328 - utils.database - INFO: All database connections closed
+2025-07-31 13:29:20,361 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:29:20,362 - __main__ - INFO: Starting web application mode
+2025-07-31 13:29:20,362 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:29:20,362 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:29:20,367 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:29:20,375 - utils.database - INFO: Database connection test successful
+2025-07-31 13:29:20,389 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:29:34,540 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:29:40,678 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:33:54,145 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:42:06,810 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:42:06,810 - utils.database - INFO: All database connections closed
+2025-07-31 13:42:07,855 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:42:07,855 - __main__ - INFO: Starting web application mode
+2025-07-31 13:42:07,855 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:42:07,856 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:42:07,860 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:42:07,868 - utils.database - INFO: Database connection test successful
+2025-07-31 13:42:07,880 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:51:26,546 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:51:26,546 - __main__ - INFO: Starting web application mode
+2025-07-31 13:51:26,547 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:51:26,547 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:51:26,552 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:51:26,558 - utils.database - INFO: Database connection test successful
+2025-07-31 13:51:26,569 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:53:43,918 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:53:43,918 - utils.database - INFO: All database connections closed
+2025-07-31 13:53:45,048 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:53:45,048 - __main__ - INFO: Starting web application mode
+2025-07-31 13:53:45,048 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:53:45,049 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:53:45,055 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:53:45,064 - utils.database - INFO: Database connection test successful
+2025-07-31 13:53:45,080 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 13:54:16,715 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 13:59:43,957 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 13:59:43,958 - utils.database - INFO: All database connections closed
+2025-07-31 13:59:45,266 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 13:59:45,266 - __main__ - INFO: Starting web application mode
+2025-07-31 13:59:45,266 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 13:59:45,267 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 13:59:45,272 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 13:59:45,278 - utils.database - INFO: Database connection test successful
+2025-07-31 13:59:45,290 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 14:01:15,007 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:02:00,331 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 14:02:00,331 - utils.database - INFO: All database connections closed
+2025-07-31 14:02:02,391 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 14:02:02,392 - __main__ - INFO: Starting web application mode
+2025-07-31 14:02:02,392 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 14:02:02,392 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 14:02:02,398 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 14:02:02,405 - utils.database - INFO: Database connection test successful
+2025-07-31 14:02:02,418 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 14:02:06,001 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:02:34,887 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:13:01,455 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 14:13:01,456 - utils.database - INFO: All database connections closed
+2025-07-31 14:13:02,634 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 14:13:02,634 - __main__ - INFO: Starting web application mode
+2025-07-31 14:13:02,634 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 14:13:02,635 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 14:13:02,641 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 14:13:02,649 - utils.database - INFO: Database connection test successful
+2025-07-31 14:13:02,661 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 14:15:30,652 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:15:34,190 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:16:30,447 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:20:08,189 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:21:27,776 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 14:21:27,777 - utils.database - INFO: All database connections closed
+2025-07-31 14:21:29,010 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 14:21:29,010 - __main__ - INFO: Starting web application mode
+2025-07-31 14:21:29,011 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 14:21:29,011 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 14:21:29,016 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 14:21:29,024 - utils.database - INFO: Database connection test successful
+2025-07-31 14:21:29,037 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 14:21:32,567 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:24:39,838 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 14:24:39,839 - utils.database - INFO: All database connections closed
+2025-07-31 14:24:43,424 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 14:24:43,424 - __main__ - INFO: Starting web application mode
+2025-07-31 14:24:43,424 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 14:24:43,425 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 14:24:43,430 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 14:24:43,438 - utils.database - INFO: Database connection test successful
+2025-07-31 14:24:43,450 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 14:24:53,252 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:24:58,772 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:25:33,723 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 14:28:27,165 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system

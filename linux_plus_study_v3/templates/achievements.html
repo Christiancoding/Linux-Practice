@@ -1,0 +1,865 @@
+{% extends "base.html" %}
+
+{% block title %}Achievements - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Achievements Page -->
+<div class="page-content active" id="page-achievements">
+    <!-- Page Header -->
+    <div class="page-header" data-aos="fade-down">
+        <h1 class="page-title">
+            <i class="fas fa-trophy text-gradient"></i>
+            Achievements & Rewards
+        </h1>
+        <p class="page-subtitle">Unlock badges, earn XP, and track your Linux mastery journey</p>
+    </div>
+
+    <!-- Achievement Stats Overview -->
+    <section class="achievement-stats glass mb-4" data-aos="fade-up">
+        <div class="stats-container">
+            <div class="achievement-stat">
+                <div class="stat-icon" style="background: var(--gradient-primary);">
+                    <i class="fas fa-medal"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-achievements">12/45</h3>
+                    <p>Achievements Unlocked</p>
+                </div>
+            </div>
+            <div class="achievement-stat">
+                <div class="stat-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="total-points">2,450</h3>
+                    <p>Total Points</p>
+                </div>
+            </div>
+            <div class="achievement-stat">
+                <div class="stat-icon" style="background: var(--gradient-success);">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="completion-rate">27%</h3>
+                    <p>Completion Rate</p>
+                </div>
+            </div>
+            <div class="achievement-stat">
+                <div class="stat-icon" style="background: var(--gradient-accent);">
+                    <i class="fas fa-gem"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="rarest-achievement">Elite Hacker</h3>
+                    <p>Rarest Achievement</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Achievement Categories -->
+    <section class="categories-section mb-4" data-aos="fade-up">
+        <div class="category-tabs glass">
+            <button class="category-tab active" onclick="filterAchievements('all')">
+                <i class="fas fa-th"></i> All
+            </button>
+            <button class="category-tab" onclick="filterAchievements('mastery')">
+                <i class="fas fa-brain"></i> Mastery
+            </button>
+            <button class="category-tab" onclick="filterAchievements('speed')">
+                <i class="fas fa-tachometer-alt"></i> Speed
+            </button>
+            <button class="category-tab" onclick="filterAchievements('streak')">
+                <i class="fas fa-fire"></i> Streak
+            </button>
+            <button class="category-tab" onclick="filterAchievements('special')">
+                <i class="fas fa-star"></i> Special
+            </button>
+            <button class="category-tab" onclick="filterAchievements('legendary')">
+                <i class="fas fa-crown"></i> Legendary
+            </button>
+        </div>
+    </section>
+
+    <!-- Achievements Grid -->
+    <section class="achievements-grid" id="achievements-container">
+        <!-- Unlocked Achievements -->
+        <div class="achievement-card unlocked glass" data-aos="fade-up" data-category="mastery">
+            <div class="achievement-icon" style="background: var(--gradient-success);">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>First Steps</h3>
+                <p>Complete your first quiz</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 50 XP</span>
+                    <span class="date">Unlocked 2 days ago</span>
+                </div>
+            </div>
+            <div class="achievement-badge">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+
+        <div class="achievement-card unlocked glass" data-aos="fade-up" data-aos-delay="50" data-category="speed">
+            <div class="achievement-icon" style="background: var(--gradient-warning);">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>Speed Demon</h3>
+                <p>Answer 10 questions correctly in under 2 minutes</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 100 XP</span>
+                    <span class="date">Unlocked 1 week ago</span>
+                </div>
+            </div>
+            <div class="achievement-badge">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+
+        <div class="achievement-card unlocked glass" data-aos="fade-up" data-aos-delay="100" data-category="streak">
+            <div class="achievement-icon" style="background: var(--gradient-danger);">
+                <i class="fas fa-fire"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>On Fire!</h3>
+                <p>Maintain a 7-day study streak</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 150 XP</span>
+                    <span class="date">Unlocked 3 days ago</span>
+                </div>
+            </div>
+            <div class="achievement-badge">
+                <i class="fas fa-check-circle"></i>
+            </div>
+        </div>
+
+        <!-- Locked Achievements -->
+        <div class="achievement-card locked glass" data-aos="fade-up" data-aos-delay="150" data-category="mastery">
+            <div class="achievement-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>Perfect Score</h3>
+                <p>Get 100% accuracy on a 20-question quiz</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 200 XP</span>
+                    <span class="progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%;"></div>
+                        </div>
+                        <span class="progress-text">15/20</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="achievement-card locked glass" data-aos="fade-up" data-aos-delay="200" data-category="special">
+            <div class="achievement-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>Night Owl</h3>
+                <p>Study between midnight and 3 AM</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 75 XP</span>
+                    <span class="hint">Hint: Who studies at this hour?</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="achievement-card locked glass" data-aos="fade-up" data-aos-delay="250" data-category="legendary">
+            <div class="achievement-icon legendary">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>Linux Master</h3>
+                <p>Achieve 95% overall accuracy across 1000 questions</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 1000 XP</span>
+                    <span class="progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 23%;"></div>
+                        </div>
+                        <span class="progress-text">230/1000</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- More achievements... -->
+        <div class="achievement-card locked glass" data-aos="fade-up" data-aos-delay="300" data-category="mastery">
+            <div class="achievement-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <div class="achievement-content">
+                <h3>Category Expert</h3>
+                <p>Achieve 90% accuracy in any category</p>
+                <div class="achievement-meta">
+                    <span class="points"><i class="fas fa-star"></i> 250 XP</span>
+                    <span class="progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 87%;"></div>
+                        </div>
+                        <span class="progress-text">87% in File Management</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Leaderboard Section -->
+    <section class="leaderboard-section glass" data-aos="fade-up">
+        <h2 class="section-title">
+            <div class="title-icon"><i class="fas fa-ranking-star"></i></div>
+            Top Performers
+        </h2>
+        <div class="leaderboard-tabs">
+            <button class="leaderboard-tab active" onclick="switchLeaderboard('daily')">Daily</button>
+            <button class="leaderboard-tab" onclick="switchLeaderboard('weekly')">Weekly</button>
+            <button class="leaderboard-tab" onclick="switchLeaderboard('alltime')">All Time</button>
+        </div>
+        <div class="leaderboard-list">
+            <div class="leaderboard-item rank-1">
+                <div class="rank-badge">🥇</div>
+                <div class="player-info">
+                    <span class="player-name">You</span>
+                    <span class="player-stats">Level 12 • 2,450 XP</span>
+                </div>
+                <div class="player-score">98.5%</div>
+            </div>
+            <div class="leaderboard-item rank-2">
+                <div class="rank-badge">🥈</div>
+                <div class="player-info">
+                    <span class="player-name">LinuxPro2024</span>
+                    <span class="player-stats">Level 15 • 3,200 XP</span>
+                </div>
+                <div class="player-score">97.2%</div>
+            </div>
+            <div class="leaderboard-item rank-3">
+                <div class="rank-badge">🥉</div>
+                <div class="player-info">
+                    <span class="player-name">CommandMaster</span>
+                    <span class="player-stats">Level 10 • 1,850 XP</span>
+                </div>
+                <div class="player-score">95.8%</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="rank-number">4</div>
+                <div class="player-info">
+                    <span class="player-name">ShellNinja</span>
+                    <span class="player-stats">Level 9 • 1,620 XP</span>
+                </div>
+                <div class="player-score">94.1%</div>
+            </div>
+            <div class="leaderboard-item">
+                <div class="rank-number">5</div>
+                <div class="player-info">
+                    <span class="player-name">TerminalKing</span>
+                    <span class="player-stats">Level 8 • 1,400 XP</span>
+                </div>
+                <div class="player-score">92.7%</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Rewards Section -->
+    <section class="rewards-section glass" data-aos="fade-up">
+        <h2 class="section-title">
+            <div class="title-icon"><i class="fas fa-gift"></i></div>
+            Upcoming Rewards
+        </h2>
+        <div class="rewards-grid">
+            <div class="reward-card">
+                <div class="reward-icon">
+                    <i class="fas fa-certificate"></i>
+                </div>
+                <h3>Study Certificate</h3>
+                <p>Complete all basic achievements</p>
+                <div class="reward-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 40%;"></div>
+                    </div>
+                    <span>8/20 achievements</span>
+                </div>
+            </div>
+            <div class="reward-card">
+                <div class="reward-icon">
+                    <i class="fas fa-palette"></i>
+                </div>
+                <h3>Custom Theme</h3>
+                <p>Reach Level 20</p>
+                <div class="reward-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 60%;"></div>
+                    </div>
+                    <span>Level 12/20</span>
+                </div>
+            </div>
+            <div class="reward-card">
+                <div class="reward-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h3>Elite Status</h3>
+                <p>Unlock all achievements</p>
+                <div class="reward-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 27%;"></div>
+                    </div>
+                    <span>12/45 achievements</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+/* Achievements Page Specific Styles */
+.achievement-stats {
+    padding: 2rem;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+}
+
+.achievement-stat {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stat-info h3 {
+    font-size: 1.75rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.stat-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Category Tabs */
+.categories-section {
+    margin-bottom: 2rem;
+}
+
+.category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.category-tab {
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-base);
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.category-tab:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.category-tab.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+/* Achievements Grid */
+.achievements-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.achievement-card {
+    padding: 1.5rem;
+    position: relative;
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.achievement-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.achievement-card.unlocked {
+    border: 2px solid var(--success-color);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+}
+
+.achievement-card.locked {
+    opacity: 0.7;
+}
+
+.achievement-card.locked:hover {
+    opacity: 1;
+}
+
+.achievement-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    flex-shrink: 0;
+}
+
+.locked .achievement-icon {
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+}
+
+.achievement-icon.legendary {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+.achievement-content {
+    flex: 1;
+}
+
+.achievement-content h3 {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.achievement-content p {
+    margin: 0 0 1rem 0;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.achievement-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+}
+
+.points {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.date {
+    color: var(--text-muted);
+}
+
+.hint {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.progress {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    min-width: 50px;
+    text-align: right;
+}
+
+.achievement-badge {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.5rem;
+    color: var(--success-color);
+}
+
+/* Leaderboard Section */
+.leaderboard-section {
+    padding: 2rem;
+    margin-bottom: 3rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.title-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+}
+
+.leaderboard-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.leaderboard-tab {
+    padding: 0.5rem 1.5rem;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.leaderboard-tab:hover {
+    background: var(--bg-secondary);
+}
+
+.leaderboard-tab.active {
+    background: var(--gradient-primary);
+    color: white;
+}
+
+.leaderboard-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    transition: var(--transition-base);
+}
+
+.leaderboard-item:hover {
+    background: var(--bg-secondary);
+    transform: translateX(4px);
+}
+
+.leaderboard-item.rank-1 {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.rank-badge {
+    font-size: 1.5rem;
+    min-width: 40px;
+    text-align: center;
+}
+
+.rank-number {
+    min-width: 40px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.player-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.player-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.player-stats {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.player-score {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Rewards Section */
+.rewards-section {
+    padding: 2rem;
+}
+
+.rewards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.reward-card {
+    background: var(--bg-tertiary);
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    transition: var(--transition-base);
+}
+
+.reward-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.reward-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.reward-card h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+}
+
+.reward-card p {
+    margin: 0 0 1.5rem 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.reward-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.reward-progress span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Animations */
+@keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .achievements-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .category-tabs {
+        overflow-x: scroll;
+    }
+    
+    .leaderboard-item {
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .rank-badge {
+        font-size: 1.25rem;
+    }
+    
+    .player-score {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Achievements page functionality
+document.addEventListener('DOMContentLoaded', function() {
+    loadAchievementsData();
+    initializeFilters();
+});
+
+// Load achievements data
+function loadAchievementsData() {
+    fetch('/api/achievements')
+        .then(response => response.json())
+        .then(data => {
+            updateAchievementStats(data.stats);
+            displayAchievements(data.achievements);
+        })
+        .catch(error => {
+            console.error('Error loading achievements:', error);
+            // Use demo data if API fails
+            useDemoData();
+        });
+}
+
+// Update achievement statistics
+function updateAchievementStats(stats) {
+    document.getElementById('total-achievements').textContent = `${stats?.unlocked || 12}/${stats?.total || 45}`;
+    document.getElementById('total-points').textContent = stats?.points || '2,450';
+    document.getElementById('completion-rate').textContent = `${stats?.completion || 27}%`;
+    document.getElementById('rarest-achievement').textContent = stats?.rarest || 'Elite Hacker';
+}
+
+// Initialize filter functionality
+function initializeFilters() {
+    // Category filter is already set up with onclick handlers
+}
+
+// Filter achievements by category
+function filterAchievements(category) {
+    // Update active tab
+    document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Filter achievement cards
+    const cards = document.querySelectorAll('.achievement-card');
+    cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+            card.style.display = 'flex';
+            // Reset AOS animation
+            card.classList.remove('aos-animate');
+            setTimeout(() => card.classList.add('aos-animate'), 10);
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Switch leaderboard view
+function switchLeaderboard(period) {
+    // Update active tab
+    document.querySelectorAll('.leaderboard-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // In a real app, this would load different data
+    console.log('Loading leaderboard for:', period);
+    
+    // Animate the change
+    const leaderboardList = document.querySelector('.leaderboard-list');
+    leaderboardList.style.opacity = '0.5';
+    
+    setTimeout(() => {
+        // Would update with new data here
+        leaderboardList.style.opacity = '1';
+    }, 300);
+}
+
+// Use demo data if API fails
+function useDemoData() {
+    const demoStats = {
+        unlocked: 12,
+        total: 45,
+        points: '2,450',
+        completion: 27,
+        rarest: 'Elite Hacker'
+    };
+    updateAchievementStats(demoStats);
+}
+
+// Handle achievement card clicks
+document.addEventListener('click', function(e) {
+    const card = e.target.closest('.achievement-card');
+    if (card) {
+        if (card.classList.contains('locked')) {
+            showAchievementDetails(card);
+        } else {
+            celebrateAchievement(card);
+        }
+    }
+});
+
+// Show achievement details modal
+function showAchievementDetails(card) {
+    const title = card.querySelector('h3').textContent;
+    const description = card.querySelector('p').textContent;
+    
+    // In a real app, this would open a modal
+    console.log('Achievement details:', title, description);
+}
+
+// Celebrate unlocked achievement
+function celebrateAchievement(card) {
+    // Add celebration animation
+    card.style.animation = 'pulse 0.5s ease';
+    
+    setTimeout(() => {
+        card.style.animation = '';
+    }, 500);
+}
+
+// Export achievements data
+function exportAchievements() {
+    console.log('Exporting achievements...');
+    // Would implement actual export functionality
+}
+</script>
+{% endblock %}

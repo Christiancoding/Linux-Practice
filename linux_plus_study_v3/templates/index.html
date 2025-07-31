@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Dashboard Page -->
+<div class="page-content active" id="page-dashboard">
+    <!-- Welcome Hero Section -->
+    <section class="hero-section glass mb-4" data-aos="fade-down">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Welcome back, <span class="text-gradient">Linux Master</span>!</h1>
+                <p class="hero-subtitle">Ready to continue your journey to Linux+ certification?</p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Current Level</span>
+                        <span class="stat-value text-gradient" id="hero-level">1</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total XP</span>
+                        <span class="stat-value text-gradient" id="hero-xp">0</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-label">Study Streak</span>
+                        <span class="stat-value text-gradient" id="hero-streak">0</span>
+                        <span class="stat-label">days</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-progress">
+                <svg class="progress-ring" width="200" height="200">
+                    <circle cx="100" cy="100" r="90" stroke="var(--bg-tertiary)" stroke-width="10" fill="none"/>
+                    <circle class="progress-ring-fill" cx="100" cy="100" r="90" stroke="url(#gradient)" stroke-width="10" fill="none" 
+                            stroke-dasharray="565.48" stroke-dashoffset="565.48" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+                    <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="progress-text">
+                    <span class="progress-percent">0%</span>
+                    <span class="progress-label">to next level</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Practice Modes Grid -->
+    <section class="section" data-aos="fade-up">
+        <h2 class="section-title">
+            <div class="title-icon"><i class="fas fa-brain"></i></div>
+            Practice Modes
+        </h2>
+        <div class="modes-grid">
+            <div class="mode-card glass" onclick="startPractice('standard')" data-aos="fade-up" data-aos-delay="100">
+                <div class="mode-icon" style="background: var(--gradient-primary);">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3>Standard Practice</h3>
+                <p>Classic quiz mode with immediate feedback. Perfect for learning new concepts.</p>
+                <div class="mode-stats">
+                    <span><i class="fas fa-clock"></i> Unlimited time</span>
+                    <span><i class="fas fa-question"></i> 20 questions</span>
+                </div>
+                <button class="btn btn-primary">Start Practice</button>
+            </div>
+
+            <div class="mode-card glass" onclick="startPractice('timed')" data-aos="fade-up" data-aos-delay="200">
+                <div class="mode-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <h3>Timed Challenge</h3>
+                <p>Race against the clock! Test your knowledge under pressure.</p>
+                <div class="mode-stats">
+                    <span><i class="fas fa-clock"></i> 30 seconds/question</span>
+                    <span><i class="fas fa-fire"></i> Bonus XP</span>
+                </div>
+                <button class="btn btn-warning">Start Challenge</button>
+            </div>
+
+            <div class="mode-card glass" onclick="startPractice('survival')" data-aos="fade-up" data-aos-delay="300">
+                <div class="mode-icon" style="background: var(--gradient-danger);">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <h3>Survival Mode</h3>
+                <p>How far can you go? One wrong answer ends the game!</p>
+                <div class="mode-stats">
+                    <span><i class="fas fa-heart"></i> 3 lives</span>
+                    <span><i class="fas fa-trophy"></i> High score</span>
+                </div>
+                <button class="btn btn-danger">Start Survival</button>
+            </div>
+
+            <div class="mode-card glass" onclick="startPractice('category')" data-aos="fade-up" data-aos-delay="400">
+                <div class="mode-icon" style="background: var(--gradient-accent);">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <h3>Category Focus</h3>
+                <p>Choose specific topics to study. Targeted practice for weak areas.</p>
+                <div class="mode-stats">
+                    <span><i class="fas fa-list"></i> 15+ categories</span>
+                    <span><i class="fas fa-chart-line"></i> Track progress</span>
+                </div>
+                <button class="btn btn-secondary">Choose Category</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Overview -->
+    <section class="section" data-aos="fade-up">
+        <h2 class="section-title">
+            <div class="title-icon"><i class="fas fa-chart-bar"></i></div>
+            Performance Overview
+        </h2>
+        <div class="stats-grid">
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stat-icon" style="background: var(--gradient-success);">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value" id="correct-answers">0</h3>
+                    <p class="stat-label">Correct Answers</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> 12% from last week
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stat-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-percentage"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value" id="accuracy">0%</h3>
+                    <p class="stat-label">Accuracy Rate</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> 5% improvement
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stat-icon" style="background: var(--gradient-primary);">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value" id="current-streak">0</h3>
+                    <p class="stat-label">Day Streak</p>
+                    <div class="stat-trend">
+                        <i class="fas fa-fire"></i> Keep it going!
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stat-icon" style="background: var(--gradient-accent);">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value" id="study-time">0h</h3>
+                    <p class="stat-label">Study Time</p>
+                    <div class="stat-trend positive">
+                        <i class="fas fa-arrow-up"></i> 2h this week
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Recent Achievements & Activity -->
+    <div class="dashboard-grid">
+        <!-- Recent Achievements -->
+        <section class="glass" data-aos="fade-right">
+            <h3 class="section-header">
+                <i class="fas fa-trophy"></i> Recent Achievements
+            </h3>
+            <div class="achievements-list" id="recent-achievements">
+                <div class="achievement-item">
+                    <div class="achievement-icon" style="background: var(--gradient-success);">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <h4>First Steps</h4>
+                        <p>Complete your first quiz</p>
+                    </div>
+                </div>
+                <div class="achievement-item locked">
+                    <div class="achievement-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <h4>Speed Demon</h4>
+                        <p>Complete a timed challenge</p>
+                    </div>
+                </div>
+                <div class="achievement-item locked">
+                    <div class="achievement-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <div class="achievement-info">
+                        <h4>Perfect Score</h4>
+                        <p>Get 100% on any quiz</p>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-dark mt-3" onclick="location.href='/achievements'">
+                View All Achievements
+            </button>
+        </section>
+
+        <!-- Study Calendar -->
+        <section class="glass" data-aos="fade-left">
+            <h3 class="section-header">
+                <i class="fas fa-calendar-alt"></i> Study Activity
+            </h3>
+            <div class="study-calendar" id="study-calendar">
+                <!-- Calendar grid will be generated by JavaScript -->
+            </div>
+            <div class="calendar-legend">
+                <span class="legend-item">Less</span>
+                <div class="legend-scale">
+                    <div class="activity-cell" data-level="0"></div>
+                    <div class="activity-cell" data-level="1"></div>
+                    <div class="activity-cell" data-level="2"></div>
+                    <div class="activity-cell" data-level="3"></div>
+                    <div class="activity-cell" data-level="4"></div>
+                </div>
+                <span class="legend-item">More</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- Command Reference Quick Access -->
+    <section class="glass mt-4" data-aos="fade-up">
+        <h3 class="section-header">
+            <i class="fas fa-terminal"></i> Quick Command Reference
+        </h3>
+        <div class="command-categories-grid">
+            <div class="command-category-card" onclick="showCommandReference('files')">
+                <i class="fas fa-folder"></i>
+                <span>File Management</span>
+            </div>
+            <div class="command-category-card" onclick="showCommandReference('system')">
+                <i class="fas fa-server"></i>
+                <span>System Info</span>
+            </div>
+            <div class="command-category-card" onclick="showCommandReference('network')">
+                <i class="fas fa-network-wired"></i>
+                <span>Networking</span>
+            </div>
+            <div class="command-category-card" onclick="showCommandReference('process')">
+                <i class="fas fa-microchip"></i>
+                <span>Process Mgmt</span>
+            </div>
+            <div class="command-category-card" onclick="showCommandReference('permissions')">
+                <i class="fas fa-key"></i>
+                <span>Permissions</span>
+            </div>
+            <div class="command-category-card" onclick="showCommandReference('package')">
+                <i class="fas fa-cube"></i>
+                <span>Package Mgmt</span>
+            </div>
+        </div>
+    </section>
+</div>
+
+<style>
+/* Dashboard Specific Styles */
+.hero-section {
+    padding: 3rem;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(124, 58, 237, 0.1) 0%, transparent 70%);
+    animation: rotate 30s linear infinite;
+}
+
+.hero-content {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 3rem;
+}
+
+.hero-text {
+    flex: 1;
+}
+
+.hero-title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 1rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.hero-stats {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 40px;
+    background: var(--border-color);
+}
+
+.hero-progress {
+    position: relative;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+}
+
+.progress-ring-fill {
+    transition: stroke-dashoffset 1s ease;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.progress-percent {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Practice Modes Grid */
+.modes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.mode-card {
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.mode-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+}
+
+.mode-card:hover::before {
+    transform: scaleX(1);
+}
+
+.mode-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+    margin-bottom: 1.5rem;
+}
+
+.mode-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.mode-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.mode-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.mode-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Stats Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-top: 0.5rem;
+}
+
+.stat-trend.positive {
+    color: var(--success-color);
+}
+
+.stat-trend.negative {
+    color: var(--danger-color);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Achievements List */
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    transition: var(--transition-base);
+}
+
+.achievement-item:hover {
+    background: var(--bg-secondary);
+}
+
+.achievement-item.locked {
+    opacity: 0.5;
+}
+
+.achievement-item.locked .achievement-icon {
+    background: var(--bg-tertiary) !important;
+}
+
+/* Study Calendar */
+.study-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 1rem;
+}
+
+.activity-cell {
+    aspect-ratio: 1;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.activity-cell[data-level="1"] { background: rgba(16, 185, 129, 0.2); }
+.activity-cell[data-level="2"] { background: rgba(16, 185, 129, 0.4); }
+.activity-cell[data-level="3"] { background: rgba(16, 185, 129, 0.6); }
+.activity-cell[data-level="4"] { background: rgba(16, 185, 129, 0.8); }
+
+.activity-cell:hover {
+    transform: scale(1.2);
+    box-shadow: var(--shadow-lg);
+}
+
+.calendar-legend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.legend-scale {
+    display: flex;
+    gap: 4px;
+}
+
+.legend-scale .activity-cell {
+    width: 12px;
+    height: 12px;
+}
+
+/* Command Categories Grid */
+.command-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.command-category-card {
+    background: var(--bg-tertiary);
+    padding: 1.5rem;
+    border-radius: var(--radius-md);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-base);
+    border: 2px solid transparent;
+}
+
+.command-category-card:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.command-category-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero-stats {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Dashboard initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize dashboard data
+    loadDashboardData();
+    generateStudyCalendar();
+    updateProgressRing();
+});
+
+// Load dashboard data
+function loadDashboardData() {
+    // Get stats from localStorage or API
+    const stats = JSON.parse(localStorage.getItem('gameStats') || '{}');
+    
+    // Update hero stats
+    document.getElementById('hero-level').textContent = stats.level || 1;
+    document.getElementById('hero-xp').textContent = stats.xp || 0;
+    document.getElementById('hero-streak').textContent = stats.streak || 0;
+    
+    // Update performance stats
+    document.getElementById('correct-answers').textContent = stats.correctAnswers || 0;
+    document.getElementById('accuracy').textContent = (stats.accuracy || 0) + '%';
+    document.getElementById('current-streak').textContent = stats.streak || 0;
+    document.getElementById('study-time').textContent = formatStudyTime(stats.studyTime || 0);
+}
+
+// Generate study calendar
+function generateStudyCalendar() {
+    const calendar = document.getElementById('study-calendar');
+    const today = new Date();
+    
+    // Generate last 35 days
+    for (let i = 34; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'activity-cell';
+        
+        // Random activity level for demo
+        const level = Math.floor(Math.random() * 5);
+        cell.setAttribute('data-level', level);
+        
+        // Add tooltip
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        cell.title = `${date.toLocaleDateString()}: ${level * 5} questions`;
+        
+        calendar.appendChild(cell);
+    }
+}
+
+// Update progress ring
+function updateProgressRing() {
+    const stats = JSON.parse(localStorage.getItem('gameStats') || '{}');
+    const currentXP = stats.xp || 0;
+    const level = stats.level || 1;
+    const xpForNextLevel = level * 100; // Example: 100 XP per level
+    const progress = (currentXP % xpForNextLevel) / xpForNextLevel;
+    
+    const ring = document.querySelector('.progress-ring-fill');
+    const circumference = 2 * Math.PI * 90; // radius = 90
+    const offset = circumference - (progress * circumference);
+    
+    setTimeout(() => {
+        ring.style.strokeDashoffset = offset;
+    }, 500);
+    
+    document.querySelector('.progress-percent').textContent = Math.round(progress * 100) + '%';
+}
+
+// Practice mode functions
+function startPractice(mode) {
+    localStorage.setItem('practiceMode', mode);
+    window.location.href = '/quiz';
+}
+
+// Format study time
+function formatStudyTime(minutes) {
+    if (minutes < 60) return minutes + 'm';
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours + 'h ' + (mins > 0 ? mins + 'm' : '');
+}
+
+// Command reference
+function showCommandReference(category) {
+    // This would open a modal or navigate to command reference
+    console.log('Show commands for:', category);
+    window.location.href = '/cli_playground#' + category;
+}
+</script>
+{% endblock %}

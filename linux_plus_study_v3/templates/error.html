@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}Error - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Error Page -->
+<div class="error-page">
+    <div class="error-container glass" data-aos="zoom-in">
+        <!-- Animated Error Icon -->
+        <div class="error-icon-wrapper">
+            <div class="error-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="error-pulse"></div>
+            <div class="error-particles">
+                <span></span><span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <!-- Error Content -->
+        <div class="error-content">
+            <h1 class="error-code text-gradient">{{ error_code | default('404') }}</h1>
+            <h2 class="error-title">{{ error_title | default('Page Not Found') }}</h2>
+            <p class="error-message">{{ error_message | default("The page you're looking for seems to have wandered off into the void of /dev/null") }}</p>
+            
+            <!-- Terminal-style error details -->
+            <div class="error-terminal">
+                <div class="terminal-header">
+                    <span class="terminal-prompt">student@linux-study:~$ </span>
+                    <span class="terminal-command">cat /var/log/error.log</span>
+                </div>
+                <div class="terminal-output">
+                    <span class="error-timestamp">[{{ current_time }}]</span> ERROR: {{ error_details | default('Resource not found in filesystem') }}<br>
+                    <span class="error-timestamp">[{{ current_time }}]</span> PATH: {{ request.path }}<br>
+                    <span class="error-timestamp">[{{ current_time }}]</span> STATUS: {{ error_code | default('404') }} - {{ error_title | default('Not Found') }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="error-actions">
+            <button class="btn btn-primary" onclick="window.location.href='/'">
+                <i class="fas fa-home"></i> Go to Dashboard
+            </button>
+            <button class="btn btn-secondary" onclick="window.history.back()">
+                <i class="fas fa-arrow-left"></i> Go Back
+            </button>
+            <button class="btn btn-dark" onclick="reportError()">
+                <i class="fas fa-bug"></i> Report Issue
+            </button>
+        </div>
+
+        <!-- Helpful Links -->
+        <div class="helpful-links">
+            <h3>Helpful Resources</h3>
+            <div class="links-grid">
+                <a href="/quiz" class="link-card">
+                    <i class="fas fa-brain"></i>
+                    <span>Practice Quiz</span>
+                </a>
+                <a href="/cli_playground" class="link-card">
+                    <i class="fas fa-terminal"></i>
+                    <span>CLI Playground</span>
+                </a>
+                <a href="/achievements" class="link-card">
+                    <i class="fas fa-trophy"></i>
+                    <span>Achievements</span>
+                </a>
+                <a href="/stats" class="link-card">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Statistics</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Animation -->
+    <div class="matrix-rain"></div>
+</div>
+
+<style>
+/* Error Page Styles */
+.error-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.error-container {
+    max-width: 800px;
+    width: 90%;
+    padding: 4rem;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* Error Icon Animation */
+.error-icon-wrapper {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 3rem;
+}
+
+.error-icon {
+    width: 150px;
+    height: 150px;
+    background: var(--gradient-danger);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+    position: relative;
+    z-index: 2;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.error-pulse {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-danger);
+    border-radius: 50%;
+    opacity: 0.5;
+    animation: pulse 2s ease-out infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.5); opacity: 0; }
+}
+
+.error-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.error-particles span {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: var(--danger-color);
+    border-radius: 50%;
+    animation: particle 3s ease-out infinite;
+}
+
+.error-particles span:nth-child(1) { top: 50%; left: 0; animation-delay: 0s; }
+.error-particles span:nth-child(2) { top: 0; left: 50%; animation-delay: 0.5s; }
+.error-particles span:nth-child(3) { top: 50%; right: 0; animation-delay: 1s; }
+.error-particles span:nth-child(4) { bottom: 0; left: 50%; animation-delay: 1.5s; }
+
+@keyframes particle {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--x), var(--y)) scale(0); opacity: 0; }
+}
+
+.error-particles span:nth-child(1) { --x: -100px; --y: 0; }
+.error-particles span:nth-child(2) { --x: 0; --y: -100px; }
+.error-particles span:nth-child(3) { --x: 100px; --y: 0; }
+.error-particles span:nth-child(4) { --x: 0; --y: 100px; }
+
+/* Error Content */
+.error-content {
+    margin-bottom: 3rem;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 1rem;
+}
+
+.error-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.error-message {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+/* Terminal Style Error Details */
+.error-terminal {
+    background: #0a0a0a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-align: left;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.875rem;
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.terminal-header {
+    margin-bottom: 1rem;
+    color: #50fa7b;
+}
+
+.terminal-prompt {
+    color: #50fa7b;
+    font-weight: bold;
+}
+
+.terminal-command {
+    color: #ffffff;
+}
+
+.terminal-output {
+    color: #ff5555;
+    line-height: 1.6;
+}
+
+.error-timestamp {
+    color: #6272a4;
+}
+
+/* Action Buttons */
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+}
+
+/* Helpful Links */
+.helpful-links {
+    margin-top: 3rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.helpful-links h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-secondary);
+}
+
+.links-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.link-card {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.link-card:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.link-card i {
+    font-size: 2rem;
+    color: var(--primary-color);
+}
+
+.link-card span {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Matrix Rain Background */
+.matrix-rain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.matrix-rain::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(124, 58, 237, 0.03) 2px,
+        rgba(124, 58, 237, 0.03) 4px
+    );
+    animation: matrix-move 20s linear infinite;
+}
+
+@keyframes matrix-move {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(100px); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .error-container {
+        padding: 2rem;
+    }
+    
+    .error-code {
+        font-size: 4rem;
+    }
+    
+    .error-title {
+        font-size: 1.5rem;
+    }
+    
+    .error-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 2rem;
+    }
+    
+    .error-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .error-actions .btn {
+        width: 100%;
+    }
+}
+
+/* 404 Specific */
+.error-code-404 {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 500 Specific */
+.error-code-500 {
+    background: var(--gradient-danger);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* 403 Specific */
+.error-code-403 {
+    background: var(--gradient-warning);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Get current time for error log
+function getCurrentTime() {
+    const now = new Date();
+    return now.toISOString().replace('T', ' ').substring(0, 19);
+}
+
+// Set current time
+document.addEventListener('DOMContentLoaded', function() {
+    const timestamps = document.querySelectorAll('.error-timestamp');
+    const currentTime = getCurrentTime();
+    // This would normally be handled by the template engine
+});
+
+// Report error function
+function reportError() {
+    const errorInfo = {
+        code: '{{ error_code | default("404") }}',
+        title: '{{ error_title | default("Page Not Found") }}',
+        path: window.location.pathname,
+        timestamp: getCurrentTime(),
+        userAgent: navigator.userAgent
+    };
+    
+    // In a real app, this would send to an error reporting service
+    console.log('Error reported:', errorInfo);
+    
+    // Show notification
+    showNotification('Error report sent. Thank you for helping us improve!');
+}
+
+// Show notification
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    notification.style.cssText = `
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        background: var(--gradient-success);
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-xl);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: slideIn 0.3s ease;
+        z-index: 1000;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
+
+// Add notification animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Easter egg: Konami code
+let konamiCode = [];
+const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+
+document.addEventListener('keydown', (e) => {
+    konamiCode.push(e.key);
+    konamiCode = konamiCode.slice(-10);
+    
+    if (konamiCode.join(',') === konamiPattern.join(',')) {
+        activateEasterEgg();
+    }
+});
+
+function activateEasterEgg() {
+    document.querySelector('.error-icon i').className = 'fas fa-rocket';
+    document.querySelector('.error-title').textContent = 'Achievement Unlocked!';
+    document.querySelector('.error-message').textContent = 'You found the secret! Here\'s +100 bonus XP!';
+    showNotification('🎉 Secret achievement unlocked!');
+}
+</script>
+{% endblock %}

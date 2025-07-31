@@ -1,0 +1,1302 @@
+{% extends "base.html" %}
+
+{% block title %}Practice Quiz - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Quiz Page -->
+<div class="page-content active" id="page-quiz">
+    <!-- Quiz Setup (shown before quiz starts) -->
+    <div id="quiz-setup" class="quiz-setup-container">
+        <div class="page-header" data-aos="fade-down">
+            <h1 class="page-title">
+                <i class="fas fa-brain text-gradient"></i>
+                Practice Quiz
+            </h1>
+            <p class="page-subtitle">Test your Linux knowledge and improve your skills</p>
+        </div>
+
+        <!-- Quiz Mode Selection -->
+        <section class="quiz-modes glass" data-aos="fade-up">
+            <h2 class="section-header">
+                <i class="fas fa-gamepad"></i> Choose Your Mode
+            </h2>
+            <div class="mode-cards">
+                <div class="mode-card" onclick="selectMode('standard')" data-aos="fade-up" data-aos-delay="100">
+                    <div class="mode-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3>Standard Mode</h3>
+                    <p>Learn at your own pace with instant feedback</p>
+                    <ul class="mode-features">
+                        <li><i class="fas fa-check"></i> Unlimited time</li>
+                        <li><i class="fas fa-check"></i> Instant feedback</li>
+                        <li><i class="fas fa-check"></i> Explanations</li>
+                    </ul>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('timed')" data-aos="fade-up" data-aos-delay="200">
+                    <div class="mode-icon" style="background: var(--gradient-warning);">
+                        <i class="fas fa-stopwatch"></i>
+                    </div>
+                    <h3>Timed Challenge</h3>
+                    <p>Race against the clock for bonus points</p>
+                    <ul class="mode-features">
+                        <li><i class="fas fa-clock"></i> 30s per question</li>
+                        <li><i class="fas fa-fire"></i> Speed bonus</li>
+                        <li><i class="fas fa-trophy"></i> Leaderboard</li>
+                    </ul>
+                </div>
+
+                <div class="mode-card" onclick="selectMode('exam')" data-aos="fade-up" data-aos-delay="300">
+                    <div class="mode-icon" style="background: var(--gradient-danger);">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h3>Exam Simulation</h3>
+                    <p>Practice like the real Linux+ exam</p>
+                    <ul class="mode-features">
+                        <li><i class="fas fa-list-ol"></i> 90 questions</li>
+                        <li><i class="fas fa-hourglass"></i> 90 minutes</li>
+                        <li><i class="fas fa-chart-bar"></i> Final score only</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quiz Options -->
+        <section class="quiz-options glass" data-aos="fade-up" data-aos-delay="400">
+            <h2 class="section-header">
+                <i class="fas fa-sliders-h"></i> Customize Your Quiz
+            </h2>
+            <div class="options-grid">
+                <div class="option-group">
+                    <label>Number of Questions</label>
+                    <select class="form-select" id="num-questions">
+                        <option value="10">10 Questions</option>
+                        <option value="20" selected>20 Questions</option>
+                        <option value="30">30 Questions</option>
+                        <option value="50">50 Questions</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>Category</label>
+                    <select class="form-select" id="quiz-category">
+                        <option value="all">All Categories</option>
+                        <option value="system-admin">System Administration</option>
+                        <option value="networking">Networking</option>
+                        <option value="security">Security</option>
+                        <option value="shell">Shell Scripting</option>
+                        <option value="file-mgmt">File Management</option>
+                    </select>
+                </div>
+                <div class="option-group">
+                    <label>Difficulty</label>
+                    <select class="form-select" id="quiz-difficulty">
+                        <option value="all">All Levels</option>
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary btn-lg mt-4" onclick="startQuiz()">
+                <i class="fas fa-play"></i> Start Quiz
+            </button>
+        </section>
+    </div>
+
+    <!-- Quiz Container (shown during quiz) -->
+    <div id="quiz-container" class="quiz-container" style="display: none;">
+        <!-- Quiz Header -->
+        <div class="quiz-header glass">
+            <div class="quiz-info">
+                <div class="quiz-progress">
+                    <span class="progress-label">Question</span>
+                    <span class="progress-numbers">
+                        <span id="current-question">1</span> / <span id="total-questions">20</span>
+                    </span>
+                </div>
+                <div class="quiz-timer" id="quiz-timer" style="display: none;">
+                    <i class="fas fa-clock"></i>
+                    <span id="time-remaining">30</span>s
+                </div>
+            </div>
+            <div class="quiz-actions">
+                <button class="btn btn-sm btn-secondary" onclick="pauseQuiz()">
+                    <i class="fas fa-pause"></i> Pause
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="endQuiz()">
+                    <i class="fas fa-stop"></i> End Quiz
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="quiz-progress-bar">
+            <div class="progress-track">
+                <div class="progress-fill" id="progress-fill" style="width: 0%;">
+                    <div class="progress-glow"></div>
+                </div>
+            </div>
+            <div class="progress-dots" id="progress-dots">
+                <!-- Dots will be generated dynamically -->
+            </div>
+        </div>
+
+        <!-- Question Container -->
+        <div class="question-container glass" id="question-container">
+            <div class="question-header">
+                <span class="question-category" id="question-category">
+                    <i class="fas fa-tag"></i> System Administration
+                </span>
+                <span class="question-points">
+                    <i class="fas fa-star"></i> <span id="question-points">10</span> points
+                </span>
+            </div>
+
+            <div class="question-content">
+                <h2 class="question-text" id="question-text">
+                    Which command is used to display the current directory path in Linux?
+                </h2>
+
+                <div class="answer-options" id="answer-options">
+                    <div class="answer-option" onclick="selectAnswer(0)">
+                        <span class="option-letter">A</span>
+                        <span class="option-text">pwd</span>
+                        <span class="option-indicator"></span>
+                    </div>
+                    <div class="answer-option" onclick="selectAnswer(1)">
+                        <span class="option-letter">B</span>
+                        <span class="option-text">cd</span>
+                        <span class="option-indicator"></span>
+                    </div>
+                    <div class="answer-option" onclick="selectAnswer(2)">
+                        <span class="option-letter">C</span>
+                        <span class="option-text">ls</span>
+                        <span class="option-indicator"></span>
+                    </div>
+                    <div class="answer-option" onclick="selectAnswer(3)">
+                        <span class="option-letter">D</span>
+                        <span class="option-text">dir</span>
+                        <span class="option-indicator"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation (shown after answer) -->
+            <div class="explanation-box" id="explanation-box" style="display: none;">
+                <h4><i class="fas fa-lightbulb"></i> Explanation</h4>
+                <p id="explanation-text">The 'pwd' command stands for "print working directory" and displays the full path of the current directory.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="question-actions">
+                <button class="btn btn-secondary" onclick="useHint()" id="hint-btn">
+                    <i class="fas fa-lightbulb"></i> Use Hint (-5 points)
+                </button>
+                <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn" style="display: none;">
+                    Next Question <i class="fas fa-arrow-right"></i>
+                </button>
+                <button class="btn btn-primary" onclick="submitAnswer()" id="submit-btn">
+                    Submit Answer
+                </button>
+            </div>
+        </div>
+
+        <!-- Streak Indicator -->
+        <div class="streak-indicator" id="streak-indicator" style="display: none;">
+            <i class="fas fa-fire"></i>
+            <span id="streak-count">0</span> Streak!
+        </div>
+    </div>
+
+    <!-- Quiz Results (shown after quiz) -->
+    <div id="quiz-results" class="quiz-results" style="display: none;">
+        <div class="results-container glass" data-aos="zoom-in">
+            <h1 class="results-title text-gradient">Quiz Complete!</h1>
+            
+            <div class="score-circle">
+                <svg width="200" height="200">
+                    <circle cx="100" cy="100" r="90" stroke="var(--bg-tertiary)" stroke-width="10" fill="none"/>
+                    <circle class="score-ring" cx="100" cy="100" r="90" stroke="url(#scoreGradient)" 
+                            stroke-width="10" fill="none" stroke-dasharray="565.48" 
+                            stroke-dashoffset="565.48" stroke-linecap="round" transform="rotate(-90 100 100)"/>
+                    <defs>
+                        <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#84cc16;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="score-text">
+                    <span class="score-percent" id="score-percent">0%</span>
+                    <span class="score-label">Score</span>
+                </div>
+            </div>
+
+            <div class="results-stats">
+                <div class="result-stat">
+                    <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
+                    <div>
+                        <h3 id="correct-count">0</h3>
+                        <p>Correct</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-times-circle" style="color: var(--danger-color);"></i>
+                    <div>
+                        <h3 id="incorrect-count">0</h3>
+                        <p>Incorrect</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-clock" style="color: var(--warning-color);"></i>
+                    <div>
+                        <h3 id="time-taken">0:00</h3>
+                        <p>Time</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-star" style="color: var(--primary-color);"></i>
+                    <div>
+                        <h3 id="points-earned">0</h3>
+                        <p>Points</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-breakdown">
+                <h3>Category Performance</h3>
+                <div class="category-bars" id="category-performance">
+                    <!-- Generated dynamically -->
+                </div>
+            </div>
+
+            <div class="results-actions">
+                <button class="btn btn-secondary" onclick="reviewAnswers()">
+                    <i class="fas fa-eye"></i> Review Answers
+                </button>
+                <button class="btn btn-primary" onclick="startNewQuiz()">
+                    <i class="fas fa-redo"></i> New Quiz
+                </button>
+                <button class="btn btn-success" onclick="shareResults()">
+                    <i class="fas fa-share"></i> Share
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pause Modal -->
+<div id="pause-modal" class="modal">
+    <div class="modal-content glass">
+        <h2><i class="fas fa-pause-circle"></i> Quiz Paused</h2>
+        <p>Take a break! Your progress is saved.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="resumeQuiz()">
+                <i class="fas fa-play"></i> Resume
+            </button>
+            <button class="btn btn-danger" onclick="confirmEndQuiz()">
+                <i class="fas fa-stop"></i> End Quiz
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Quiz Page Specific Styles */
+.quiz-setup-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Mode Selection */
+.quiz-modes {
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.mode-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.mode-card {
+    padding: 2rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.mode-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow-xl);
+}
+
+.mode-card.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+.mode-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.mode-card h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.mode-card p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+.mode-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    text-align: left;
+    display: inline-block;
+}
+
+.mode-features li {
+    padding: 0.5rem 0;
+    color: var(--text-secondary);
+}
+
+.mode-features i {
+    color: var(--success-color);
+    margin-right: 0.5rem;
+}
+
+/* Quiz Options */
+.quiz-options {
+    padding: 2rem;
+    text-align: center;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.option-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Quiz Container */
+.quiz-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.quiz-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.quiz-progress {
+    display: flex;
+    flex-direction: column;
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.progress-numbers {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.quiz-timer {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+.quiz-timer.warning {
+    background: var(--gradient-warning);
+    color: white;
+    animation: pulse 1s ease-in-out infinite;
+}
+
+.quiz-timer.danger {
+    background: var(--gradient-danger);
+    color: white;
+    animation: pulse 0.5s ease-in-out infinite;
+}
+
+/* Progress Bar */
+.quiz-progress-bar {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.progress-track {
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--gradient-primary);
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.progress-glow {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
+    animation: shimmer 2s linear infinite;
+}
+
+.progress-dots {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+}
+
+.progress-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--bg-tertiary);
+    transition: all 0.3s ease;
+}
+
+.progress-dot.completed {
+    background: var(--success-color);
+}
+
+.progress-dot.current {
+    background: var(--primary-color);
+    transform: scale(1.2);
+}
+
+/* Question Container */
+.question-container {
+    padding: 2.5rem;
+    animation: fadeInUp 0.6s ease;
+}
+
+.question-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.question-category {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.question-points {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--warning-color);
+    font-weight: 600;
+}
+
+.question-text {
+    font-size: 1.5rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    color: var(--text-primary);
+}
+
+/* Answer Options */
+.answer-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.answer-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.answer-option:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.answer-option.selected {
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+    border-color: var(--primary-color);
+}
+
+.answer-option.correct {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(132, 204, 22, 0.1) 100%);
+    border-color: var(--success-color);
+}
+
+.answer-option.incorrect {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.1) 100%);
+    border-color: var(--danger-color);
+}
+
+.answer-option.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.option-letter {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.option-text {
+    flex: 1;
+    font-size: 1.125rem;
+}
+
+.option-indicator {
+    position: absolute;
+    right: 1.25rem;
+    font-size: 1.25rem;
+}
+
+.answer-option.correct .option-indicator::after {
+    content: '✓';
+    color: var(--success-color);
+}
+
+.answer-option.incorrect .option-indicator::after {
+    content: '✗';
+    color: var(--danger-color);
+}
+
+/* Explanation Box */
+.explanation-box {
+    background: var(--bg-tertiary);
+    border-left: 4px solid var(--accent-color);
+    border-radius: var(--radius-md);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeIn 0.5s ease;
+}
+
+.explanation-box h4 {
+    color: var(--accent-color);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Question Actions */
+.question-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+/* Streak Indicator */
+.streak-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--gradient-danger);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-full);
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    animation: bounceIn 0.5s ease;
+    z-index: 1000;
+}
+
+@keyframes bounceIn {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Results */
+.quiz-results {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.results-container {
+    padding: 3rem;
+    text-align: center;
+}
+
+.results-title {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.score-circle {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 3rem;
+}
+
+.score-ring {
+    transition: stroke-dashoffset 1s ease;
+}
+
+.score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.score-percent {
+    display: block;
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.score-label {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.results-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.result-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.result-stat i {
+    font-size: 2rem;
+}
+
+.result-stat h3 {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.result-stat p {
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* Category Performance */
+.results-breakdown {
+    margin-bottom: 2rem;
+}
+
+.results-breakdown h3 {
+    margin-bottom: 1.5rem;
+}
+
+.category-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    text-align: left;
+}
+
+.category-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.category-name {
+    min-width: 150px;
+    font-weight: 600;
+}
+
+.bar-container {
+    flex: 1;
+    height: 20px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    background: var(--gradient-success);
+    transition: width 1s ease;
+}
+
+.category-score {
+    min-width: 50px;
+    text-align: right;
+    font-weight: 600;
+}
+
+.results-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mode-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .quiz-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .quiz-info {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .question-text {
+        font-size: 1.25rem;
+    }
+    
+    .answer-option {
+        padding: 1rem;
+    }
+    
+    .option-text {
+        font-size: 1rem;
+    }
+    
+    .question-actions {
+        flex-direction: column;
+    }
+    
+    .question-actions button {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Quiz state
+let quizState = {
+    mode: 'standard',
+    currentQuestion: 0,
+    totalQuestions: 20,
+    answers: [],
+    startTime: Date.now(),
+    timeLimit: 30,
+    timer: null,
+    score: 0,
+    streak: 0,
+    paused: false
+};
+
+// Sample question data (in real app, would come from API)
+const sampleQuestions = [
+    {
+        question: "Which command is used to display the current directory path in Linux?",
+        options: ["pwd", "cd", "ls", "dir"],
+        correct: 0,
+        category: "System Administration",
+        explanation: "The 'pwd' command stands for 'print working directory' and displays the full path of the current directory."
+    },
+    // Add more questions...
+];
+
+// Initialize quiz
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if coming from another page with specific mode
+    const savedMode = localStorage.getItem('practiceMode');
+    if (savedMode) {
+        selectMode(savedMode);
+        localStorage.removeItem('practiceMode');
+    }
+});
+
+// Select quiz mode
+function selectMode(mode) {
+    // Remove previous selection
+    document.querySelectorAll('.mode-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selection to clicked mode
+    event.target.closest('.mode-card').classList.add('selected');
+    
+    // Update quiz state
+    quizState.mode = mode;
+    
+    // Update options based on mode
+    if (mode === 'exam') {
+        document.getElementById('num-questions').value = '90';
+        document.getElementById('num-questions').disabled = true;
+    } else {
+        document.getElementById('num-questions').disabled = false;
+    }
+}
+
+// Start quiz
+function startQuiz() {
+    // Update quiz state
+    quizState.totalQuestions = parseInt(document.getElementById('num-questions').value);
+    quizState.currentQuestion = 0;
+    quizState.answers = [];
+    quizState.startTime = Date.now();
+    quizState.score = 0;
+    quizState.streak = 0;
+    
+    // Hide setup, show quiz
+    document.getElementById('quiz-setup').style.display = 'none';
+    document.getElementById('quiz-container').style.display = 'block';
+    
+    // Initialize progress dots
+    initializeProgressDots();
+    
+    // Load first question
+    loadQuestion();
+    
+    // Start timer if timed mode
+    if (quizState.mode === 'timed' || quizState.mode === 'exam') {
+        document.getElementById('quiz-timer').style.display = 'flex';
+        startTimer();
+    }
+}
+
+// Initialize progress dots
+function initializeProgressDots() {
+    const dotsContainer = document.getElementById('progress-dots');
+    dotsContainer.innerHTML = '';
+    
+    const dotsToShow = Math.min(quizState.totalQuestions, 20);
+    for (let i = 0; i < dotsToShow; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        if (i === 0) dot.classList.add('current');
+        dotsContainer.appendChild(dot);
+    }
+}
+
+// Load question
+function loadQuestion() {
+    const question = sampleQuestions[quizState.currentQuestion % sampleQuestions.length];
+    
+    // Update question display
+    document.getElementById('current-question').textContent = quizState.currentQuestion + 1;
+    document.getElementById('total-questions').textContent = quizState.totalQuestions;
+    document.getElementById('question-category').innerHTML = `<i class="fas fa-tag"></i> ${question.category}`;
+    document.getElementById('question-text').textContent = question.question;
+    
+    // Update progress
+    const progress = ((quizState.currentQuestion) / quizState.totalQuestions) * 100;
+    document.getElementById('progress-fill').style.width = progress + '%';
+    
+    // Update progress dots
+    updateProgressDots();
+    
+    // Reset answer options
+    const optionsContainer = document.getElementById('answer-options');
+    optionsContainer.innerHTML = '';
+    
+    question.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'answer-option';
+        optionDiv.onclick = () => selectAnswer(index);
+        optionDiv.innerHTML = `
+            <span class="option-letter">${String.fromCharCode(65 + index)}</span>
+            <span class="option-text">${option}</span>
+            <span class="option-indicator"></span>
+        `;
+        optionsContainer.appendChild(optionDiv);
+    });
+    
+    // Hide explanation and next button
+    document.getElementById('explanation-box').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'inline-flex';
+    document.getElementById('hint-btn').disabled = false;
+    
+    // Reset timer for timed mode
+    if (quizState.mode === 'timed') {
+        resetTimer();
+    }
+}
+
+// Update progress dots
+function updateProgressDots() {
+    const dots = document.querySelectorAll('.progress-dot');
+    const dotsToShow = Math.min(quizState.totalQuestions, 20);
+    
+    dots.forEach((dot, index) => {
+        const questionIndex = Math.floor((index / dotsToShow) * quizState.totalQuestions);
+        
+        dot.classList.remove('current', 'completed');
+        
+        if (questionIndex < quizState.currentQuestion) {
+            dot.classList.add('completed');
+        } else if (questionIndex === quizState.currentQuestion) {
+            dot.classList.add('current');
+        }
+    });
+}
+
+// Select answer
+function selectAnswer(index) {
+    // Remove previous selection
+    document.querySelectorAll('.answer-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    
+    // Add selection
+    document.querySelectorAll('.answer-option')[index].classList.add('selected');
+    
+    // Store selected answer
+    quizState.selectedAnswer = index;
+}
+
+// Submit answer
+function submitAnswer() {
+    if (quizState.selectedAnswer === undefined) {
+        showMessage('warning', 'Please select an answer');
+        return;
+    }
+    
+    const question = sampleQuestions[quizState.currentQuestion % sampleQuestions.length];
+    const isCorrect = quizState.selectedAnswer === question.correct;
+    
+    // Update UI
+    const options = document.querySelectorAll('.answer-option');
+    options.forEach((option, index) => {
+        option.classList.add('disabled');
+        option.onclick = null;
+        
+        if (index === question.correct) {
+            option.classList.add('correct');
+        } else if (index === quizState.selectedAnswer && !isCorrect) {
+            option.classList.add('incorrect');
+        }
+    });
+    
+    // Update score and streak
+    if (isCorrect) {
+        quizState.score += 10;
+        quizState.streak++;
+        
+        // Show streak indicator for 3+ streak
+        if (quizState.streak >= 3) {
+            showStreak();
+        }
+    } else {
+        quizState.streak = 0;
+    }
+    
+    // Store answer
+    quizState.answers.push({
+        question: quizState.currentQuestion,
+        selected: quizState.selectedAnswer,
+        correct: question.correct,
+        time: Date.now() - quizState.startTime
+    });
+    
+    // Show explanation if enabled
+    if (quizState.mode === 'standard') {
+        document.getElementById('explanation-text').textContent = question.explanation;
+        document.getElementById('explanation-box').style.display = 'block';
+    }
+    
+    // Update buttons
+    document.getElementById('submit-btn').style.display = 'none';
+    document.getElementById('hint-btn').disabled = true;
+    
+    if (quizState.currentQuestion < quizState.totalQuestions - 1) {
+        document.getElementById('next-btn').style.display = 'inline-flex';
+    } else {
+        // Quiz complete
+        setTimeout(showResults, 1000);
+    }
+}
+
+// Next question
+function nextQuestion() {
+    quizState.currentQuestion++;
+    quizState.selectedAnswer = undefined;
+    loadQuestion();
+}
+
+// Use hint
+function useHint() {
+    if (confirm('Using a hint will deduct 5 points. Continue?')) {
+        quizState.score = Math.max(0, quizState.score - 5);
+        
+        // Eliminate two wrong answers
+        const question = sampleQuestions[quizState.currentQuestion % sampleQuestions.length];
+        const options = document.querySelectorAll('.answer-option');
+        let eliminated = 0;
+        
+        options.forEach((option, index) => {
+            if (index !== question.correct && eliminated < 2) {
+                option.style.opacity = '0.3';
+                option.classList.add('disabled');
+                option.onclick = null;
+                eliminated++;
+            }
+        });
+        
+        document.getElementById('hint-btn').disabled = true;
+    }
+}
+
+// Timer functions
+function startTimer() {
+    quizState.timeRemaining = quizState.timeLimit;
+    updateTimerDisplay();
+    
+    quizState.timer = setInterval(() => {
+        if (!quizState.paused) {
+            quizState.timeRemaining--;
+            updateTimerDisplay();
+            
+            if (quizState.timeRemaining <= 0) {
+                clearInterval(quizState.timer);
+                // Auto-submit with no answer
+                submitAnswer();
+            }
+        }
+    }, 1000);
+}
+
+function resetTimer() {
+    clearInterval(quizState.timer);
+    startTimer();
+}
+
+function updateTimerDisplay() {
+    const timerElement = document.getElementById('quiz-timer');
+    const timeDisplay = document.getElementById('time-remaining');
+    
+    timeDisplay.textContent = quizState.timeRemaining;
+    
+    // Add warning classes
+    timerElement.classList.remove('warning', 'danger');
+    if (quizState.timeRemaining <= 10) {
+        timerElement.classList.add('danger');
+    } else if (quizState.timeRemaining <= 20) {
+        timerElement.classList.add('warning');
+    }
+}
+
+// Show streak indicator
+function showStreak() {
+    const indicator = document.getElementById('streak-indicator');
+    document.getElementById('streak-count').textContent = quizState.streak;
+    
+    indicator.style.display = 'flex';
+    setTimeout(() => {
+        indicator.style.display = 'none';
+    }, 2000);
+}
+
+// Pause quiz
+function pauseQuiz() {
+    quizState.paused = true;
+    document.getElementById('pause-modal').classList.add('active');
+}
+
+// Resume quiz
+function resumeQuiz() {
+    quizState.paused = false;
+    document.getElementById('pause-modal').classList.remove('active');
+}
+
+// End quiz
+function endQuiz() {
+    if (confirm('Are you sure you want to end the quiz?')) {
+        showResults();
+    }
+}
+
+// Show results
+function showResults() {
+    clearInterval(quizState.timer);
+    
+    // Calculate results
+    const correct = quizState.answers.filter(a => a.selected === a.correct).length;
+    const incorrect = quizState.totalQuestions - correct;
+    const percentage = Math.round((correct / quizState.totalQuestions) * 100);
+    const timeTaken = Math.floor((Date.now() - quizState.startTime) / 1000);
+    const minutes = Math.floor(timeTaken / 60);
+    const seconds = timeTaken % 60;
+    
+    // Hide quiz, show results
+    document.getElementById('quiz-container').style.display = 'none';
+    document.getElementById('quiz-results').style.display = 'block';
+    
+    // Update results display
+    document.getElementById('score-percent').textContent = percentage + '%';
+    document.getElementById('correct-count').textContent = correct;
+    document.getElementById('incorrect-count').textContent = incorrect;
+    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('points-earned').textContent = quizState.score;
+    
+    // Animate score ring
+    const circumference = 2 * Math.PI * 90;
+    const offset = circumference - (percentage / 100 * circumference);
+    
+    setTimeout(() => {
+        document.querySelector('.score-ring').style.strokeDashoffset = offset;
+    }, 100);
+    
+    // Save results
+    saveQuizResults({
+        mode: quizState.mode,
+        score: percentage,
+        correct: correct,
+        incorrect: incorrect,
+        time: timeTaken,
+        points: quizState.score
+    });
+}
+
+// Save quiz results
+function saveQuizResults(results) {
+    const history = JSON.parse(localStorage.getItem('quizHistory') || '[]');
+    history.push({
+        ...results,
+        date: new Date().toISOString()
+    });
+    localStorage.setItem('quizHistory', JSON.stringify(history));
+    
+    // Update stats
+    const stats = JSON.parse(localStorage.getItem('gameStats') || '{}');
+    stats.totalQuizzes = (stats.totalQuizzes || 0) + 1;
+    stats.totalCorrect = (stats.totalCorrect || 0) + results.correct;
+    stats.totalQuestions = (stats.totalQuestions || 0) + quizState.totalQuestions;
+    stats.totalPoints = (stats.totalPoints || 0) + results.points;
+    localStorage.setItem('gameStats', JSON.stringify(stats));
+}
+
+// Review answers
+function reviewAnswers() {
+    // This would show a detailed review of all answers
+    console.log('Review answers');
+}
+
+// Start new quiz
+function startNewQuiz() {
+    location.reload();
+}
+
+// Share results
+function shareResults() {
+    const text = `I scored ${document.getElementById('score-percent').textContent} on the Linux+ Study Game! Can you beat my score?`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'Linux+ Study Game Results',
+            text: text,
+            url: window.location.href
+        });
+    } else {
+        // Copy to clipboard
+        navigator.clipboard.writeText(text);
+        showMessage('success', 'Results copied to clipboard!');
+    }
+}
+
+function showMessage(type, text) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} animate-fade-in`;
+    messageDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
+        ${text}
+    `;
+    const icon = messageDiv.querySelector('i');
+    if (icon) {
+        icon.style.color = type === 'success' ? 'green' : type === 'warning' ? 'orange' : 'red';
+    }
+    const container = document.querySelector('.quiz-container') || document.querySelector('.quiz-setup-container');
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}
