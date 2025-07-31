@@ -558,3 +558,14 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'.
 2025-07-31 15:32:10,538 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
 2025-07-31 15:32:30,453 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
 2025-07-31 15:32:32,368 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:35:57,334 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:37:44,105 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:43:08,992 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 15:43:08,993 - utils.database - INFO: All database connections closed
+2025-07-31 15:43:09,978 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 15:43:09,978 - __main__ - INFO: Starting web application mode
+2025-07-31 15:43:09,979 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 15:43:09,979 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 15:43:09,984 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 15:43:09,991 - utils.database - INFO: Database connection test successful
+2025-07-31 15:43:10,002 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

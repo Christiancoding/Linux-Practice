@@ -25,9 +25,6 @@
         <button class="settings-tab" onclick="switchSettingsTab('notifications')">
             <i class="fas fa-bell"></i> Notifications
         </button>
-        <button class="settings-tab" onclick="switchSettingsTab('privacy')">
-            <i class="fas fa-shield-alt"></i> Privacy
-        </button>
         <button class="settings-tab" onclick="switchSettingsTab('data')">
             <i class="fas fa-database"></i> Data
         </button>
@@ -290,51 +287,6 @@
             </section>
         </div>
 
-        <!-- Privacy Settings -->
-        <div class="settings-panel" id="privacy-panel">
-            <section class="settings-section glass" data-aos="fade-up">
-                <h2 class="section-header">
-                    <i class="fas fa-lock"></i> Privacy & Security
-                </h2>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <h4>Anonymous Statistics</h4>
-                        <p>Share anonymous usage data to improve the app</p>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="anonymous-stats">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <h4>Public Profile</h4>
-                        <p>Show your stats on the leaderboard</p>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="public-profile" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <h4>Achievement Sharing</h4>
-                        <p>Allow others to see your achievements</p>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="achievement-sharing" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </section>
-        </div>
-
         <!-- Data Management -->
         <div class="settings-panel" id="data-panel">
             <section class="settings-section glass" data-aos="fade-up">
@@ -363,18 +315,6 @@
                         </button>
                     </div>
                 </div>
-                <div class="setting-item">
-                    <div class="setting-info">
-                        <h4>Auto Backup</h4>
-                        <p>Automatically backup progress weekly</p>
-                    </div>
-                    <div class="setting-control">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="auto-backup" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                </div>
             </section>
 
             <section class="settings-section glass danger-zone" data-aos="fade-up" data-aos-delay="100">
@@ -389,28 +329,6 @@
                     <div class="setting-control">
                         <button class="btn btn-outline-danger" onclick="confirmResetProgress()">
                             Reset Progress
-                        </button>
-                    </div>
-                </div>
-                <div class="setting-item danger">
-                    <div class="setting-info">
-                        <h4>Clear Cache</h4>
-                        <p>Remove temporary files and cached data</p>
-                    </div>
-                    <div class="setting-control">
-                        <button class="btn btn-outline-danger" onclick="clearCache()">
-                            Clear Cache
-                        </button>
-                    </div>
-                </div>
-                <div class="setting-item danger">
-                    <div class="setting-info">
-                        <h4>Delete Account</h4>
-                        <p>Permanently delete all your data</p>
-                    </div>
-                    <div class="setting-control">
-                        <button class="btn btn-danger" onclick="confirmDeleteAccount()">
-                            Delete Account
                         </button>
                     </div>
                 </div>
