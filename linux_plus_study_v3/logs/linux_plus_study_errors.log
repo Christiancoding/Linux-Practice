@@ -569,3 +569,22 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'.
 2025-07-31 15:43:09,984 - utils.database - INFO: Initializing sqlite without connection pooling
 2025-07-31 15:43:09,991 - utils.database - INFO: Database connection test successful
 2025-07-31 15:43:10,002 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 15:44:03,944 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:44:33,941 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:44:49,316 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:46:29,024 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:47:33,437 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 15:47:33,438 - utils.database - INFO: All database connections closed
+2025-07-31 15:47:35,459 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 15:47:35,459 - __main__ - INFO: Starting web application mode
+2025-07-31 15:47:35,459 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 15:47:35,460 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 15:47:35,466 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 15:47:35,474 - utils.database - INFO: Database connection test successful
+2025-07-31 15:47:35,489 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 15:47:46,132 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:48:17,091 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:48:47,879 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:49:17,874 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:49:47,876 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:50:33,377 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
