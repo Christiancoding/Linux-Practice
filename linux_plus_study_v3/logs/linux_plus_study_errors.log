@@ -523,3 +523,38 @@ werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'quiz'.
 2025-07-31 14:24:58,772 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
 2025-07-31 14:25:33,723 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
 2025-07-31 14:28:27,165 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:02:26,582 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 15:02:26,583 - __main__ - INFO: Starting web application mode
+2025-07-31 15:02:26,583 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 15:02:26,583 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 15:02:26,588 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 15:02:26,596 - utils.database - INFO: Database connection test successful
+2025-07-31 15:02:26,608 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 15:02:35,444 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:03:10,517 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:21:26,339 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:24:08,192 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:29:36,225 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-07-31 15:29:36,226 - utils.database - INFO: All database connections closed
+2025-07-31 15:29:37,532 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 15:29:37,532 - __main__ - INFO: Starting web application mode
+2025-07-31 15:29:37,532 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 15:29:37,533 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 15:29:37,540 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 15:29:37,550 - utils.database - INFO: Database connection test successful
+2025-07-31 15:29:37,565 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-07-31 15:29:44,964 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:30:05,481 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:30:14,952 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:30:44,953 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:14,024 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:14,953 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:18,134 - vm_integration.utils.lpem_manager - INFO: VM 'ubuntu-practice' stopped successfully
+2025-07-31 15:31:18,140 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:22,136 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:22,972 - vm_integration.utils.lpem_manager - INFO: VM 'ubuntu-practice' started successfully
+2025-07-31 15:31:22,978 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:31:44,953 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:32:10,538 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:32:30,453 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 15:32:32,368 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
