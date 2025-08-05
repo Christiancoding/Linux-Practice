@@ -1363,6 +1363,7 @@ function handleTerminalInput(event) {
 }
 
 async function executeCommand(command) {
+    const startTime = Date.now();
     displayTerminalMessage(`$ ${command}`, 'command');
     
     if (!selectedVM || !terminalConnected) {
@@ -1381,11 +1382,26 @@ async function executeCommand(command) {
         });
         
         const data = await response.json();
+        const executionTime = (Date.now() - startTime) / 1000;
         
         if (data.success) {
             displayTerminalMessage(data.output, 'output');
+            
+            // Track VM command execution
+            if (typeof trackVMCommand === 'function') {
+                trackVMCommand(command, executionTime);
+            }
+            if (typeof trackFeatureUsage === 'function') {
+                trackFeatureUsage('vm_command_executed');
+                // Track specific command types
+                const commandType = command.split(' ')[0];
+                trackFeatureUsage(`vm_command_${commandType}`);
+            }
         } else {
             displayTerminalMessage(`Error: ${data.error}`, 'error');
+            if (typeof trackFeatureUsage === 'function') {
+                trackFeatureUsage('vm_command_error');
+            }
         }
     } catch (error) {
         displayTerminalMessage(`Connection error: ${error.message}`, 'error');
@@ -1410,6 +1426,7 @@ function clearTerminal() {
 // Connection Management
 async function connectToVM(vmName) {
     updateConnectionStatus(false, 'Connecting...');
+    const startTime = Date.now();
     
     try {
         const response = await fetch('/api/vm/connect', {
@@ -1425,12 +1442,24 @@ async function connectToVM(vmName) {
             updateConnectionStatus(true);
             document.getElementById('terminal-input').disabled = false;
             displayTerminalMessage(`Connected to ${vmName}`, 'success');
+            
+            // Track successful VM connection
+            if (typeof trackFeatureUsage === 'function') {
+                trackFeatureUsage('vm_connected');
+                const connectionTime = (Date.now() - startTime) / 1000;
+                trackFeatureUsage('vm_connection_speed');
+            }
         } else {
             throw new Error(data.error);
         }
     } catch (error) {
         updateConnectionStatus(false, 'Disconnected');
         displayTerminalMessage(`Failed to connect: ${error.message}`, 'error');
+        
+        // Track connection failures
+        if (typeof trackFeatureUsage === 'function') {
+            trackFeatureUsage('vm_connection_failed');
+        }
     }
 }
 

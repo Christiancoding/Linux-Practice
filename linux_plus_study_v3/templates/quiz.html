@@ -47,6 +47,19 @@
                     </ul>
                 </div>
 
+                <div class="mode-card" onclick="selectMode('survival')" data-aos="fade-up" data-aos-delay="250">
+                    <div class="mode-icon" style="background: var(--gradient-success);">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <h3>Survival Mode</h3>
+                    <p>Keep your streak alive - 3 strikes and you're out!</p>
+                    <ul class="mode-features">
+                        <li><i class="fas fa-heart"></i> 3 lives only</li>
+                        <li><i class="fas fa-infinity"></i> Endless questions</li>
+                        <li><i class="fas fa-medal"></i> High score tracking</li>
+                    </ul>
+                </div>
+
                 <div class="mode-card" onclick="selectMode('exam')" data-aos="fade-up" data-aos-delay="300">
                     <div class="mode-icon" style="background: var(--gradient-danger);">
                         <i class="fas fa-clipboard-check"></i>
@@ -68,9 +81,9 @@
                 <i class="fas fa-sliders-h"></i> Customize Your Quiz
             </h2>
             <div class="options-grid">
-                <div class="option-group">
+                <div class="option-group" id="num-questions-group">
                     <label>Number of Questions</label>
-                    <select class="form-select" id="num-questions">
+                    <select id="num-questions">
                         <option value="10">10 Questions</option>
                         <option value="20" selected>20 Questions</option>
                         <option value="30">30 Questions</option>
@@ -79,8 +92,8 @@
                 </div>
                 <div class="option-group">
                     <label>Category</label>
-                    <select class="form-select" id="quiz-category">
-                        <option value="all">All Categories</option>
+                    <select id="quiz-category">
+                        <option value="All Categories">All Categories</option>
                         <option value="system-admin">System Administration</option>
                         <option value="networking">Networking</option>
                         <option value="security">Security</option>
@@ -90,7 +103,7 @@
                 </div>
                 <div class="option-group">
                     <label>Difficulty</label>
-                    <select class="form-select" id="quiz-difficulty">
+                    <select id="quiz-difficulty">
                         <option value="all">All Levels</option>
                         <option value="beginner">Beginner</option>
                         <option value="intermediate">Intermediate</option>
@@ -118,6 +131,12 @@
                 <div class="quiz-timer" id="quiz-timer" style="display: none;">
                     <i class="fas fa-clock"></i>
                     <span id="time-remaining">30</span>s
+                </div>
+                
+                <!-- Survival Lives Display -->
+                <div class="survival-lives" id="survival-lives" style="display: none;">
+                    <i class="fas fa-heart"></i>
+                    <span id="lives-count">3</span> lives
                 </div>
             </div>
             <div class="quiz-actions">
@@ -149,7 +168,7 @@
                     <i class="fas fa-tag"></i> System Administration
                 </span>
                 <span class="question-points">
-                    <i class="fas fa-star"></i> <span id="question-points">10</span> points
+                    <i class="fas fa-star"></i> <span id="question-points">0</span> points
                 </span>
             </div>
 
@@ -191,7 +210,7 @@
             <!-- Action Buttons -->
             <div class="question-actions">
                 <button class="btn btn-secondary" onclick="useHint()" id="hint-btn">
-                    <i class="fas fa-lightbulb"></i> Use Hint (-5 points)
+                    <i class="fas fa-lightbulb"></i> Use Hint (-<span id="hint-penalty">{{ game_values.scoring.hint_penalty if game_values else 5 }}</span> points)
                 </button>
                 <button class="btn btn-primary" onclick="nextQuestion()" id="next-btn" style="display: none;">
                     Next Question <i class="fas fa-arrow-right"></i>
@@ -461,6 +480,29 @@
     animation: pulse 0.5s ease-in-out infinite;
 }
 
+/* Survival Lives Display */
+.survival-lives {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: var(--gradient-danger);
+    color: white;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+}
+
+.survival-lives i {
+    color: #ff6b6b;
+    animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
 /* Progress Bar */
 .quiz-progress-bar {
     position: relative;
@@ -477,7 +519,7 @@
 .progress-fill {
     height: 100%;
     background: var(--gradient-primary);
-    transition: width 0.5s ease;
+    transition: width 1.2s ease-out;
     position: relative;
 }
 
@@ -485,16 +527,17 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 50px;
+    width: 30px;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
-    animation: shimmer 2s linear infinite;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3));
+    opacity: 0.7;
 }
 
 .progress-dots {
     display: flex;
     justify-content: space-between;
     margin-top: 0.5rem;
+    position: relative;
 }
 
 .progress-dot {
@@ -503,6 +546,8 @@
     border-radius: 50%;
     background: var(--bg-tertiary);
     transition: all 0.3s ease;
+    position: relative;
+    z-index: 2;
 }
 
 .progress-dot.completed {
@@ -599,6 +644,31 @@
 .answer-option.disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.answer-option.eliminated {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, rgba(107, 114, 128, 0.1) 0%, rgba(75, 85, 99, 0.1) 100%);
+    border-color: var(--text-tertiary);
+    position: relative;
+}
+
+.answer-option.eliminated::after {
+    content: '✕';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    color: var(--danger-color);
+    font-weight: bold;
+    z-index: 1;
+}
+
+.answer-option.eliminated .option-text {
+    text-decoration: line-through;
+    color: var(--text-tertiary);
 }
 
 .option-letter {
@@ -883,6 +953,9 @@ const sampleQuestions = [
 
 // Initialize quiz
 document.addEventListener('DOMContentLoaded', function() {
+    // Load available categories from backend
+    loadCategories();
+    
     // Check if coming from another page with specific mode
     const savedMode = localStorage.getItem('practiceMode');
     if (savedMode) {
@@ -891,6 +964,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Load categories from backend
+function loadCategories() {
+    fetch('/api/get_categories')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const categorySelect = document.getElementById('quiz-category');
+                // Clear existing options except "All Categories"
+                categorySelect.innerHTML = '<option value="All Categories">All Categories</option>';
+                
+                // Add categories from backend
+                data.categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+        });
+}
+
 // Select quiz mode
 function selectMode(mode) {
     // Remove previous selection
@@ -898,46 +995,259 @@ function selectMode(mode) {
         card.classList.remove('selected');
     });
     
-    // Add selection to clicked mode
-    event.target.closest('.mode-card').classList.add('selected');
+    // Add selection to clicked mode - use event if available, otherwise find by mode
+    if (typeof event !== 'undefined' && event.target) {
+        event.target.closest('.mode-card').classList.add('selected');
+    } else {
+        // Fallback: find the card that called this function
+        document.querySelectorAll('.mode-card').forEach(card => {
+            const cardOnclick = card.getAttribute('onclick');
+            if (cardOnclick && cardOnclick.includes(`selectMode('${mode}')`)) {
+                card.classList.add('selected');
+            }
+        });
+    }
     
     // Update quiz state
     quizState.mode = mode;
     
-    // Update options based on mode
+    // Show/hide and configure options based on mode
+    const numQuestionsGroup = document.getElementById('num-questions-group');
+    const numQuestionsSelect = document.getElementById('num-questions');
+    
     if (mode === 'exam') {
-        document.getElementById('num-questions').value = '90';
-        document.getElementById('num-questions').disabled = true;
+        // Exam mode has fixed 90 questions
+        numQuestionsSelect.value = '90';
+        numQuestionsSelect.disabled = true;
+        numQuestionsGroup.style.display = 'block';
+    } else if (mode === 'survival') {
+        // Survival mode has unlimited questions - hide the option
+        numQuestionsGroup.style.display = 'none';
     } else {
-        document.getElementById('num-questions').disabled = false;
+        // Standard and timed modes allow question customization
+        numQuestionsSelect.disabled = false;
+        numQuestionsGroup.style.display = 'block';
     }
 }
 
 // Start quiz
 function startQuiz() {
-    // Update quiz state
-    quizState.totalQuestions = parseInt(document.getElementById('num-questions').value);
-    quizState.currentQuestion = 0;
-    quizState.answers = [];
-    quizState.startTime = Date.now();
-    quizState.score = 0;
-    quizState.streak = 0;
+    console.log('Starting quiz...');
     
-    // Hide setup, show quiz
-    document.getElementById('quiz-setup').style.display = 'none';
-    document.getElementById('quiz-container').style.display = 'block';
+    if (!quizState.mode) {
+        showMessage('warning', 'Please select a quiz mode');
+        return;
+    }
     
-    // Initialize progress dots
-    initializeProgressDots();
+    const category = document.getElementById('quiz-category').value;
+    const numQuestions = document.getElementById('num-questions').value;
     
-    // Load first question
-    loadQuestion();
+    const requestData = {
+        mode: quizState.mode,
+        category: category
+    };
+
+    // Add number of questions for modes that support it (not survival or exam)
+    if (quizState.mode !== 'survival' && quizState.mode !== 'exam') {
+        requestData.num_questions = parseInt(numQuestions);
+    }
+
+    console.log('Quiz request data:', requestData);
+
+    // Determine the API endpoint based on mode
+    let apiEndpoint = '/api/start_quiz';
+    switch (quizState.mode) {
+        case 'timed':
+            apiEndpoint = '/api/start_timed_challenge';
+            break;
+        case 'survival':
+            apiEndpoint = '/api/start_survival_mode';
+            break;
+        case 'exam':
+            apiEndpoint = '/api/start_exam_mode';
+            break;
+        default:
+            apiEndpoint = '/api/start_quiz';
+            break;
+    }
+
+    console.log('Using API endpoint:', apiEndpoint);
+
+    // Show loading state
+    showMessage('info', 'Starting quiz...');
     
-    // Start timer if timed mode
+    // Call the backend API to start the quiz
+    fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Start quiz response:', data);
+        
+        if (data.success) {
+            // Track quiz start analytics
+            if (typeof trackFeatureUsage === 'function') {
+                trackFeatureUsage('quiz_started');
+                trackFeatureUsage(`quiz_mode_${quizState.mode}`);
+                if (category && category !== 'all') {
+                    trackFeatureUsage(`quiz_category_${category}`);
+                }
+            }
+            
+            // Update quiz state with backend data
+            quizState.mode = data.mode;
+            quizState.totalQuestions = data.total_questions || parseInt(document.getElementById('num-questions').value);
+            quizState.currentQuestion = 0;
+            quizState.answers = [];
+            quizState.startTime = Date.now();
+            quizState.score = 0;
+            quizState.streak = 0;
+            
+            // Store mode-specific data
+            if (data.survival_mode_active) {
+                quizState.survivalLives = data.survival_lives;
+            }
+            if (data.timed_mode_active) {
+                quizState.timePerQuestion = data.time_per_question;
+                quizState.timeLimit = data.time_per_question || 30; // Default to 30 seconds
+            }
+            
+            console.log('Updated quiz state:', quizState);
+            
+            // Hide setup, show quiz
+            document.getElementById('quiz-setup').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            
+            // Initialize mode-specific UI
+            initializeModeUI();
+            
+            // Initialize progress dots
+            initializeProgressDots();
+            
+            // Load first question from backend
+            loadQuestionFromBackend();
+            
+        } else {
+            console.error('Start quiz failed:', data.error);
+            showMessage('error', data.error || 'Failed to start quiz');
+        }
+    })
+    .catch(error => {
+        console.error('Error starting quiz:', error);
+        showMessage('error', 'Failed to start quiz');
+    });
+}
+
+// Initialize mode-specific UI elements
+function initializeModeUI() {
+    // Reset all mode displays
+    document.getElementById('quiz-timer').style.display = 'none';
+    document.getElementById('survival-lives').style.display = 'none';
+    
     if (quizState.mode === 'timed' || quizState.mode === 'exam') {
         document.getElementById('quiz-timer').style.display = 'flex';
         startTimer();
     }
+    
+    if (quizState.mode === 'survival') {
+        // Show survival lives indicator
+        updateSurvivalLives();
+    }
+}
+
+// Load question from backend API
+function loadQuestionFromBackend() {
+    console.log('Loading question from backend...');
+    
+    fetch('/api/get_question')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Question response:', data);
+            
+            if (data.error) {
+                console.error('Question error:', data.error);
+                showMessage('error', data.error);
+                return;
+            }
+            
+            if (data.quiz_complete) {
+                console.log('Quiz completed');
+                showResults();
+                return;
+            }
+            
+            // Display the question
+            displayQuestionFromBackend(data);
+        })
+        .catch(error => {
+            console.error('Error loading question:', error);
+            showMessage('error', 'Failed to load question');
+        });
+}
+
+// Display question from backend data
+function displayQuestionFromBackend(data) {
+    console.log('Displaying question from backend:', data);
+    
+    // Update question display
+    document.getElementById('current-question').textContent = data.question_number || quizState.currentQuestion + 1;
+    document.getElementById('total-questions').textContent = data.total_questions || quizState.totalQuestions;
+    document.getElementById('question-category').innerHTML = `<i class="fas fa-tag"></i> ${data.category}`;
+    document.getElementById('question-text').textContent = data.question;
+    
+    // Update options
+    const optionsContainer = document.getElementById('answer-options');
+    optionsContainer.innerHTML = '';
+    
+    data.options.forEach((option, index) => {
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'answer-option';
+        optionDiv.innerHTML = `
+            <span class="option-letter">${String.fromCharCode(65 + index)}</span>
+            <span class="option-text">${option}</span>
+            <span class="option-indicator"></span>
+        `;
+        optionDiv.onclick = () => selectAnswer(index);
+        optionsContainer.appendChild(optionDiv);
+    });
+    
+    // Update progress - align with dots by calculating to center of current dot
+    const currentQuestionIndex = (data.question_number - 1);
+    const totalQuestions = (data.total_questions || quizState.totalQuestions);
+    const dotsShown = Math.min(totalQuestions, 20);
+    const progressPercentage = dotsShown > 1 
+        ? (currentQuestionIndex / (dotsShown - 1)) * 100 
+        : currentQuestionIndex === 0 ? 0 : 100;
+    document.getElementById('progress-fill').style.width = Math.min(progressPercentage, 100) + '%';
+    
+    // Update progress dots
+    updateProgressDots();
+    
+    // Reset UI state
+    document.getElementById('explanation-box').style.display = 'none';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('submit-btn').style.display = 'inline-flex';
+    document.getElementById('hint-btn').disabled = false;
+    
+    // Update mode-specific displays
+    if (data.survival_mode_active) {
+        quizState.survivalLives = data.survival_lives;
+        updateSurvivalLives();
+    }
+    
+    // Reset answer selection
+    quizState.selectedAnswer = undefined;
+    
+    // Reset timer for timed mode
+    if (quizState.mode === 'timed') {
+        resetTimer();
+    }
+    
+    console.log('Question displayed successfully');
 }
 
 // Initialize progress dots
@@ -964,9 +1274,12 @@ function loadQuestion() {
     document.getElementById('question-category').innerHTML = `<i class="fas fa-tag"></i> ${question.category}`;
     document.getElementById('question-text').textContent = question.question;
     
-    // Update progress
-    const progress = ((quizState.currentQuestion) / quizState.totalQuestions) * 100;
-    document.getElementById('progress-fill').style.width = progress + '%';
+    // Update progress - align with dots by calculating to center of current dot
+    const dotsShown = Math.min(quizState.totalQuestions, 20);
+    const progressPercentage = dotsShown > 1 
+        ? (quizState.currentQuestion / (dotsShown - 1)) * 100 
+        : quizState.currentQuestion === 0 ? 0 : 100;
+    document.getElementById('progress-fill').style.width = Math.min(progressPercentage, 100) + '%';
     
     // Update progress dots
     updateProgressDots();
@@ -1019,112 +1332,378 @@ function updateProgressDots() {
 
 // Select answer
 function selectAnswer(index) {
+    // Check if this option is eliminated
+    const selectedOption = document.querySelectorAll('.answer-option')[index];
+    if (selectedOption.classList.contains('eliminated')) {
+        console.log('Cannot select eliminated option');
+        return;
+    }
+    
     // Remove previous selection
     document.querySelectorAll('.answer-option').forEach(option => {
         option.classList.remove('selected');
     });
     
     // Add selection
-    document.querySelectorAll('.answer-option')[index].classList.add('selected');
+    selectedOption.classList.add('selected');
     
     // Store selected answer
     quizState.selectedAnswer = index;
 }
 
 // Submit answer
-function submitAnswer() {
+function submitAnswer(isTimeout = false) {
+    console.log('Submitting answer:', { 
+        selected: quizState.selectedAnswer, 
+        isTimeout: isTimeout 
+    });
+    
+    // For timeout, set selectedAnswer to -1 to indicate no answer
+    if (isTimeout && quizState.selectedAnswer === undefined) {
+        quizState.selectedAnswer = -1;
+    }
+    
     if (quizState.selectedAnswer === undefined) {
         showMessage('warning', 'Please select an answer');
         return;
     }
     
-    const question = sampleQuestions[quizState.currentQuestion % sampleQuestions.length];
-    const isCorrect = quizState.selectedAnswer === question.correct;
+    // Clear timer if running
+    if (quizState.timer) {
+        clearInterval(quizState.timer);
+        quizState.timer = null;
+    }
     
-    // Update UI
-    const options = document.querySelectorAll('.answer-option');
-    options.forEach((option, index) => {
-        option.classList.add('disabled');
-        option.onclick = null;
+    // Calculate time taken for this question
+    const questionStartTime = quizState.questionStartTime || Date.now();
+    const timeTaken = (Date.now() - questionStartTime) / 1000;
+    
+    // Submit answer to backend
+    fetch('/api/submit_answer', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            answer_index: quizState.selectedAnswer === -1 ? null : quizState.selectedAnswer
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Submit answer response:', data);
         
-        if (index === question.correct) {
-            option.classList.add('correct');
-        } else if (index === quizState.selectedAnswer && !isCorrect) {
-            option.classList.add('incorrect');
+        if (data.error) {
+            showMessage('error', data.error);
+            return;
         }
-    });
-    
-    // Update score and streak
-    if (isCorrect) {
-        quizState.score += 10;
-        quizState.streak++;
         
-        // Show streak indicator for 3+ streak
-        if (quizState.streak >= 3) {
-            showStreak();
+        // Track analytics for quiz answer
+        if (typeof trackQuizAnswer === 'function') {
+            trackQuizAnswer(data.correct, timeTaken);
         }
-    } else {
-        quizState.streak = 0;
-    }
-    
-    // Store answer
-    quizState.answers.push({
-        question: quizState.currentQuestion,
-        selected: quizState.selectedAnswer,
-        correct: question.correct,
-        time: Date.now() - quizState.startTime
+        
+        // Track feature usage
+        if (typeof trackFeatureUsage === 'function') {
+            trackFeatureUsage('quiz_answer_submitted');
+            if (isTimeout) {
+                trackFeatureUsage('quiz_timeout');
+            }
+        }
+        
+        // Update UI based on answer correctness
+        const options = document.querySelectorAll('.answer-option');
+        options.forEach((option, index) => {
+            option.classList.add('disabled');
+            option.onclick = null;
+            
+            if (index === data.correct_answer_index) {
+                option.classList.add('correct');
+            } else if (index === quizState.selectedAnswer && !data.is_correct) {
+                option.classList.add('incorrect');
+            }
+        });
+        
+        // Show timeout message if applicable
+        if (isTimeout) {
+            showMessage('warning', 'Time\'s up! Question marked as incorrect.');
+        }
+        
+        // Update score and streak
+        if (data.is_correct) {
+            quizState.score += data.points_earned || 10;
+            quizState.streak = data.streak || 0;
+            
+            // Show streak indicator for 3+ streak
+            if (quizState.streak >= 3) {
+                showStreak();
+            }
+        } else {
+            quizState.streak = 0;
+            
+            // Handle survival mode life loss
+            if (data.survival_lives !== undefined) {
+                quizState.survivalLives = data.survival_lives;
+                updateSurvivalLives();
+                
+                if (data.survival_game_over) {
+                    showSurvivalGameOver(data);
+                    return;
+                }
+            }
+        }
+        
+        // Store answer
+        quizState.answers.push({
+            question: quizState.currentQuestion,
+            selected: quizState.selectedAnswer,
+            correct: data.correct_answer_index,
+            time: Date.now() - quizState.startTime,
+            timeout: isTimeout
+        });
+        
+        console.log('Answer stored - quizState.answers length:', quizState.answers.length);
+        console.log('Last answer details:', quizState.answers[quizState.answers.length - 1]);
+        
+        // Show explanation if provided
+        if (data.explanation && quizState.mode === 'standard') {
+            document.getElementById('explanation-text').textContent = data.explanation;
+            document.getElementById('explanation-box').style.display = 'block';
+        }
+        
+        // Show speed bonus message if applicable
+        if (data.speed_bonus) {
+            showMessage('success', `Speed bonus: +${data.speed_bonus} points!`);
+        }
+        
+        // Update buttons
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('hint-btn').disabled = true;
+        
+        // Check if quiz is complete
+        if (data.session_complete) {
+            setTimeout(() => showResults(data), 1000);
+        } else {
+            document.getElementById('next-btn').style.display = 'inline-flex';
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting answer:', error);
+        showMessage('error', 'Failed to submit answer');
     });
-    
-    // Show explanation if enabled
-    if (quizState.mode === 'standard') {
-        document.getElementById('explanation-text').textContent = question.explanation;
-        document.getElementById('explanation-box').style.display = 'block';
-    }
-    
-    // Update buttons
-    document.getElementById('submit-btn').style.display = 'none';
-    document.getElementById('hint-btn').disabled = true;
-    
-    if (quizState.currentQuestion < quizState.totalQuestions - 1) {
-        document.getElementById('next-btn').style.display = 'inline-flex';
-    } else {
-        // Quiz complete
-        setTimeout(showResults, 1000);
-    }
 }
 
 // Next question
 function nextQuestion() {
+    console.log('Loading next question');
     quizState.currentQuestion++;
     quizState.selectedAnswer = undefined;
-    loadQuestion();
+    
+    // Clear any existing timer
+    if (quizState.timer) {
+        clearInterval(quizState.timer);
+        quizState.timer = null;
+    }
+    
+    loadQuestionFromBackend();
+}
+
+// Update survival lives display
+function updateSurvivalLives() {
+    const livesDisplay = document.getElementById('survival-lives');
+    const livesCount = document.getElementById('lives-count');
+    
+    if (quizState.mode === 'survival' && quizState.survivalLives !== undefined) {
+        livesDisplay.style.display = 'flex';
+        livesCount.textContent = quizState.survivalLives;
+        
+        // Add warning class if low on lives
+        if (quizState.survivalLives <= 1) {
+            livesDisplay.classList.add('warning');
+        } else {
+            livesDisplay.classList.remove('warning');
+        }
+    } else {
+        livesDisplay.style.display = 'none';
+    }
+}
+
+// Show survival game over
+function showSurvivalGameOver(data) {
+    const gameOverHtml = `
+        <div class="quiz-complete">
+            <div class="complete-header">
+                <div class="complete-icon game-over">
+                    💀
+                </div>
+                <h2>Game Over!</h2>
+                <p>You ran out of lives in Survival Mode</p>
+            </div>
+            
+            <div class="results-stats">
+                <div class="result-stat">
+                    <i class="fas fa-trophy" style="color: var(--warning-color);"></i>
+                    <div>
+                        <h3 id="final-score">${data.survival_final_score || quizState.score}</h3>
+                        <p>Final Score</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-star" style="color: var(--primary-color);"></i>
+                    <div>
+                        <h3 id="high-score">${data.survival_high_score || 0}</h3>
+                        <p>High Score</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-question" style="color: var(--accent-color);"></i>
+                    <div>
+                        <h3>${quizState.answers.length}</h3>
+                        <p>Questions Answered</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-actions">
+                <button class="btn btn-danger" onclick="startNewSurvivalMode()">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                <button class="btn btn-secondary" onclick="window.location.href='/'">
+                    <i class="fas fa-home"></i> Home
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('question-container').innerHTML = gameOverHtml;
+    document.getElementById('quiz-container').classList.add('quiz-complete');
+}
+
+// Start new survival mode
+function startNewSurvivalMode() {
+    window.location.reload();
+}
+
+// Show message helper
+function showMessage(type, message) {
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 10000;
+        transition: all 0.3s ease;
+    `;
+    
+    // Set background color based on type
+    switch (type) {
+        case 'success':
+            toast.style.background = 'var(--success-color)';
+            break;
+        case 'warning':
+            toast.style.background = 'var(--warning-color)';
+            break;
+        case 'error':
+            toast.style.background = 'var(--danger-color)';
+            break;
+        default:
+            toast.style.background = 'var(--primary-color)';
+    }
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+        }
+    }, 3000);
 }
 
 // Use hint
 function useHint() {
-    if (confirm('Using a hint will deduct 5 points. Continue?')) {
-        quizState.score = Math.max(0, quizState.score - 5);
+    const hintPenalty = parseInt(document.getElementById('hint-penalty')?.textContent) || 5;
+    if (confirm(`Using a hint will deduct ${hintPenalty} points. Continue?`)) {
+        quizState.score = Math.max(0, quizState.score - hintPenalty);
         
-        // Eliminate two wrong answers
-        const question = sampleQuestions[quizState.currentQuestion % sampleQuestions.length];
-        const options = document.querySelectorAll('.answer-option');
-        let eliminated = 0;
+        // Get the current question data from the backend
+        // We need to fetch the correct answer from the current question
+        const currentQuestionElement = document.getElementById('question-text');
+        if (!currentQuestionElement || !currentQuestionElement.textContent) {
+            showMessage('error', 'No active question for hint');
+            return;
+        }
         
-        options.forEach((option, index) => {
-            if (index !== question.correct && eliminated < 2) {
-                option.style.opacity = '0.3';
-                option.classList.add('disabled');
-                option.onclick = null;
-                eliminated++;
+        // Request hint from backend API
+        fetch('/api/get_hint', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.eliminate_indices) {
+                // Eliminate the specified wrong answers
+                const options = document.querySelectorAll('.answer-option');
+                
+                data.eliminate_indices.forEach(index => {
+                    if (index < options.length) {
+                        options[index].style.opacity = '0.3';
+                        options[index].classList.add('disabled', 'eliminated');
+                        options[index].onclick = null;
+                    }
+                });
+                
+                showMessage('info', `Eliminated ${data.eliminate_indices.length} incorrect answers`);
+                document.getElementById('hint-btn').disabled = true;
+            } else {
+                // Fallback: eliminate answers based on current UI state
+                eliminateAnswersClientSide();
+            }
+        })
+        .catch(error => {
+            console.error('Error getting hint:', error);
+            // Fallback: eliminate answers based on current UI state
+            eliminateAnswersClientSide();
         });
-        
-        document.getElementById('hint-btn').disabled = true;
     }
+}
+
+// Fallback function for client-side hint elimination
+function eliminateAnswersClientSide() {
+    console.log('Using client-side hint fallback');
+    
+    const options = document.querySelectorAll('.answer-option');
+    const totalOptions = options.length;
+    
+    // Create array of all option indices
+    const optionIndices = Array.from({length: totalOptions}, (_, i) => i);
+    
+    // We don't know the correct answer on client side, so we'll eliminate 2 random options
+    // This is not ideal but better than always eliminating the same positions
+    const shuffled = optionIndices.sort(() => Math.random() - 0.5);
+    const toEliminate = shuffled.slice(0, Math.min(2, totalOptions - 1)); // Leave at least 1 option
+    
+    toEliminate.forEach(index => {
+        options[index].style.opacity = '0.3';
+        options[index].classList.add('disabled', 'eliminated');
+        options[index].onclick = null;
+    });
+    
+    showMessage('info', `Eliminated ${toEliminate.length} answers (random selection)`);
+    document.getElementById('hint-btn').disabled = true;
 }
 
 // Timer functions
 function startTimer() {
+    console.log('Starting timer for timed mode');
     quizState.timeRemaining = quizState.timeLimit;
     updateTimerDisplay();
     
@@ -1134,17 +1713,24 @@ function startTimer() {
             updateTimerDisplay();
             
             if (quizState.timeRemaining <= 0) {
+                console.log('Timer expired - auto-submitting answer');
                 clearInterval(quizState.timer);
-                // Auto-submit with no answer
-                submitAnswer();
+                quizState.timer = null;
+                // Auto-submit with timeout flag
+                submitAnswer(true);
             }
         }
     }, 1000);
 }
 
 function resetTimer() {
-    clearInterval(quizState.timer);
-    startTimer();
+    if (quizState.timer) {
+        clearInterval(quizState.timer);
+        quizState.timer = null;
+    }
+    if (quizState.mode === 'timed' || quizState.mode === 'exam') {
+        startTimer();
+    }
 }
 
 function updateTimerDisplay() {
@@ -1187,20 +1773,167 @@ function resumeQuiz() {
 
 // End quiz
 function endQuiz() {
+    console.log('End quiz requested');
+    
     if (confirm('Are you sure you want to end the quiz?')) {
-        showResults();
+        console.log('User confirmed end quiz');
+        
+        // Clear any running timer
+        if (quizState.timer) {
+            clearInterval(quizState.timer);
+            quizState.timer = null;
+        }
+        
+        // Call backend to end the session
+        fetch('/api/end_quiz', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('End quiz response:', data);
+            if (data.success) {
+                showResults(data);
+            } else {
+                console.error('Failed to end quiz:', data.error);
+                // Still show results even if backend fails
+                showResults();
+            }
+        })
+        .catch(error => {
+            console.error('Error ending quiz:', error);
+            // Still show results even if request fails
+            showResults();
+        });
     }
 }
 
 // Show results
-function showResults() {
+function showResults(backendData = null) {
     clearInterval(quizState.timer);
     
-    // Calculate results
-    const correct = quizState.answers.filter(a => a.selected === a.correct).length;
-    const incorrect = quizState.totalQuestions - correct;
-    const percentage = Math.round((correct / quizState.totalQuestions) * 100);
-    const timeTaken = Math.floor((Date.now() - quizState.startTime) / 1000);
+    if (backendData && backendData.success === false) {
+        showMessage('error', backendData.error || 'Failed to get quiz results');
+        return;
+    }
+    
+    // If we have backend data, use it; otherwise fetch from API
+    if (backendData) {
+        displayResultsWithData(backendData);
+    } else {
+        // Fetch results from backend API
+        fetch('/api/quiz_results')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayResultsWithData(data);
+                } else {
+                    // Fallback to end quiz API if no results available
+                    return fetch('/api/end_quiz', { method: 'POST' });
+                }
+            })
+            .then(response => {
+                if (response) {
+                    return response.json();
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    displayResultsWithData(data);
+                } else {
+                    // Last resort: calculate from frontend data
+                    displayResultsWithFrontendData();
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching quiz results:', error);
+                displayResultsWithFrontendData();
+            });
+    }
+}
+
+// Display results using backend data
+function displayResultsWithData(data) {
+    console.log('Displaying results with backend data:', data);
+    console.log('Current quizState.answers:', quizState.answers);
+    
+    // Extract results from backend data - prioritize backend data over frontend state
+    const sessionScore = data.session_score !== undefined ? data.session_score : 
+                         (quizState.answers ? quizState.answers.filter(a => a.selected === a.correct).length : 0);
+    const sessionTotal = data.session_total !== undefined ? data.session_total : 
+                         (quizState.answers ? quizState.answers.length : quizState.totalQuestions || 1);
+    
+    console.log('Calculated scores - sessionScore:', sessionScore, 'sessionTotal:', sessionTotal);
+    
+    // Calculate accuracy
+    const accuracy = data.accuracy !== undefined ? data.accuracy : 
+                    sessionTotal > 0 ? (sessionScore / sessionTotal * 100) : 0;
+    const correct = sessionScore;
+    const incorrect = sessionTotal - correct;
+    const percentage = Math.round(accuracy);
+    
+    // Calculate time
+    let timeTaken = 0;
+    if (data.duration) {
+        timeTaken = Math.floor(data.duration);
+    } else if (data.session_time) {
+        timeTaken = Math.floor(data.session_time);
+    } else if (quizState.startTime) {
+        timeTaken = Math.floor((Date.now() - quizState.startTime) / 1000);
+    }
+    
+    const minutes = Math.floor(timeTaken / 60);
+    const seconds = timeTaken % 60;
+    
+    // Points
+    const points = data.session_points || data.points_earned || quizState.score || 0;
+    
+    // Hide quiz, show results
+    document.getElementById('quiz-container').style.display = 'none';
+    document.getElementById('quiz-results').style.display = 'block';
+    
+    // Update results display
+    document.getElementById('score-percent').textContent = percentage + '%';
+    document.getElementById('correct-count').textContent = correct;
+    document.getElementById('incorrect-count').textContent = incorrect;
+    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('points-earned').textContent = points;
+    
+    // Animate score ring
+    const circumference = 2 * Math.PI * 90;
+    const offset = circumference - (percentage / 100 * circumference);
+    
+    setTimeout(() => {
+        const scoreRing = document.querySelector('.score-ring');
+        if (scoreRing) {
+            scoreRing.style.strokeDashoffset = offset;
+        }
+    }, 100);
+    
+    // Save results
+    saveQuizResults({
+        mode: quizState.mode || data.mode,
+        score: percentage,
+        correct: correct,
+        incorrect: incorrect,
+        time: timeTaken,
+        points: points,
+        total: sessionTotal
+    });
+}
+
+// Fallback: Display results using frontend data (when backend fails)
+function displayResultsWithFrontendData() {
+    console.log('Displaying results with frontend fallback data');
+    
+    // Calculate results from frontend state
+    const correct = quizState.answers ? quizState.answers.filter(a => a.selected === a.correct).length : 0;
+    const total = quizState.totalQuestions || quizState.answers.length || 1;
+    const incorrect = total - correct;
+    const percentage = Math.round((correct / total) * 100);
+    const timeTaken = quizState.startTime ? Math.floor((Date.now() - quizState.startTime) / 1000) : 0;
     const minutes = Math.floor(timeTaken / 60);
     const seconds = timeTaken % 60;
     
@@ -1213,14 +1946,17 @@ function showResults() {
     document.getElementById('correct-count').textContent = correct;
     document.getElementById('incorrect-count').textContent = incorrect;
     document.getElementById('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
-    document.getElementById('points-earned').textContent = quizState.score;
+    document.getElementById('points-earned').textContent = quizState.score || 0;
     
     // Animate score ring
     const circumference = 2 * Math.PI * 90;
     const offset = circumference - (percentage / 100 * circumference);
     
     setTimeout(() => {
-        document.querySelector('.score-ring').style.strokeDashoffset = offset;
+        const scoreRing = document.querySelector('.score-ring');
+        if (scoreRing) {
+            scoreRing.style.strokeDashoffset = offset;
+        }
     }, 100);
     
     // Save results
@@ -1230,7 +1966,8 @@ function showResults() {
         correct: correct,
         incorrect: incorrect,
         time: timeTaken,
-        points: quizState.score
+        points: quizState.score || 0,
+        total: total
     });
 }
 
@@ -1254,8 +1991,8 @@ function saveQuizResults(results) {
 
 // Review answers
 function reviewAnswers() {
-    // This would show a detailed review of all answers
-    console.log('Review answers');
+    // Navigate to the review page
+    window.location.href = '/review';
 }
 
 // Start new quiz
@@ -1278,25 +2015,6 @@ function shareResults() {
         navigator.clipboard.writeText(text);
         showMessage('success', 'Results copied to clipboard!');
     }
-}
-
-function showMessage(type, text) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type} animate-fade-in`;
-    messageDiv.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'exclamation-circle'}"></i>
-        ${text}
-    `;
-    const icon = messageDiv.querySelector('i');
-    if (icon) {
-        icon.style.color = type === 'success' ? 'green' : type === 'warning' ? 'orange' : 'red';
-    }
-    const container = document.querySelector('.quiz-container') || document.querySelector('.quiz-setup-container');
-    container.insertBefore(messageDiv, container.firstChild);
-    
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 3000);
 }
 </script>
 {% endblock %}

@@ -183,7 +183,7 @@
                 <p>Master cd, ls, and pwd commands</p>
                 <div class="challenge-difficulty">
                     <span class="difficulty-badge easy">Easy</span>
-                    <span class="xp-reward">+50 XP</span>
+                    <span class="xp-reward">+0 XP</span>
                 </div>
             </div>
             <div class="challenge-card" onclick="startChallenge('manipulation')">
@@ -194,7 +194,7 @@
                 <p>Learn cp, mv, rm, and mkdir</p>
                 <div class="challenge-difficulty">
                     <span class="difficulty-badge medium">Medium</span>
-                    <span class="xp-reward">+100 XP</span>
+                    <span class="xp-reward">+0 XP</span>
                 </div>
             </div>
             <div class="challenge-card" onclick="startChallenge('permissions')">
@@ -205,7 +205,7 @@
                 <p>Understand chmod, chown, and umask</p>
                 <div class="challenge-difficulty">
                     <span class="difficulty-badge hard">Hard</span>
-                    <span class="xp-reward">+150 XP</span>
+                    <span class="xp-reward">+0 XP</span>
                 </div>
             </div>
             <div class="challenge-card" onclick="startChallenge('scripting')">
@@ -216,7 +216,7 @@
                 <p>Write your first bash scripts</p>
                 <div class="challenge-difficulty">
                     <span class="difficulty-badge expert">Expert</span>
-                    <span class="xp-reward">+200 XP</span>
+                    <span class="xp-reward">+0 XP</span>
                 </div>
             </div>
         </div>
@@ -862,9 +862,24 @@ function maximizeTerminal() {
 // Override the base executeCommand to update counter
 const originalExecute = cliPlayground.executeCommand;
 cliPlayground.executeCommand = function() {
+    const command = this.input.value.trim();
+    const startTime = Date.now();
+    
     originalExecute.call(this);
     commandsCount++;
     document.getElementById('commands-count').textContent = commandsCount;
+    
+    // Track CLI command execution
+    if (typeof trackCLICommand === 'function') {
+        const executionTime = (Date.now() - startTime) / 1000;
+        trackCLICommand(command, executionTime);
+    }
+    if (typeof trackFeatureUsage === 'function') {
+        trackFeatureUsage('cli_command_executed');
+        // Track specific command types
+        const commandType = command.split(' ')[0];
+        trackFeatureUsage(`cli_command_${commandType}`);
+    }
 };
 </script>
 {% endblock %}

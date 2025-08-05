@@ -32,6 +32,10 @@ DEFAULT_MODE = "cli"
 # --- Quiz Mode Constants ---
 QUIZ_MODE_STANDARD = "standard"
 QUIZ_MODE_VERIFY = "verify"
+QUIZ_MODE_TIMED = "timed"
+QUIZ_MODE_SURVIVAL = "survival"
+QUIZ_MODE_CATEGORY_FOCUS = "category"
+QUIZ_MODE_EXAM = "exam"
 
 # --- Quick Fire Mode Constants ---
 QUICK_FIRE_QUESTIONS = 5
@@ -40,6 +44,17 @@ QUICK_FIRE_TIME_LIMIT = 180  # 3 minutes in seconds
 # --- Mini Quiz Constants ---
 MINI_QUIZ_QUESTIONS = 3
 MINI_QUIZ_TIME_LIMIT = 30  # 30 seconds
+
+# --- Timed Challenge Constants ---
+TIMED_CHALLENGE_TIME_PER_QUESTION = 30  # 30 seconds per question
+TIMED_CHALLENGE_QUESTIONS = 20  # 20 questions
+
+# --- Survival Mode Constants ---
+SURVIVAL_MODE_LIVES = 3  # 3 lives in survival mode
+
+# --- Exam Mode Constants ---
+EXAM_MODE_QUESTIONS = 90  # 90 questions for full exam simulation
+EXAM_MODE_TIME_LIMIT = 5400  # 90 minutes in seconds
 
 # --- Colorama Setup (CLI Colors) ---
 def _initialize_colors():

@@ -2,7 +2,15 @@
   "sessions": [],
   "questions": {},
   "categories": {
-    "Troubleshooting": {
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Security)": {
       "correct": 0,
       "attempts": 0
     },
@@ -14,15 +22,7 @@
       "correct": 0,
       "attempts": 0
     },
-    "Concepts & Terms (Security)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (Containers)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Commands (System Management)": {
+    "Troubleshooting": {
       "correct": 0,
       "attempts": 0
     }

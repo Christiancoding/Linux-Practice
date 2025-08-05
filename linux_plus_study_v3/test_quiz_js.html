@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz JavaScript Test</title>
+</head>
+<body>
+    <h1>JavaScript Validation Test</h1>
+    
+    <!-- Minimal quiz setup to test JavaScript -->
+    <div id="quiz-setup">
+        <div class="mode-card" onclick="selectMode('standard')">Standard Mode</div>
+        <select id="quiz-category"><option value="All Categories">All Categories</option></select>
+        <select id="num-questions"><option value="20">20</option></select>
+        <div id="num-questions-group"></div>
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+    
+    <div id="result"></div>
+
+    <script>
+// Copy the key JavaScript functions from quiz.html to test for syntax errors
+
+// Quiz state
+let quizState = {
+    mode: null,
+    currentQuestion: 0,
+    totalQuestions: 20,
+    answers: [],
+    startTime: Date.now(),
+    timeLimit: 30,
+    timer: null,
+    score: 0,
+    streak: 0,
+    paused: false
+};
+
+// Test select mode function
+function selectMode(mode) {
+    console.log('selectMode called with:', mode);
+    
+    // Remove previous selection
+    document.querySelectorAll('.mode-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selection to clicked mode
+    if (typeof event !== 'undefined' && event.target) {
+        event.target.closest('.mode-card').classList.add('selected');
+    } else {
+        // Fallback: find the card that called this function
+        document.querySelectorAll('.mode-card').forEach(card => {
+            const cardOnclick = card.getAttribute('onclick');
+            if (cardOnclick && cardOnclick.includes(`selectMode('${mode}')`)) {
+                card.classList.add('selected');
+            }
+        });
+    }
+    
+    // Update quiz state
+    quizState.mode = mode;
+    
+    // Show/hide and configure options based on mode
+    const numQuestionsGroup = document.getElementById('num-questions-group');
+    const numQuestionsSelect = document.getElementById('num-questions');
+    
+    if (mode === 'exam') {
+        // Exam mode has fixed 90 questions
+        numQuestionsSelect.value = '90';
+        numQuestionsSelect.disabled = true;
+        numQuestionsGroup.style.display = 'block';
+    } else if (mode === 'survival') {
+        // Survival mode has unlimited questions - hide the option
+        numQuestionsGroup.style.display = 'none';
+    } else {
+        // Standard and timed modes allow question customization
+        numQuestionsSelect.disabled = false;
+        numQuestionsGroup.style.display = 'block';
+    }
+    
+    document.getElementById('result').innerHTML = `Mode selected: ${mode}`;
+}
+
+// Test start quiz function
+function startQuiz() {
+    console.log('startQuiz called');
+    
+    if (!quizState.mode) {
+        showMessage('warning', 'Please select a quiz mode');
+        return;
+    }
+    
+    const category = document.getElementById('quiz-category').value;
+    const numQuestions = document.getElementById('num-questions').value;
+    
+    const requestData = {
+        mode: quizState.mode,
+        category: category === 'all' ? 'All Categories' : category
+    };
+
+    // Add number of questions for modes that support it (not survival or exam)
+    if (quizState.mode !== 'survival' && quizState.mode !== 'exam') {
+        requestData.num_questions = parseInt(numQuestions);
+    }
+
+    console.log('Quiz request data:', requestData);
+    
+    document.getElementById('result').innerHTML = `Starting quiz with data: ${JSON.stringify(requestData)}`;
+}
+
+// Simple message function
+function showMessage(type, message) {
+    console.log(`${type}: ${message}`);
+    alert(`${type}: ${message}`);
+}
+
+// Test on page load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Page loaded, JavaScript is working');
+    document.getElementById('result').innerHTML = 'JavaScript loaded successfully. Click buttons to test.';
+});
+    </script>
+</body>
+</html>

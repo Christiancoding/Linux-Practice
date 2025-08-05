@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Test</title>
+</head>
+<body>
+    <h1>Dashboard API Test</h1>
+    
+    <div id="test-results">
+        <p>Level: <span id="test-level">Loading...</span></p>
+        <p>XP: <span id="test-xp">Loading...</span></p>
+        <p>Accuracy: <span id="test-accuracy">Loading...</span></p>
+        <p>Study Time: <span id="test-study-time">Loading...</span></p>
+        <p>Correct Answers: <span id="test-correct">Loading...</span></p>
+    </div>
+    
+    <button onclick="testAPI()">Test API</button>
+    
+    <script>
+    function testAPI() {
+        console.log('Testing dashboard API...');
+        fetch('/api/dashboard')
+            .then(response => response.json())
+            .then(data => {
+                console.log('API Response:', data);
+                document.getElementById('test-level').textContent = data.level || 'N/A';
+                document.getElementById('test-xp').textContent = data.xp || 'N/A';
+                document.getElementById('test-accuracy').textContent = Math.round(data.accuracy || 0) + '%';
+                document.getElementById('test-study-time').textContent = formatStudyTime(data.study_time || 0);
+                document.getElementById('test-correct').textContent = data.total_correct || 'N/A';
+            })
+            .catch(error => {
+                console.error('API Error:', error);
+            });
+    }
+    
+    function formatStudyTime(seconds) {
+        if (seconds < 60) return '0m';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm';
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return hours + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
+    }
+    
+    // Auto-test on load
+    window.addEventListener('load', testAPI);
+    </script>
+</body>
+</html>

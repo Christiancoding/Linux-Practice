@@ -1,0 +1,848 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Linux+ Study{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* Modern Analytics Dashboard Styles */
+.analytics-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+    background: #f8f9fa;
+    min-height: calc(100vh - 100px);
+}
+
+/* Header Styles */
+.analytics-header {
+    text-align: center;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.analytics-header p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 20px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.metric-card {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.metric-content h3 {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin: 0 0 5px 0;
+}
+
+.metric-content p {
+    color: #718096;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Chart Containers */
+.chart-container {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    margin-bottom: 25px;
+    min-height: 420px;
+    border: 1px solid #e9ecef;
+}
+
+.chart-container h3 {
+    color: #2d3748;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chart-container canvas {
+    max-height: 320px !important;
+}
+
+/* Recent Sessions */
+.recent-sessions {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    min-height: 420px;
+    border: 1px solid #e9ecef;
+}
+
+.recent-sessions h3 {
+    color: #2d3748;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    background: #f7fafc;
+    transition: all 0.2s ease;
+}
+
+.session-item:hover {
+    background: #edf2f7;
+    transform: translateX(5px);
+}
+
+.session-info strong {
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.session-info small {
+    color: #718096;
+}
+
+.session-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.accuracy {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.accuracy.good { 
+    background: #10b981;
+    color: white;
+}
+
+.accuracy.average { 
+    background: #f59e0b;
+    color: white;
+}
+
+.accuracy.poor { 
+    background: #ef4444;
+    color: white;
+}
+
+/* Refresh Button */
+.refresh-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.refresh-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Grid Layout */
+.row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+/* Loading State */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #718096;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: #cbd5e0;
+    margin-bottom: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .analytics-header h1 {
+        font-size: 2rem;
+    }
+    
+    .row {
+        grid-template-columns: 1fr;
+    }
+    
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-card {
+        padding: 20px;
+    }
+    
+    .chart-container {
+        padding: 20px;
+    }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    .analytics-container {
+        background: #1a202c;
+    }
+    
+    .metric-card,
+    .chart-container,
+    .recent-sessions {
+        background: #2d3748;
+        border-color: #4a5568;
+    }
+    
+    .metric-content h3,
+    .chart-container h3,
+    .recent-sessions h3 {
+        color: #e2e8f0;
+    }
+    
+    .metric-content p,
+    .session-info small {
+        color: #a0aec0;
+    }
+    
+    .session-item {
+        background: #374151;
+    }
+    
+    .session-item:hover {
+        background: #4a5568;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="analytics-container">
+    <header class="analytics-header">
+        <h1>📊 Your Learning Analytics</h1>
+        <p>Track your progress and improve your Linux+ certification journey</p>
+        <button class="refresh-btn" onclick="refreshAnalytics()" id="refresh-btn">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+        </button>
+    </header>
+
+    <!-- Key Metrics Cards -->
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <div class="metric-icon">🎯</div>
+            <div class="metric-content">
+                <h3 id="total-questions">{{ stats.total_questions or 0 }}</h3>
+                <p>Questions Answered</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">✅</div>
+            <div class="metric-content">
+                <h3 id="accuracy">{{ "%.1f"|format(stats.overall_accuracy or 0) }}%</h3>
+                <p>Overall Accuracy</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">⏱️</div>
+            <div class="metric-content">
+                <h3 id="study-time">{{ "%.1f"|format((stats.total_study_time or 0) / 3600) }}h</h3>
+                <p>Total Study Time</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">💻</div>
+            <div class="metric-content">
+                <h3 id="vm-commands">{{ stats.total_vm_commands or 0 }}</h3>
+                <p>VM Commands</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">🔥</div>
+            <div class="metric-content">
+                <h3 id="study-streak">{{ stats.study_streak or 0 }}</h3>
+                <p>Day Study Streak</p>
+            </div>
+        </div>
+        
+        <div class="metric-card">
+            <div class="metric-icon">📚</div>
+            <div class="metric-content">
+                <h3 id="total-sessions">{{ stats.total_sessions or 0 }}</h3>
+                <p>Total Sessions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3>📈 Performance Over Time</h3>
+                <canvas id="performanceChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3>📚 Activity Breakdown</h3>
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="chart-container">
+                <h3>🎯 Topic Areas</h3>
+                <canvas id="topicsChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="recent-sessions">
+                <h3>🕒 Recent Sessions</h3>
+                <div id="recent-sessions-list">
+                    {% if stats.recent_performance %}
+                        {% for session in stats.recent_performance %}
+                        <div class="session-item">
+                            <div class="session-info">
+                                <strong>{{ session.activity|title }}</strong><br>
+                                <small>{{ session.date[:10] }}</small>
+                            </div>
+                            <div class="session-stats">
+                                <span class="accuracy {{ 'good' if session.accuracy >= 80 else 'average' if session.accuracy >= 60 else 'poor' }}">
+                                    {{ "%.0f"|format(session.accuracy) }}%
+                                </span>
+                                <small style="color: #718096;">{{ session.questions }} Q</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-chart-line"></i>
+                            <p>No recent sessions found.<br>Start a quiz to see your progress!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data for JavaScript -->
+<script type="application/json" id="stats-data">{{ stats | tojson | safe }}</script>
+
+<script>
+// Initialize charts with data
+let statsData;
+let chartInstances = {
+    performance: null,
+    activity: null,
+    topics: null
+};
+
+try {
+    const statsElement = document.getElementById('stats-data');
+    if (statsElement) {
+        statsData = JSON.parse(statsElement.textContent) || {};
+    } else {
+        statsData = {};
+        console.warn('Stats data element not found');
+    }
+} catch (e) {
+    statsData = {};
+    console.warn('Failed to parse stats data:', e);
+}
+
+// Add loading indicators and error handling
+function showLoadingState() {
+    const metrics = ['total-questions', 'accuracy', 'study-time', 'vm-commands'];
+    metrics.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+    });
+}
+
+function showErrorState() {
+    const metrics = ['total-questions', 'accuracy', 'study-time', 'vm-commands'];
+    metrics.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = 'N/A';
+        }
+    });
+}
+
+// Initialize analytics dashboard
+function initializeAnalyticsDashboard() {
+    // Check if we have valid stats data
+    if (statsData.error) {
+        console.warn('Analytics error:', statsData.error);
+        showErrorState();
+        return;
+    }
+    
+    // Ensure charts load properly with fallback data
+    try {
+        initializeCharts();
+    } catch (e) {
+        console.error('Error initializing charts:', e);
+    }
+}
+
+// Initialize charts with better error handling
+function initializeCharts() {
+    // Configure Chart.js defaults for better appearance
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    Chart.defaults.color = '#4a5568';
+    
+    // Destroy existing charts before creating new ones
+    Object.keys(chartInstances).forEach(key => {
+        if (chartInstances[key]) {
+            chartInstances[key].destroy();
+            chartInstances[key] = null;
+        }
+    });
+    
+    // Performance Over Time Chart
+    try {
+        const performanceCtx = document.getElementById('performanceChart');
+        if (performanceCtx && performanceCtx.getContext) {
+            const ctx = performanceCtx.getContext('2d');
+            const performanceData = statsData.recent_performance || [];
+            
+            // Sort by date and take last 7 entries
+            const sortedData = performanceData.sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-7);
+            
+            chartInstances.performance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: sortedData.length ? sortedData.map(s => {
+                        const date = new Date(s.date);
+                        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }) : ['No Data'],
+                    datasets: [{
+                        label: 'Accuracy %',
+                        data: sortedData.length ? sortedData.map(s => s.accuracy || 0) : [0],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 55, 72, 0.9)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                },
+                                padding: 10
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                padding: 10
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Error creating performance chart:', e);
+    }
+
+    // Activity Breakdown Chart
+    try {
+        const activityCtx = document.getElementById('activityChart');
+        if (activityCtx && activityCtx.getContext) {
+            const ctx = activityCtx.getContext('2d');
+            const activityData = statsData.activity_breakdown || {};
+            const hasData = Object.keys(activityData).length > 0;
+            
+            chartInstances.activity = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: hasData ? Object.keys(activityData).map(k => k.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())) : ['No Data'],
+                    datasets: [{
+                        data: hasData ? Object.values(activityData) : [1],
+                        backgroundColor: hasData ? [
+                            '#667eea', '#10b981', '#f59e0b', '#ef4444',
+                            '#8b5cf6', '#3b82f6', '#06b6d4', '#ec4899'
+                        ] : ['#e2e8f0'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    cutout: '60%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 12 }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 55, 72, 0.9)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Error creating activity chart:', e);
+    }
+
+    // Topics Chart
+    try {
+        const topicsCtx = document.getElementById('topicsChart');
+        if (topicsCtx && topicsCtx.getContext) {
+            const ctx = topicsCtx.getContext('2d');
+            const topicsData = statsData.topic_breakdown || {};
+            const hasData = Object.keys(topicsData).length > 0;
+            
+            // Sort topics by value and take top 8
+            const sortedTopics = Object.entries(topicsData)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+            
+            chartInstances.topics = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hasData ? sortedTopics.map(([topic]) => topic) : ['No Data'],
+                    datasets: [{
+                        label: 'Questions',
+                        data: hasData ? sortedTopics.map(([, count]) => count) : [0],
+                        backgroundColor: '#667eea',
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        maxBarThickness: 60
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(45, 55, 72, 0.9)',
+                            titleFont: { size: 14 },
+                            bodyFont: { size: 13 },
+                            padding: 12,
+                            cornerRadius: 8,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                padding: 10,
+                                precision: 0
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false,
+                                drawBorder: false
+                            },
+                            ticks: {
+                                padding: 10,
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Error creating topics chart:', e);
+    }
+}
+
+// Update recent sessions list
+function updateRecentSessions(sessions) {
+    const container = document.getElementById('recent-sessions-list');
+    if (!container) return;
+    
+    if (!sessions || sessions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-chart-line"></i>
+                <p>No recent sessions found.<br>Start a quiz to see your progress!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = sessions.map(session => {
+        const accuracyClass = session.accuracy >= 80 ? 'good' : session.accuracy >= 60 ? 'average' : 'poor';
+        const date = new Date(session.date);
+        const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+        
+        return `
+            <div class="session-item">
+                <div class="session-info">
+                    <strong>${(session.activity || 'Session').charAt(0).toUpperCase() + (session.activity || 'Session').slice(1)}</strong><br>
+                    <small>${formattedDate}</small>
+                </div>
+                <div class="session-stats">
+                    <span class="accuracy ${accuracyClass}">
+                        ${Math.round(session.accuracy || 0)}%
+                    </span>
+                    <small style="color: #718096;">${session.questions || 0} Q</small>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Initialize dashboard when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAnalyticsDashboard();
+});
+
+// Track analytics dashboard view
+if (typeof trackPageView === 'function') {
+    trackPageView('analytics_dashboard');
+}
+if (typeof trackFeatureUsage === 'function') {
+    trackFeatureUsage('dashboard_viewed');
+}
+
+// Note: Auto-refresh removed to prevent layout issues
+// Manual refresh can be added with a button if needed
+
+// Manual refresh function
+function refreshAnalytics() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    const originalText = refreshBtn.innerHTML;
+    
+    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    refreshBtn.disabled = true;
+    
+    fetch('/api/user/analytics-summary')
+        .then(response => response.json())
+        .then(data => {
+            // Update key metrics
+            document.getElementById('total-questions').textContent = data.total_questions || 0;
+            document.getElementById('accuracy').textContent = (data.overall_accuracy || 0).toFixed(1) + '%';
+            document.getElementById('study-time').textContent = ((data.total_study_time || 0) / 3600).toFixed(1) + 'h';
+            document.getElementById('vm-commands').textContent = data.total_vm_commands || 0;
+            document.getElementById('study-streak').textContent = data.study_streak || 0;
+            document.getElementById('total-sessions').textContent = data.total_sessions || 0;
+            
+            // Update global stats data
+            statsData = data;
+            
+            // Reinitialize charts with new data
+            initializeCharts();
+            
+            // Update recent sessions list
+            updateRecentSessions(data.recent_performance || []);
+            
+            // Show success message
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-success';
+            toast.textContent = 'Analytics data refreshed successfully';
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                background: #10b981;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                transition: all 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        })
+        .catch(err => {
+            console.log('Manual refresh failed:', err);
+            // Show error message
+            const toast = document.createElement('div');
+            toast.className = 'toast toast-error';
+            toast.textContent = 'Failed to refresh analytics data';
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                background: #ef4444;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                transition: all 0.3s ease;
+            `;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 3000);
+        })
+        .finally(() => {
+            refreshBtn.innerHTML = originalText;
+            refreshBtn.disabled = false;
+        });
+}
+</script>
+{% endblock %}

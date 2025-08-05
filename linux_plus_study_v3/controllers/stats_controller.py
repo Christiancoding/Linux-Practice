@@ -104,14 +104,54 @@ class StatsController:
         Returns:
             dict: Progress summary containing session and total stats
         """
+        # Calculate current streak from study history
+        current_streak = self.calculate_current_streak()
+        
         return {
             'session_points': self.game_state.session_points,
             'total_points': self.game_state.achievements.get('points_earned', 0),
             'questions_answered': self.game_state.achievements.get('questions_answered', 0),
-            'current_streak': getattr(self.game_state, 'current_streak', 0),
+            'current_streak': current_streak,
             'badges': self.game_state.achievements.get('badges', []),
             'days_studied': len(self.game_state.achievements.get('days_studied', []))
         }
+    
+    def calculate_current_streak(self) -> int:
+        """Calculate current study streak from study history."""
+        try:
+            from datetime import datetime, timedelta
+            
+            days_studied = self.game_state.achievements.get('days_studied', [])
+            if not days_studied:
+                return 0
+            
+            # Sort dates in descending order
+            sorted_dates = sorted([datetime.fromisoformat(date).date() for date in days_studied], reverse=True)
+            current_date = datetime.now().date()
+            
+            # Check if user studied today or yesterday
+            if sorted_dates[0] not in [current_date, current_date - timedelta(days=1)]:
+                return 0
+            
+            # Count consecutive days
+            streak = 0
+            expected_date = current_date
+            
+            for study_date in sorted_dates:
+                if study_date == expected_date:
+                    streak += 1
+                    expected_date -= timedelta(days=1)
+                elif study_date == expected_date + timedelta(days=1):
+                    # Skip today if not studied yet, but count yesterday
+                    expected_date = study_date - timedelta(days=1)
+                    streak += 1
+                else:
+                    break
+            
+            return streak
+        except Exception as e:
+            print(f"Error calculating streak: {e}")
+            return 0
     
     def get_leaderboard_data(self) -> List[FormattedLeaderboardEntry]:
         """

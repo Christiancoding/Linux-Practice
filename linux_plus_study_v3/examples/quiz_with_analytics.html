@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux+ Study - Quiz with Analytics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Quiz Interface with Analytics Integration -->
+    <div class="quiz-container">
+        <h1>Linux+ Quiz - {{ topic|title }}</h1>
+        <div class="quiz-progress">
+            <span id="question-counter">Question 1 of 10</span>
+            <span id="score-display">Score: <span id="current-score">0</span>/10</span>
+        </div>
+        
+        <div id="quiz-content">
+            <div class="question-card">
+                <h3 id="question-text">Loading question...</h3>
+                <div class="answer-options" id="answer-options">
+                    <!-- Answer options will be loaded here -->
+                </div>
+                <div class="quiz-controls">
+                    <button id="hint-btn" onclick="showHint()">💡 Hint</button>
+                    <button id="help-btn" onclick="requestHelp()">❓ Help</button>
+                    <button id="submit-btn" onclick="submitAnswer()" disabled>Submit Answer</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Dashboard Widget -->
+        <div class="analytics-widget">
+            <h4>Your Progress</h4>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" id="total-questions">0</span>
+                    <span class="stat-label">Questions</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="accuracy">0%</span>
+                    <span class="stat-label">Accuracy</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="study-time">0m</span>
+                    <span class="stat-label">Study Time</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics Configuration -->
+    {{ analytics_js_snippet | safe }}
+    
+    <script>
+    // Quiz-specific analytics tracking
+    let currentQuestion = 1;
+    let questionStartTime = Date.now();
+    let selectedAnswer = null;
+    let correctAnswers = 0;
+    let totalQuestions = 0;
+
+    // Track quiz start
+    trackPageView('quiz_{{ topic }}');
+    trackFeatureUsage('quiz_start');
+
+    function selectAnswer(answerElement, answerId) {
+        // Clear previous selections
+        document.querySelectorAll('.answer-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Select current answer
+        answerElement.classList.add('selected');
+        selectedAnswer = answerId;
+        
+        // Enable submit button
+        document.getElementById('submit-btn').disabled = false;
+        
+        // Track answer selection
+        trackFeatureUsage('answer_selected');
+    }
+
+    function submitAnswer() {
+        if (!selectedAnswer) return;
+        
+        const timeTaken = (Date.now() - questionStartTime) / 1000;
+        
+        // Check if answer is correct (you'll need to implement this logic)
+        const isCorrect = checkAnswer(selectedAnswer);
+        
+        // Track the answer with analytics
+        trackQuizAnswer(isCorrect, timeTaken);
+        
+        // Update local stats
+        totalQuestions++;
+        if (isCorrect) {
+            correctAnswers++;
+        }
+        
+        // Update UI
+        updateProgressDisplay();
+        
+        // Move to next question or finish quiz
+        if (currentQuestion < 10) {
+            nextQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function showHint() {
+        // Track hint usage
+        trackFeatureUsage('hint_used');
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event_type: 'hint_usage',
+                hint_type: 'question_hint'
+            })
+        });
+        
+        // Show hint logic here
+        const hintDiv = document.createElement('div');
+        hintDiv.className = 'hint-display';
+        hintDiv.innerHTML = '<p>💡 Hint: Consider the Linux command structure and common options.</p>';
+        document.querySelector('.question-card').appendChild(hintDiv);
+    }
+
+    function requestHelp() {
+        // Track help request
+        trackFeatureUsage('help_requested');
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event_type: 'help_request',
+                help_type: 'question_help'
+            })
+        });
+        
+        // Show help modal or redirect to help page
+        alert('Help documentation will open in a new tab.');
+        window.open('/help/quiz-instructions', '_blank');
+    }
+
+    function nextQuestion() {
+        currentQuestion++;
+        questionStartTime = Date.now();
+        selectedAnswer = null;
+        
+        // Reset UI
+        document.getElementById('submit-btn').disabled = true;
+        document.querySelectorAll('.hint-display').forEach(el => el.remove());
+        
+        // Load next question (implement this based on your quiz logic)
+        loadQuestion(currentQuestion);
+        
+        // Track question view
+        trackFeatureUsage(`question_${currentQuestion}_viewed`);
+    }
+
+    function finishQuiz() {
+        const accuracy = (correctAnswers / totalQuestions) * 100;
+        
+        // Track quiz completion
+        trackFeatureUsage('quiz_completed');
+        
+        // Check for achievements
+        if (accuracy >= 90) {
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'achievement',
+                    achievement_id: 'quiz_excellence'
+                })
+            });
+        }
+        
+        if (correctAnswers === totalQuestions) {
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'achievement',
+                    achievement_id: 'perfect_score'
+                })
+            });
+        }
+        
+        // Redirect to results page
+        window.location.href = `/quiz/results?score=${correctAnswers}&total=${totalQuestions}&topic={{ topic }}`;
+    }
+
+    function updateProgressDisplay() {
+        document.getElementById('question-counter').textContent = `Question ${currentQuestion} of 10`;
+        document.getElementById('current-score').textContent = correctAnswers;
+        
+        // Update analytics widget
+        document.getElementById('total-questions').textContent = totalQuestions;
+        document.getElementById('accuracy').textContent = Math.round((correctAnswers / Math.max(totalQuestions, 1)) * 100) + '%';
+    }
+
+    // Load user analytics for progress display
+    fetch('/api/user/analytics-summary')
+        .then(response => response.json())
+        .then(data => {
+            if (data.total_questions) {
+                document.getElementById('total-questions').textContent = data.total_questions;
+                document.getElementById('accuracy').textContent = data.accuracy + '%';
+                document.getElementById('study-time').textContent = Math.round(data.study_time_minutes) + 'm';
+            }
+        })
+        .catch(err => console.log('Could not load analytics:', err));
+
+    // Track engagement metrics
+    let interactions = 0;
+    document.addEventListener('click', function() {
+        interactions++;
+        if (interactions % 5 === 0) {
+            trackFeatureUsage('user_interaction_5x');
+        }
+    });
+
+    // Track focus/blur for engagement analysis
+    let focusTime = Date.now();
+    window.addEventListener('focus', function() {
+        focusTime = Date.now();
+    });
+
+    window.addEventListener('blur', function() {
+        const timeSpent = (Date.now() - focusTime) / 1000;
+        if (timeSpent > 5) { // Only track if focused for more than 5 seconds
+            fetch('/api/analytics/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event_type: 'focus_time',
+                    time_spent: timeSpent
+                })
+            });
+        }
+    });
+
+    // Placeholder functions (implement based on your quiz logic)
+    function checkAnswer(answerId) {
+        // Your answer checking logic here
+        return Math.random() > 0.5; // Placeholder
+    }
+
+    function loadQuestion(questionNumber) {
+        // Your question loading logic here
+        console.log(`Loading question ${questionNumber}`);
+    }
+    </script>
+
+    <style>
+    .analytics-widget {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 16px;
+        margin: 20px 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 12px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 12px;
+        background: white;
+        border-radius: 6px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 24px;
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 4px;
+    }
+
+    .hint-display {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 4px;
+        padding: 12px;
+        margin: 12px 0;
+    }
+
+    .quiz-controls {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .quiz-controls button {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    #hint-btn, #help-btn {
+        background: #6c757d;
+        color: white;
+    }
+
+    #submit-btn {
+        background: #007bff;
+        color: white;
+        margin-left: auto;
+    }
+
+    #submit-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .answer-option {
+        padding: 12px;
+        margin: 8px 0;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .answer-option:hover {
+        border-color: #007bff;
+        background: #f8f9fa;
+    }
+
+    .answer-option.selected {
+        border-color: #007bff;
+        background: #e7f3ff;
+    }
+    </style>
+</body>
+</html>

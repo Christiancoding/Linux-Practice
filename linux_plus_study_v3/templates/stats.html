@@ -139,14 +139,14 @@
                     </div>
                     <div class="session-info">
                         <div class="session-stats">
-                            <span class="stat">20 questions</span>
+                            <span class="stat" id="session-today-questions">-- questions</span>
                             <span class="divider">•</span>
-                            <span class="stat">85% accuracy</span>
+                            <span class="stat" id="session-today-accuracy">--% accuracy</span>
                             <span class="divider">•</span>
-                            <span class="stat">12 min</span>
+                            <span class="stat" id="session-today-duration">-- min</span>
                         </div>
                         <div class="session-bar">
-                            <div class="bar-fill" style="width: 85%; background: var(--gradient-success);"></div>
+                            <div class="bar-fill" id="session-today-bar" style="width: 0%; background: var(--gradient-success);"></div>
                         </div>
                     </div>
                 </div>
@@ -157,14 +157,14 @@
                     </div>
                     <div class="session-info">
                         <div class="session-stats">
-                            <span class="stat">15 questions</span>
+                            <span class="stat" id="session-yesterday-questions">-- questions</span>
                             <span class="divider">•</span>
-                            <span class="stat">73% accuracy</span>
+                            <span class="stat" id="session-yesterday-accuracy">--% accuracy</span>
                             <span class="divider">•</span>
-                            <span class="stat">10 min</span>
+                            <span class="stat" id="session-yesterday-duration">-- min</span>
                         </div>
                         <div class="session-bar">
-                            <div class="bar-fill" style="width: 73%; background: var(--gradient-warning);"></div>
+                            <div class="bar-fill" id="session-yesterday-bar" style="width: 0%; background: var(--gradient-warning);"></div>
                         </div>
                     </div>
                 </div>
@@ -183,28 +183,28 @@
                 <div class="category-item">
                     <div class="category-info">
                         <span class="category-name">File Management</span>
-                        <span class="category-score">92%</span>
+                        <span class="category-score" id="file-mgmt-score">--%</span>
                     </div>
                     <div class="category-bar">
-                        <div class="bar-fill" style="width: 92%; background: var(--gradient-success);"></div>
+                        <div class="bar-fill" id="file-mgmt-bar" style="width: 0%; background: var(--gradient-success);"></div>
                     </div>
                 </div>
                 <div class="category-item">
                     <div class="category-info">
                         <span class="category-name">System Administration</span>
-                        <span class="category-score">87%</span>
+                        <span class="category-score" id="system-admin-score">--%</span>
                     </div>
                     <div class="category-bar">
-                        <div class="bar-fill" style="width: 87%; background: var(--gradient-success);"></div>
+                        <div class="bar-fill" id="system-admin-bar" style="width: 0%; background: var(--gradient-success);"></div>
                     </div>
                 </div>
                 <div class="category-item">
                     <div class="category-info">
                         <span class="category-name">Shell Scripting</span>
-                        <span class="category-score">78%</span>
+                        <span class="category-score" id="shell-scripting-score">--%</span>
                     </div>
                     <div class="category-bar">
-                        <div class="bar-fill" style="width: 78%; background: var(--gradient-warning);"></div>
+                        <div class="bar-fill" id="shell-scripting-bar" style="width: 0%; background: var(--gradient-warning);"></div>
                     </div>
                 </div>
             </div>
@@ -219,10 +219,10 @@
                 <div class="category-item weak">
                     <div class="category-info">
                         <span class="category-name">Networking</span>
-                        <span class="category-score">45%</span>
+                        <span class="category-score" id="networking-score">--%</span>
                     </div>
                     <div class="category-bar">
-                        <div class="bar-fill" style="width: 45%; background: var(--gradient-danger);"></div>
+                        <div class="bar-fill" id="networking-bar" style="width: 0%; background: var(--gradient-danger);"></div>
                     </div>
                     <button class="btn btn-sm btn-primary mt-2" onclick="practiceCategory('networking')">
                         Practice Now
@@ -231,10 +231,10 @@
                 <div class="category-item weak">
                     <div class="category-info">
                         <span class="category-name">Security</span>
-                        <span class="category-score">52%</span>
+                        <span class="category-score" id="security-score">--%</span>
                     </div>
                     <div class="category-bar">
-                        <div class="bar-fill" style="width: 52%; background: var(--gradient-danger);"></div>
+                        <div class="bar-fill" id="security-bar" style="width: 0%; background: var(--gradient-danger);"></div>
                     </div>
                     <button class="btn btn-sm btn-primary mt-2" onclick="practiceCategory('security')">
                         Practice Now
@@ -657,19 +657,110 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load stats data
 function loadStatsData() {
-    // In a real app, this would fetch from API
+    // Fetch real statistics from API
+    Promise.all([
+        fetch('/api/statistics').then(response => response.json()),
+        fetch('/api/dashboard').then(response => response.json())
+    ])
+    .then(([statsData, dashboardData]) => {
+        if (statsData.error || dashboardData.error) {
+            console.error('Error loading stats:', statsData.error || dashboardData.error);
+            loadDemoStatsData();
+            return;
+        }
+        
+        // Update stat values with real data
+        const totalCorrect = statsData.overall?.total_correct || 0;
+        const accuracyRate = statsData.overall?.overall_accuracy || 0;
+        const avgTime = calculateAverageTime(statsData);
+        const currentStreak = dashboardData.streak || 0;
+        
+        // Update with animation
+        animateValue('total-correct', 0, totalCorrect, 1000);
+        animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
+        animateValue('avg-time', 0, avgTime, 1000, 's');
+        animateValue('current-streak', 0, currentStreak, 1000);
+        
+        // Update charts with real data
+        updateChartsWithData(statsData);
+        
+        // Update session list
+        updateSessionList(statsData);
+    })
+    .catch(error => {
+        console.error('Error loading stats:', error);
+        loadDemoStatsData();
+    });
+}
+
+// Load demo data if API fails
+function loadDemoStatsData() {
     const stats = {
-        totalCorrect: 245,
-        accuracyRate: 78,
-        avgTime: 22,
-        currentStreak: 5
+        totalCorrect: '--',
+        accuracyRate: '--',
+        avgTime: '--',
+        currentStreak: '--'
     };
     
-    // Update stat values with animation
-    animateValue('total-correct', 0, stats.totalCorrect, 1000);
-    animateValue('accuracy-rate', 0, stats.accuracyRate, 1000, '%');
-    animateValue('avg-time', 0, stats.avgTime, 1000, 's');
-    animateValue('current-streak', 0, stats.currentStreak, 1000);
+    // Update stat values with placeholders
+    document.getElementById('total-correct').textContent = stats.totalCorrect;
+    document.getElementById('accuracy-rate').textContent = stats.accuracyRate + '%';
+    document.getElementById('avg-time').textContent = stats.avgTime + 's';
+    document.getElementById('current-streak').textContent = stats.currentStreak;
+}
+
+// Calculate average time from stats data
+function calculateAverageTime(statsData) {
+    // This would calculate from actual session data
+    // For now, return a placeholder
+    return 0;
+}
+
+// Update charts with real data
+function updateChartsWithData(statsData) {
+    // Update performance chart with real data if available
+    if (window.performanceChart && statsData.categories) {
+        const categories = statsData.categories.slice(0, 7); // Get first 7 days worth
+        const correctData = categories.map(cat => cat.correct || 0);
+        const incorrectData = categories.map(cat => (cat.attempts || 0) - (cat.correct || 0));
+        
+        window.performanceChart.data.datasets[0].data = correctData;
+        window.performanceChart.data.datasets[1].data = incorrectData;
+        window.performanceChart.update();
+    }
+    
+    // Update category chart with real data
+    if (window.categoryChart && statsData.categories) {
+        const categoryNames = statsData.categories.map(cat => cat.category);
+        const categoryData = statsData.categories.map(cat => cat.correct || 0);
+        
+        window.categoryChart.data.labels = categoryNames.slice(0, 5);
+        window.categoryChart.data.datasets[0].data = categoryData.slice(0, 5);
+        window.categoryChart.update();
+    }
+}
+
+// Update recent sessions list
+function updateSessionList(statsData) {
+    // This would update the session list with real data
+    // Implementation depends on session data structure
+    
+    // For now, update with placeholders if no data
+    if (!statsData || !statsData.sessions) {
+        document.getElementById('session-today-questions').textContent = '-- questions';
+        document.getElementById('session-today-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-today-duration').textContent = '-- min';
+        document.getElementById('session-yesterday-questions').textContent = '-- questions';
+        document.getElementById('session-yesterday-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-yesterday-duration').textContent = '-- min';
+        
+        // Update category scores
+        document.getElementById('file-mgmt-score').textContent = '--%';
+        document.getElementById('system-admin-score').textContent = '--%';
+        document.getElementById('shell-scripting-score').textContent = '--%';
+        document.getElementById('networking-score').textContent = '--%';
+        document.getElementById('security-score').textContent = '--%';
+    }
 }
 
 // Animate number changes
@@ -696,19 +787,19 @@ function animateValue(id, start, end, duration, suffix = '') {
 function initCharts() {
     // Performance Over Time Chart
     const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-    new Chart(performanceCtx, {
+    window.performanceChart = new Chart(performanceCtx, {
         type: 'line',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             datasets: [{
                 label: 'Correct',
-                data: [12, 19, 15, 25, 22, 30, 28],
+                data: [0, 0, 0, 0, 0, 0, 0],
                 borderColor: '#10b981',
                 backgroundColor: 'rgba(16, 185, 129, 0.1)',
                 tension: 0.4
             }, {
                 label: 'Incorrect',
-                data: [3, 5, 2, 8, 6, 4, 3],
+                data: [0, 0, 0, 0, 0, 0, 0],
                 borderColor: '#ef4444',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 tension: 0.4
@@ -746,12 +837,12 @@ function initCharts() {
     
     // Category Breakdown Chart
     const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(categoryCtx, {
+    window.categoryChart = new Chart(categoryCtx, {
         type: 'doughnut',
         data: {
             labels: ['File Management', 'System Admin', 'Networking', 'Security', 'Shell Scripting'],
             datasets: [{
-                data: [30, 25, 15, 10, 20],
+                data: [0, 0, 0, 0, 0],
                 backgroundColor: [
                     '#10b981',
                     '#3b82f6',
@@ -788,14 +879,14 @@ function generateHeatmap() {
         const cell = document.createElement('div');
         cell.className = 'activity-cell';
         
-        // Random activity level for demo
-        const level = Math.floor(Math.random() * 5);
+        // Set all activity level to 0
+        const level = 0;
         cell.setAttribute('data-level', level);
         
         // Add tooltip
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        cell.title = `${date.toLocaleDateString()}: ${level * 10} questions`;
+        cell.title = `${date.toLocaleDateString()}: -- questions`;
         
         heatmap.appendChild(cell);
     }

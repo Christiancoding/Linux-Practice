@@ -9,24 +9,24 @@ import threading
 import time
 import os
 import requests
-from flask import Flask, render_template, request, jsonify, send_from_directory, session, send_file, flash, redirect, url_for
-from vm_integration.utils.snapshot_manager import SnapshotManager
-from pathlib import Path
+from flask import Flask, render_template, request, jsonify
 import json
 from datetime import datetime
-import hashlib
-import time
 import logging
 import traceback
 import atexit
+import secrets
+import hashlib
 from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
-import re  # Add the missing import for regular expressions
+import re
+from urllib.parse import urlparse
 try:
     from vm_integration.utils.vm_manager import VMManager
 except ImportError:
     VMManager = None
+
 from vm_integration.utils.ssh_manager import SSHManager
 try:
     import libvirt  # type: ignore
@@ -35,7 +35,7 @@ except ImportError:
     logging.warning("libvirt-python not available. VM functionality will be limited.")
 
 # Add proper type imports
-from typing import Any, Dict, List, Optional, Union, Tuple, Set, TypeVar, Callable, Generator, cast, TypedDict, Literal, Protocol, runtime_checkable
+from typing import Any, Dict, List, Optional, Union, Tuple, Set, cast, TypedDict, Protocol, runtime_checkable, Callable
 
 try:
     from utils.database import initialize_database_pool, get_database_manager, cleanup_database_connections, DatabasePoolManager
@@ -45,7 +45,7 @@ except ImportError as e:
     from typing import TYPE_CHECKING
     if TYPE_CHECKING:
         from utils.database import DatabasePoolManager
-        from controllers.stats_controller import DetailedStatistics, FormattedLeaderboardEntry, ReviewQuestionsData
+        from controllers.stats_controller import DetailedStatistics, ReviewQuestionsData
     
     # Define fallback functions with proper type annotations
     def initialize_database_pool(db_type: str = "sqlite", enable_pooling: bool = True) -> "DatabasePoolManager":
@@ -60,14 +60,69 @@ except ImportError as e:
 
 from utils.config import get_config_value
 from werkzeug.utils import secure_filename
-import tempfile
-import mimetypes
 from typing import Any, Dict, Optional
 from utils.persistence_manager import get_persistence_manager
 
 # Define TypedDict for question object structure
 class QuestionExportDict(TypedDict):
     """Type definition for question export data structure."""
+    id: int
+    question: str
+    options: List[str]
+    correct_answer_index: int
+    correct_answer_letter: str
+    correct_answer_text: str
+    category: str
+    explanation: str
+
+# TypedDict for API request data
+class QuizStartRequestData(TypedDict, total=False):
+    """Type definition for quiz start request data."""
+    mode: str
+    category: Optional[str]
+    num_questions: Optional[int]
+
+class AnswerSubmissionData(TypedDict, total=False):
+    """Type definition for answer submission data."""
+    answer_index: int
+
+class CategoryRequestData(TypedDict, total=False):
+    """Type definition for category-based request data."""
+    category: Optional[str]
+
+class VMRequestData(TypedDict, total=False):
+    """Type definition for VM-related request data."""
+    vm_name: Optional[str]
+    snapshot_name: Optional[str]
+    description: str
+    port: int
+    name: Optional[str]
+
+class CommandRequestData(TypedDict, total=False):
+    """Type definition for command execution request data."""
+    command: str
+
+class SettingsRequestData(TypedDict):
+    """Type definition for settings request data."""
+    focusMode: bool
+    breakReminder: bool
+    debugMode: bool
+    pointsPerQuestion: int
+    streakBonus: int
+    maxStreakBonus: int
+
+class FullscreenRequestData(TypedDict, total=False):
+    """Type definition for fullscreen request data."""
+    enable: bool
+
+class RemoveFromReviewData(TypedDict, total=False):
+    """Type definition for remove from review request data."""
+    question_text: str
+
+class TTYDRequestData(TypedDict, total=False):
+    """Type definition for ttyd request data."""
+    vm_name: str
+    port: int
     id: int
     question: str
     category: str
@@ -102,14 +157,11 @@ def setup_database_for_web() -> Optional["DatabasePoolManager"]:
         db_manager = initialize_database_pool(db_type, enable_pooling)
         
         # Log pool status
-        if db_manager is not None:
-            pool_status = db_manager.get_pool_status()
-            if pool_status.get("pooling_enabled"):
-                print(f"Database pooling enabled - Pool size: {pool_status.get('pool_size', 'N/A')}")
-            else:
-                print("Database pooling disabled (SQLite or manual override)")
+        pool_status = db_manager.get_pool_status()
+        if pool_status.get("pooling_enabled"):
+            print(f"Database pooling enabled - Pool size: {pool_status.get('pool_size', 'N/A')}")
         else:
-            print("Database manager not initialized")
+            print("Database pooling disabled (SQLite or manual override)")
             
         return db_manager
     except ImportError:
@@ -129,6 +181,7 @@ class StatsControllerProtocol(Protocol):
     def clear_statistics(self) -> bool: ...
     def get_review_questions_data(self) -> "ReviewQuestionsData": ...  # Updated return type
     def remove_from_review_list(self, question_text: str) -> bool: ...
+    def cleanup_missing_review_questions(self, missing_questions: List[str]) -> int: ...
 
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
@@ -171,7 +224,7 @@ class LinuxPlusStudyWeb:
         # Initialize controllers with proper error handling
         try:
             from controllers.quiz_controller import QuizController
-            from controllers.stats_controller import StatsController, ReviewQuestionsData  # Import the type
+            from controllers.stats_controller import StatsController
             
             self.quiz_controller = QuizController(game_state)
             
@@ -181,9 +234,6 @@ class LinuxPlusStudyWeb:
                 self.quiz_controller.update_settings(settings)
             
             self.stats_controller: StatsControllerProtocol = StatsController(game_state)
-            # Runtime check is now valid since we added @runtime_checkable
-            if not isinstance(self.stats_controller, StatsControllerProtocol):
-                raise TypeError("StatsController does not implement StatsControllerProtocol")
         except ImportError as e:
             self.logger.error(f"Failed to import controllers: {e}")
             raise ImportError(f"Controller import failed: {e}")
@@ -332,8 +382,8 @@ class LinuxPlusStudyWeb:
         @app.route('/api/cli/execute', methods=['POST'])
         def execute_cli_command():
             try:
-                data = request.get_json()
-                command = data.get('command', '').strip()
+                data = cast(CommandRequestData, request.get_json() or {})
+                command: str = data.get('command', '').strip()
                 
                 if not command:
                     return jsonify({'success': False, 'error': 'No command provided'})
@@ -570,10 +620,10 @@ class LinuxPlusStudyWeb:
                     'error': 'VM Manager not available. Please check libvirt installation.'
                 })
             try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
-                description = data.get('description', '')
+                data = cast(VMRequestData, request.get_json() or {})
+                vm_name: Optional[str] = data.get('vm_name')
+                snapshot_name: Optional[str] = data.get('snapshot_name')
+                description: str = data.get('description', '')
                 
                 if not vm_name or not snapshot_name:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
@@ -613,9 +663,9 @@ class LinuxPlusStudyWeb:
                     'error': 'VM Manager not available. Please check libvirt installation.'
                 })
             try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
+                data = cast(VMRequestData, request.get_json() or {})
+                vm_name: Optional[str] = data.get('vm_name')
+                snapshot_name: Optional[str] = data.get('snapshot_name')
                 
                 if not vm_name or not snapshot_name:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
@@ -655,9 +705,9 @@ class LinuxPlusStudyWeb:
                     'error': 'VM Manager not available. Please check libvirt installation.'
                 })
             try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                snapshot_name = data.get('snapshot_name')
+                data = cast(VMRequestData, request.get_json() or {})
+                vm_name: Optional[str] = data.get('vm_name')
+                snapshot_name: Optional[str] = data.get('snapshot_name')
                 
                 if not vm_name or not snapshot_name:
                     return jsonify({'success': False, 'error': 'VM name and snapshot name are required'})
@@ -766,6 +816,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'message': f'Error exporting Q&A to Markdown: {str(e)}'
                 }), 500
+        
+        # Store reference to make it clear the route is being used
+        self.export_qa_markdown_handler = export_qa_markdown
 
         @self.app.route('/export/qa/json')
         def export_qa_json():
@@ -835,6 +888,9 @@ class LinuxPlusStudyWeb:
                     'success': False,
                     'message': f'Error exporting Q&A to JSON: {str(e)}'
                 }), 500
+        
+        # Store reference to make it clear the route is being used
+        self.export_qa_json_handler = export_qa_json
 
         @self.app.route('/import/questions', methods=['GET', 'POST'])
         def import_questions_route():
@@ -1116,7 +1172,6 @@ class LinuxPlusStudyWeb:
                     if match:
                         answer_number = int(match.group(1))
                         correct_letter = match.group(2)
-                        correct_option_text = match.group(3).strip()
                         
                         # Convert letter to index (A=0, B=1, etc.)
                         correct_index = ord(correct_letter) - ord('A')
@@ -1513,13 +1568,68 @@ class LinuxPlusStudyWeb:
         
         @self.app.route('/')
         def index():
-            return render_template('index.html')
+            # Get analytics data for server-side rendering
+            try:
+                from services.analytics_integration import get_user_analytics_summary
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics_stats = get_user_analytics_summary(user_id)
+                
+                # If anonymous user has no data, try demo user data
+                if (analytics_stats and 
+                    (analytics_stats.get('total_questions', 0) == 0 or 'error' in analytics_stats) and 
+                    user_id == 'anonymous'):
+                    demo_stats = get_user_analytics_summary('demo_user_001')
+                    if demo_stats and demo_stats.get('total_questions', 0) > 0:
+                        analytics_stats = demo_stats
+                
+                # Prepare dashboard data for template
+                if analytics_stats and 'error' not in analytics_stats and analytics_stats.get('total_questions', 0) > 0:
+                    total_questions = analytics_stats.get('total_questions', 0)
+                    overall_accuracy = analytics_stats.get('overall_accuracy', 0)
+                    total_study_time = analytics_stats.get('total_study_time', 0)
+                    study_streak = analytics_stats.get('study_streak', 0)
+                    
+                    level = max(1, (total_questions // 50) + 1)
+                    total_correct = int(total_questions * (overall_accuracy / 100)) if total_questions > 0 else 0
+                    base_xp = total_questions * 10
+                    accuracy_bonus = int((overall_accuracy / 100) * total_questions * 5)
+                    total_xp = base_xp + accuracy_bonus
+                    
+                    dashboard_stats = {
+                        'level': level,
+                        'xp': total_xp,
+                        'streak': study_streak,
+                        'total_correct': total_correct,
+                        'accuracy': overall_accuracy,
+                        'study_time': total_study_time
+                    }
+                else:
+                    # Default stats
+                    dashboard_stats = {
+                        'level': 1,
+                        'xp': 0,
+                        'streak': 0,
+                        'total_correct': 0,
+                        'accuracy': 0,
+                        'study_time': 0
+                    }
+                
+                return render_template('index.html', stats=dashboard_stats)
+            except Exception as e:
+                print(f"Error loading dashboard stats: {e}")
+                return render_template('index.html', stats={
+                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0, 'study_time': 0
+                })
         # Store reference to make it clear the route is being used
         self.index_handler = index
         
         @self.app.route('/quiz')
         def quiz_page():
-            return render_template('quiz.html')
+            from utils.game_values import get_game_value_manager
+            game_values = get_game_value_manager().get_all_config()
+            return render_template('quiz.html', game_values=game_values)
         # Store reference to make it clear the route is being used
         self.quiz_page_handler = quiz_page
 
@@ -1558,6 +1668,12 @@ class LinuxPlusStudyWeb:
             return render_template('settings.html')
         # Store reference to make it clear the route is being used
         self.settings_page_handler = settings_page
+        
+        @self.app.route('/dashboard-test')
+        def dashboard_test():
+            return render_template('dashboard_test.html')
+        # Store reference to make it clear the route is being used
+        self.dashboard_test_handler = dashboard_test
 
         @self.app.route('/api/status')
         def api_status():
@@ -1603,9 +1719,10 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/start_quiz', methods=['POST'])
         def api_start_quiz():
             try:
-                data = request.get_json()
-                quiz_mode = data.get('mode', 'standard')
-                category = data.get('category')
+                data = cast(QuizStartRequestData, request.get_json() or {})
+                quiz_mode: str = data.get('mode', 'standard')
+                category: Optional[str] = data.get('category')
+                num_questions: Optional[int] = data.get('num_questions')
                 
                 # Normalize category filter
                 category_filter = None if category == "All Categories" else category
@@ -1624,6 +1741,10 @@ class LinuxPlusStudyWeb:
                 
                 # Store category filter in web interface for consistency
                 self.current_category_filter = category_filter
+                
+                # Store number of questions if provided
+                if num_questions and quiz_mode not in ['survival', 'exam']:
+                    self.quiz_controller.custom_question_limit = num_questions
                 
                 if result.get('session_active'):
                     return jsonify({'success': True, **result})
@@ -1745,12 +1866,15 @@ class LinuxPlusStudyWeb:
                 print(f"Error acknowledging break: {e}")
                 return jsonify({'success': False, 'error': str(e)})
                 
+        # Store reference to make it clear the route is being used
+        self.api_acknowledge_break_handler = api_acknowledge_break
+                
 
         @self.app.route('/api/submit_answer', methods=['POST'])
         def api_submit_answer():
             try:
-                data = request.get_json()
-                user_answer_index = data.get('answer_index')
+                data = cast(AnswerSubmissionData, request.get_json() or {})
+                user_answer_index: Optional[int] = data.get('answer_index')
                 
                 # Validate session and question state
                 if not self.quiz_controller.quiz_active:
@@ -1885,6 +2009,141 @@ class LinuxPlusStudyWeb:
         
         # Store reference to the route function
         self.api_start_mini_quiz_handler = api_start_mini_quiz
+
+        @self.app.route('/api/start_timed_challenge', methods=['POST'])
+        def api_start_timed_challenge():
+            try:
+                data = cast(CategoryRequestData, request.get_json() or {})
+                category: Optional[str] = data.get('category')
+                category_filter: Optional[str] = None if category == "All Categories" else category
+
+                if self.quiz_controller.quiz_active:
+                    self.quiz_controller.force_end_session()
+                
+                result = self.quiz_controller.start_quiz_session(mode="timed", category_filter=category_filter)
+                self.current_quiz_mode = "timed"
+                self.current_category_filter = category_filter
+                
+                return jsonify({'success': True, **result})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_start_timed_challenge_handler = api_start_timed_challenge
+
+        @self.app.route('/api/start_survival_mode', methods=['POST'])
+        def api_start_survival_mode():
+            try:
+                data = cast(CategoryRequestData, request.get_json() or {})
+                category: Optional[str] = data.get('category')
+                category_filter: Optional[str] = None if category == "All Categories" else category
+
+                if self.quiz_controller.quiz_active:
+                    self.quiz_controller.force_end_session()
+                
+                result = self.quiz_controller.start_quiz_session(mode="survival", category_filter=category_filter)
+                self.current_quiz_mode = "survival"
+                self.current_category_filter = category_filter
+                
+                return jsonify({'success': True, **result})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_start_survival_mode_handler = api_start_survival_mode
+
+        @self.app.route('/api/start_exam_mode', methods=['POST'])
+        def api_start_exam_mode():
+            try:
+                if self.quiz_controller.quiz_active:
+                    self.quiz_controller.force_end_session()
+                
+                result = self.quiz_controller.start_quiz_session(mode="exam")
+                self.current_quiz_mode = "exam"
+                self.current_category_filter = None
+                
+                return jsonify({'success': True, **result})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_start_exam_mode_handler = api_start_exam_mode
+
+        @self.app.route('/api/start_category_focus', methods=['POST'])
+        def api_start_category_focus():
+            try:
+                data = cast(CategoryRequestData, request.get_json() or {})
+                category: Optional[str] = data.get('category')
+                
+                if not category or category == "All Categories":
+                    return jsonify({'success': False, 'error': 'Please select a specific category for Category Focus mode'})
+                
+                if self.quiz_controller.quiz_active:
+                    self.quiz_controller.force_end_session()
+                
+                result = self.quiz_controller.start_quiz_session(mode="category", category_filter=category)
+                self.current_quiz_mode = "category"
+                self.current_category_filter = category
+                
+                return jsonify({'success': True, **result})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_start_category_focus_handler = api_start_category_focus
+        
+        @self.app.route('/api/get_categories')
+        def api_get_categories():
+            """Get available question categories."""
+            try:
+                categories = sorted(list(self.game_state.question_manager.categories))
+                return jsonify({
+                    'success': True,
+                    'categories': categories
+                })
+            except Exception as e:
+                print(f"Error getting categories: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to make it clear the route is being used
+        self.api_get_categories_handler = api_get_categories
+        
+        @self.app.route('/api/get_hint', methods=['POST'])
+        def api_get_hint():
+            """Get hint for current question by eliminating wrong answers."""
+            try:
+                # Check if quiz is active and has current question
+                if not self.quiz_controller.quiz_active:
+                    return jsonify({'success': False, 'error': 'No active quiz session'})
+                
+                # Get current question from controller
+                current_question = self.quiz_controller.get_current_question()
+                if current_question is None:
+                    return jsonify({'success': False, 'error': 'No current question available'})
+                
+                question_data = current_question['question_data']
+                _, options, correct_answer_index, _, _ = question_data
+                
+                # Find all incorrect answer indices
+                incorrect_indices = [i for i in range(len(options)) if i != correct_answer_index]
+                
+                # Randomly select 2 incorrect answers to eliminate (or fewer if not enough options)
+                import random
+                eliminate_count = min(2, len(incorrect_indices))
+                eliminate_indices = random.sample(incorrect_indices, eliminate_count)
+                
+                return jsonify({
+                    'success': True,
+                    'eliminate_indices': eliminate_indices,
+                    'eliminated_count': eliminate_count
+                })
+                
+            except Exception as e:
+                print(f"Error getting hint: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to make it clear the route is being used
+        self.api_get_hint_handler = api_get_hint
         
         @self.app.route('/api/statistics')
         def api_statistics():
@@ -1896,10 +2155,127 @@ class LinuxPlusStudyWeb:
         # Store reference to the route function
         self.api_statistics_handler = api_statistics
         
+        @self.app.route('/api/dashboard')
+        def api_dashboard():
+            try:
+                # Get analytics data using the same service as analytics dashboard
+                from services.analytics_integration import get_user_analytics_summary
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics_stats = get_user_analytics_summary(user_id)
+                
+                # If anonymous user has no data, try to get demo user data
+                if (analytics_stats and 
+                    (analytics_stats.get('total_questions', 0) == 0 or 'error' in analytics_stats) and 
+                    user_id == 'anonymous'):
+                    
+                    # Try getting demo user data instead
+                    demo_stats = get_user_analytics_summary('demo_user_001')
+                    if demo_stats and demo_stats.get('total_questions', 0) > 0:
+                        analytics_stats = demo_stats
+                
+                if analytics_stats and 'error' not in analytics_stats and analytics_stats.get('total_questions', 0) > 0:
+                    # Convert analytics data to dashboard format
+                    total_questions = analytics_stats.get('total_questions', 0)
+                    overall_accuracy = analytics_stats.get('overall_accuracy', 0)
+                    total_study_time = analytics_stats.get('total_study_time', 0)  # in seconds
+                    study_streak = analytics_stats.get('study_streak', 0)
+                    total_sessions = analytics_stats.get('total_sessions', 0)
+                    
+                    # Calculate level based on questions answered (simple progression)
+                    level = max(1, (total_questions // 50) + 1)  # Level up every 50 questions
+                    level_progress = ((total_questions % 50) / 50) * 100  # Progress within current level
+                    
+                    # XP calculation (questions answered + bonus for accuracy)
+                    base_xp = total_questions * 10  # 10 XP per question
+                    accuracy_bonus = int((overall_accuracy / 100) * total_questions * 5)  # 5 bonus XP per question at 100% accuracy
+                    total_xp = base_xp + accuracy_bonus
+                    
+                    dashboard_data = {
+                        'level': level,
+                        'xp': total_xp,
+                        'level_progress': level_progress,
+                        'streak': study_streak,
+                        'total_correct': int(total_questions * (overall_accuracy / 100)) if total_questions > 0 else 0,
+                        'accuracy': overall_accuracy,
+                        'study_time': total_study_time,  # in seconds
+                        'session_points': total_xp,  # Use total XP as session points
+                        'total_points': total_xp,
+                        'questions_answered': total_questions,
+                        'days_studied': study_streak,  # Use streak as days studied
+                        'badges_earned': min(10, level - 1),  # Simple badge calculation
+                        'total_sessions': total_sessions
+                    }
+                else:
+                    # Fallback to basic stats if analytics fails
+                    stats = self.game_state.get_statistics_summary()
+                    level_info = self.game_state.achievement_system.get_level_progress()
+                    current_streak = 0  # Default streak
+                    
+                    dashboard_data = {
+                        'level': level_info['level'],
+                        'xp': level_info['total_xp'],
+                        'level_progress': level_info['progress_percentage'],
+                        'streak': current_streak,
+                        'total_correct': stats['history'].get('total_correct', 0),
+                        'accuracy': stats['history'].get('overall_accuracy', 0),
+                        'study_time': stats['history'].get('total_study_time', 0),
+                        'session_points': stats['session']['current_session_points'],
+                        'total_points': stats['achievements']['total_points'],
+                        'questions_answered': stats['achievements']['questions_answered'],
+                        'days_studied': stats['achievements']['days_studied'],
+                        'badges_earned': stats['achievements']['badges_earned']
+                    }
+                
+                return jsonify(dashboard_data)
+            except Exception as e:
+                return jsonify({'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_dashboard_handler = api_dashboard
+        
         @self.app.route('/api/achievements')
         def api_achievements():
             try:
-                return jsonify(self.stats_controller.get_achievements_data())
+                achievements_data = self.stats_controller.get_achievements_data()
+                level_info = self.game_state.achievement_system.get_level_progress()
+                
+                # Get detailed statistics for accuracy and question count
+                try:
+                    detailed_stats = self.stats_controller.get_detailed_statistics()
+                    accuracy = detailed_stats['overall']['overall_accuracy']
+                    # Get questions answered from achievements data or game state
+                    questions_answered = self.game_state.achievements.get('questions_answered', 0)
+                except Exception:
+                    accuracy = 0.0  # Fallback if no stats available
+                    questions_answered = 0
+                
+                # Safely get list lengths
+                unlocked_list = achievements_data.get('unlocked', [])
+                available_list = achievements_data.get('available', [])
+                
+                unlocked_count = len(unlocked_list) if isinstance(unlocked_list, list) else 0
+                available_count = len(available_list) if isinstance(available_list, list) else 0
+                total_achievements = unlocked_count + available_count
+                
+                # Add level and stats information to achievements data
+                achievements_data['stats'] = {
+                    'unlocked': unlocked_count,
+                    'total': total_achievements,
+                    'points': achievements_data.get('total_points', 0),
+                    'completion': round((unlocked_count / max(1, total_achievements)) * 100, 1),
+                    'rarest': 'None',  # Could be implemented later
+                    'level': level_info['level'],
+                    'xp': level_info['total_xp'],
+                    'level_progress': level_info['progress_percentage'],
+                    'accuracy': accuracy
+                }
+                
+                # Add questions answered for progress calculations
+                achievements_data['questions_answered'] = questions_answered
+                
+                return jsonify(achievements_data)
             except Exception as e:
                 return jsonify({'error': str(e)})
         
@@ -1934,7 +2310,7 @@ class LinuxPlusStudyWeb:
                 
                 # Auto-cleanup missing questions if any are found
                 if review_data.get('missing_questions'):
-                    removed_count = self.stats_controller.cleanup_missing_review_questions(
+                    removed_count: int = self.stats_controller.cleanup_missing_review_questions(
                         review_data['missing_questions']
                     )
                     if removed_count > 0:
@@ -1958,8 +2334,8 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/remove_from_review', methods=['POST'])
         def api_remove_from_review():
             try:
-                data = request.get_json()
-                question_text = data.get('question_text')
+                data = cast(RemoveFromReviewData, request.get_json() or {})
+                question_text: Optional[str] = data.get('question_text')
                 if not question_text:
                     return jsonify({'success': False, 'error': 'No question text provided'})
                 
@@ -1978,7 +2354,7 @@ class LinuxPlusStudyWeb:
                 review_data = self.stats_controller.get_review_questions_data()
                 
                 if review_data.get('missing_questions'):
-                    removed_count = self.stats_controller.cleanup_missing_review_questions(
+                    removed_count: int = self.stats_controller.cleanup_missing_review_questions(
                         review_data['missing_questions']
                     )
                     # Save the cleanup changes
@@ -2050,7 +2426,7 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/save_settings', methods=['POST'])
         def api_save_settings():
             try:
-                data = request.get_json()
+                data = cast(SettingsRequestData, request.get_json() or {})
                 if not data:
                     return jsonify({'success': False, 'error': 'No data provided'})
                 
@@ -2066,10 +2442,10 @@ class LinuxPlusStudyWeb:
                 
                 # Save using persistence manager
                 persistence_manager = get_persistence_manager()
-                persistence_manager.save_settings(data)
+                persistence_manager.save_settings(cast(Dict[str, Any], data))
                 
                 # Apply settings to controllers and game state
-                success = self._apply_settings_to_game_state(data)
+                success = self._apply_settings_to_game_state(cast(Dict[str, Any], data))
                 if not success:
                     return jsonify({'success': False, 'error': 'Failed to apply settings to game state'})
                 
@@ -2081,11 +2457,61 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_save_settings_handler = api_save_settings
 
+        @self.app.route('/api/load_game_values')
+        def api_load_game_values():
+            """Load game values configuration."""
+            try:
+                from utils.game_values import get_game_value_manager
+                manager = get_game_value_manager()
+                values = manager.get_all_config()
+                return jsonify({'success': True, 'values': values})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        self.api_load_game_values_handler = api_load_game_values
+        
+        @self.app.route('/api/save_game_values', methods=['POST'])
+        def api_save_game_values():
+            """Save game values configuration."""
+            try:
+                from utils.game_values import get_game_value_manager
+                data = cast(Dict[str, Any], request.get_json() or {})
+                if not data:
+                    return jsonify({'success': False, 'error': 'No data provided'})
+                
+                manager = get_game_value_manager()
+                success = manager.update_settings(**data)
+                
+                if success:
+                    return jsonify({'success': True})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to save game values'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        self.api_save_game_values_handler = api_save_game_values
+        
+        @self.app.route('/api/reset_game_values', methods=['POST'])
+        def api_reset_game_values():
+            """Reset game values to defaults."""
+            try:
+                from utils.game_values import get_game_value_manager
+                manager = get_game_value_manager()
+                success = manager.reset_to_defaults()
+                
+                if success:
+                    return jsonify({'success': True})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to reset game values'})
+                
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        self.api_reset_game_values_handler = api_reset_game_values
+
         @self.app.route('/api/set_fullscreen', methods=['POST'])
         def api_set_fullscreen():
             try:
-                data = request.get_json()
-                enable = data.get('enable', True)
+                data = cast(FullscreenRequestData, request.get_json() or {})
+                enable: bool = data.get('enable', True)
                 result = self.toggle_fullscreen(enable)
                 return jsonify(result)
             except Exception as e:
@@ -2189,9 +2615,9 @@ class LinuxPlusStudyWeb:
                     'error': 'VM Manager not available. Please check libvirt installation.'
                 })
             try:
-                data = request.get_json() or {}
-                vm_name = data.get('vm_name', 'ubuntu-practice')  # Default VM name
-                port = data.get('port', 7682)  # Default ttyd port
+                data = cast(TTYDRequestData, request.get_json() or {})
+                vm_name: str = data.get('vm_name', 'ubuntu-practice')  # Default VM name
+                port: int = data.get('port', 7682)  # Default ttyd port
                 
                 # Detect OS type from VM name
                 vm_name_lower = vm_name.lower()
@@ -2454,7 +2880,7 @@ class LinuxPlusStudyWeb:
                     # Save VM metadata if notes provided
                     if notes:
                         try:
-                            vm_metadata = {
+                            vm_metadata: Dict[str, Any] = {
                                 'name': vm_name,
                                 'template': template,
                                 'notes': notes,
@@ -2464,7 +2890,6 @@ class LinuxPlusStudyWeb:
                                 'disk_gb': disk_gb
                             }
                             # Save metadata to file or database
-                            import json
                             metadata_file = f'/var/lib/vms/metadata/{vm_name}.json'
                             os.makedirs(os.path.dirname(metadata_file), exist_ok=True)
                             with open(metadata_file, 'w') as f:
@@ -2895,7 +3320,7 @@ class LinuxPlusStudyWeb:
                 vm_manager = VMManager()
                 domain = vm_manager.find_vm(vm_name)
                 
-                is_active = bool(domain.isActive())
+                is_active = bool(cast(int, domain.isActive()))
                 status_info: Dict[str, Any] = {
                     'name': vm_name,
                     'status': 'running' if is_active else 'stopped',
@@ -2935,30 +3360,50 @@ class LinuxPlusStudyWeb:
                 vm_manager = VMManager()
                 domain = vm_manager.find_vm(vm_name)
                 
-                is_active = bool(domain.isActive())
+                is_active = bool(cast(int, domain.isActive()))
                 
                 # Get VM info
-                info = domain.info()
+                info = cast(Any, domain.info())
                 
                 # Format memory more intelligently
-                def format_memory(memory_kb):
+                def format_memory(memory_kb: int) -> str:
                     """Format memory from KB to human readable format"""
                     if not memory_kb:
                         return 'Unknown'
                     
-                    memory_mb = memory_kb // 1024
+                    memory_mb: int = memory_kb // 1024
                     if memory_mb >= 1024:
-                        memory_gb = memory_mb / 1024
+                        memory_gb: float = memory_mb / 1024
                         return f"{memory_gb:.1f} GB"
                     else:
                         return f"{memory_mb} MB"
                 
-                vm_details = {
+                # Safely extract memory and CPU info
+                memory_info = 'Unknown'
+                cpu_info = 'Unknown'
+                
+                try:
+                    if info:
+                        info_list = cast(List[Any], info)
+                        if len(info_list) > 1:
+                            memory_info = format_memory(int(info_list[1]))
+                except (TypeError, IndexError, ValueError):
+                    memory_info = 'Unknown'
+                    
+                try:
+                    if info:
+                        info_list = cast(List[Any], info)
+                        if len(info_list) > 3:
+                            cpu_info = str(int(info_list[3]))
+                except (TypeError, IndexError, ValueError):
+                    cpu_info = 'Unknown'
+
+                vm_details: Dict[str, Any] = {
                     'name': vm_name,
                     'status': 'running' if is_active else 'stopped',
                     'id': domain.ID() if is_active else None,
-                    'memory': format_memory(info[1]) if info else 'Unknown',
-                    'cpu': str(info[3]) if info else 'Unknown',
+                    'memory': memory_info,
+                    'cpu': cpu_info,
                     'ip': None
                 }
                 
@@ -2979,11 +3424,8 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_vm_details_handler = api_vm_details
 
-    def _handle_iso_download(self, template, custom_iso_url=None):
+    def _handle_iso_download(self, template: Dict[str, Any], custom_iso_url: Optional[str] = None) -> Optional[str]:
         """Handle ISO file download for VM creation."""
-        import os
-        import requests
-        from urllib.parse import urlparse
         
         # Load settings to get ISO URLs and download path
         settings = self._load_web_settings()
@@ -2997,14 +3439,18 @@ class LinuxPlusStudyWeb:
         iso_urls = iso_settings.get('urls', {})
         
         # Determine the ISO URL
+        iso_url: str
+        filename: str
+        
         if custom_iso_url:
             iso_url = custom_iso_url
             filename = os.path.basename(urlparse(iso_url).path) or 'custom.iso'
         else:
-            iso_url = iso_urls.get(template)
+            template_name = template.get('name', 'default')
+            iso_url = iso_urls.get(template_name)
             if not iso_url:
                 return None
-            filename = f"{template}.iso"
+            filename = f"{template_name}.iso"
         
         # Create download directory
         os.makedirs(download_path, exist_ok=True)
@@ -3054,7 +3500,7 @@ class LinuxPlusStudyWeb:
                         'space_freed': '0 MB'
                     })
                 
-                removed_count = 0
+                removed_count: int = 0
                 space_freed = 0
                 
                 # Get list of ISO files

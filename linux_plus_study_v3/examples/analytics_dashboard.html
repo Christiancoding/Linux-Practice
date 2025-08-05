@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux+ Study Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>📊 Your Learning Analytics</h1>
+            <p>Track your progress and improve your Linux+ certification journey</p>
+        </header>
+
+        <!-- Key Metrics Cards -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">🎯</div>
+                <div class="metric-content">
+                    <h3 id="total-questions">{{ stats.total_questions or 0 }}</h3>
+                    <p>Questions Answered</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">✅</div>
+                <div class="metric-content">
+                    <h3 id="accuracy">{{ "%.1f"|format(stats.accuracy or 0) }}%</h3>
+                    <p>Overall Accuracy</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">⏱️</div>
+                <div class="metric-content">
+                    <h3 id="study-time">{{ "%.1f"|format(stats.study_time_minutes or 0) }}h</h3>
+                    <p>Total Study Time</p>
+                </div>
+            </div>
+            
+            <div class="metric-card">
+                <div class="metric-icon">🏆</div>
+                <div class="metric-content">
+                    <h3 id="achievements">{{ stats.achievements or 0 }}</h3>
+                    <p>Achievements</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="chart-row">
+                <!-- Performance Over Time -->
+                <div class="chart-container">
+                    <h3>📈 Performance Over Time</h3>
+                    <canvas id="performanceChart"></canvas>
+                </div>
+                
+                <!-- Topic Breakdown -->
+                <div class="chart-container">
+                    <h3>📚 Study Topics</h3>
+                    <canvas id="topicsChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-row">
+                <!-- Activity Breakdown -->
+                <div class="chart-container">
+                    <h3>🎮 Activity Breakdown</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+                
+                <!-- VM Usage Stats -->
+                <div class="chart-container">
+                    <h3>💻 VM Lab Usage</h3>
+                    <canvas id="vmChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Stats Tables -->
+        <div class="details-section">
+            <div class="details-grid">
+                <!-- Recent Sessions -->
+                <div class="details-card">
+                    <h3>🕒 Recent Sessions</h3>
+                    <div class="sessions-list" id="recent-sessions">
+                        {% if stats.recent_performance %}
+                            {% for session in stats.recent_performance %}
+                            <div class="session-item">
+                                <div class="session-info">
+                                    <strong>{{ session.activity|title }}</strong>
+                                    <span class="session-date">{{ session.date[:10] }}</span>
+                                </div>
+                                <div class="session-stats">
+                                    <span class="accuracy {{ 'good' if session.accuracy >= 80 else 'average' if session.accuracy >= 60 else 'poor' }}">
+                                        {{ "%.0f"|format(session.accuracy) }}%
+                                    </span>
+                                    <span class="questions">{{ session.questions }} Q</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="no-data">No recent sessions found.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Learning Insights -->
+                <div class="details-card">
+                    <h3>💡 Learning Insights</h3>
+                    <div id="insights-content">
+                        <div class="insight-item strength">
+                            <h4>🌟 Strengths</h4>
+                            <ul id="strengths-list">
+                                <!-- Will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                        
+                        <div class="insight-item improvement">
+                            <h4>📈 Areas for Improvement</h4>
+                            <ul id="improvements-list">
+                                <!-- Will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                        
+                        <div class="insight-item recommendations">
+                            <h4>🎯 Recommendations</h4>
+                            <ul id="recommendations-list">
+                                <!-- Will be populated by JavaScript -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals and Progress -->
+        <div class="goals-section">
+            <h3>🎯 Learning Goals</h3>
+            <div class="goals-grid">
+                <div class="goal-card">
+                    <h4>Quiz Mastery</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ stats.accuracy or 0 }}%"></div>
+                    </div>
+                    <p>{{ "%.0f"|format(stats.accuracy or 0) }}% / 85% Target</p>
+                </div>
+                
+                <div class="goal-card">
+                    <h4>Study Consistency</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (stats.study_time_minutes or 0) / 30 * 100 if (stats.study_time_minutes or 0) < 30 else 100 }}%"></div>
+                    </div>
+                    <p>{{ "%.0f"|format(stats.study_time_minutes or 0) }}h / 30h Target</p>
+                </div>
+                
+                <div class="goal-card">
+                    <h4>Hands-on Practice</h4>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: {{ (stats.vm_commands or 0) / 500 * 100 if (stats.vm_commands or 0) < 500 else 100 }}%"></div>
+                    </div>
+                    <p>{{ stats.vm_commands or 0 }} / 500 Commands Target</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ analytics_js_snippet | safe }}
+
+    <script>
+    // Initialize charts with data
+    const statsData = {{ stats | tojson | safe }};
+
+    // Performance Over Time Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: statsData.recent_performance ? statsData.recent_performance.map(s => s.date.split('T')[0]).reverse() : [],
+            datasets: [{
+                label: 'Accuracy %',
+                data: statsData.recent_performance ? statsData.recent_performance.map(s => s.accuracy).reverse() : [],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Topics Breakdown Chart
+    const topicsCtx = document.getElementById('topicsChart').getContext('2d');
+    const topicsData = statsData.topic_breakdown || {};
+    new Chart(topicsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(topicsData),
+            datasets: [{
+                data: Object.values(topicsData),
+                backgroundColor: [
+                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
+                    '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Activity Breakdown Chart
+    const activityCtx = document.getElementById('activityChart').getContext('2d');
+    const activityData = statsData.activity_breakdown || {};
+    new Chart(activityCtx, {
+        type: 'bar',
+        data: {
+            labels: Object.keys(activityData).map(k => k.replace('_', ' ').toUpperCase()),
+            datasets: [{
+                label: 'Sessions',
+                data: Object.values(activityData),
+                backgroundColor: '#007bff',
+                borderColor: '#0056b3',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // VM Usage Chart
+    const vmCtx = document.getElementById('vmChart').getContext('2d');
+    new Chart(vmCtx, {
+        type: 'radar',
+        data: {
+            labels: ['Commands Executed', 'Lab Exercises', 'Session Time', 'Success Rate', 'Engagement'],
+            datasets: [{
+                label: 'VM Performance',
+                data: [
+                    Math.min((statsData.vm_commands || 0) / 10, 100),
+                    Math.min((statsData.lab_exercises_completed || 0) * 10, 100),
+                    Math.min((statsData.vm_uptime || 0) / 60, 100),
+                    statsData.lab_success_rate || 0,
+                    Math.min((statsData.vm_sessions_started || 0) * 20, 100)
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: '#36A2EB',
+                pointBackgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    // Load and display learning insights
+    fetch('/api/user/learning-insights')
+        .then(response => response.json())
+        .then(insights => {
+            // Populate strengths
+            const strengthsList = document.getElementById('strengths-list');
+            insights.strengths?.forEach(strength => {
+                const li = document.createElement('li');
+                li.textContent = strength;
+                strengthsList.appendChild(li);
+            });
+
+            // Populate improvements
+            const improvementsList = document.getElementById('improvements-list');
+            insights.areas_for_improvement?.forEach(improvement => {
+                const li = document.createElement('li');
+                li.textContent = improvement;
+                improvementsList.appendChild(li);
+            });
+
+            // Populate recommendations
+            const recommendationsList = document.getElementById('recommendations-list');
+            insights.recommendations?.forEach(recommendation => {
+                const li = document.createElement('li');
+                li.textContent = recommendation;
+                recommendationsList.appendChild(li);
+            });
+        })
+        .catch(err => {
+            console.log('Could not load learning insights:', err);
+            // Show default insights
+            document.getElementById('insights-content').innerHTML = 
+                '<p class="no-data">Complete more quizzes to get personalized insights!</p>';
+        });
+
+    // Track dashboard page view
+    trackPageView('analytics_dashboard');
+    trackFeatureUsage('dashboard_viewed');
+
+    // Auto-refresh data every 30 seconds
+    setInterval(() => {
+        fetch('/api/user/analytics-summary')
+            .then(response => response.json())
+            .then(data => {
+                // Update key metrics
+                document.getElementById('total-questions').textContent = data.total_questions || 0;
+                document.getElementById('accuracy').textContent = (data.accuracy || 0).toFixed(1) + '%';
+                document.getElementById('study-time').textContent = ((data.study_time_minutes || 0) / 60).toFixed(1) + 'h';
+                document.getElementById('achievements').textContent = data.achievements || 0;
+            })
+            .catch(err => console.log('Auto-refresh failed:', err));
+    }, 30000);
+    </script>
+
+    <style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    .dashboard-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .dashboard-header h1 {
+        color: #2c3e50;
+        margin-bottom: 8px;
+    }
+
+    .dashboard-header p {
+        color: #7f8c8d;
+        font-size: 16px;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .metric-icon {
+        font-size: 32px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .metric-content h3 {
+        font-size: 28px;
+        font-weight: bold;
+        color: #2c3e50;
+        margin: 0;
+    }
+
+    .metric-content p {
+        color: #7f8c8d;
+        margin: 4px 0 0 0;
+        font-size: 14px;
+    }
+
+    .charts-section {
+        margin-bottom: 30px;
+    }
+
+    .chart-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .chart-container {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-container h3 {
+        color: #2c3e50;
+        margin-bottom: 16px;
+        font-size: 18px;
+    }
+
+    .details-section {
+        margin-bottom: 30px;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .details-card {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .details-card h3 {
+        color: #2c3e50;
+        margin-bottom: 16px;
+        font-size: 18px;
+    }
+
+    .session-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #ecf0f1;
+    }
+
+    .session-item:last-child {
+        border-bottom: none;
+    }
+
+    .session-info strong {
+        display: block;
+        color: #2c3e50;
+    }
+
+    .session-date {
+        font-size: 12px;
+        color: #7f8c8d;
+    }
+
+    .session-stats {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .accuracy {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .accuracy.good { background: #d4edda; color: #155724; }
+    .accuracy.average { background: #fff3cd; color: #856404; }
+    .accuracy.poor { background: #f8d7da; color: #721c24; }
+
+    .questions {
+        font-size: 12px;
+        color: #7f8c8d;
+    }
+
+    .insight-item {
+        margin-bottom: 20px;
+    }
+
+    .insight-item h4 {
+        color: #2c3e50;
+        margin-bottom: 8px;
+        font-size: 16px;
+    }
+
+    .insight-item ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .insight-item li {
+        color: #5d6d7e;
+        margin-bottom: 4px;
+    }
+
+    .goals-section {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .goals-section h3 {
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    .goals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .goal-card {
+        padding: 20px;
+        border: 1px solid #ecf0f1;
+        border-radius: 8px;
+    }
+
+    .goal-card h4 {
+        color: #2c3e50;
+        margin-bottom: 12px;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #ecf0f1;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        transition: width 0.3s ease;
+    }
+
+    .goal-card p {
+        color: #7f8c8d;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .no-data {
+        color: #7f8c8d;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .chart-row, .details-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .metrics-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    </style>
+</body>
+</html>

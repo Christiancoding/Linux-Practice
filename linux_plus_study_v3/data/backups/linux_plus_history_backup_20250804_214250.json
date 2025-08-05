@@ -1,0 +1,48 @@
+{
+  "sessions": [],
+  "questions": {
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:40:36.472296",
+          "correct": true
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    }
+  },
+  "total_correct": 1,
+  "total_attempts": 1,
+  "incorrect_review": [],
+  "leaderboard": [],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

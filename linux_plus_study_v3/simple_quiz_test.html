@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Quiz Test</title>
+    <style>
+        .mode-card { 
+            border: 1px solid #ccc; 
+            padding: 20px; 
+            margin: 10px; 
+            cursor: pointer; 
+            background: white;
+        }
+        .mode-card.selected { 
+            background: lightblue; 
+            border-color: blue; 
+        }
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+        }
+        #result { 
+            margin: 20px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            background: #f9f9f9; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Simple Quiz Button Test</h1>
+    
+    <div class="mode-card" onclick="selectMode('standard')">
+        <h3>Standard Mode</h3>
+        <p>Click to select</p>
+    </div>
+    
+    <div class="mode-card" onclick="selectMode('timed')">
+        <h3>Timed Mode</h3>
+        <p>Click to select</p>
+    </div>
+    
+    <select id="quiz-category">
+        <option value="All Categories">All Categories</option>
+    </select>
+    
+    <select id="num-questions">
+        <option value="20">20 Questions</option>
+    </select>
+    
+    <button onclick="startQuiz()">Start Quiz</button>
+    
+    <div id="result">Ready to test...</div>
+    
+    <script>
+        let quizState = { mode: null };
+        
+        function selectMode(mode) {
+            console.log('selectMode called with:', mode);
+            
+            // Clear previous selections
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Select current mode
+            event.target.closest('.mode-card').classList.add('selected');
+            quizState.mode = mode;
+            
+            document.getElementById('result').innerHTML = 'Selected mode: ' + mode;
+        }
+        
+        function startQuiz() {
+            console.log('startQuiz called');
+            
+            if (!quizState.mode) {
+                alert('Please select a mode first');
+                return;
+            }
+            
+            const category = document.getElementById('quiz-category').value;
+            const numQuestions = document.getElementById('num-questions').value;
+            
+            const data = {
+                mode: quizState.mode,
+                category: category,
+                num_questions: parseInt(numQuestions)
+            };
+            
+            document.getElementById('result').innerHTML = 'Would start quiz with: ' + JSON.stringify(data);
+            console.log('Quiz data:', data);
+        }
+    </script>
+</body>
+</html>

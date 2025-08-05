@@ -11,6 +11,7 @@ import hashlib
 from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
+from utils.game_values import get_game_value_manager
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -62,12 +63,33 @@ class QuizController:
         # Last question cache
         self.last_question: Optional[Dict[str, Any]] = None
         
-        # Initialize scoring settings with defaults
-        self.points_per_question: int = 10
-        self.points_per_incorrect: int = 0
-        self.streak_bonus: int = 5
-        self.max_streak_bonus: int = 50
+        # Custom question limit for web interface
+        self.custom_question_limit: Optional[int] = None
+        
+        # Initialize scoring settings from game values
+        game_values = get_game_value_manager()
+        self.points_per_question: int = game_values.get_value('scoring', 'points_per_correct', 10)
+        self.points_per_incorrect: int = game_values.get_value('scoring', 'points_per_incorrect', 0)
+        self.streak_bonus: int = game_values.get_value('scoring', 'streak_bonus', 5)
+        self.max_streak_bonus: int = game_values.get_value('scoring', 'max_streak_bonus', 50)
+        self.hint_penalty: int = game_values.get_value('scoring', 'hint_penalty', 5)
+        self.speed_bonus: int = game_values.get_value('scoring', 'speed_bonus', 5)
         self.debug_mode: bool = False
+        
+        # Timed mode attributes
+        self.timed_mode_active = False
+        self.timed_mode_start_time: Optional[float] = None
+        self.time_per_question = TIMED_CHALLENGE_TIME_PER_QUESTION
+        self.current_question_start_time: Optional[float] = None
+        
+        # Survival mode attributes
+        self.survival_mode_active = False
+        self.survival_lives = SURVIVAL_MODE_LIVES
+        self.survival_high_score = 0
+        
+        # Exam mode attributes
+        self.exam_mode_active = False
+        self.exam_start_time: Optional[float] = None
 
     def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
@@ -97,7 +119,7 @@ class QuizController:
         Start a new quiz session.
         
         Args:
-            mode (str): Quiz mode (standard, verify, quick_fire, etc.)
+            mode (str): Quiz mode (standard, verify, quick_fire, timed, survival, category, exam)
             category_filter (str): Category to filter questions by
             
         Returns:
@@ -115,12 +137,30 @@ class QuizController:
         # Reset session-specific counters in game state
         self.game_state.reset_session()
         
+        # Reset mode-specific flags
+        self.quick_fire_active = False
+        self.timed_mode_active = False
+        self.survival_mode_active = False
+        self.exam_mode_active = False
+        
         # Handle special modes
         if mode == "quick_fire":
             self.start_quick_fire_mode()
             total_questions = QUICK_FIRE_QUESTIONS
         elif mode == "mini_quiz":
             total_questions = min(MINI_QUIZ_QUESTIONS, self._get_available_questions_count(category_filter))
+        elif mode == QUIZ_MODE_TIMED:
+            self.start_timed_mode()
+            total_questions = TIMED_CHALLENGE_QUESTIONS
+        elif mode == QUIZ_MODE_SURVIVAL:
+            self.start_survival_mode()
+            total_questions = float('inf')  # Unlimited questions until death
+        elif mode == QUIZ_MODE_EXAM:
+            self.start_exam_mode()
+            total_questions = EXAM_MODE_QUESTIONS
+        elif mode == QUIZ_MODE_CATEGORY_FOCUS:
+            # Category focus mode - use all questions from selected category
+            total_questions = self._get_available_questions_count(category_filter)
         else:
             total_questions = self._get_available_questions_count(category_filter)
         
@@ -136,7 +176,12 @@ class QuizController:
             'category_filter': category_filter,
             'total_questions': total_questions,
             'session_active': True,
-            'quick_fire_active': self.quick_fire_active
+            'quick_fire_active': self.quick_fire_active,
+            'timed_mode_active': self.timed_mode_active,
+            'survival_mode_active': self.survival_mode_active,
+            'exam_mode_active': self.exam_mode_active,
+            'survival_lives': getattr(self, 'survival_lives', SURVIVAL_MODE_LIVES) if mode == QUIZ_MODE_SURVIVAL else None,
+            'time_per_question': self.time_per_question if mode == QUIZ_MODE_TIMED else None
         }
     
     def get_next_question(self, category_filter: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -171,17 +216,30 @@ class QuizController:
         if question_data is not None:
             quick_fire_remaining = self._get_quick_fire_remaining() if self.quick_fire_active else None
             
+            # Start timer for timed mode questions
+            if self.timed_mode_active:
+                self.current_question_start_time = time.time()
+            
             # Determine total questions for progress display
             total_questions = None
             if self.current_quiz_mode == "mini_quiz":
                 total_questions = MINI_QUIZ_QUESTIONS
             elif self.current_quiz_mode == "quick_fire":
                 total_questions = QUICK_FIRE_QUESTIONS
+            elif self.current_quiz_mode == QUIZ_MODE_TIMED:
+                total_questions = TIMED_CHALLENGE_QUESTIONS
+            elif self.current_quiz_mode == QUIZ_MODE_EXAM:
+                total_questions = EXAM_MODE_QUESTIONS
+            elif self.current_quiz_mode == QUIZ_MODE_SURVIVAL:
+                total_questions = None  # Unlimited until death
             elif self.current_quiz_mode in ["daily_challenge", "pop_quiz"]:
                 total_questions = 1
             else:
-                # For standard quiz and category quizzes, show total available questions
-                total_questions = self._get_available_questions_count(self.category_filter)
+                # For standard quiz and category quizzes, use custom limit if set, otherwise show total available
+                if self.custom_question_limit:
+                    total_questions = self.custom_question_limit
+                else:
+                    total_questions = self._get_available_questions_count(self.category_filter)
             
             result: Dict[str, Any] = {
                 'question_data': question_data,
@@ -189,7 +247,12 @@ class QuizController:
                 'question_number': self.session_total + 1,
                 'total_questions': total_questions,
                 'streak': self.current_streak,
-                'quick_fire_remaining': quick_fire_remaining
+                'quick_fire_remaining': quick_fire_remaining,
+                'timed_mode_active': self.timed_mode_active,
+                'time_per_question': self.time_per_question if self.timed_mode_active else None,
+                'survival_mode_active': self.survival_mode_active,
+                'survival_lives': getattr(self, 'survival_lives', SURVIVAL_MODE_LIVES) if self.survival_mode_active else None,
+                'exam_mode_active': self.exam_mode_active
             }
             # Cache the current question
             self.cache_current_question(result)
@@ -277,13 +340,13 @@ class QuizController:
             return {'valid': False, 'reason': 'Invalid quiz mode'}
         
         return {'valid': True}
-    def submit_answer(self, question_data: tuple[str, list[str], int, str, str], user_answer_index: int, original_index: int) -> dict[str, Any]:
+    def submit_answer(self, question_data: tuple[str, list[str], int, str, str], user_answer_index: Optional[int], original_index: int) -> dict[str, Any]:
         """
         Process a submitted answer.
         
         Args:
             question_data (tuple): Question data tuple
-            user_answer_index (int): User's selected answer index
+            user_answer_index (int, optional): User's selected answer index (None for timeout)
             original_index (int): Original question index in the question pool
             
         Returns:
@@ -293,14 +356,28 @@ class QuizController:
             return {'error': 'Invalid quiz state or question data'}
         
         _, options, correct_answer_index, category, explanation = question_data
-        is_correct = (user_answer_index == correct_answer_index)
         
-        # Update streak
+        # Handle timeout case (no answer selected)
+        if user_answer_index is None:
+            is_correct = False
+            user_answer_index = -1  # Use -1 to indicate timeout/no answer
+        else:
+            is_correct = (user_answer_index == correct_answer_index)
+        
+        # Update streak and handle survival mode
         if is_correct:
             self.current_streak += 1
             self.session_score += 1
+            print(f"DEBUG: Correct answer - session_score: {self.session_score}, session_total: {self.session_total + 1}")
         else:
             self.current_streak = 0
+            print(f"DEBUG: Incorrect answer - session_score: {self.session_score}, session_total: {self.session_total + 1}")
+            # Handle survival mode - lose a life on wrong answer
+            if self.survival_mode_active:
+                self.survival_lives -= 1
+                if self.survival_lives <= 0:
+                    # Game over in survival mode
+                    self.quiz_active = False
         
         self.session_total += 1
         self.questions_since_break += 1
@@ -334,8 +411,31 @@ class QuizController:
             'new_badges': new_badges,
             'session_score': self.session_score,
             'session_total': self.session_total,
-            'options': options
+            'options': options,
+            'mode': self.current_quiz_mode
         }
+        
+        # Add mode-specific information
+        if self.survival_mode_active:
+            result['survival_lives'] = self.survival_lives
+            result['survival_game_over'] = self.survival_lives <= 0
+            if self.survival_lives <= 0:
+                # Update high score if needed
+                if self.session_score > getattr(self, 'survival_high_score', 0):
+                    self.survival_high_score = self.session_score
+                result['survival_high_score'] = self.survival_high_score
+                result['survival_final_score'] = self.session_score
+        
+        if self.timed_mode_active and self.current_question_start_time:
+            # Calculate time taken for this question
+            time_taken = time.time() - self.current_question_start_time
+            result['time_taken'] = time_taken
+            result['time_per_question'] = self.time_per_question
+            # Award bonus points for fast answers in timed mode
+            if time_taken < self.time_per_question / 2 and is_correct:
+                bonus_points = 5
+                result['points_earned'] += bonus_points
+                result['speed_bonus'] = bonus_points
         
         # Store answer for verify mode
         if self.current_quiz_mode == QUIZ_MODE_VERIFY:
@@ -453,12 +553,14 @@ class QuizController:
         self.last_session_results = session_results
         
         # Reset session variables
+        self.quiz_active = False
         self.session_score = 0
         self.session_total = 0
         self.session_answers = []
         self.current_streak = 0
         self.questions_since_break = 0
         self.current_quiz_mode = QUIZ_MODE_STANDARD
+        self.custom_question_limit = None  # Reset custom limit
         
         return session_results
     
@@ -473,6 +575,42 @@ class QuizController:
             'start_time': self.quick_fire_start_time,
             'time_limit': QUICK_FIRE_TIME_LIMIT,
             'question_limit': QUICK_FIRE_QUESTIONS
+        }
+
+    def start_timed_mode(self) -> Dict[str, Any]:
+        """Initialize Timed Challenge mode."""
+        self.timed_mode_active = True
+        self.timed_mode_start_time = time.time()
+        self.time_per_question = TIMED_CHALLENGE_TIME_PER_QUESTION
+        
+        return {
+            'timed_mode_active': True,
+            'start_time': self.timed_mode_start_time,
+            'time_per_question': self.time_per_question,
+            'total_questions': TIMED_CHALLENGE_QUESTIONS
+        }
+
+    def start_survival_mode(self) -> Dict[str, Any]:
+        """Initialize Survival mode."""
+        self.survival_mode_active = True
+        self.survival_lives = SURVIVAL_MODE_LIVES
+        
+        return {
+            'survival_mode_active': True,
+            'lives': self.survival_lives,
+            'high_score': getattr(self, 'survival_high_score', 0)
+        }
+
+    def start_exam_mode(self) -> Dict[str, Any]:
+        """Initialize Exam Simulation mode."""
+        self.exam_mode_active = True
+        self.exam_start_time = time.time()
+        
+        return {
+            'exam_mode_active': True,
+            'start_time': self.exam_start_time,
+            'time_limit': EXAM_MODE_TIME_LIMIT,
+            'total_questions': EXAM_MODE_QUESTIONS
         }
     def _end_quick_fire_mode_internal(self, time_up: bool) -> None:
         """
@@ -805,10 +943,33 @@ class QuizController:
         """Check if the current session should end."""
         print(f"DEBUG: Checking session complete - mode: '{self.current_quiz_mode}', total: {self.session_total}")
         
+        # Survival mode - game over when lives reach 0
+        if self.survival_mode_active and self.survival_lives <= 0:
+            print(f"DEBUG: Survival mode game over - no lives remaining")
+            return True
+        
         # Quick Fire completion
         if (self.quick_fire_active and 
             self.quick_fire_questions_answered >= QUICK_FIRE_QUESTIONS):
             print(f"DEBUG: Quick fire complete")
+            return True
+        
+        # Timed Challenge completion
+        if (self.current_quiz_mode == QUIZ_MODE_TIMED and 
+            self.session_total >= TIMED_CHALLENGE_QUESTIONS):
+            print(f"DEBUG: Timed challenge complete")
+            return True
+        
+        # Exam mode completion
+        if (self.current_quiz_mode == QUIZ_MODE_EXAM and 
+            self.session_total >= EXAM_MODE_QUESTIONS):
+            print(f"DEBUG: Exam simulation complete")
+            return True
+        
+        # Check exam mode time limit
+        if (self.exam_mode_active and self.exam_start_time and 
+            (time.time() - self.exam_start_time) >= EXAM_MODE_TIME_LIMIT):
+            print(f"DEBUG: Exam time limit reached")
             return True
         
         # Mini quiz completion
@@ -823,38 +984,67 @@ class QuizController:
             print(f"DEBUG: Single question mode - complete: {complete}")
             return complete
         
-        # For standard and verify quizzes, check if there are more questions available
-        if self.current_quiz_mode in ["standard", "verify"]:
-            # Try to see if we can get another question without actually selecting it
-            try:
-                # Check available questions count without modifying session state
-                available_count = self._get_available_questions_count(self.category_filter)
-                answered_count = len(self.game_state.question_manager.answered_indices_session)
-                questions_remaining = available_count - answered_count
-                
-                print(f"DEBUG: Standard/verify quiz - available: {available_count}, answered: {answered_count}, remaining: {questions_remaining}")
-                
-                if questions_remaining <= 0:
-                    print(f"DEBUG: No more questions available - completing session")
-                    return True
-            except Exception as e:
-                print(f"DEBUG: Error checking remaining questions: {e}")
-                # If we can't determine, assume quiz continues
-                pass
+        # For standard, verify, category focus, and survival quizzes, check if there are more questions available
+        if self.current_quiz_mode in ["standard", "verify", QUIZ_MODE_CATEGORY_FOCUS]:
+            # Check custom question limit first (for web interface)
+            if self.custom_question_limit and self.session_total >= self.custom_question_limit:
+                print(f"DEBUG: Custom question limit reached ({self.custom_question_limit}) - completing session")
+                return True
+            
+            # Only check for completion after a reasonable number of questions (at least 5)
+            # This prevents immediate completion for small question pools
+            if self.session_total >= 5:
+                try:
+                    # Check available questions count without modifying session state
+                    available_count = self._get_available_questions_count(self.category_filter)
+                    answered_count = len(self.game_state.question_manager.answered_indices_session)
+                    questions_remaining = available_count - answered_count
+                    
+                    print(f"DEBUG: Standard/verify/category quiz - available: {available_count}, answered: {answered_count}, remaining: {questions_remaining}")
+                    
+                    if questions_remaining <= 0:
+                        print(f"DEBUG: No more questions available - completing session")
+                        return True
+                except Exception as e:
+                    print(f"DEBUG: Error checking remaining questions: {e}")
+                    # If we can't determine, assume quiz continues
+                    pass
+            else:
+                print(f"DEBUG: Standard mode - only {self.session_total} questions answered, continuing")
+                return False
         
-        # Standard and verify quizzes continue until manually ended or no questions available
+        # Survival mode continues until death (handled above)
+        if self.current_quiz_mode == QUIZ_MODE_SURVIVAL:
+            print(f"DEBUG: Survival mode continuing - {self.survival_lives} lives remaining")
+            return False
+        
+        # Standard, verify, and category focus quizzes continue until manually ended or no questions available
         print(f"DEBUG: Session not complete - continuing")
         return False
     def update_settings(self, settings: Dict[str, Any]) -> None:
         """Update quiz controller with new settings."""
+        # Update legacy settings
         self.points_per_question = settings.get('pointsPerQuestion', 10)
         self.points_per_incorrect = settings.get('pointsPerIncorrect', 0)
         self.streak_bonus = settings.get('streakBonus', 5)
         self.max_streak_bonus = settings.get('maxStreakBonus', 50)
         self.debug_mode = settings.get('debugMode', False)
         
+        # Also refresh from game values in case they've been updated
+        self.refresh_game_values()
+        
         # Update any active scoring calculations
         if hasattr(self, 'current_streak_bonus'):
             self.current_streak_bonus = min(
                 int(self.current_streak_bonus), int(self.max_streak_bonus)
             )
+    
+    def refresh_game_values(self) -> None:
+        """Refresh settings from the game values manager."""
+        game_values = get_game_value_manager()
+        self.points_per_question = game_values.get_value('scoring', 'points_per_correct', 10)
+        self.points_per_incorrect = game_values.get_value('scoring', 'points_per_incorrect', 0)
+        self.streak_bonus = game_values.get_value('scoring', 'streak_bonus', 5)
+        self.max_streak_bonus = game_values.get_value('scoring', 'max_streak_bonus', 50)
+        self.hint_penalty = game_values.get_value('scoring', 'hint_penalty', 5)
+        self.speed_bonus = game_values.get_value('scoring', 'speed_bonus', 5)

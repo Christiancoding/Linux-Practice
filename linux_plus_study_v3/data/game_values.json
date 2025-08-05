@@ -1,0 +1,69 @@
+{
+  "scoring": {
+    "points_per_correct": 10,
+    "points_per_incorrect": 0,
+    "hint_penalty": 5,
+    "speed_bonus": 5,
+    "streak_bonus": 5,
+    "max_streak_bonus": 50,
+    "streak_bonus_threshold": 3,
+    "streak_bonus_multiplier": 2.0,
+    "perfect_quiz_bonus": 25,
+    "daily_challenge_bonus": 50,
+    "default_challenge_score": 100,
+    "achievement_point_threshold": 500,
+    "achievement_question_threshold": 100
+  },
+  "streaks": {
+    "daily_streak_threshold": 3,
+    "weekly_streak_threshold": 7,
+    "streak_display_threshold": 3,
+    "default_streak_value": 0
+  },
+  "quiz": {
+    "default_question_count": 10,
+    "max_question_count": 50,
+    "min_question_count": 1,
+    "quick_fire_count": 5,
+    "time_per_question": 30,
+    "strike_limit": 3,
+    "survival_mode_strikes": 3,
+    "timed_challenge_seconds": 30
+  },
+  "accuracy": {
+    "excellent_threshold": 90,
+    "good_threshold": 75,
+    "average_threshold": 50,
+    "passing_percentage": 70,
+    "perfect_score_percentage": 100
+  },
+  "levels": {
+    "default_level": 0,
+    "default_xp": 0,
+    "legendary_achievement_xp": 100,
+    "easter_egg_bonus_xp": 100
+  },
+  "display": {
+    "default_questions_display": 0,
+    "default_score_display": 0,
+    "default_percentage_display": 0,
+    "activity_level_low": 0.2,
+    "activity_level_medium": 0.4,
+    "activity_level_high": 0.6,
+    "activity_level_max": 0.8
+  },
+  "time": {
+    "file_cleanup_days": 30,
+    "stats_week_days": 7,
+    "stats_month_days": 30,
+    "calendar_year_days": 365,
+    "dashboard_calendar_days": 35,
+    "session_timeout_hours": 1,
+    "break_reminder_minutes": 10
+  },
+  "leaderboard": {
+    "max_entries": 100,
+    "top_sessions_limit": 10,
+    "achievement_progress_display": "8/20 achievements"
+  }
+}

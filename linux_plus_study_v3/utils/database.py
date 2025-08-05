@@ -195,6 +195,14 @@ def get_database_manager() -> Optional[DatabasePoolManager]:
     """Get the global database manager instance."""
     return _db_manager
 
+def get_db_session():
+    """Get a database session for use with analytics and other features."""
+    db_manager = get_database_manager()
+    if db_manager is None:
+        # Initialize database manager if not already done
+        db_manager = initialize_database_pool()
+    return db_manager.get_session()
+
 def cleanup_database_connections() -> None:
     """Clean up all database connections."""
     global _db_manager

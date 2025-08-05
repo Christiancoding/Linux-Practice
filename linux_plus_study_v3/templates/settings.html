@@ -22,6 +22,9 @@
         <button class="settings-tab" onclick="switchSettingsTab('gameplay')">
             <i class="fas fa-gamepad"></i> Gameplay
         </button>
+        <button class="settings-tab" onclick="switchSettingsTab('gamevalues')">
+            <i class="fas fa-sliders-h"></i> Game Values
+        </button>
         <button class="settings-tab" onclick="switchSettingsTab('notifications')">
             <i class="fas fa-bell"></i> Notifications
         </button>
@@ -231,6 +234,195 @@
                     </div>
                 </div>
             </section>
+        </div>
+
+        <!-- Game Values Settings -->
+        <div class="settings-panel" id="gamevalues-panel">
+            <section class="settings-section glass" data-aos="fade-up">
+                <h2 class="section-header">
+                    <i class="fas fa-calculator"></i> Scoring Configuration
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Points per Correct Answer</h4>
+                        <p>Base points awarded for each correct answer</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="points-per-correct" min="1" max="100" value="10">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Points per Incorrect Answer</h4>
+                        <p>Points deducted for incorrect answers (0 = no penalty)</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="points-per-incorrect" min="0" max="50" value="0">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Hint Penalty</h4>
+                        <p>Points deducted when using hints</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="hint-penalty" min="0" max="20" value="5">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Speed Bonus</h4>
+                        <p>Extra points for quick answers</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="speed-bonus" min="0" max="20" value="5">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Streak Bonus</h4>
+                        <p>Points added per question when on a streak</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="streak-bonus" min="0" max="20" value="5">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Maximum Streak Bonus</h4>
+                        <p>Maximum possible streak bonus points</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="max-streak-bonus" min="5" max="200" value="50">
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section glass" data-aos="fade-up" data-aos-delay="100">
+                <h2 class="section-header">
+                    <i class="fas fa-fire"></i> Streak Configuration
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Streak Bonus Threshold</h4>
+                        <p>Minimum streak required for bonus points</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="streak-bonus-threshold" min="1" max="10" value="3">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Streak Bonus Multiplier</h4>
+                        <p>Multiplier applied to streak bonus</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="streak-bonus-multiplier" min="1" max="5" step="0.1" value="2.0">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Daily Streak Threshold</h4>
+                        <p>Days required for dedicated learner achievement</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="daily-streak-threshold" min="1" max="30" value="3">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Weekly Streak Threshold</h4>
+                        <p>Days required for weekly streak achievement</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="weekly-streak-threshold" min="1" max="30" value="7">
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section glass" data-aos="fade-up" data-aos-delay="200">
+                <h2 class="section-header">
+                    <i class="fas fa-trophy"></i> Achievement Configuration
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Perfect Quiz Bonus</h4>
+                        <p>Extra points for getting all answers correct</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="perfect-quiz-bonus" min="0" max="100" value="25">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Daily Challenge Bonus</h4>
+                        <p>Points for completing daily challenges</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="daily-challenge-bonus" min="0" max="200" value="50">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Achievement Point Threshold</h4>
+                        <p>Points required for point collector achievement</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="achievement-point-threshold" min="100" max="2000" value="500">
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Achievement Question Threshold</h4>
+                        <p>Questions required for century club achievement</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="achievement-question-threshold" min="10" max="500" value="100">
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section glass" data-aos="fade-up" data-aos-delay="300">
+                <h2 class="section-header">
+                    <i class="fas fa-cogs"></i> Display Settings
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Excellent Accuracy Threshold</h4>
+                        <p>Percentage for excellent performance (green)</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="excellent-threshold" min="80" max="100" value="90">%
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Good Accuracy Threshold</h4>
+                        <p>Percentage for good performance (yellow)</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="good-threshold" min="50" max="90" value="75">%
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Passing Percentage</h4>
+                        <p>Minimum percentage to pass a quiz</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="passing-percentage" min="50" max="80" value="70">%
+                    </div>
+                </div>
+            </section>
+
+            <div class="settings-footer">
+                <button class="btn btn-secondary" onclick="resetGameValuesToDefaults()">
+                    <i class="fas fa-undo"></i> Reset to Defaults
+                </button>
+                <button class="btn btn-primary" onclick="saveGameValues()">
+                    <i class="fas fa-save"></i> Save Game Values
+                </button>
+            </div>
         </div>
 
         <!-- Notifications Settings -->
@@ -653,6 +845,7 @@
 // Settings page functionality
 document.addEventListener('DOMContentLoaded', function() {
     loadSettings();
+    loadGameValues();
     initializeSliders();
 });
 
@@ -811,10 +1004,27 @@ function importUserData() {
 function confirmResetProgress() {
     if (confirm('This will permanently delete all your quiz history and statistics. Are you sure?')) {
         if (confirm('This action cannot be undone. Please confirm again.')) {
-            localStorage.removeItem('gameStats');
-            localStorage.removeItem('quizHistory');
-            showMessage('success', 'Progress reset successfully');
-            setTimeout(() => location.reload(), 1500);
+            // Call the backend API to clear all statistics
+            fetch('/api/clear_statistics', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear localStorage items as well
+                    localStorage.removeItem('gameStats');
+                    localStorage.removeItem('quizHistory');
+                    localStorage.removeItem('achievements');
+                    showMessage('success', 'Progress reset successfully');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showMessage('error', 'Failed to reset progress: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error resetting progress:', error);
+                showMessage('error', 'Failed to reset progress');
+            });
         }
     }
 }
@@ -846,6 +1056,143 @@ function confirmDeleteAccount() {
         setTimeout(() => {
             window.location.href = '/';
         }, 2000);
+    }
+}
+
+// Game Values Functions
+function loadGameValues() {
+    fetch('/api/load_game_values')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.values) {
+                populateGameValues(data.values);
+            } else {
+                console.error('Failed to load game values:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading game values:', error);
+        });
+}
+
+function populateGameValues(values) {
+    // Scoring settings
+    if (values.scoring) {
+        setIfExists('points-per-correct', values.scoring.points_per_correct);
+        setIfExists('points-per-incorrect', values.scoring.points_per_incorrect);
+        setIfExists('hint-penalty', values.scoring.hint_penalty);
+        setIfExists('speed-bonus', values.scoring.speed_bonus);
+        setIfExists('streak-bonus', values.scoring.streak_bonus);
+        setIfExists('max-streak-bonus', values.scoring.max_streak_bonus);
+        setIfExists('streak-bonus-threshold', values.scoring.streak_bonus_threshold);
+        setIfExists('streak-bonus-multiplier', values.scoring.streak_bonus_multiplier);
+        setIfExists('perfect-quiz-bonus', values.scoring.perfect_quiz_bonus);
+        setIfExists('daily-challenge-bonus', values.scoring.daily_challenge_bonus);
+        setIfExists('achievement-point-threshold', values.scoring.achievement_point_threshold);
+        setIfExists('achievement-question-threshold', values.scoring.achievement_question_threshold);
+    }
+    
+    // Streak settings
+    if (values.streaks) {
+        setIfExists('daily-streak-threshold', values.streaks.daily_streak_threshold);
+        setIfExists('weekly-streak-threshold', values.streaks.weekly_streak_threshold);
+    }
+    
+    // Accuracy settings
+    if (values.accuracy) {
+        setIfExists('excellent-threshold', values.accuracy.excellent_threshold);
+        setIfExists('good-threshold', values.accuracy.good_threshold);
+        setIfExists('passing-percentage', values.accuracy.passing_percentage);
+    }
+}
+
+function setIfExists(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.value = value;
+    }
+}
+
+function saveGameValues() {
+    const gameValues = {
+        scoring: {
+            points_per_correct: parseInt(document.getElementById('points-per-correct')?.value) || 10,
+            points_per_incorrect: parseInt(document.getElementById('points-per-incorrect')?.value) || 0,
+            hint_penalty: parseInt(document.getElementById('hint-penalty')?.value) || 5,
+            speed_bonus: parseInt(document.getElementById('speed-bonus')?.value) || 5,
+            streak_bonus: parseInt(document.getElementById('streak-bonus')?.value) || 5,
+            max_streak_bonus: parseInt(document.getElementById('max-streak-bonus')?.value) || 50,
+            streak_bonus_threshold: parseInt(document.getElementById('streak-bonus-threshold')?.value) || 3,
+            streak_bonus_multiplier: parseFloat(document.getElementById('streak-bonus-multiplier')?.value) || 2.0,
+            perfect_quiz_bonus: parseInt(document.getElementById('perfect-quiz-bonus')?.value) || 25,
+            daily_challenge_bonus: parseInt(document.getElementById('daily-challenge-bonus')?.value) || 50,
+            achievement_point_threshold: parseInt(document.getElementById('achievement-point-threshold')?.value) || 500,
+            achievement_question_threshold: parseInt(document.getElementById('achievement-question-threshold')?.value) || 100
+        },
+        streaks: {
+            daily_streak_threshold: parseInt(document.getElementById('daily-streak-threshold')?.value) || 3,
+            weekly_streak_threshold: parseInt(document.getElementById('weekly-streak-threshold')?.value) || 7
+        },
+        accuracy: {
+            excellent_threshold: parseInt(document.getElementById('excellent-threshold')?.value) || 90,
+            good_threshold: parseInt(document.getElementById('good-threshold')?.value) || 75,
+            passing_percentage: parseInt(document.getElementById('passing-percentage')?.value) || 70
+        }
+    };
+    
+    // Validation
+    if (gameValues.scoring.max_streak_bonus < gameValues.scoring.streak_bonus) {
+        showMessage('error', 'Max Streak Bonus cannot be less than Streak Bonus');
+        return;
+    }
+    
+    if (gameValues.accuracy.good_threshold >= gameValues.accuracy.excellent_threshold) {
+        showMessage('error', 'Good threshold must be less than excellent threshold');
+        return;
+    }
+    
+    fetch('/api/save_game_values', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(gameValues)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'Game values saved successfully!');
+        } else {
+            showMessage('error', 'Failed to save game values: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving game values:', error);
+        showMessage('error', 'An error occurred while saving game values');
+    });
+}
+
+function resetGameValuesToDefaults() {
+    if (confirm('Reset all game values to defaults? This cannot be undone.')) {
+        fetch('/api/reset_game_values', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage('success', 'Game values reset to defaults!');
+                loadGameValues(); // Reload the form
+            } else {
+                showMessage('error', 'Failed to reset game values: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error resetting game values:', error);
+            showMessage('error', 'An error occurred while resetting game values');
+        });
     }
 }
 

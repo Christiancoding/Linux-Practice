@@ -2,14 +2,16 @@
 """
 Achievement System for Linux+ Study Game
 
-Handles achievement tracking, badge management, points calculation,
-and leaderboard functionality.
+Manages badges, progress tracking, and achievement calculations.
 """
 
 import json
-from datetime import datetime
-from typing import List, Dict, Any, Set, Optional, TypedDict, cast
-from utils.config import *
+import time
+from pathlib import Path
+from typing import Dict, Any, List, Optional, Tuple, Set, TypedDict, cast
+from datetime import datetime, date
+from utils.game_values import get_game_value_manager
+from utils.config import ACHIEVEMENTS_FILE
 
 
 class LeaderboardEntry(TypedDict):
@@ -161,19 +163,24 @@ class AchievementSystem:
         
         # Check for dedicated learner achievement
         days_studied = cast(Set[str], self.achievements["days_studied"])
-        if (len(days_studied) >= 3 and 
+        game_values = get_game_value_manager()
+        daily_streak_threshold = game_values.get_value('streaks', 'daily_streak_threshold', 3)
+        
+        if (len(days_studied) >= daily_streak_threshold and 
             "dedicated_learner" not in self.achievements["badges"]):
             new_badges.append("dedicated_learner")
             self.achievements["badges"].append("dedicated_learner")
         
-        # Check for century club achievement
-        if (self.achievements["questions_answered"] >= 100 and 
+        # Check for century club achievement (configurable question threshold)
+        question_threshold = game_values.get_value('scoring', 'achievement_question_threshold', 100)
+        if (self.achievements["questions_answered"] >= question_threshold and 
             "century_club" not in self.achievements["badges"]):
             new_badges.append("century_club")
             self.achievements["badges"].append("century_club")
         
-        # Check for point collector achievement
-        if (self.achievements["points_earned"] >= 500 and 
+        # Check for point collector achievement (configurable point threshold)
+        point_threshold = game_values.get_value('scoring', 'achievement_point_threshold', 500)
+        if (self.achievements["points_earned"] >= point_threshold and 
             "point_collector" not in self.achievements["badges"]):
             new_badges.append("point_collector")
             self.achievements["badges"].append("point_collector")
@@ -256,7 +263,7 @@ class AchievementSystem:
     
     def get_achievement_description(self, badge_name: str) -> str:
         """
-        Get description for achievement badge.
+        Get description for achievement badge with dynamic values.
         
         Args:
             badge_name (str): Name of the badge
@@ -264,11 +271,16 @@ class AchievementSystem:
         Returns:
             str: Formatted description with emoji
         """
+        game_values = get_game_value_manager()
+        question_threshold = game_values.get_value('scoring', 'achievement_question_threshold', 100)
+        point_threshold = game_values.get_value('scoring', 'achievement_point_threshold', 500)
+        daily_streak_threshold = game_values.get_value('streaks', 'daily_streak_threshold', 3)
+        
         descriptions = {
             "streak_master": "🔥 Streak Master - Answered 5 questions in a row correctly!",
-            "dedicated_learner": "📚 Dedicated Learner - Studied 3 days in a row!",
-            "century_club": "💯 Century Club - Answered 100 questions!",
-            "point_collector": "⭐ Point Collector - Earned 500 points!",
+            "dedicated_learner": f"📚 Dedicated Learner - Studied {daily_streak_threshold} days in a row!",
+            "century_club": f"💯 Century Club - Answered {question_threshold} questions!",
+            "point_collector": f"⭐ Point Collector - Earned {point_threshold} points!",
             "quick_fire_champion": "⚡ Quick Fire Champion - Completed Quick Fire mode!",
             "daily_warrior": "🗓️ Daily Warrior - Completed daily challenge!",
             "perfect_session": "🎯 Perfect Session - 100% accuracy in a session!"
@@ -278,16 +290,21 @@ class AchievementSystem:
     
     def get_all_achievement_definitions(self) -> Dict[str, str]:
         """
-        Get all available achievement definitions.
+        Get all available achievement definitions with dynamic values.
         
         Returns:
             dict: Achievement names mapped to requirements descriptions
         """
+        game_values = get_game_value_manager()
+        question_threshold = game_values.get_value('scoring', 'achievement_question_threshold', 100)
+        point_threshold = game_values.get_value('scoring', 'achievement_point_threshold', 500)
+        daily_streak_threshold = game_values.get_value('streaks', 'daily_streak_threshold', 3)
+        
         return {
             "streak_master": "Answer 5 questions correctly in a row",
-            "dedicated_learner": "Study for 3 different days",
-            "century_club": "Answer 100 questions total",
-            "point_collector": "Earn 500 points",
+            "dedicated_learner": f"Study for {daily_streak_threshold} different days",
+            "century_club": f"Answer {question_threshold} questions total",
+            "point_collector": f"Earn {point_threshold} points",
             "quick_fire_champion": "Complete Quick Fire mode",
             "daily_warrior": "Complete a daily challenge",
             "perfect_session": "Get 100% accuracy in a session (3+ questions)"
@@ -374,6 +391,63 @@ class AchievementSystem:
         """
         return self.leaderboard.copy()
     
+    def calculate_level_from_points(self, points: int) -> int:
+        """
+        Calculate level based on total points earned.
+        
+        Args:
+            points (int): Total points earned
+            
+        Returns:
+            int: Current level (starting from 1)
+        """
+        if points <= 0:
+            return 1
+            
+        # Level progression: 100 points for level 2, 200 for level 3, etc.
+        # Formula: level = floor(sqrt(points / 50)) + 1
+        import math
+        level = int(math.sqrt(points / 50)) + 1
+        return max(1, level)
+    
+    def calculate_xp_for_level(self, level: int) -> int:
+        """
+        Calculate total XP required for a specific level.
+        
+        Args:
+            level (int): Target level
+            
+        Returns:
+            int: Total XP required for that level
+        """
+        if level <= 1:
+            return 0
+        return (level - 1) ** 2 * 50
+    
+    def get_level_progress(self) -> Dict[str, Any]:
+        """
+        Get current level and progress to next level.
+        
+        Returns:
+            dict: Level information including current level, XP, and progress
+        """
+        total_points = self.achievements.get("points_earned", 0)
+        current_level = self.calculate_level_from_points(total_points)
+        current_level_xp = self.calculate_xp_for_level(current_level)
+        next_level_xp = self.calculate_xp_for_level(current_level + 1)
+        
+        xp_in_current_level = total_points - current_level_xp
+        xp_needed_for_next = next_level_xp - current_level_xp
+        progress_percentage = (xp_in_current_level / xp_needed_for_next * 100) if xp_needed_for_next > 0 else 0
+        
+        return {
+            "level": current_level,
+            "total_xp": total_points,
+            "current_level_xp": xp_in_current_level,
+            "xp_for_next_level": xp_needed_for_next,
+            "progress_percentage": min(100, max(0, progress_percentage))
+        }
+
     def get_statistics_summary(self) -> Dict[str, Any]:
         """
         Get summary statistics for achievements.
@@ -381,6 +455,8 @@ class AchievementSystem:
         Returns:
             dict: Summary of achievement-related statistics
         """
+        level_info = self.get_level_progress()
+        
         return {
             "total_points": self.achievements.get("points_earned", 0),
             "session_points": self.session_points,
@@ -389,7 +465,10 @@ class AchievementSystem:
             "badges_earned": len(self.achievements.get("badges", [])),
             "streaks_achieved": self.achievements.get("streaks_achieved", 0),
             "perfect_sessions": self.achievements.get("perfect_sessions", 0),
-            "daily_challenges": len(self.achievements.get("daily_warrior_dates", []))
+            "daily_challenges": len(self.achievements.get("daily_warrior_dates", [])),
+            "level": level_info["level"],
+            "total_xp": level_info["total_xp"],
+            "level_progress": level_info["progress_percentage"]
         }
     
     def reset_session_points(self) -> None:

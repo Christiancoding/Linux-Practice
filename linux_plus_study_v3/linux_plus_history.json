@@ -1,80 +1,249 @@
 {
   "sessions": [],
   "questions": {
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 1,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:40:36.472296",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:17:14.537533",
+          "correct": false
+        }
+      ]
+    },
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
+      "correct": 1,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:24.308199",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:17:30.462983",
+          "correct": false
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 0,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:26.738750",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:17:05.762243",
+          "correct": false
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 3,
+      "attempts": 8,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:29.813519",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-04T21:42:32.482841",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-04T21:42:50.430574",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:15:50.596928",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:16:00.191194",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:16:59.957243",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:17:07.830126",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:17:24.779649",
+          "correct": false
+        }
+      ]
+    },
+    "In Kubernetes, what is an Ambassador container?": {
+      "correct": 1,
+      "attempts": 3,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:35.445925",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:15:52.966777",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:17:16.920457",
+          "correct": false
+        }
+      ]
+    },
+    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
+      "correct": 2,
+      "attempts": 3,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:38.902908",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:15:55.925124",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:17:21.607840",
+          "correct": true
+        }
+      ]
+    },
     "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
       "correct": 2,
       "attempts": 2,
       "history": [
         {
-          "timestamp": "2025-07-30T01:53:21.702448",
+          "timestamp": "2025-08-04T21:42:42.488740",
           "correct": true
         },
         {
-          "timestamp": "2025-07-31T13:17:00.132146",
+          "timestamp": "2025-08-05T01:17:02.908163",
           "correct": true
         }
       ]
     },
-    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
-      "correct": 0,
-      "attempts": 2,
+    "What is Ansible primarily used for?": {
+      "correct": 1,
+      "attempts": 3,
       "history": [
         {
-          "timestamp": "2025-07-30T01:53:26.472760",
+          "timestamp": "2025-08-04T21:42:45.823473",
           "correct": false
         },
         {
-          "timestamp": "2025-07-31T13:16:51.903404",
+          "timestamp": "2025-08-05T01:15:48.119607",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:17:11.896968",
+          "correct": false
+        }
+      ]
+    },
+    "What is AppArmor?": {
+      "correct": 0,
+      "attempts": 3,
+      "history": [
+        {
+          "timestamp": "2025-08-04T21:42:48.008402",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:16:07.769293",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-05T01:17:09.706162",
+          "correct": false
+        }
+      ]
+    },
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 2,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-08-05T01:16:03.631287",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-05T01:17:27.415316",
+          "correct": true
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-05T01:16:55.575364",
           "correct": false
         }
       ]
     }
   },
   "categories": {
-    "Troubleshooting": {
-      "correct": 2,
-      "attempts": 4
+    "Concepts & Terms (Containers)": {
+      "correct": 1,
+      "attempts": 3
     },
-    "Concepts & Terms (Automation)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (System Management)": {
-      "correct": 0,
-      "attempts": 0
+    "Commands (System Management)": {
+      "correct": 7,
+      "attempts": 14
     },
     "Concepts & Terms (Security)": {
       "correct": 0,
-      "attempts": 0
+      "attempts": 4
     },
-    "Concepts & Terms (Containers)": {
-      "correct": 0,
-      "attempts": 0
+    "Concepts & Terms (Automation)": {
+      "correct": 1,
+      "attempts": 3
     },
-    "Commands (System Management)": {
+    "Concepts & Terms (System Management)": {
       "correct": 0,
-      "attempts": 0
+      "attempts": 2
+    },
+    "Troubleshooting": {
+      "correct": 4,
+      "attempts": 5
     }
   },
-  "total_correct": 2,
-  "total_attempts": 4,
+  "total_correct": 13,
+  "total_attempts": 31,
   "incorrect_review": [
-    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?"
+    "What is an AppImage?",
+    "What is AppArmor?",
+    "In Kubernetes, what is an Ambassador container?",
+    "What does ACL stand for in Linux security?",
+    "Which command installs the GRUB2 bootloader to a specified device?",
+    "What is Ansible primarily used for?",
+    "What is the primary function of the `mkinitrd` command?",
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
   ],
   "leaderboard": [
     {
-      "date": "2025-07-30T01:53:26.472827",
-      "score": 1,
-      "total": 2,
-      "accuracy": 50.0,
-      "points": 13
+      "date": "2025-08-04T21:42:50.430616",
+      "score": 6,
+      "total": 10,
+      "accuracy": 60.0,
+      "points": 60
     },
     {
-      "date": "2025-07-31T13:17:00.132230",
-      "score": 1,
-      "total": 2,
-      "accuracy": 50.0,
-      "points": 13
+      "date": "2025-08-05T01:17:30.463131",
+      "score": 4,
+      "total": 13,
+      "accuracy": 30.76923076923077,
+      "points": 40
     }
   ],
   "settings": {},
