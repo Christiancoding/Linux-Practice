@@ -30,8 +30,8 @@
                     <div class="stat-icon" style="background: var(--gradient-success);">
                         <i class="fas fa-check-circle"></i>
                     </div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> 15%
+                    <div class="stat-trend neutral" id="correct-trend">
+                        <i class="fas fa-chart-line"></i> Start your journey!
                     </div>
                 </div>
                 <div class="stat-content">
@@ -46,8 +46,8 @@
                     <div class="stat-icon" style="background: var(--gradient-warning);">
                         <i class="fas fa-percentage"></i>
                     </div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> 8%
+                    <div class="stat-trend neutral" id="accuracy-trend">
+                        <i class="fas fa-chart-line"></i> Practice makes perfect!
                     </div>
                 </div>
                 <div class="stat-content">
@@ -62,8 +62,8 @@
                     <div class="stat-icon" style="background: var(--gradient-primary);">
                         <i class="fas fa-clock"></i>
                     </div>
-                    <div class="stat-trend neutral">
-                        <i class="fas fa-minus"></i> 0%
+                    <div class="stat-trend neutral" id="time-trend">
+                        <i class="fas fa-chart-line"></i> Begin learning!
                     </div>
                 </div>
                 <div class="stat-content">
@@ -78,8 +78,8 @@
                     <div class="stat-icon" style="background: var(--gradient-accent);">
                         <i class="fas fa-fire"></i>
                     </div>
-                    <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> +3
+                    <div class="stat-trend neutral" id="streak-trend">
+                        <i class="fas fa-chart-line"></i> Build your streak!
                     </div>
                 </div>
                 <div class="stat-content">
@@ -675,11 +675,22 @@ function loadStatsData() {
         const avgTime = calculateAverageTime(statsData);
         const currentStreak = dashboardData.streak || 0;
         
+        // Check if this is a reset state
+        const isResetState = (
+            totalCorrect === 0 &&
+            accuracyRate === 0 &&
+            currentStreak === 0 &&
+            (!dashboardData.progress_summary || dashboardData.progress_summary.questions_answered === 0)
+        );
+        
         // Update with animation
         animateValue('total-correct', 0, totalCorrect, 1000);
         animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
         animateValue('avg-time', 0, avgTime, 1000, 's');
         animateValue('current-streak', 0, currentStreak, 1000);
+        
+        // Update trend indicators based on reset state
+        updateStatsTrends(isResetState, statsData);
         
         // Update charts with real data
         updateChartsWithData(statsData);
@@ -691,6 +702,52 @@ function loadStatsData() {
         console.error('Error loading stats:', error);
         loadDemoStatsData();
     });
+}
+
+// Update stats trend indicators
+function updateStatsTrends(isResetState, statsData) {
+    const correctTrend = document.getElementById('correct-trend');
+    const accuracyTrend = document.getElementById('accuracy-trend');
+    const timeTrend = document.getElementById('time-trend');
+    const streakTrend = document.getElementById('streak-trend');
+    
+    if (isResetState) {
+        // Show encouraging messages for reset state
+        if (correctTrend) {
+            correctTrend.className = 'stat-trend neutral';
+            correctTrend.innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
+        }
+        if (accuracyTrend) {
+            accuracyTrend.className = 'stat-trend neutral';
+            accuracyTrend.innerHTML = '<i class="fas fa-chart-line"></i> Practice makes perfect!';
+        }
+        if (timeTrend) {
+            timeTrend.className = 'stat-trend neutral';
+            timeTrend.innerHTML = '<i class="fas fa-chart-line"></i> Begin learning!';
+        }
+        if (streakTrend) {
+            streakTrend.className = 'stat-trend neutral';
+            streakTrend.innerHTML = '<i class="fas fa-chart-line"></i> Build your streak!';
+        }
+    } else {
+        // Show positive trends for active users
+        if (correctTrend) {
+            correctTrend.className = 'stat-trend positive';
+            correctTrend.innerHTML = '<i class="fas fa-arrow-up"></i> Keep going!';
+        }
+        if (accuracyTrend) {
+            accuracyTrend.className = 'stat-trend positive';
+            accuracyTrend.innerHTML = '<i class="fas fa-arrow-up"></i> Improving!';
+        }
+        if (timeTrend) {
+            timeTrend.className = 'stat-trend neutral';
+            timeTrend.innerHTML = '<i class="fas fa-clock"></i> Steady pace';
+        }
+        if (streakTrend) {
+            streakTrend.className = 'stat-trend positive';
+            streakTrend.innerHTML = '<i class="fas fa-fire"></i> On fire!';
+        }
+    }
 }
 
 // Load demo data if API fails
@@ -898,9 +955,33 @@ function changeTimePeriod(period) {
     document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
     
+    // Show loading state
+    showMessage('info', `Loading ${getPeriodName(period)} data...`);
+    
     // Reload data for selected period
     console.log('Loading data for:', period);
-    // In real app, this would fetch new data
+    
+    // For now, just reload the same data but could filter by date range
+    loadStatsData();
+    
+    // In a real implementation, you would:
+    // - Pass the period parameter to the API
+    // - Filter data on the backend based on the time range
+    // - Update charts and stats accordingly
+    setTimeout(() => {
+        showMessage('success', `Loaded ${getPeriodName(period)} statistics`);
+    }, 500);
+}
+
+// Get friendly name for time period
+function getPeriodName(period) {
+    const names = {
+        'week': 'Last 7 Days',
+        'month': 'Last 30 Days',
+        'all': 'All Time',
+        'custom': 'Custom Range'
+    };
+    return names[period] || period;
 }
 
 // Export data

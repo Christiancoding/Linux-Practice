@@ -7,13 +7,14 @@ import requests
 import json
 
 def test_endpoints():
-    base_url = "http://127.0.0.1:8081"
+    base_url = "http://127.0.0.1:5000"
     
     endpoints = {
         "dashboard": f"{base_url}/api/dashboard",
         "achievements": f"{base_url}/api/achievements", 
         "statistics": f"{base_url}/api/statistics",
         "leaderboard": f"{base_url}/api/leaderboard"
+        "settings": f"{base_url}/api/settings",
     }
     
     print("API Endpoint Validation")

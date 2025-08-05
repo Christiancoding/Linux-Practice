@@ -461,6 +461,52 @@ class LinuxPlusStudySystem:
                     
             return jsonify(summary)
         
+        @app.route('/api/analytics/users')
+        def analytics_users():
+            """Get list of all users in analytics system."""
+            try:
+                from utils.database import get_database_manager
+                from services.analytics_service import AnalyticsService
+                
+                db_manager = get_database_manager()
+                if db_manager and db_manager.session_factory:
+                    session = db_manager.session_factory()
+                    try:
+                        analytics_service = AnalyticsService(session)
+                        users = analytics_service.get_all_users()
+                        return jsonify({'success': True, 'users': users})
+                    except Exception as e:
+                        return jsonify({'success': False, 'error': str(e)})
+                    finally:
+                        session.close()
+                else:
+                    return jsonify({'success': False, 'error': 'Database not available'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @app.route('/api/analytics/overview')
+        def analytics_overview():
+            """Get system-wide analytics overview."""
+            try:
+                from utils.database import get_database_manager
+                from services.analytics_service import AnalyticsService
+                
+                db_manager = get_database_manager()
+                if db_manager and db_manager.session_factory:
+                    session = db_manager.session_factory()
+                    try:
+                        analytics_service = AnalyticsService(session)
+                        overview = analytics_service.get_user_activity_overview()
+                        return jsonify({'success': True, 'overview': overview})
+                    except Exception as e:
+                        return jsonify({'success': False, 'error': str(e)})
+                    finally:
+                        session.close()
+                else:
+                    return jsonify({'success': False, 'error': 'Database not available'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
         @app.route('/analytics')
         def analytics_dashboard():
             """Analytics dashboard page."""

@@ -49,8 +49,8 @@
                     <i class="fas fa-gem"></i>
                 </div>
                 <div class="stat-info">
-                    <h3 id="rarest-achievement">None</h3>
-                    <p>Rarest Achievement</p>
+                    <h3 id="rarest-achievement">None yet - start your journey!</h3>
+                    <p id="rarest-achievement-label">Rarest Achievement</p>
                 </div>
             </div>
         </div>
@@ -735,18 +735,69 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadAchievementsData();
     initializeFilters();
+    
+    // Add refresh button functionality if it exists
+    const refreshBtn = document.getElementById('refresh-achievements');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            console.log('Manually refreshing achievements...');
+            loadAchievementsData();
+        });
+    }
+    
+    // Check for reset marker and refresh if needed
+    checkForResetMarker();
 });
+
+// Check if a reset happened recently and refresh data
+function checkForResetMarker() {
+    const lastResetCheck = localStorage.getItem('lastResetCheck');
+    const now = Date.now();
+    
+    // Check every 5 seconds for reset marker
+    if (!lastResetCheck || (now - parseInt(lastResetCheck)) > 5000) {
+        localStorage.setItem('lastResetCheck', now.toString());
+        
+        // Force reload achievements data to ensure fresh state
+        setTimeout(() => {
+            console.log('Checking for fresh data after potential reset...');
+            loadAchievementsData();
+        }, 1000);
+    }
+}
 
 // Load achievements data
 function loadAchievementsData() {
-    fetch('/api/achievements')
+    // Add cache busting parameter to force fresh data
+    const timestamp = new Date().getTime();
+    fetch(`/api/achievements?_=${timestamp}`)
         .then(response => response.json())
         .then(data => {
-            updateAchievementStats(data.stats);
+            console.log('Loaded achievements data:', data);
+            
+            // Ensure we have the right data structure
+            const statsData = {
+                unlocked: data.unlocked ? data.unlocked.length : 0,
+                points: data.total_points || 0,
+                completion: 0, // Calculate based on unlocked/total
+                questions_answered: data.questions_answered || 0,
+                days_studied: data.days_studied || 0,
+                badges: data.badges || [],
+                rarest: data.rarest || null
+            };
+            
+            // Calculate completion percentage
+            if (statsData.unlocked > 0) {
+                statsData.completion = Math.round((statsData.unlocked / 45) * 100);
+            }
+            
+            console.log('Processed stats data:', statsData);
+            
+            updateAchievementStats(statsData);
             displayAchievements(data.achievements);
             updateAchievementCards(data);
-            updateLeaderboardWithLevelInfo(data.stats);
-            updateLeaderboardScores(data.stats);
+            updateLeaderboardWithLevelInfo(statsData);
+            updateLeaderboardScores(statsData);
         })
         .catch(error => {
             console.error('Error loading achievements:', error);
@@ -806,6 +857,14 @@ function updateAchievementProgress(data) {
     const progress = data.progress || {};
     const stats = data.stats || {};
     
+    // Check if this is a reset state (all stats are 0)
+    const isResetState = (
+        (data.questions_answered || 0) === 0 &&
+        (data.total_points || 0) === 0 &&
+        (data.days_studied || 0) === 0 &&
+        (!data.badges || data.badges.length === 0)
+    );
+    
     // Update Perfect Score achievement (20 questions with 100% accuracy)
     const perfectScoreCard = document.querySelector('[data-category="mastery"] .achievement-content h3');
     if (perfectScoreCard && perfectScoreCard.textContent.includes('Perfect Score')) {
@@ -813,11 +872,16 @@ function updateAchievementProgress(data) {
         const progressBar = card.querySelector('.progress-fill');
         const progressText = card.querySelector('.progress-text');
         if (progressBar && progressText) {
-            const totalAnswered = data.questions_answered || 0;
-            const target = 20;
-            const percentage = Math.min((totalAnswered / target) * 100, 100);
-            progressBar.style.width = percentage + '%';
-            progressText.textContent = `${totalAnswered}/${target}`;
+            if (isResetState) {
+                progressBar.style.width = '0%';
+                progressText.textContent = '0/20';
+            } else {
+                const totalAnswered = data.questions_answered || 0;
+                const target = 20;
+                const percentage = Math.min((totalAnswered / target) * 100, 100);
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = `${totalAnswered}/${target}`;
+            }
         }
     }
     
@@ -829,11 +893,16 @@ function updateAchievementProgress(data) {
             const progressBar = card.querySelector('.progress-fill');
             const progressText = card.querySelector('.progress-text');
             if (progressBar && progressText) {
-                const totalAnswered = data.questions_answered || 0;
-                const target = 1000;
-                const percentage = Math.min((totalAnswered / target) * 100, 100);
-                progressBar.style.width = percentage + '%';
-                progressText.textContent = `${totalAnswered}/${target}`;
+                if (isResetState) {
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '0/1000';
+                } else {
+                    const totalAnswered = data.questions_answered || 0;
+                    const target = 1000;
+                    const percentage = Math.min((totalAnswered / target) * 100, 100);
+                    progressBar.style.width = percentage + '%';
+                    progressText.textContent = `${totalAnswered}/${target}`;
+                }
             }
         }
     });
@@ -846,11 +915,16 @@ function updateAchievementProgress(data) {
             const progressBar = card.querySelector('.progress-fill');
             const progressText = card.querySelector('.progress-text');
             if (progressBar && progressText) {
-                const userAccuracy = stats.accuracy || 0;
-                const target = 90;
-                const percentage = Math.min((userAccuracy / target) * 100, 100);
-                progressBar.style.width = percentage + '%';
-                progressText.textContent = `${Math.round(userAccuracy)}% accuracy`;
+                if (isResetState) {
+                    progressBar.style.width = '0%';
+                    progressText.textContent = '0% in System Management';
+                } else {
+                    const userAccuracy = stats.accuracy || 0;
+                    const target = 90;
+                    const percentage = Math.min((userAccuracy / target) * 100, 100);
+                    progressBar.style.width = percentage + '%';
+                    progressText.textContent = `${Math.round(userAccuracy)}% accuracy`;
+                }
             }
         }
     });
@@ -928,13 +1002,128 @@ function displayAchievements(achievements) {
 
 // Update achievement statistics
 function updateAchievementStats(stats) {
-    document.getElementById('total-achievements').textContent = `${stats?.unlocked || 0}/${stats?.total || 45}`;
-    document.getElementById('total-points').textContent = stats?.points || '0';
-    document.getElementById('completion-rate').textContent = `${stats?.completion || 0}%`;
-    document.getElementById('rarest-achievement').textContent = stats?.rarest || 'None';
+    console.log('updateAchievementStats called with:', stats);
+    
+    // Check if this is a reset state (all stats are 0)
+    const isResetState = (
+        (stats?.unlocked || 0) === 0 &&
+        (stats?.points || 0) === 0 &&
+        (stats?.completion || 0) === 0 &&
+        (stats?.questions_answered || 0) === 0 &&
+        (stats?.days_studied || 0) === 0 &&
+        (!stats?.badges || stats.badges.length === 0)
+    );
+    
+    console.log('Reset state detection:', {
+        unlocked: stats?.unlocked || 0,
+        points: stats?.points || 0,
+        completion: stats?.completion || 0,
+        questions_answered: stats?.questions_answered || 0,
+        days_studied: stats?.days_studied || 0,
+        badges_length: stats?.badges ? stats.badges.length : 0,
+        isResetState: isResetState
+    });
+    
+    if (isResetState) {
+        console.log('Applying reset state...');
+        // Show fresh start values for reset state
+        document.getElementById('total-achievements').textContent = '0/45';
+        document.getElementById('total-points').textContent = '0';
+        document.getElementById('completion-rate').textContent = '0%';
+        document.getElementById('rarest-achievement').textContent = 'None yet - start your journey!';
+        
+        // Update the label text for reset state
+        const rarestLabel = document.getElementById('rarest-achievement-label');
+        if (rarestLabel) {
+            rarestLabel.textContent = 'Getting Started';
+            console.log('Updated rarest achievement label to: Getting Started');
+        } else {
+            console.log('Rarest achievement label element not found');
+        }
+        
+        // Reset upcoming rewards progress
+        resetUpcomingRewards();
+    } else {
+        console.log('Applying active state...');
+        // Show actual progress
+        document.getElementById('total-achievements').textContent = `${stats?.unlocked || 0}/${stats?.total || 45}`;
+        document.getElementById('total-points').textContent = stats?.points || '0';
+        document.getElementById('completion-rate').textContent = `${stats?.completion || 0}%`;
+        document.getElementById('rarest-achievement').textContent = stats?.rarest || 'None';
+        
+        // Update the label text for active state
+        const rarestLabel = document.getElementById('rarest-achievement-label');
+        if (rarestLabel) {
+            rarestLabel.textContent = 'Rarest Achievement';
+            console.log('Updated rarest achievement label to: Rarest Achievement');
+        }
+        
+        // Update upcoming rewards with actual progress
+        updateUpcomingRewards(stats);
+    }
     
     // Update leaderboard with level/XP info if available
     updateLeaderboardWithLevelInfo(stats);
+}
+
+// Reset upcoming rewards to initial state
+function resetUpcomingRewards() {
+    const rewardCards = document.querySelectorAll('.reward-card');
+    
+    rewardCards.forEach((card, index) => {
+        const progressFill = card.querySelector('.progress-fill');
+        const progressText = card.querySelector('.reward-progress span');
+        
+        if (progressFill && progressText) {
+            progressFill.style.width = '0%';
+            
+            if (index === 0) {
+                // Study Certificate
+                progressText.textContent = '0/20 achievements';
+            } else if (index === 1) {
+                // Custom Theme
+                progressText.textContent = 'Level 0/20';
+            } else if (index === 2) {
+                // Elite Status
+                progressText.textContent = '0/45 achievements';
+            }
+        }
+    });
+}
+
+// Update upcoming rewards with current progress
+function updateUpcomingRewards(stats) {
+    const rewardCards = document.querySelectorAll('.reward-card');
+    
+    rewardCards.forEach((card, index) => {
+        const progressFill = card.querySelector('.progress-fill');
+        const progressText = card.querySelector('.reward-progress span');
+        
+        if (progressFill && progressText) {
+            let percentage = 0;
+            let displayText = '';
+            
+            if (index === 0) {
+                // Study Certificate - 20 basic achievements
+                const basicAchievements = Math.min(stats?.unlocked || 0, 20);
+                percentage = (basicAchievements / 20) * 100;
+                displayText = `${basicAchievements}/20 achievements`;
+            } else if (index === 1) {
+                // Custom Theme - Level 20
+                const currentLevel = stats?.level || 0;
+                percentage = (currentLevel / 20) * 100;
+                displayText = `Level ${currentLevel}/20`;
+            } else if (index === 2) {
+                // Elite Status - All achievements
+                const totalAchievements = stats?.unlocked || 0;
+                percentage = (totalAchievements / 45) * 100;
+                displayText = `${totalAchievements}/45 achievements`;
+            }
+            
+            progressFill.style.width = Math.min(percentage, 100) + '%';
+            progressText.textContent = displayText;
+        }
+    });
 }
 
 // Update leaderboard items with real level/XP data

@@ -123,9 +123,135 @@ class AnalyticsService:
             logger.error(f"Error getting user summary for {user_id}: {e}")
             return self._get_demo_data()
     
+    def get_all_users(self) -> List[Dict[str, Any]]:
+        """Get a list of all users in the analytics system."""
+        try:
+            # Query unique users with their activity summary
+            user_stats = self.db_session.query(
+                Analytics.user_id,
+                func.count(Analytics.id).label('total_sessions'),
+                func.sum(Analytics.questions_attempted).label('total_questions'),
+                func.sum(Analytics.questions_correct).label('total_correct'),
+                func.max(Analytics.created_at).label('last_activity'),
+                func.min(Analytics.created_at).label('first_activity')
+            ).filter(
+                Analytics.user_id.isnot(None)  # Exclude anonymous users
+            ).group_by(Analytics.user_id).order_by(func.max(Analytics.created_at).desc()).all()
+            
+            users_list = []
+            for user in user_stats:
+                accuracy = 0
+                if user.total_questions and user.total_questions > 0:
+                    accuracy = (user.total_correct / user.total_questions) * 100
+                
+                users_list.append({
+                    'user_id': user.user_id,
+                    'total_sessions': user.total_sessions,
+                    'total_questions': user.total_questions or 0,
+                    'total_correct': user.total_correct or 0,
+                    'accuracy': round(accuracy, 1),
+                    'last_activity': user.last_activity.isoformat() if user.last_activity else None,
+                    'first_activity': user.first_activity.isoformat() if user.first_activity else None
+                })
+            
+            # If no registered users, include some anonymous session data
+            if not users_list:
+                anonymous_stats = self.db_session.query(
+                    func.count(Analytics.id).label('total_sessions'),
+                    func.sum(Analytics.questions_attempted).label('total_questions'),
+                    func.sum(Analytics.questions_correct).label('total_correct'),
+                    func.max(Analytics.created_at).label('last_activity')
+                ).filter(Analytics.user_id.is_(None)).first()
+                
+                if anonymous_stats and anonymous_stats.total_sessions:
+                    accuracy = 0
+                    if anonymous_stats.total_questions and anonymous_stats.total_questions > 0:
+                        accuracy = (anonymous_stats.total_correct / anonymous_stats.total_questions) * 100
+                    
+                    users_list.append({
+                        'user_id': 'anonymous',
+                        'total_sessions': anonymous_stats.total_sessions,
+                        'total_questions': anonymous_stats.total_questions or 0,
+                        'total_correct': anonymous_stats.total_correct or 0,
+                        'accuracy': round(accuracy, 1),
+                        'last_activity': anonymous_stats.last_activity.isoformat() if anonymous_stats.last_activity else None,
+                        'first_activity': None
+                    })
+            
+            return users_list
+            
+        except Exception as e:
+            logger.error(f"Error getting all users: {e}")
+            return [{'user_id': 'demo_user_001', 'total_sessions': 10, 'total_questions': 150, 'total_correct': 120, 'accuracy': 80.0, 'last_activity': datetime.now().isoformat(), 'first_activity': None}]
+    
+    def get_user_activity_overview(self) -> Dict[str, Any]:
+        """Get overview of all user activity in the system."""
+        try:
+            # Get total system statistics
+            total_stats = self.db_session.query(
+                func.count(Analytics.id).label('total_sessions'),
+                func.count(func.distinct(Analytics.user_id)).label('unique_users'),
+                func.sum(Analytics.questions_attempted).label('total_questions'),
+                func.sum(Analytics.questions_correct).label('total_correct'),
+                func.sum(Analytics.session_duration).label('total_study_time')
+            ).first()
+            
+            # Get activity by type
+            activity_breakdown = self.db_session.query(
+                Analytics.activity_type,
+                func.count(Analytics.id).label('count')
+            ).group_by(Analytics.activity_type).all()
+            
+            # Get recent activity (last 30 days)
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            recent_activity = self.db_session.query(
+                func.date(Analytics.created_at).label('date'),
+                func.count(Analytics.id).label('sessions')
+            ).filter(
+                Analytics.created_at >= thirty_days_ago
+            ).group_by(func.date(Analytics.created_at)).order_by(func.date(Analytics.created_at)).all()
+            
+            return {
+                'total_sessions': total_stats.total_sessions or 0,
+                'unique_users': total_stats.unique_users or 0,
+                'total_questions': total_stats.total_questions or 0,
+                'total_correct': total_stats.total_correct or 0,
+                'overall_accuracy': (total_stats.total_correct / total_stats.total_questions * 100) if total_stats.total_questions else 0,
+                'total_study_time': total_stats.total_study_time or 0,
+                'activity_breakdown': {activity.activity_type: activity.count for activity in activity_breakdown},
+                'recent_activity': [{'date': str(activity.date), 'sessions': activity.sessions} for activity in recent_activity]
+            }
+            
+        except Exception as e:
+            logger.error(f"Error getting user activity overview: {e}")
+            return {
+                'total_sessions': 0,
+                'unique_users': 0,
+                'total_questions': 0,
+                'total_correct': 0,
+                'overall_accuracy': 0,
+                'total_study_time': 0,
+                'activity_breakdown': {},
+                'recent_activity': []
+            }
+    
     def _get_demo_data(self) -> Dict[str, Any]:
         """Return demo data when no real analytics exist."""
         from datetime import datetime, timedelta
+        import os
+        
+        # Check if we should return empty data instead of demo data
+        # This happens when data was recently reset
+        reset_marker_file = 'data/.analytics_reset_marker'
+        if os.path.exists(reset_marker_file):
+            # Check if reset was recent (within last 5 minutes)
+            try:
+                reset_time = os.path.getmtime(reset_marker_file)
+                current_time = datetime.now().timestamp()
+                if current_time - reset_time < 300:  # 5 minutes
+                    return self._get_empty_data()
+            except:
+                pass
         
         # Generate realistic demo data
         today = datetime.now()
@@ -170,8 +296,37 @@ class AnalyticsService:
             'total_sessions': 43
         }
     
+    def _get_empty_data(self) -> Dict[str, Any]:
+        """Return empty data after a reset."""
+        return {
+            'total_questions': 0,
+            'overall_accuracy': 0,
+            'total_study_time': 0,
+            'total_vm_commands': 0,
+            'recent_performance': [],
+            'topic_breakdown': {},
+            'activity_breakdown': {},
+            'study_streak': 0,
+            'total_sessions': 0
+        }
+    
     def _get_demo_user_data(self) -> Dict[str, Any]:
         """Return real demo user data from database."""
+        import os
+        
+        # Check if we should return empty data instead of demo data
+        # This happens when data was recently reset
+        reset_marker_file = 'data/.analytics_reset_marker'
+        if os.path.exists(reset_marker_file):
+            # Check if reset was recent (within last 5 minutes)
+            try:
+                reset_time = os.path.getmtime(reset_marker_file)
+                current_time = datetime.now().timestamp()
+                if current_time - reset_time < 300:  # 5 minutes
+                    return self._get_empty_data()
+            except:
+                pass
+        
         try:
             # Query demo user data
             demo_stats = self.db_session.query(

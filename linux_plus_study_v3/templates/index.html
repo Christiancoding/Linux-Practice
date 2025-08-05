@@ -179,32 +179,10 @@
                 <i class="fas fa-trophy"></i> Recent Achievements
             </h3>
             <div class="achievements-list" id="recent-achievements">
-                <div class="achievement-item">
-                    <div class="achievement-icon" style="background: var(--gradient-success);">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div class="achievement-info">
-                        <h4>First Steps</h4>
-                        <p>Complete your first quiz</p>
-                    </div>
-                </div>
-                <div class="achievement-item locked">
-                    <div class="achievement-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div class="achievement-info">
-                        <h4>Speed Demon</h4>
-                        <p>Complete a timed challenge</p>
-                    </div>
-                </div>
-                <div class="achievement-item locked">
-                    <div class="achievement-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div class="achievement-info">
-                        <h4>Perfect Score</h4>
-                        <p>Get 100% on any quiz</p>
-                    </div>
+                <!-- Achievements will be loaded dynamically -->
+                <div class="loading-achievements">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading achievements...</p>
                 </div>
             </div>
             <button class="btn btn-sm btn-dark mt-3" onclick="location.href='/achievements'">
@@ -493,6 +471,32 @@
     background: var(--bg-tertiary) !important;
 }
 
+.empty-achievements {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-achievements .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    opacity: 0.6;
+}
+
+.empty-achievements p {
+    margin: 0 0 0.5rem 0;
+    font-weight: 500;
+}
+
+.empty-achievements small {
+    opacity: 0.8;
+    font-size: 0.85rem;
+}
+
 /* Study Calendar */
 .study-calendar {
     display: grid;
@@ -647,15 +651,31 @@ function updateDashboardStats() {
             // Create analytics data from dashboard data for improvement metrics
             const mockAnalyticsData = createMockAnalyticsFromDashboard(data);
             
-            // Update improvement metrics using the dashboard data
-            updateImprovementMetrics(mockAnalyticsData);
+            // Update improvement metrics using the enhanced performance data
+            if (data.performance_overview) {
+                updateImprovementMetricsWithEnhancedData(data);
+            } else {
+                updateImprovementMetrics(mockAnalyticsData);
+            }
             
-            // Update study activity calendar using the dashboard data  
-            updateStudyActivityCalendar(mockAnalyticsData);
+            // Update study activity calendar using the enhanced data
+            if (data.study_activity) {
+                updateStudyActivityCalendarWithEnhancedData(data.study_activity);
+            } else {
+                updateStudyActivityCalendar(mockAnalyticsData);
+            }
+            
+            // Update achievements using enhanced data
+            if (data.recent_achievements) {
+                updateRecentAchievementsDisplay(data.recent_achievements);
+            } else {
+                loadAchievementsData(); // Fallback to old method
+            }
         })
         .catch(error => {
             console.error('Error fetching dashboard data:', error);
             updateDashboardStatsFromLocalStorage();
+            loadAchievementsData(); // Still try to load achievements
         });
 }
 
@@ -690,6 +710,141 @@ function updateProgressRingWithData(data) {
     }, 500);
     
     document.querySelector('.progress-percent').textContent = Math.round(levelProgress) + '%';
+}
+
+// Load and display achievements data
+function loadAchievementsData() {
+    console.log('Loading achievements data...');
+    fetch('/api/achievements')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Achievements data received:', data);
+            updateAchievementsDisplay(data);
+        })
+        .catch(error => {
+            console.error('Error loading achievements:', error);
+            showAchievementsError();
+        });
+}
+
+// Update achievements display
+function updateAchievementsDisplay(achievementsData) {
+    const container = document.getElementById('recent-achievements');
+    
+    if (!achievementsData || !achievementsData.unlocked) {
+        showAchievementsError();
+        return;
+    }
+    
+    const unlockedAchievements = achievementsData.unlocked || [];
+    const availableAchievements = achievementsData.available || [];
+    
+    if (unlockedAchievements.length === 0) {
+        // Show empty state when no achievements are unlocked
+        container.innerHTML = `
+            <div class="empty-achievements">
+                <div class="empty-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <p>No achievements unlocked yet</p>
+                <small>Complete quizzes to earn your first achievement!</small>
+            </div>
+        `;
+        return;
+    }
+    
+    // Show unlocked achievements (recent ones first, max 3)
+    const recentAchievements = unlockedAchievements.slice(-3).reverse();
+    const remainingSlots = 3 - recentAchievements.length;
+    
+    let achievementsHTML = '';
+    
+    // Add unlocked achievements
+    recentAchievements.forEach(achievement => {
+        const badgeName = achievement.badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        achievementsHTML += `
+            <div class="achievement-item">
+                <div class="achievement-icon" style="background: var(--gradient-success);">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="achievement-info">
+                    <h4>${badgeName}</h4>
+                    <p>${achievement.description}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    // Fill remaining slots with locked achievements
+    const availableToShow = availableAchievements.slice(0, remainingSlots);
+    availableToShow.forEach(achievement => {
+        const badgeName = achievement.badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        achievementsHTML += `
+            <div class="achievement-item locked">
+                <div class="achievement-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="achievement-info">
+                    <h4>${badgeName}</h4>
+                    <p>${achievement.description}</p>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = achievementsHTML;
+}
+
+// Show error state for achievements
+function showAchievementsError() {
+    const container = document.getElementById('recent-achievements');
+    container.innerHTML = `
+        <div class="empty-achievements">
+            <div class="empty-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <p>Unable to load achievements</p>
+            <small>Please try refreshing the page</small>
+        </div>
+    `;
+}
+
+// Update achievements display using enhanced dashboard data
+function updateRecentAchievementsDisplay(recentAchievements) {
+    const container = document.getElementById('recent-achievements');
+    
+    if (!recentAchievements || recentAchievements.length === 0) {
+        container.innerHTML = `
+            <div class="empty-achievements">
+                <div class="empty-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <p>No recent achievements</p>
+                <small>Complete quizzes to earn achievements!</small>
+            </div>
+        `;
+        return;
+    }
+    
+    let achievementsHTML = '';
+    
+    // Display recent achievements from enhanced data
+    recentAchievements.forEach(achievement => {
+        achievementsHTML += `
+            <div class="achievement-item">
+                <div class="achievement-icon" style="background: var(--gradient-success);">
+                    ${achievement.icon || '<i class="fas fa-star"></i>'}
+                </div>
+                <div class="achievement-info">
+                    <h4>${achievement.name}</h4>
+                    <p>${achievement.description}</p>
+                    <small class="achievement-date">${new Date(achievement.earned_date).toLocaleDateString()}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = achievementsHTML;
 }
 
 // Generate study calendar
@@ -759,6 +914,22 @@ function showCommandReference(category) {
 
 // Create consistent analytics data from dashboard data
 function createMockAnalyticsFromDashboard(dashboardData) {
+    // Check if this is a reset state (all stats are 0)
+    const isResetState = (
+        (dashboardData.accuracy || 0) === 0 &&
+        (dashboardData.total_correct || 0) === 0 &&
+        (dashboardData.study_time || 0) === 0 &&
+        (dashboardData.streak || 0) === 0
+    );
+    
+    // If in reset state, return empty analytics data
+    if (isResetState) {
+        return {
+            total_questions: 0,
+            recent_performance: []
+        };
+    }
+    
     const today = new Date(); // August 5, 2025
     const recentPerformance = [];
     
@@ -801,10 +972,53 @@ function createMockAnalyticsFromDashboard(dashboardData) {
 
 // Update improvement metrics based on analytics data
 function updateImprovementMetrics(analyticsData) {
-    if (!analyticsData || !analyticsData.recent_performance) return;
+    if (!analyticsData || !analyticsData.recent_performance || analyticsData.recent_performance.length === 0) {
+        // No data available - show neutral/empty state for reset
+        const trends = document.querySelectorAll('.stat-trend');
+        
+        // Update correct answers trend (first stat card)
+        if (trends[0]) {
+            trends[0].className = 'stat-trend neutral';
+            trends[0].innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
+        }
+        
+        // Update accuracy trend (second stat card)
+        if (trends[1]) {
+            trends[1].className = 'stat-trend neutral';
+            trends[1].innerHTML = '<i class="fas fa-chart-line"></i> Practice makes perfect!';
+        }
+        
+        // Update study time trend (fourth stat card)
+        if (trends[3]) {
+            trends[3].className = 'stat-trend neutral';
+            trends[3].innerHTML = '<i class="fas fa-chart-line"></i> Begin learning!';
+        }
+        
+        return;
+    }
     
     const recentPerformance = analyticsData.recent_performance;
-    if (recentPerformance.length < 14) return;
+    if (recentPerformance.length < 14) {
+        // Not enough data for week-over-week comparison
+        const trends = document.querySelectorAll('.stat-trend');
+        
+        if (trends[0]) {
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> Building momentum!';
+        }
+        
+        if (trends[1]) {
+            trends[1].className = 'stat-trend positive';
+            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Improving daily!';
+        }
+        
+        if (trends[3]) {
+            trends[3].className = 'stat-trend positive';
+            trends[3].innerHTML = '<i class="fas fa-arrow-up"></i> Keep studying!';
+        }
+        
+        return;
+    }
     
     // Calculate week-over-week improvements (consistent calculations)
     const thisWeek = recentPerformance.slice(0, 7);
@@ -913,6 +1127,133 @@ function updateStudyActivityCalendar(analyticsData) {
         cell.title = tooltipText;
         
         calendar.appendChild(cell);
+    }
+}
+
+// Enhanced study activity calendar using dashboard data
+function updateStudyActivityCalendarWithEnhancedData(studyActivity) {
+    const calendar = document.getElementById('study-calendar');
+    if (!calendar) return;
+    
+    calendar.innerHTML = '';
+    
+    const dailyActivity = studyActivity.daily_activity || [];
+    const activityMap = {};
+    
+    // Map activity data by date
+    dailyActivity.forEach(day => {
+        const date = new Date(day.date).toDateString();
+        activityMap[date] = {
+            questions: day.questions || 0,
+            accuracy: day.accuracy || 0
+        };
+    });
+    
+    const today = new Date();
+    
+    // Generate last 35 days
+    for (let i = 34; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'activity-cell';
+        
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateString = date.toDateString();
+        
+        // Determine activity level
+        let level = 0;
+        let tooltipText = `${date.toLocaleDateString()}: No activity`;
+        
+        if (activityMap[dateString]) {
+            const questions = activityMap[dateString].questions;
+            const accuracy = activityMap[dateString].accuracy;
+            
+            if (questions > 0) {
+                level = Math.min(4, Math.ceil(questions / 3)); // 1-4 activity levels based on questions
+                tooltipText = `${date.toLocaleDateString()}: ${questions} questions (${accuracy.toFixed(1)}% accuracy)`;
+            }
+        }
+        
+        cell.setAttribute('data-level', level);
+        cell.title = tooltipText;
+        
+        calendar.appendChild(cell);
+    }
+}
+
+// Update improvement metrics using enhanced dashboard data
+function updateImprovementMetricsWithEnhancedData(dashboardData) {
+    const trends = document.querySelectorAll('.stat-trend');
+    const performance = dashboardData.performance_overview || {};
+    const studyActivity = dashboardData.study_activity || {};
+    const weeklyStats = studyActivity.weekly_summary || {};
+    
+    // Update Correct Answers trend (first stat card)
+    if (trends[0]) {
+        const totalQuestions = dashboardData.questions_answered || 0;
+        const correctAnswers = dashboardData.total_correct || 0;
+        
+        if (totalQuestions === 0) {
+            trends[0].className = 'stat-trend neutral';
+            trends[0].innerHTML = '<i class="fas fa-play-circle"></i> Start practicing!';
+        } else if (totalQuestions < 10) {
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> Building momentum!';
+        } else {
+            const weeklyQuestions = weeklyStats.total_questions || 0;
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = `<i class="fas fa-arrow-up"></i> ${weeklyQuestions} this week`;
+        }
+    }
+    
+    // Update Accuracy trend (second stat card)
+    if (trends[1]) {
+        const accuracy = dashboardData.accuracy || 0;
+        const trend = performance.overall_trend || 'neutral';
+        
+        if (accuracy === 0) {
+            trends[1].className = 'stat-trend neutral';
+            trends[1].innerHTML = '<i class="fas fa-target"></i> Ready to improve!';
+        } else if (trend === 'improving') {
+            trends[1].className = 'stat-trend positive';
+            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Improving trend!';
+        } else if (trend === 'declining') {
+            trends[1].className = 'stat-trend negative';
+            trends[1].innerHTML = '<i class="fas fa-chart-line"></i> Keep practicing!';
+        } else {
+            trends[1].className = 'stat-trend neutral';
+            trends[1].innerHTML = '<i class="fas fa-equals"></i> Staying consistent';
+        }
+    }
+    
+    // Update Study Time trend (fourth stat card - index 3)
+    if (trends[3]) {
+        const studyTime = dashboardData.study_time || 0;
+        const weeklyTime = weeklyStats.total_time || 0;
+        
+        if (studyTime === 0) {
+            trends[3].className = 'stat-trend neutral';
+            trends[3].innerHTML = '<i class="fas fa-clock"></i> Start your journey!';
+        } else {
+            const hours = Math.floor(weeklyTime / 3600);
+            const minutes = Math.floor((weeklyTime % 3600) / 60);
+            
+            let timeText = '';
+            if (hours > 0) {
+                timeText = `${hours}h ${minutes}m`;
+            } else {
+                timeText = `${minutes}m`;
+            }
+            
+            trends[3].className = 'stat-trend positive';
+            trends[3].innerHTML = `<i class="fas fa-arrow-up"></i> ${timeText} this week`;
+        }
+    }
+    
+    // Add performance insights based on strongest/weakest topics
+    if (performance.strongest_topic && performance.weakest_topic) {
+        // Could add additional UI elements showing strongest/weakest topics
+        console.log(`Strongest: ${performance.strongest_topic}, Weakest: ${performance.weakest_topic}`);
     }
 }
 

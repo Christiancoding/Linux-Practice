@@ -183,6 +183,29 @@ class StatsControllerProtocol(Protocol):
     def remove_from_review_list(self, question_text: str) -> bool: ...
     def cleanup_missing_review_questions(self, missing_questions: List[str]) -> int: ...
 
+
+# Initialize analytics for current session
+def get_current_user_id():
+    from flask import session
+    return session.get('user_id', 'anonymous')
+
+def ensure_analytics_user_sync():
+    """Ensure analytics service is tracking the current session user"""
+    try:
+        from services.simple_analytics import get_analytics_manager
+        analytics = get_analytics_manager()
+        user_id = get_current_user_id()
+        
+        # Initialize user if doesn't exist
+        user_data = analytics.get_user_data(user_id)
+        if not user_data:
+            analytics.create_profile(user_id)
+        
+        return user_id, analytics
+    except Exception as e:
+        print(f"Error syncing analytics user: {e}")
+        return 'anonymous', None
+
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
     
@@ -1669,6 +1692,32 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.settings_page_handler = settings_page
         
+        @self.app.route('/profile-test')
+        def profile_test():
+            # Serve the HTML test file
+            try:
+                with open('profile_test.html', 'r') as f:
+                    content = f.read()
+                from flask import Response
+                return Response(content, mimetype='text/html')
+            except FileNotFoundError:
+                return "Profile test page not found", 404
+        # Store reference to make it clear the route is being used
+        self.profile_test_handler = profile_test
+        
+        @self.app.route('/debug-settings')
+        def debug_settings():
+            # Serve the debug HTML file
+            try:
+                with open('debug_settings.html', 'r') as f:
+                    content = f.read()
+                from flask import Response
+                return Response(content, mimetype='text/html')
+            except FileNotFoundError:
+                return "Debug settings page not found", 404
+        # Store reference to make it clear the route is being used
+        self.debug_settings_handler = debug_settings
+        
         @self.app.route('/dashboard-test')
         def dashboard_test():
             return render_template('dashboard_test.html')
@@ -1894,6 +1943,20 @@ class LinuxPlusStudyWeb:
                     question_index
                 )
                 
+                # Track analytics for this answer
+                try:
+                    user_id, analytics = ensure_analytics_user_sync()
+                    if analytics and user_id:
+                        # Update quiz statistics
+                        analytics.track_question_answer(
+                            user_id=user_id,
+                            correct=result.get('is_correct', False),
+                            category=getattr(self.quiz_controller, 'category_filter', None),
+                            time_taken=None  # Could add timing if needed
+                        )
+                except Exception as e:
+                    print(f"Error tracking analytics: {e}")
+                
                 # Clear current question cache after processing
                 self.quiz_controller.clear_current_question_cache()
                 
@@ -1902,6 +1965,8 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 print(f"Error in submit_answer: {e}")
                 return jsonify({'error': str(e)})
+        
+        # Store reference to the route function
         
         # Store reference to the route function
         self.api_submit_answer_handler = api_submit_answer
@@ -2148,7 +2213,32 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/statistics')
         def api_statistics():
             try:
-                return jsonify(self.stats_controller.get_detailed_statistics())
+                # Use simple JSON-based analytics for consistent data
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                analytics_stats = analytics.get_analytics_stats(user_id)
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                
+                # Format data in the expected statistics format
+                statistics_data = {
+                    'overall': {
+                        'total_questions': analytics_stats['total_questions'],
+                        'correct_answers': analytics_stats['correct_answers'],
+                        'overall_accuracy': analytics_stats['accuracy'],
+                        'total_study_time': analytics_stats['total_study_time'],
+                        'total_sessions': analytics_stats['total_sessions'],
+                        'level': dashboard_stats['level'],
+                        'xp': dashboard_stats['xp']
+                    },
+                    'topics': analytics_stats['topics_studied'],
+                    'difficulty': analytics_stats['difficulty_progress'],
+                    'recent_sessions': analytics_stats.get('session_history', [])
+                }
+                
+                return jsonify(statistics_data)
             except Exception as e:
                 return jsonify({'error': str(e)})
         
@@ -2158,122 +2248,122 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/dashboard')
         def api_dashboard():
             try:
-                # Get analytics data using the same service as analytics dashboard
-                from services.analytics_integration import get_user_analytics_summary
+                # Use simple JSON-based analytics
+                from services.simple_analytics import get_analytics_manager
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics_stats = get_user_analytics_summary(user_id)
+                analytics = get_analytics_manager()
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
                 
-                # If anonymous user has no data, try to get demo user data
-                if (analytics_stats and 
-                    (analytics_stats.get('total_questions', 0) == 0 or 'error' in analytics_stats) and 
-                    user_id == 'anonymous'):
-                    
-                    # Try getting demo user data instead
-                    demo_stats = get_user_analytics_summary('demo_user_001')
-                    if demo_stats and demo_stats.get('total_questions', 0) > 0:
-                        analytics_stats = demo_stats
+                return jsonify(dashboard_stats)
                 
-                if analytics_stats and 'error' not in analytics_stats and analytics_stats.get('total_questions', 0) > 0:
-                    # Convert analytics data to dashboard format
-                    total_questions = analytics_stats.get('total_questions', 0)
-                    overall_accuracy = analytics_stats.get('overall_accuracy', 0)
-                    total_study_time = analytics_stats.get('total_study_time', 0)  # in seconds
-                    study_streak = analytics_stats.get('study_streak', 0)
-                    total_sessions = analytics_stats.get('total_sessions', 0)
-                    
-                    # Calculate level based on questions answered (simple progression)
-                    level = max(1, (total_questions // 50) + 1)  # Level up every 50 questions
-                    level_progress = ((total_questions % 50) / 50) * 100  # Progress within current level
-                    
-                    # XP calculation (questions answered + bonus for accuracy)
-                    base_xp = total_questions * 10  # 10 XP per question
-                    accuracy_bonus = int((overall_accuracy / 100) * total_questions * 5)  # 5 bonus XP per question at 100% accuracy
-                    total_xp = base_xp + accuracy_bonus
-                    
-                    dashboard_data = {
-                        'level': level,
-                        'xp': total_xp,
-                        'level_progress': level_progress,
-                        'streak': study_streak,
-                        'total_correct': int(total_questions * (overall_accuracy / 100)) if total_questions > 0 else 0,
-                        'accuracy': overall_accuracy,
-                        'study_time': total_study_time,  # in seconds
-                        'session_points': total_xp,  # Use total XP as session points
-                        'total_points': total_xp,
-                        'questions_answered': total_questions,
-                        'days_studied': study_streak,  # Use streak as days studied
-                        'badges_earned': min(10, level - 1),  # Simple badge calculation
-                        'total_sessions': total_sessions
-                    }
-                else:
-                    # Fallback to basic stats if analytics fails
-                    stats = self.game_state.get_statistics_summary()
-                    level_info = self.game_state.achievement_system.get_level_progress()
-                    current_streak = 0  # Default streak
-                    
-                    dashboard_data = {
-                        'level': level_info['level'],
-                        'xp': level_info['total_xp'],
-                        'level_progress': level_info['progress_percentage'],
-                        'streak': current_streak,
-                        'total_correct': stats['history'].get('total_correct', 0),
-                        'accuracy': stats['history'].get('overall_accuracy', 0),
-                        'study_time': stats['history'].get('total_study_time', 0),
-                        'session_points': stats['session']['current_session_points'],
-                        'total_points': stats['achievements']['total_points'],
-                        'questions_answered': stats['achievements']['questions_answered'],
-                        'days_studied': stats['achievements']['days_studied'],
-                        'badges_earned': stats['achievements']['badges_earned']
-                    }
-                
-                return jsonify(dashboard_data)
             except Exception as e:
                 return jsonify({'error': str(e)})
         
         # Store reference to the route function
         self.api_dashboard_handler = api_dashboard
         
+        @self.app.route('/api/analytics')
+        def api_analytics():
+            try:
+                # Use simple JSON-based analytics
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                analytics_stats = analytics.get_analytics_stats(user_id)
+                
+                return jsonify(analytics_stats)
+                
+            except Exception as e:
+                return jsonify({'error': str(e)})
+        
+        # Store reference to the route function
+        self.api_analytics_handler = api_analytics
+        
         @self.app.route('/api/achievements')
         def api_achievements():
             try:
-                achievements_data = self.stats_controller.get_achievements_data()
-                level_info = self.game_state.achievement_system.get_level_progress()
+                # Use simple JSON-based analytics for consistent data
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
                 
-                # Get detailed statistics for accuracy and question count
-                try:
-                    detailed_stats = self.stats_controller.get_detailed_statistics()
-                    accuracy = detailed_stats['overall']['overall_accuracy']
-                    # Get questions answered from achievements data or game state
-                    questions_answered = self.game_state.achievements.get('questions_answered', 0)
-                except Exception:
-                    accuracy = 0.0  # Fallback if no stats available
-                    questions_answered = 0
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data(user_id)
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
                 
-                # Safely get list lengths
-                unlocked_list = achievements_data.get('unlocked', [])
-                available_list = achievements_data.get('available', [])
+                # Calculate achievements based on simple analytics
+                total_questions = user_data['total_questions']
+                correct_answers = user_data['correct_answers']
+                accuracy = user_data['accuracy']
+                level = dashboard_stats['level']
+                xp = dashboard_stats['xp']
                 
-                unlocked_count = len(unlocked_list) if isinstance(unlocked_list, list) else 0
-                available_count = len(available_list) if isinstance(available_list, list) else 0
-                total_achievements = unlocked_count + available_count
+                # Simple achievement system based on progress
+                achievements = []
+                unlocked_count = 0
                 
-                # Add level and stats information to achievements data
-                achievements_data['stats'] = {
-                    'unlocked': unlocked_count,
-                    'total': total_achievements,
-                    'points': achievements_data.get('total_points', 0),
-                    'completion': round((unlocked_count / max(1, total_achievements)) * 100, 1),
-                    'rarest': 'None',  # Could be implemented later
-                    'level': level_info['level'],
-                    'xp': level_info['total_xp'],
-                    'level_progress': level_info['progress_percentage'],
-                    'accuracy': accuracy
+                # Achievement definitions based on analytics data
+                achievement_defs = [
+                    {'name': 'First Steps', 'desc': 'Answer your first question', 'threshold': 1, 'type': 'questions'},
+                    {'name': 'Getting Started', 'desc': 'Answer 5 questions', 'threshold': 5, 'type': 'questions'},
+                    {'name': 'On a Roll', 'desc': 'Answer 10 questions', 'threshold': 10, 'type': 'questions'},
+                    {'name': 'Dedicated Learner', 'desc': 'Answer 25 questions', 'threshold': 25, 'type': 'questions'},
+                    {'name': 'Knowledge Seeker', 'desc': 'Answer 50 questions', 'threshold': 50, 'type': 'questions'},
+                    {'name': 'First Correct', 'desc': 'Get your first answer right', 'threshold': 1, 'type': 'correct'},
+                    {'name': 'Accuracy Expert', 'desc': 'Achieve 80% accuracy (min 10 questions)', 'threshold': 80, 'type': 'accuracy'},
+                    {'name': 'Perfect Score', 'desc': 'Achieve 100% accuracy (min 5 questions)', 'threshold': 100, 'type': 'accuracy'},
+                    {'name': 'Level Up', 'desc': 'Reach level 2', 'threshold': 2, 'type': 'level'},
+                    {'name': 'XP Collector', 'desc': 'Earn 100 XP', 'threshold': 100, 'type': 'xp'},
+                ]
+                
+                # Check which achievements are unlocked
+                for achievement in achievement_defs:
+                    unlocked = False
+                    
+                    if achievement['type'] == 'questions':
+                        unlocked = total_questions >= achievement['threshold']
+                    elif achievement['type'] == 'correct':
+                        unlocked = correct_answers >= achievement['threshold']
+                    elif achievement['type'] == 'accuracy':
+                        if achievement['threshold'] == 100:
+                            unlocked = accuracy >= 100 and total_questions >= 5
+                        else:
+                            unlocked = accuracy >= achievement['threshold'] and total_questions >= 10
+                    elif achievement['type'] == 'level':
+                        unlocked = level >= achievement['threshold']
+                    elif achievement['type'] == 'xp':
+                        unlocked = xp >= achievement['threshold']
+                    
+                    achievement['unlocked'] = unlocked
+                    if unlocked:
+                        unlocked_count += 1
+                    
+                    achievements.append(achievement)
+                
+                # Calculate total points based on unlocked achievements
+                total_points = unlocked_count * 10  # 10 points per achievement
+                
+                # Prepare response data consistent with simple analytics
+                achievements_data = {
+                    'unlocked': [a for a in achievements if a['unlocked']],
+                    'available': [a for a in achievements if not a['unlocked']],
+                    'stats': {
+                        'unlocked': unlocked_count,
+                        'total': len(achievement_defs),
+                        'points': total_points,
+                        'completion': round((unlocked_count / len(achievement_defs)) * 100, 1),
+                        'rarest': 'Perfect Score' if any(a['name'] == 'Perfect Score' and a['unlocked'] for a in achievements) else 'None',
+                        'level': level,
+                        'xp': xp,
+                        'level_progress': dashboard_stats['level_progress'],
+                        'accuracy': accuracy
+                    },
+                    'questions_answered': total_questions
                 }
-                
-                # Add questions answered for progress calculations
-                achievements_data['questions_answered'] = questions_answered
                 
                 return jsonify(achievements_data)
             except Exception as e:
@@ -2303,26 +2393,161 @@ class LinuxPlusStudyWeb:
         # Store reference to the route function
         self.api_clear_statistics_handler = api_clear_statistics
         
+        # Profile Management API Routes
+        @self.app.route('/api/profiles', methods=['GET'])
+        def api_get_profiles():
+            """Get all user profiles"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                analytics = get_analytics_manager()
+                profiles = analytics.get_all_profiles()
+                
+                # Convert display_name to name for frontend compatibility
+                for profile_id, profile_data in profiles.items():
+                    profile_data['name'] = profile_data.get('display_name', profile_id)
+                
+                current_profile = session.get('user_id', 'anonymous')
+                return jsonify({'success': True, 'profiles': profiles, 'current_profile': current_profile})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @self.app.route('/api/profiles', methods=['POST'])
+        def api_create_profile():
+            """Create a new user profile"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                import uuid
+                data = request.get_json()
+                
+                # Frontend sends 'name', use it as display_name and generate user_id
+                display_name = data.get('name', '').strip()
+                
+                if not display_name:
+                    return jsonify({'success': False, 'error': 'Profile name is required'})
+                
+                # Generate a unique user_id based on the display name
+                user_id = display_name.lower().replace(' ', '_').replace('-', '_')
+                user_id = ''.join(c for c in user_id if c.isalnum() or c == '_')
+                
+                # Add timestamp to ensure uniqueness
+                user_id = f"{user_id}_{str(uuid.uuid4())[:8]}"
+                
+                analytics = get_analytics_manager()
+                success = analytics.create_profile(user_id, display_name)
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'Profile created successfully', 'user_id': user_id})
+                else:
+                    return jsonify({'success': False, 'error': 'Profile already exists or invalid name'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @self.app.route('/api/profiles/<user_id>', methods=['DELETE'])
+        def api_delete_profile(user_id):
+            """Delete a user profile"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                success = analytics.delete_profile(user_id)
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'Profile deleted successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Profile not found or cannot be deleted'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @self.app.route('/api/profiles/<user_id>/rename', methods=['PUT'])
+        def api_rename_profile(user_id):
+            """Rename a user profile"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                data = request.get_json()
+                
+                # Frontend sends 'name', but backend expects 'display_name'
+                new_display_name = data.get('name', '').strip()
+                
+                if not new_display_name:
+                    return jsonify({'success': False, 'error': 'Profile name is required'})
+                
+                analytics = get_analytics_manager()
+                success = analytics.rename_profile(user_id, new_display_name)
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'Profile renamed successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Profile not found'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @self.app.route('/api/profiles/<user_id>/reset', methods=['POST'])
+        def api_reset_profile(user_id):
+            """Reset a user profile to default state"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                success = analytics.reset_profile(user_id)
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'Profile reset successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Profile not found'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
+        @self.app.route('/api/profiles/switch', methods=['POST'])
+        def api_switch_profile():
+            """Switch active user profile"""
+            try:
+                data = request.get_json()
+                
+                # Frontend sends 'profile_id', but we expect 'user_id'
+                user_id = data.get('profile_id', '').strip()
+                
+                if not user_id:
+                    return jsonify({'success': False, 'error': 'Profile ID is required'})
+                
+                # Store current user in session
+                from flask import session
+                session['user_id'] = user_id
+                
+                # Ensure analytics is synced with new user
+                ensure_analytics_user_sync()
+                
+                # Initialize quiz controller with new user context
+                if hasattr(self, 'quiz_controller'):
+                    # Reset quiz controller state for new user
+                    self.quiz_controller.reset_session()
+                
+                return jsonify({'success': True, 'message': f'Switched to profile: {user_id}'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
+        
         @self.app.route('/api/review_incorrect')
         def api_review_incorrect():
             try:
-                review_data = self.stats_controller.get_review_questions_data()
+                # Use simple JSON-based analytics for consistent data
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
                 
-                # Auto-cleanup missing questions if any are found
-                if review_data.get('missing_questions'):
-                    removed_count: int = self.stats_controller.cleanup_missing_review_questions(
-                        review_data['missing_questions']
-                    )
-                    if removed_count > 0:
-                        # Save the cleanup changes
-                        self.game_state.save_all_data()
-                        # Get updated review data after cleanup
-                        review_data = self.stats_controller.get_review_questions_data()
-                        # Add cleanup info to response (avoiding TypedDict issues)
-                        response_data = dict(review_data)
-                        response_data['cleanup_performed'] = True
-                        response_data['questions_cleaned'] = removed_count
-                        return jsonify(response_data)
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data(user_id)
+                
+                # Simple review system based on analytics
+                review_data = {
+                    'questions_to_review': user_data['questions_to_review'],
+                    'total_incorrect': user_data['incorrect_answers'],
+                    'review_questions': [],  # Would need to implement question storage for full review
+                    'missing_questions': [],
+                    'stats': {
+                        'total_questions': user_data['total_questions'],
+                        'correct_answers': user_data['correct_answers'],
+                        'accuracy': user_data['accuracy']
+                    }
+                }
                 
                 return jsonify(review_data)
             except Exception as e:

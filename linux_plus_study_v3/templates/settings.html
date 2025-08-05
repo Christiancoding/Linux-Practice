@@ -25,6 +25,9 @@
         <button class="settings-tab" onclick="switchSettingsTab('gamevalues')">
             <i class="fas fa-sliders-h"></i> Game Values
         </button>
+        <button class="settings-tab" onclick="switchSettingsTab('profiles')" title="Manage user profiles - create, rename, and switch between different learning profiles">
+            <i class="fas fa-user-friends"></i> Profiles
+        </button>
         <button class="settings-tab" onclick="switchSettingsTab('notifications')">
             <i class="fas fa-bell"></i> Notifications
         </button>
@@ -425,6 +428,67 @@
             </div>
         </div>
 
+        <!-- Profiles Settings -->
+        <div class="settings-panel" id="profiles-panel">
+            <section class="settings-section glass" data-aos="fade-up">
+                <h2 class="section-header">
+                    <i class="fas fa-user-friends"></i> User Profiles
+                </h2>
+                
+                <!-- Current Profile Display -->
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Current Profile</h4>
+                        <p>Currently active learning profile</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="current-profile-display">
+                            <span id="current-profile-name">Default</span>
+                            <span class="profile-stats" id="current-profile-stats">(0 sessions)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profile List -->
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Available Profiles</h4>
+                        <p>Manage your learning profiles</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="profiles-list" id="profiles-list">
+                            <div class="profile-loading">Loading profiles...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Create New Profile -->
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Create New Profile</h4>
+                        <p>Add a new learning profile</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="new-profile-form">
+                            <input type="text" id="new-profile-name" placeholder="Enter profile name (e.g., Study Mode, Work)" maxlength="30" title="Enter a name for your new learning profile">
+                            <button class="btn btn-primary" onclick="createNewProfile()" title="Click to create a new profile with the entered name">
+                                <i class="fas fa-plus"></i> Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="settings-footer">
+                <button class="btn btn-info" onclick="loadProfiles()">
+                    <i class="fas fa-sync"></i> Refresh Profiles
+                </button>
+                <button class="btn btn-warning" onclick="exportProfiles()">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+            </div>
+        </div>
+
         <!-- Notifications Settings -->
         <div class="settings-panel" id="notifications-panel">
             <section class="settings-section glass" data-aos="fade-up">
@@ -515,12 +579,13 @@
                 </h2>
                 <div class="setting-item danger">
                     <div class="setting-info">
-                        <h4>Reset Progress</h4>
-                        <p>Clear all quiz history and stats</p>
+                        <h4>Reset All Data</h4>
+                        <p>Clear all quiz history and stats for ALL profiles (keeps profiles but resets their data)</p>
+                        <small class="text-muted">⚠️ This affects all profiles, not just the current one</small>
                     </div>
                     <div class="setting-control">
-                        <button class="btn btn-outline-danger" onclick="confirmResetProgress()">
-                            Reset Progress
+                        <button class="btn btn-outline-danger" onclick="confirmResetProgress()" title="Reset all quiz data for all profiles">
+                            Reset All Data
                         </button>
                     </div>
                 </div>
@@ -837,6 +902,137 @@
         width: 100%;
     }
 }
+
+/* Profile Management Styles */
+.current-profile-display {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#current-profile-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 1.1em;
+}
+
+.profile-stats {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+}
+
+.profiles-list {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.profile-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: background-color 0.3s ease;
+}
+
+.profile-item:last-child {
+    border-bottom: none;
+}
+
+.profile-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-item.active {
+    background: rgba(74, 144, 226, 0.3);
+    border-left: 4px solid #4a90e2;
+}
+
+.profile-info h5 {
+    margin: 0;
+    color: #fff;
+    font-size: 1em;
+}
+
+.profile-info p {
+    margin: 2px 0 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.85em;
+}
+
+.profile-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.profile-actions .btn {
+    padding: 5px 10px;
+    font-size: 0.8em;
+    min-width: auto;
+}
+
+.new-profile-form {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.new-profile-form input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    font-size: 1em;
+}
+
+.new-profile-form input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.new-profile-form input:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+.profile-empty {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+}
+
+.profile-loading {
+    text-align: center;
+    padding: 20px;
+    color: rgba(255, 255, 255, 0.8);
+    font-style: italic;
+}
+
+.profile-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: rgba(255, 255, 255, 0.8);
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
 </style>
 {% endblock %}
 
@@ -847,6 +1043,9 @@ document.addEventListener('DOMContentLoaded', function() {
     loadSettings();
     loadGameValues();
     initializeSliders();
+    
+    // Preload profiles to avoid confusion
+    loadProfiles();
 });
 
 // Load saved settings
@@ -881,6 +1080,11 @@ function switchSettingsTab(tab) {
         panel.classList.remove('active');
     });
     document.getElementById(`${tab}-panel`).classList.add('active');
+    
+    // Load profiles when profiles tab is selected
+    if (tab === 'profiles') {
+        loadProfiles();
+    }
 }
 
 // Initialize sliders
@@ -1011,10 +1215,27 @@ function confirmResetProgress() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Clear localStorage items as well
-                    localStorage.removeItem('gameStats');
-                    localStorage.removeItem('quizHistory');
-                    localStorage.removeItem('achievements');
+                    // Clear all localStorage items related to progress
+                    const keysToRemove = [
+                        'gameStats',
+                        'quizHistory', 
+                        'achievements',
+                        'analyticsData',
+                        'userProgress',
+                        'dashboardStats',
+                        'improvementMetrics',
+                        'recentPerformance',
+                        'sessionData',
+                        'studyCalendar'
+                    ];
+                    
+                    keysToRemove.forEach(key => {
+                        localStorage.removeItem(key);
+                    });
+                    
+                    // Clear any sessionStorage as well
+                    sessionStorage.clear();
+                    
                     showMessage('success', 'Progress reset successfully');
                     setTimeout(() => location.reload(), 1500);
                 } else {
@@ -1211,5 +1432,304 @@ function showMessage(type, text) {
         messageDiv.remove();
     }, 3000);
 }
+
+// Profile Management Functions
+let currentProfileId = null;
+
+function loadProfiles() {
+    // Show loading state
+    const profilesList = document.getElementById('profiles-list');
+    if (profilesList) {
+        profilesList.innerHTML = '<div class="profile-loading">Loading profiles...</div>';
+    }
+    
+    fetch('/api/profiles')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayProfiles(data.profiles, data.current_profile);
+            } else {
+                showMessage('error', 'Failed to load profiles: ' + (data.error || 'Unknown error'));
+                if (profilesList) {
+                    profilesList.innerHTML = '<div class="profile-empty">Failed to load profiles. Click "Refresh Profiles" to try again.</div>';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading profiles:', error);
+            showMessage('error', 'An error occurred while loading profiles');
+            if (profilesList) {
+                profilesList.innerHTML = '<div class="profile-empty">Error loading profiles. Click "Refresh Profiles" to try again.</div>';
+            }
+        });
+}
+
+function displayProfiles(profiles, currentProfile) {
+    currentProfileId = currentProfile;
+    
+    // Update current profile display
+    const currentProfileName = document.getElementById('current-profile-name');
+    const currentProfileStats = document.getElementById('current-profile-stats');
+    
+    if (profiles[currentProfile]) {
+        currentProfileName.textContent = profiles[currentProfile].name;
+        const sessionCount = profiles[currentProfile].analytics?.sessions?.length || 0;
+        currentProfileStats.textContent = `(${sessionCount} sessions)`;
+    }
+    
+    // Update profiles list
+    const profilesList = document.getElementById('profiles-list');
+    profilesList.innerHTML = '';
+    
+    if (Object.keys(profiles).length === 0) {
+        profilesList.innerHTML = '<div class="profile-empty">No profiles found</div>';
+        return;
+    }
+    
+    Object.entries(profiles).forEach(([id, profile]) => {
+        const profileItem = document.createElement('div');
+        profileItem.className = `profile-item ${id === currentProfile ? 'active' : ''}`;
+        
+        const sessionCount = profile.analytics?.sessions?.length || 0;
+        const lastStudy = profile.analytics?.sessions?.length > 0 
+            ? new Date(profile.analytics.sessions[profile.analytics.sessions.length - 1].timestamp).toLocaleDateString()
+            : 'Never';
+        
+        profileItem.innerHTML = `
+            <div class="profile-info">
+                <h5>${profile.name}</h5>
+                <p>${sessionCount} sessions • Last study: ${lastStudy}</p>
+            </div>
+            <div class="profile-actions">
+                ${id !== currentProfile ? `<button class="btn btn-sm btn-primary" onclick="switchProfile('${id}')">
+                    <i class="fas fa-user-check"></i> Switch
+                </button>` : '<span class="badge badge-success">Active</span>'}
+                <button class="btn btn-sm btn-warning" onclick="renameProfile('${id}', '${profile.name}')">
+                    <i class="fas fa-edit"></i> Rename
+                </button>
+                <button class="btn btn-sm btn-info" onclick="resetProfile('${id}')" title="Clear all progress for this profile only">
+                    <i class="fas fa-undo"></i> Reset Progress
+                </button>
+                ${Object.keys(profiles).length > 1 ? `<button class="btn btn-sm btn-danger" onclick="deleteProfile('${id}', '${profile.name}')" title="Permanently remove this profile and all its data">
+                    <i class="fas fa-trash"></i> Delete Profile
+                </button>` : ''}
+            </div>
+        `;
+        
+        profilesList.appendChild(profileItem);
+    });
+}
+
+function createNewProfile() {
+    const nameInput = document.getElementById('new-profile-name');
+    const name = nameInput.value.trim();
+    
+    if (!name) {
+        showMessage('error', 'Please enter a profile name');
+        return;
+    }
+    
+    if (name.length > 30) {
+        showMessage('error', 'Profile name must be 30 characters or less');
+        return;
+    }
+    
+    fetch('/api/profiles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: name })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', `Profile "${name}" created successfully!`);
+            nameInput.value = '';
+            loadProfiles();
+        } else {
+            showMessage('error', 'Failed to create profile: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error creating profile:', error);
+        showMessage('error', 'An error occurred while creating the profile');
+    });
+}
+
+function switchProfile(profileId) {
+    if (profileId === currentProfileId) {
+        showMessage('info', 'This profile is already active');
+        return;
+    }
+    
+    fetch('/api/profiles/switch', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profile_id: profileId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'Profile switched successfully!');
+            loadProfiles();
+            // Refresh the page to update all data
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showMessage('error', 'Failed to switch profile: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error switching profile:', error);
+        showMessage('error', 'An error occurred while switching profiles');
+    });
+}
+
+function renameProfile(profileId, currentName) {
+    const newName = prompt(`Enter new name for profile "${currentName}":`, currentName);
+    
+    if (newName === null) return; // User cancelled
+    
+    const trimmedName = newName.trim();
+    if (!trimmedName) {
+        showMessage('error', 'Profile name cannot be empty');
+        return;
+    }
+    
+    if (trimmedName.length > 30) {
+        showMessage('error', 'Profile name must be 30 characters or less');
+        return;
+    }
+    
+    if (trimmedName === currentName) {
+        showMessage('info', 'No changes made');
+        return;
+    }
+    
+    fetch(`/api/profiles/${profileId}/rename`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: trimmedName })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', `Profile renamed to "${trimmedName}" successfully!`);
+            loadProfiles();
+        } else {
+            showMessage('error', 'Failed to rename profile: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error renaming profile:', error);
+        showMessage('error', 'An error occurred while renaming the profile');
+    });
+}
+
+function resetProfile(profileId) {
+    const confirmReset = confirm('Are you sure you want to reset this profile? This will clear all progress and statistics. This action cannot be undone.');
+    
+    if (!confirmReset) return;
+    
+    fetch(`/api/profiles/${profileId}/reset`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'Profile reset successfully!');
+            loadProfiles();
+            // If this is the current profile, refresh the page
+            if (profileId === currentProfileId) {
+                setTimeout(() => location.reload(), 1000);
+            }
+        } else {
+            showMessage('error', 'Failed to reset profile: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error resetting profile:', error);
+        showMessage('error', 'An error occurred while resetting the profile');
+    });
+}
+
+function deleteProfile(profileId, profileName) {
+    const confirmDelete = confirm(`Are you sure you want to delete the profile "${profileName}"? This action cannot be undone.`);
+    
+    if (!confirmDelete) return;
+    
+    if (profileId === currentProfileId) {
+        showMessage('error', 'Cannot delete the currently active profile. Switch to another profile first.');
+        return;
+    }
+    
+    fetch(`/api/profiles/${profileId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', `Profile "${profileName}" deleted successfully!`);
+            loadProfiles();
+        } else {
+            showMessage('error', 'Failed to delete profile: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting profile:', error);
+        showMessage('error', 'An error occurred while deleting the profile');
+    });
+}
+
+function exportProfiles() {
+    fetch('/api/profiles')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const dataStr = JSON.stringify(data.profiles, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `linux_plus_profiles_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showMessage('success', 'Profiles exported successfully!');
+            } else {
+                showMessage('error', 'Failed to export profiles: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error exporting profiles:', error);
+            showMessage('error', 'An error occurred while exporting profiles');
+        });
+}
+
+// Load profiles when the profiles panel is shown
+// Add event listener for new profile form
+document.addEventListener('DOMContentLoaded', function() {
+    const newProfileInput = document.getElementById('new-profile-name');
+    if (newProfileInput) {
+        newProfileInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                createNewProfile();
+            }
+        });
+    }
+});
 </script>
 {% endblock %}

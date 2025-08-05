@@ -1433,6 +1433,12 @@ function submitAnswer(isTimeout = false) {
             quizState.score += data.points_earned || 10;
             quizState.streak = data.streak || 0;
             
+            // Update streak badge
+            const streakBadge = document.querySelector('.streak-badge, #streak-counter');
+            if (streakBadge) {
+                streakBadge.textContent = quizState.streak;
+            }
+            
             // Show streak indicator for 3+ streak
             if (quizState.streak >= 3) {
                 showStreak();

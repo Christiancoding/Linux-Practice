@@ -12,6 +12,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
+from services.simple_analytics import get_analytics_manager
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -894,6 +895,18 @@ class QuizController:
             print(f"Error generating session summary: {e}")
             return None
     
+    def sync_analytics_after_answer(self, is_correct: bool, user_id: str = "anonymous"):
+        """Sync analytics after answering a question"""
+        try:
+            analytics = get_analytics_manager()
+            analytics.track_question_answer(
+                user_id=user_id,
+                correct=is_correct,
+                category=getattr(self, 'category_filter', None)
+            )
+        except Exception as e:
+            print(f"Error syncing analytics: {e}")
+
     def _calculate_points(self, is_correct: bool, current_streak: int) -> int:
         """Calculate points earned for an answer."""
         if is_correct:

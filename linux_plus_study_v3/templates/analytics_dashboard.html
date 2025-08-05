@@ -86,17 +86,45 @@
 }
 
 .metric-content h3 {
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 700;
     color: #2d3748;
-    margin: 0 0 5px 0;
+    margin: 0 0 0.5rem 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .metric-content p {
     color: #718096;
     margin: 0;
-    font-size: 0.95rem;
     font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.metric-trend {
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.metric-trend.positive {
+    color: #10b981;
+}
+
+.metric-trend.negative {
+    color: #ef4444;
+}
+
+.metric-trend.neutral {
+    color: #718096;
+}
+
+.metric-trend i {
+    font-size: 0.7rem;
 }
 
 /* Chart Containers */
@@ -270,6 +298,120 @@
     }
 }
 
+/* Users Section Styles */
+.users-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #718096;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2d3748;
+}
+
+.users-table {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.users-table h4 {
+    margin-bottom: 15px;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.user-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    transition: background-color 0.2s ease;
+}
+
+.user-row:hover {
+    background-color: #f7fafc;
+}
+
+.user-row:last-child {
+    border-bottom: none;
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-id {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+
+.user-stats {
+    font-size: 0.8rem;
+    color: #718096;
+    margin-top: 2px;
+}
+
+.user-accuracy {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    min-width: 50px;
+    text-align: center;
+}
+
+.loading-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #718096;
+}
+
+.loading-state i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-weight: 600;
+}
+
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
     .analytics-container {
@@ -315,13 +457,16 @@
         </button>
     </header>
 
-    <!-- Key Metrics Cards -->
+<!-- Key Metrics Cards -->
     <div class="metrics-grid">
         <div class="metric-card">
             <div class="metric-icon">🎯</div>
             <div class="metric-content">
                 <h3 id="total-questions">{{ stats.total_questions or 0 }}</h3>
                 <p>Questions Answered</p>
+                <div class="metric-trend" id="questions-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
         
@@ -330,6 +475,9 @@
             <div class="metric-content">
                 <h3 id="accuracy">{{ "%.1f"|format(stats.overall_accuracy or 0) }}%</h3>
                 <p>Overall Accuracy</p>
+                <div class="metric-trend" id="accuracy-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
         
@@ -338,6 +486,9 @@
             <div class="metric-content">
                 <h3 id="study-time">{{ "%.1f"|format((stats.total_study_time or 0) / 3600) }}h</h3>
                 <p>Total Study Time</p>
+                <div class="metric-trend" id="time-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
         
@@ -346,6 +497,9 @@
             <div class="metric-content">
                 <h3 id="vm-commands">{{ stats.total_vm_commands or 0 }}</h3>
                 <p>VM Commands</p>
+                <div class="metric-trend" id="commands-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
         
@@ -354,6 +508,9 @@
             <div class="metric-content">
                 <h3 id="study-streak">{{ stats.study_streak or 0 }}</h3>
                 <p>Day Study Streak</p>
+                <div class="metric-trend" id="streak-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
         
@@ -362,6 +519,9 @@
             <div class="metric-content">
                 <h3 id="total-sessions">{{ stats.total_sessions or 0 }}</h3>
                 <p>Total Sessions</p>
+                <div class="metric-trend" id="sessions-trend">
+                    <!-- Trend will be updated by JavaScript -->
+                </div>
             </div>
         </div>
     </div>
@@ -416,6 +576,55 @@
                             <p>No recent sessions found.<br>Start a quiz to see your progress!</p>
                         </div>
                     {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Users Overview Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>👥 System Users</h3>
+                    <button class="refresh-btn" onclick="loadUsersData()" style="margin-left: auto;">
+                        <i class="fas fa-refresh"></i> Refresh Users
+                    </button>
+                </div>
+                <div id="users-content">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div id="users-overview" class="users-metrics">
+                                <div class="metric-item">
+                                    <span class="metric-label">Total Users</span>
+                                    <span class="metric-value" id="total-users">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Active Sessions</span>
+                                    <span class="metric-value" id="total-sessions">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Questions Answered</span>
+                                    <span class="metric-value" id="system-questions">-</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">System Accuracy</span>
+                                    <span class="metric-value" id="system-accuracy">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div id="users-list" class="users-table">
+                                <h4>User Activity</h4>
+                                <div id="users-table-content">
+                                    <div class="loading-state">
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                        <p>Loading users...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -477,12 +686,115 @@ function initializeAnalyticsDashboard() {
         return;
     }
     
+    // Update improvement trends first
+    updateImprovementTrends();
+    
     // Ensure charts load properly with fallback data
     try {
         initializeCharts();
     } catch (e) {
         console.error('Error initializing charts:', e);
     }
+}
+
+// Update improvement trends in metric cards
+function updateImprovementTrends() {
+    const isResetState = (
+        (statsData.total_questions || 0) === 0 &&
+        (statsData.overall_accuracy || 0) === 0 &&
+        (statsData.total_study_time || 0) === 0 &&
+        (statsData.study_streak || 0) === 0
+    );
+    
+    const trends = [
+        { id: 'questions-trend', value: 0, text: 'Start answering questions!' },
+        { id: 'accuracy-trend', value: 0, text: 'Keep practicing!' },
+        { id: 'time-trend', value: 0, text: 'Begin your study journey!' },
+        { id: 'commands-trend', value: 0, text: 'Try the VM lab!' },
+        { id: 'streak-trend', value: 0, text: 'Build your streak!' },
+        { id: 'sessions-trend', value: 0, text: 'Start your first session!' }
+    ];
+    
+    if (isResetState) {
+        // Show encouraging messages for reset state
+        trends.forEach(trend => {
+            const element = document.getElementById(trend.id);
+            if (element) {
+                element.className = 'metric-trend neutral';
+                element.innerHTML = `<i class="fas fa-chart-line"></i> ${trend.text}`;
+            }
+        });
+    } else {
+        // Calculate trends based on available data
+        const recentPerformance = statsData.recent_performance || [];
+        
+        if (recentPerformance.length >= 7) {
+            // We have enough data for week-over-week comparison
+            const thisWeek = recentPerformance.slice(0, 7);
+            const lastWeek = recentPerformance.slice(7, 14);
+            
+            if (lastWeek.length >= 7) {
+                // Questions trend
+                const thisWeekQuestions = thisWeek.reduce((sum, s) => sum + (s.questions || 0), 0);
+                const lastWeekQuestions = lastWeek.reduce((sum, s) => sum + (s.questions || 0), 0);
+                const questionsChange = thisWeekQuestions - lastWeekQuestions;
+                const questionsPercent = lastWeekQuestions > 0 ? Math.abs(questionsChange / lastWeekQuestions * 100) : 0;
+                
+                updateTrendElement('questions-trend', questionsChange, `${questionsPercent.toFixed(0)}% from last week`);
+                
+                // Accuracy trend
+                const thisWeekAccuracy = thisWeek.reduce((sum, s) => sum + (s.accuracy || 0), 0) / thisWeek.length;
+                const lastWeekAccuracy = lastWeek.reduce((sum, s) => sum + (s.accuracy || 0), 0) / lastWeek.length;
+                const accuracyChange = thisWeekAccuracy - lastWeekAccuracy;
+                
+                updateTrendElement('accuracy-trend', accuracyChange, `${Math.abs(accuracyChange).toFixed(1)}% improvement`);
+                
+                // Time trend (show this week's total)
+                const thisWeekTime = thisWeek.reduce((sum, s) => sum + (s.study_time || 0), 0) / 3600; // convert to hours
+                updateTrendElement('time-trend', 1, `${thisWeekTime.toFixed(1)}h this week`);
+            } else {
+                // Not enough historical data, show current week stats
+                showCurrentWeekTrends(thisWeek);
+            }
+        } else {
+            // Show encouraging trends for new users
+            showNewUserTrends();
+        }
+    }
+}
+
+function updateTrendElement(elementId, change, text) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const className = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+        const icon = change > 0 ? 'fa-arrow-up' : change < 0 ? 'fa-arrow-down' : 'fa-minus';
+        const prefix = change > 0 ? '+' : change < 0 ? '' : '';
+        
+        element.className = `metric-trend ${className}`;
+        element.innerHTML = `<i class="fas ${icon}"></i> ${prefix}${text}`;
+    }
+}
+
+function showCurrentWeekTrends(thisWeek) {
+    const totalQuestions = thisWeek.reduce((sum, s) => sum + (s.questions || 0), 0);
+    const avgAccuracy = thisWeek.reduce((sum, s) => sum + (s.accuracy || 0), 0) / thisWeek.length;
+    const totalTime = thisWeek.reduce((sum, s) => sum + (s.study_time || 0), 0) / 3600;
+    
+    updateTrendElement('questions-trend', 1, `${totalQuestions} questions this week`);
+    updateTrendElement('accuracy-trend', 1, `${avgAccuracy.toFixed(1)}% average accuracy`);
+    updateTrendElement('time-trend', 1, `${totalTime.toFixed(1)}h study time`);
+    updateTrendElement('commands-trend', 0, 'Practice with VM lab');
+    updateTrendElement('streak-trend', 1, 'Keep it up!');
+    updateTrendElement('sessions-trend', 1, `${thisWeek.length} sessions`);
+}
+
+function showNewUserTrends() {
+    updateTrendElement('questions-trend', 1, 'Great start!');
+    updateTrendElement('accuracy-trend', 1, 'Building skills!');
+    updateTrendElement('time-trend', 1, 'Learning actively!');
+    updateTrendElement('commands-trend', 0, 'Try the VM lab');
+    updateTrendElement('streak-trend', 1, 'Daily progress!');
+    updateTrendElement('sessions-trend', 1, 'Consistency is key!');
 }
 
 // Initialize charts with better error handling
@@ -844,5 +1156,122 @@ function refreshAnalytics() {
             refreshBtn.disabled = false;
         });
 }
+
+// Users management functions
+function loadUsersData() {
+    const refreshBtn = document.querySelector('#users-content .refresh-btn');
+    const originalText = refreshBtn ? refreshBtn.innerHTML : '';
+    
+    if (refreshBtn) {
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        refreshBtn.disabled = true;
+    }
+    
+    // Load users list
+    fetch('/api/analytics/users')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateUsersTable(data.users || []);
+            } else {
+                console.error('Failed to load users:', data.error);
+                showUsersError('Failed to load users data');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading users:', error);
+            showUsersError('Error connecting to server');
+        });
+    
+    // Load system overview
+    fetch('/api/analytics/overview')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                updateSystemOverview(data.overview || {});
+            } else {
+                console.error('Failed to load overview:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading overview:', error);
+        })
+        .finally(() => {
+            if (refreshBtn) {
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+            }
+        });
+}
+
+function updateUsersTable(users) {
+    const container = document.getElementById('users-table-content');
+    
+    if (!users || users.length === 0) {
+        container.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-users"></i>
+                <p>No users found</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = users.map(user => {
+        const accuracyClass = user.accuracy >= 80 ? 'good' : user.accuracy >= 60 ? 'average' : 'poor';
+        const lastActivity = user.last_activity ? 
+            new Date(user.last_activity).toLocaleDateString() : 'Never';
+        
+        return `
+            <div class="user-row">
+                <div class="user-info">
+                    <div class="user-id">${user.user_id}</div>
+                    <div class="user-stats">${user.total_sessions} sessions • Last: ${lastActivity}</div>
+                </div>
+                <div class="user-accuracy accuracy ${accuracyClass}">
+                    ${user.accuracy}%
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateSystemOverview(overview) {
+    // Update metrics
+    const updates = {
+        'total-users': overview.unique_users || 0,
+        'total-sessions': overview.total_sessions || 0,
+        'system-questions': overview.total_questions || 0,
+        'system-accuracy': (overview.overall_accuracy || 0).toFixed(1) + '%'
+    };
+    
+    Object.entries(updates).forEach(([id, value]) => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.textContent = value;
+        }
+    });
+}
+
+function showUsersError(message) {
+    const container = document.getElementById('users-table-content');
+    container.innerHTML = `
+        <div class="loading-state">
+            <i class="fas fa-exclamation-triangle" style="color: #ef4444;"></i>
+            <p style="color: #ef4444;">${message}</p>
+        </div>
+    `;
+}
+
+// Load users data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Load users data
+    loadUsersData();
+    
+    // Existing initialization code
+    if (typeof initializeCharts === 'function') {
+        initializeCharts();
+    }
+});
 </script>
 {% endblock %}

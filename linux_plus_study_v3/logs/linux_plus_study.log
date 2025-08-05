@@ -3155,3 +3155,370 @@ TypeError: Object of type set is not JSON serializable
 2025-08-05 01:30:21,555 - utils.database - INFO: Initializing sqlite without connection pooling
 2025-08-05 01:30:21,562 - utils.database - INFO: Database connection test successful
 2025-08-05 01:30:21,577 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-05 01:34:53,288 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 01:34:53,288 - __main__ - INFO: Starting web application mode
+2025-08-05 01:34:53,289 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 01:34:53,289 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 01:34:53,297 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 01:34:53,307 - utils.database - INFO: Database connection test successful
+2025-08-05 01:34:53,331 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 01:45:49,671 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 01:45:49,671 - __main__ - INFO: Starting web application mode
+2025-08-05 01:45:49,671 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 01:45:49,671 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 01:45:49,677 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 01:45:49,686 - utils.database - INFO: Database connection test successful
+2025-08-05 01:45:49,703 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-05 01:56:04,349 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 01:56:41,357 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 01:56:41,357 - __main__ - INFO: Starting web application mode
+2025-08-05 01:56:41,357 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 01:56:41,358 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 01:56:41,363 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 01:56:41,369 - utils.database - INFO: Database connection test successful
+2025-08-05 01:56:41,384 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8082
+2025-08-05 01:56:53,835 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 01:56:53,835 - utils.database - INFO: All database connections closed
+2025-08-05 01:56:55,392 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 01:56:55,392 - __main__ - INFO: Starting web application mode
+2025-08-05 01:56:55,392 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 01:56:55,393 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 01:56:55,397 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 01:56:55,404 - utils.database - INFO: Database connection test successful
+2025-08-05 01:56:55,418 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 02:02:45,215 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 02:02:45,215 - __main__ - INFO: Starting web application mode
+2025-08-05 02:02:45,216 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 02:02:45,216 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 02:02:45,222 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 02:02:45,231 - utils.database - INFO: Database connection test successful
+2025-08-05 02:02:45,259 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 02:03:04,405 - services.analytics_integration - WARNING: Could not commit analytics session: Instance '<Analytics at 0x71ceea4b2720>' has been deleted, or its row is otherwise not present.
+2025-08-05 02:08:41,510 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 02:08:41,511 - utils.database - INFO: All database connections closed
+2025-08-05 02:08:43,407 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 02:08:43,408 - __main__ - INFO: Starting web application mode
+2025-08-05 02:08:43,408 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 02:08:43,408 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 02:08:43,414 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 02:08:43,420 - utils.database - INFO: Database connection test successful
+2025-08-05 02:08:43,437 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 02:14:31,248 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 02:14:31,248 - __main__ - INFO: Starting web application mode
+2025-08-05 02:14:31,248 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 02:14:31,249 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 02:14:31,256 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 02:14:31,264 - utils.database - INFO: Database connection test successful
+2025-08-05 02:14:31,279 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 02:18:01,249 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 02:18:01,249 - utils.database - INFO: All database connections closed
+2025-08-05 02:18:03,000 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 02:18:03,000 - __main__ - INFO: Starting web application mode
+2025-08-05 02:18:03,000 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 02:18:03,001 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 02:18:03,006 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 02:18:03,014 - utils.database - INFO: Database connection test successful
+2025-08-05 02:18:03,031 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 09:55:11,515 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 09:55:16,193 - __main__ - INFO: Starting web application mode
+2025-08-05 09:55:16,194 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 09:55:16,195 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 09:55:16,202 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 09:55:16,213 - utils.database - INFO: Database connection test successful
+2025-08-05 09:55:16,231 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-05 09:55:24,707 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 09:55:24,707 - __main__ - INFO: Starting web application mode
+2025-08-05 09:55:24,708 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 09:55:24,709 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 09:55:24,716 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 09:55:24,725 - utils.database - INFO: Database connection test successful
+2025-08-05 09:55:24,742 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5003
+2025-08-05 09:55:48,987 - services.analytics_integration - WARNING: Could not commit analytics session: Instance '<Analytics at 0x795d409686e0>' has been deleted, or its row is otherwise not present.
+2025-08-05 09:59:30,531 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 09:59:30,531 - utils.database - INFO: All database connections closed
+2025-08-05 09:59:32,558 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 09:59:32,558 - __main__ - INFO: Starting web application mode
+2025-08-05 09:59:32,558 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 09:59:32,559 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 09:59:32,565 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 09:59:32,573 - utils.database - INFO: Database connection test successful
+2025-08-05 09:59:32,588 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:00:48,640 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 10:01:18,945 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 10:09:01,898 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:09:01,899 - utils.database - INFO: All database connections closed
+2025-08-05 10:09:03,331 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:09:03,331 - __main__ - INFO: Starting web application mode
+2025-08-05 10:09:03,331 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:09:03,332 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:09:03,337 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:09:03,346 - utils.database - INFO: Database connection test successful
+2025-08-05 10:09:03,361 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:10:03,796 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:10:03,796 - utils.database - INFO: All database connections closed
+2025-08-05 10:10:05,238 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:10:05,238 - __main__ - INFO: Starting web application mode
+2025-08-05 10:10:05,239 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:10:05,240 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:10:05,248 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:10:05,254 - utils.database - INFO: Database connection test successful
+2025-08-05 10:10:05,270 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:12:46,786 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:12:46,787 - utils.database - INFO: All database connections closed
+2025-08-05 10:12:47,938 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:12:47,939 - __main__ - INFO: Starting web application mode
+2025-08-05 10:12:47,939 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:12:47,940 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:12:47,945 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:12:47,953 - utils.database - INFO: Database connection test successful
+2025-08-05 10:12:47,972 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:13:46,109 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 10:17:36,880 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:17:36,881 - utils.database - INFO: All database connections closed
+2025-08-05 10:17:38,070 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:17:38,070 - __main__ - INFO: Starting web application mode
+2025-08-05 10:17:38,070 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:17:38,071 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:17:38,076 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:17:38,083 - utils.database - INFO: Database connection test successful
+2025-08-05 10:17:38,100 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:18:14,692 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:18:17,382 - __main__ - INFO: Starting web application mode
+2025-08-05 10:18:17,382 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:18:17,383 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:18:17,389 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:18:17,398 - utils.database - INFO: Database connection test successful
+2025-08-05 10:18:17,417 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 10:21:02,702 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:21:02,702 - __main__ - INFO: Starting web application mode
+2025-08-05 10:21:02,702 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:21:02,703 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:21:02,710 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:21:02,721 - utils.database - INFO: Database connection test successful
+2025-08-05 10:21:02,739 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:27:14,489 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:27:14,491 - utils.database - INFO: All database connections closed
+2025-08-05 10:29:31,862 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:29:31,863 - __main__ - INFO: Starting web application mode
+2025-08-05 10:29:31,863 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:29:31,864 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:29:31,870 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:29:31,878 - utils.database - INFO: Database connection test successful
+2025-08-05 10:29:31,894 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 10:38:17,949 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 10:38:17,949 - utils.database - INFO: All database connections closed
+2025-08-05 10:38:19,457 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 10:38:19,457 - __main__ - INFO: Starting web application mode
+2025-08-05 10:38:19,458 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 10:38:19,458 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 10:38:19,464 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 10:38:19,474 - utils.database - INFO: Database connection test successful
+2025-08-05 10:38:19,491 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 11:51:10,928 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 11:51:10,928 - __main__ - INFO: Starting web application mode
+2025-08-05 11:51:10,928 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 11:51:10,929 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 11:51:10,936 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 11:51:10,946 - utils.database - INFO: Database connection test successful
+2025-08-05 11:51:10,963 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 11:56:11,056 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 11:56:11,056 - utils.database - INFO: All database connections closed
+2025-08-05 11:56:12,759 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 11:56:12,759 - __main__ - INFO: Starting web application mode
+2025-08-05 11:56:12,759 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 11:56:12,760 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 11:56:12,765 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 11:56:12,773 - utils.database - INFO: Database connection test successful
+2025-08-05 11:56:12,788 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 12:00:38,308 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 12:00:38,309 - utils.database - INFO: All database connections closed
+2025-08-05 12:00:40,454 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:00:40,455 - __main__ - INFO: Starting web application mode
+2025-08-05 12:00:40,455 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 12:00:40,455 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 12:00:40,460 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:00:40,467 - utils.database - INFO: Database connection test successful
+2025-08-05 12:00:40,483 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 12:06:32,541 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 12:15:29,930 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 12:15:29,930 - utils.database - INFO: All database connections closed
+2025-08-05 12:15:31,646 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:15:31,647 - __main__ - INFO: Starting web application mode
+2025-08-05 12:15:31,648 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 12:15:31,649 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 12:15:31,657 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:15:31,669 - utils.database - INFO: Database connection test successful
+2025-08-05 12:15:31,688 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 12:15:35,745 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:15:43,170 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:15:53,221 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:16:14,720 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:16:18,294 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:17:23,021 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:17:36,190 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:17:55,190 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:17:56,885 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:17:59,623 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:18:00,533 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:18:03,489 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:18:12,890 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:18:29,275 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:19:16,985 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:19:27,938 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:19:32,884 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:19:44,444 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:19:49,810 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:25:33,016 - services.unified_analytics - ERROR: Error getting analytics data for user anonymous: No module named 'data.database_manager'
+2025-08-05 12:28:13,626 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 12:28:13,626 - utils.database - INFO: All database connections closed
+2025-08-05 12:28:14,834 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:28:14,834 - __main__ - INFO: Starting web application mode
+2025-08-05 12:28:14,834 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 12:28:14,835 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 12:28:14,840 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:28:14,847 - utils.database - INFO: Database connection test successful
+2025-08-05 12:28:14,865 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 12:28:19,188 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:28:19,189 - utils.database - INFO: Database connection test successful
+2025-08-05 12:28:22,963 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:28:22,964 - utils.database - INFO: Database connection test successful
+2025-08-05 12:36:54,705 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:36:54,706 - utils.database - INFO: Database connection test successful
+2025-08-05 12:37:08,182 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 12:37:08,182 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 12:37:08,183 - utils.database - INFO: All database connections closed
+2025-08-05 12:37:19,411 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:37:19,411 - __main__ - INFO: Starting web application mode
+2025-08-05 12:37:19,411 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 12:37:19,412 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 12:37:19,418 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:37:19,427 - utils.database - INFO: Database connection test successful
+2025-08-05 12:37:19,445 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 12:41:54,009 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 12:51:23,030 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 12:51:23,032 - utils.database - INFO: All database connections closed
+2025-08-05 12:56:54,312 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 12:56:54,313 - __main__ - INFO: Starting web application mode
+2025-08-05 12:56:54,313 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 12:56:54,313 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 12:56:54,320 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 12:56:54,327 - utils.database - INFO: Database connection test successful
+2025-08-05 12:56:54,343 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:03:04,842 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:03:04,843 - utils.database - INFO: All database connections closed
+2025-08-05 13:03:18,350 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:03:18,350 - __main__ - INFO: Starting web application mode
+2025-08-05 13:03:18,350 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:03:18,351 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:03:18,358 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:03:18,366 - utils.database - INFO: Database connection test successful
+2025-08-05 13:03:18,382 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:14:34,346 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:14:34,347 - utils.database - INFO: All database connections closed
+2025-08-05 13:14:44,786 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:14:44,787 - __main__ - INFO: Starting web application mode
+2025-08-05 13:14:44,787 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:14:44,788 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:14:44,796 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:14:44,807 - utils.database - INFO: Database connection test successful
+2025-08-05 13:14:44,824 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:22:44,138 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:22:44,139 - utils.database - INFO: All database connections closed
+2025-08-05 13:22:49,457 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:22:49,458 - __main__ - INFO: Starting web application mode
+2025-08-05 13:22:49,458 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:22:49,458 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:22:49,464 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:22:49,470 - utils.database - INFO: Database connection test successful
+2025-08-05 13:22:49,486 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:32:11,145 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:32:11,145 - __main__ - INFO: Starting web application mode
+2025-08-05 13:32:11,146 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:32:11,146 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:32:11,153 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:32:11,165 - utils.database - INFO: Database connection test successful
+2025-08-05 13:32:11,193 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 13:33:21,312 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:33:44,369 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:33:44,369 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:33:44,369 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 13:33:44,371 - utils.database - INFO: All database connections closed
+2025-08-05 13:33:44,371 - utils.database - INFO: All database connections closed
+2025-08-05 13:33:55,349 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:33:55,349 - __main__ - INFO: Starting web application mode
+2025-08-05 13:33:55,349 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:33:55,350 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:33:55,356 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:33:55,365 - utils.database - INFO: Database connection test successful
+2025-08-05 13:33:55,383 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:35:03,235 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 13:38:35,947 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:38:37,587 - __main__ - INFO: Starting web application mode
+2025-08-05 13:38:37,588 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:38:37,588 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:38:37,596 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:38:37,604 - utils.database - INFO: Database connection test successful
+2025-08-05 13:38:37,623 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-05 13:40:11,550 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 13:40:11,550 - utils.database - INFO: All database connections closed
+2025-08-05 13:40:13,085 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:40:13,799 - __main__ - INFO: Starting web application mode
+2025-08-05 13:40:13,799 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:40:13,800 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:40:13,810 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:40:13,820 - utils.database - INFO: Database connection test successful
+2025-08-05 13:40:13,842 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:41:04,064 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:41:04,065 - __main__ - INFO: Starting web application mode
+2025-08-05 13:41:04,065 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:41:04,066 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:41:04,073 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:41:04,086 - utils.database - INFO: Database connection test successful
+2025-08-05 13:41:04,118 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:48:12,376 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 13:48:12,376 - utils.database - INFO: All database connections closed
+2025-08-05 13:48:13,864 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 13:48:13,864 - __main__ - INFO: Starting web application mode
+2025-08-05 13:48:13,865 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 13:48:13,865 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 13:48:13,872 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 13:48:13,881 - utils.database - INFO: Database connection test successful
+2025-08-05 13:48:13,900 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 13:48:22,548 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 14:01:39,382 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 14:01:39,382 - utils.database - INFO: All database connections closed
+2025-08-05 14:06:30,932 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 14:06:30,932 - __main__ - INFO: Starting web application mode
+2025-08-05 14:06:30,933 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 14:06:30,933 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 14:06:30,939 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 14:06:30,948 - utils.database - INFO: Database connection test successful
+2025-08-05 14:06:30,969 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 14:06:45,362 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-05 14:06:45,363 - utils.database - INFO: All database connections closed
+2025-08-05 14:07:01,935 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 14:07:01,936 - __main__ - INFO: Starting web application mode
+2025-08-05 14:07:01,936 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 14:07:01,937 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 14:07:01,943 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 14:07:01,952 - utils.database - INFO: Database connection test successful
+2025-08-05 14:07:01,973 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 14:07:59,616 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-05 14:10:00,013 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 14:10:00,015 - utils.database - INFO: All database connections closed
+2025-08-05 14:14:23,788 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 14:14:25,028 - __main__ - INFO: Starting web application mode
+2025-08-05 14:14:25,028 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 14:14:25,029 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 14:14:25,035 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 14:14:25,046 - utils.database - INFO: Database connection test successful
+2025-08-05 14:14:25,066 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-05 14:21:08,390 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-05 14:21:08,390 - utils.database - INFO: All database connections closed
+2025-08-05 14:21:09,825 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-05 14:21:11,785 - __main__ - INFO: Starting web application mode
+2025-08-05 14:21:11,786 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-05 14:21:11,787 - __main__ - INFO: Web application components loaded successfully
+2025-08-05 14:21:11,793 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-05 14:21:11,803 - utils.database - INFO: Database connection test successful
+2025-08-05 14:21:11,823 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

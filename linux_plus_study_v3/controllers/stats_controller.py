@@ -349,7 +349,7 @@ class StatsController:
     
     def clear_statistics(self):
         """
-        Clear all statistics data.
+        Clear all statistics data including analytics database records.
         
         Returns:
             bool: True if cleared successfully
@@ -368,10 +368,20 @@ class StatsController:
                 )
             print("Reset categories")
             
-            # Clear achievements properly
+            # Reset session state (this was missing before!)
+            self.game_state.reset_session()
+            print("Reset session state")
+            
+            # Clear achievements properly and reset achievement system completely
             if hasattr(self.game_state, 'achievement_system') and self.game_state.achievement_system:
                 print("Found achievement system, resetting...")
-                # Reset achievements using the achievement system's default method
+                # Use the clear_achievements method to properly reset everything
+                self.game_state.achievement_system.clear_achievements()
+                
+                # Reset session points to 0
+                self.game_state.achievement_system.reset_session_points()
+                
+                # Ensure all achievement-related attributes are reset
                 self.game_state.achievement_system.achievements = self.game_state.achievement_system._get_default_achievements()
                 
                 # Clear leaderboard in achievement system
@@ -384,10 +394,77 @@ class StatsController:
                     
                 print("Reset achievements and leaderboard")
             
+            # Reset game state achievements if they exist separately
+            if hasattr(self.game_state, 'achievements'):
+                # Since achievements is a property without setter, we need to reset its contents
+                # Reset achievements data if it's a direct dictionary
+                if isinstance(self.game_state.achievements, dict):
+                    self.game_state.achievements.clear()
+                    self.game_state.achievements.update({
+                        "badges": [],
+                        "points_earned": 0,
+                        "days_studied": set(),
+                        "questions_answered": 0,
+                        "streaks_achieved": 0,
+                        "perfect_sessions": 0,
+                        "daily_warrior_dates": [],
+                        "leaderboard": []
+                    })
+                    print("Reset game state achievements")
+                else:
+                    # If achievements is managed by achievement_system, it's already reset above
+                    print("Achievements managed by achievement system - already reset")
+            
             # Ensure leaderboard is also cleared in study_history
             if 'leaderboard' in self.game_state.study_history:
                 self.game_state.study_history['leaderboard'] = []
                 print("Cleared leaderboard in study history")
+            
+            # Clear analytics data from database
+            try:
+                from utils.database import get_database_manager
+                from models.analytics import Analytics
+                import os
+                
+                db_manager = get_database_manager()
+                if db_manager and db_manager.session_factory:
+                    analytics_session = db_manager.session_factory()
+                    try:
+                        # Delete all analytics records (or optionally just current user's records)
+                        deleted_count = analytics_session.query(Analytics).delete()
+                        analytics_session.commit()
+                        print(f"Cleared {deleted_count} analytics records from database")
+                        
+                        # Create reset marker file to signal analytics service
+                        os.makedirs('data', exist_ok=True)
+                        from datetime import datetime
+                        with open('data/.analytics_reset_marker', 'w') as f:
+                            f.write(f"Reset at {datetime.now().isoformat()}")
+                        print("Created analytics reset marker")
+                        
+                    except Exception as analytics_error:
+                        print(f"Error clearing analytics data: {analytics_error}")
+                        analytics_session.rollback()
+                    finally:
+                        analytics_session.close()
+                else:
+                    print("Analytics database not available - skipping database cleanup")
+            except ImportError:
+                print("Analytics database dependencies not available - skipping database cleanup")
+            except Exception as analytics_error:
+                print(f"Warning: Could not clear analytics data: {analytics_error}")
+            
+            # Clear any analytics service cached data by clearing the cache directory
+            try:
+                import shutil
+                import os
+                cache_dirs = ['data/cache', 'data/.cache', '.cache']
+                for cache_dir in cache_dirs:
+                    if os.path.exists(cache_dir):
+                        shutil.rmtree(cache_dir)
+                        print(f"Cleared cache directory: {cache_dir}")
+            except Exception as cache_error:
+                print(f"Warning: Could not clear cache directories: {cache_error}")
             
             # Save the cleared history and achievements
             print("Saving history...")
@@ -396,6 +473,10 @@ class StatsController:
             print("Saving achievements...")
             if hasattr(self.game_state, 'save_achievements') and callable(self.game_state.save_achievements):
                 self.game_state.save_achievements()
+            
+            # Also save achievements through the achievement system
+            if hasattr(self.game_state, 'achievement_system') and hasattr(self.game_state.achievement_system, 'save_achievements'):
+                self.game_state.achievement_system.save_achievements()
                 
             print("Clear statistics completed successfully")
             return True

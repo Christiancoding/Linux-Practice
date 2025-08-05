@@ -1,16 +1,19 @@
 {
   "sessions": [],
-  "questions": {},
+  "questions": {
+    "What is an AppImage?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-05T13:43:53.931857",
+          "correct": true
+        }
+      ]
+    }
+  },
   "categories": {
-    "Concepts & Terms (Containers)": {
-      "correct": 0,
-      "attempts": 0
-    },
     "Commands (System Management)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (Security)": {
       "correct": 0,
       "attempts": 0
     },
@@ -18,7 +21,15 @@
       "correct": 0,
       "attempts": 0
     },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
     "Concepts & Terms (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Security)": {
       "correct": 0,
       "attempts": 0
     },
@@ -27,8 +38,8 @@
       "attempts": 0
     }
   },
-  "total_correct": 0,
-  "total_attempts": 0,
+  "total_correct": 1,
+  "total_attempts": 1,
   "incorrect_review": [],
   "leaderboard": [],
   "settings": {},
