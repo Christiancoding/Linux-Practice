@@ -1,0 +1,229 @@
+{
+  "anonymous": {
+    "total_questions": 10,
+    "correct_answers": 9,
+    "incorrect_answers": 1,
+    "accuracy": 90.0,
+    "total_study_time": 120,
+    "total_sessions": 3,
+    "study_streak": 1,
+    "current_streak": 3,
+    "longest_streak": 1,
+    "questions_to_review": 1,
+    "level": 1,
+    "xp": 96,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-07T15:22:19.644377",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-07T15:22:19.644381",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-07T15:22:35.319594",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "accuracy_80",
+        "name": "Accuracy Expert",
+        "description": "Achieved 80% accuracy with 5+ questions",
+        "earned_date": "2025-08-07T15:22:35.319596",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "ten_questions",
+        "name": "Dedicated Student",
+        "description": "Answered 10 questions",
+        "earned_date": "2025-08-07T15:22:51.196013",
+        "icon": "\ud83c\udfc6"
+      }
+    ],
+    "session_history": [],
+    "last_activity": "2025-08-07T15:22:51.195989",
+    "topics_studied": {
+      "Commands (System Management)": {
+        "correct": 4,
+        "total": 5,
+        "questions": 5
+      },
+      "Concepts & Terms (Containers)": {
+        "correct": 1,
+        "total": 1,
+        "questions": 1
+      },
+      "Concepts & Terms (Security)": {
+        "correct": 2,
+        "total": 2,
+        "questions": 2
+      },
+      "Troubleshooting": {
+        "correct": 2,
+        "total": 2,
+        "questions": 2
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 10,
+      "advanced": 0
+    },
+    "display_name": "Profile anonymous",
+    "current_session": {
+      "start": "2025-08-07T15:22:47.307151",
+      "questions": 2,
+      "last_activity": "2025-08-07T15:22:51.195989"
+    }
+  },
+  "demo_user_001": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    }
+  },
+  "test_user": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "Test User",
+    "created_date": "2025-08-07T13:39:41.565419"
+  },
+  "test_reset_user": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "Test Reset User",
+    "created_date": "2025-08-07T13:41:08.421464"
+  },
+  "test_stats_user": {
+    "total_questions": 5,
+    "correct_answers": 4,
+    "incorrect_answers": 1,
+    "accuracy": 80.0,
+    "total_study_time": 52,
+    "total_sessions": 2,
+    "study_streak": 1,
+    "current_streak": 2,
+    "longest_streak": 1,
+    "questions_to_review": 1,
+    "level": 1,
+    "xp": 40,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-07T13:41:08.422900",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-07T13:41:08.422904",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-07T13:41:08.430226",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "accuracy_80",
+        "name": "Accuracy Expert",
+        "description": "Achieved 80% accuracy with 5+ questions",
+        "earned_date": "2025-08-07T13:41:08.430229",
+        "icon": "\ud83c\udfc6"
+      }
+    ],
+    "session_history": [],
+    "last_activity": "2025-08-07T13:41:08.430214",
+    "topics_studied": {
+      "Topic A": {
+        "correct": 2,
+        "total": 2,
+        "questions": 2
+      },
+      "Topic B": {
+        "correct": 2,
+        "total": 3,
+        "questions": 3
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 2,
+      "intermediate": 3,
+      "advanced": 0
+    },
+    "current_session": {
+      "start": "2025-08-07T13:41:08.430214",
+      "questions": 1,
+      "last_activity": "2025-08-07T13:41:08.430214"
+    }
+  }
+}

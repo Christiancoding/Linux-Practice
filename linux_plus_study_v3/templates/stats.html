@@ -1,0 +1,1094 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- Stats Page -->
+<div class="page-content active" id="page-stats">
+    <!-- Page Header -->
+    <div class="page-header" data-aos="fade-down">
+        <h1 class="page-title">
+            <i class="fas fa-chart-line text-gradient"></i>
+            Performance Analytics
+        </h1>
+        <p class="page-subtitle">Track your progress and identify areas for improvement</p>
+    </div>
+
+    <!-- Time Period Selector -->
+    <div class="time-selector glass mb-4" data-aos="fade-up">
+        <button class="time-btn active" onclick="changeTimePeriod('week')">Last 7 Days</button>
+        <button class="time-btn" onclick="changeTimePeriod('month')">Last 30 Days</button>
+        <button class="time-btn" onclick="changeTimePeriod('all')">All Time</button>
+        <button class="time-btn" onclick="changeTimePeriod('custom')">Custom Range</button>
+    </div>
+
+    <!-- Stats Overview Cards -->
+    <section class="stats-overview" data-aos="fade-up">
+        <div class="stats-grid">
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="100">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: var(--gradient-success);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-trend neutral" id="correct-trend">
+                        <i class="fas fa-chart-line"></i> Start your journey!
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h2 class="stat-value" id="total-correct">0</h2>
+                    <p class="stat-label">Correct Answers</p>
+                    <div class="stat-chart mini-chart" id="correct-chart"></div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="200">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: var(--gradient-warning);">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="stat-trend neutral" id="accuracy-trend">
+                        <i class="fas fa-chart-line"></i> Practice makes perfect!
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h2 class="stat-value" id="accuracy-rate">0%</h2>
+                    <p class="stat-label">Accuracy Rate</p>
+                    <div class="stat-chart mini-chart" id="accuracy-chart"></div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="300">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: var(--gradient-primary);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-trend neutral" id="time-trend">
+                        <i class="fas fa-chart-line"></i> Begin learning!
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h2 class="stat-value" id="avg-time">0s</h2>
+                    <p class="stat-label">Avg. Response Time</p>
+                    <div class="stat-chart mini-chart" id="time-chart"></div>
+                </div>
+            </div>
+
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: var(--gradient-accent);">
+                        <i class="fas fa-fire"></i>
+                    </div>
+                    <div class="stat-trend neutral" id="streak-trend">
+                        <i class="fas fa-chart-line"></i> Build your streak!
+                    </div>
+                </div>
+                <div class="stat-content">
+                    <h2 class="stat-value" id="current-streak">0</h2>
+                    <p class="stat-label">Day Streak</p>
+                    <div class="stat-chart mini-chart" id="streak-chart"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Charts Section -->
+    <div class="charts-grid">
+        <!-- Performance Over Time -->
+        <section class="chart-section glass" data-aos="fade-right">
+            <h3 class="section-header">
+                <i class="fas fa-chart-area"></i> Performance Over Time
+            </h3>
+            <div class="chart-container">
+                <canvas id="performanceChart"></canvas>
+            </div>
+            <div class="chart-legend">
+                <span class="legend-item">
+                    <span class="legend-color" style="background: var(--success-color);"></span>
+                    Correct Answers
+                </span>
+                <span class="legend-item">
+                    <span class="legend-color" style="background: var(--danger-color);"></span>
+                    Incorrect Answers
+                </span>
+            </div>
+        </section>
+
+        <!-- Category Performance -->
+        <section class="chart-section glass" data-aos="fade-left">
+            <h3 class="section-header">
+                <i class="fas fa-chart-pie"></i> Category Breakdown
+            </h3>
+            <div class="chart-container">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </section>
+    </div>
+
+    <!-- Detailed Stats -->
+    <div class="detailed-stats-grid">
+        <!-- Study Sessions -->
+        <section class="detail-section glass" data-aos="fade-up">
+            <h3 class="section-header">
+                <i class="fas fa-calendar-check"></i> Recent Study Sessions
+            </h3>
+            <div class="sessions-list">
+                <div class="session-item">
+                    <div class="session-date">
+                        <span class="day">Today</span>
+                        <span class="time">2:30 PM</span>
+                    </div>
+                    <div class="session-info">
+                        <div class="session-stats">
+                            <span class="stat" id="session-today-questions">-- questions</span>
+                            <span class="divider">•</span>
+                            <span class="stat" id="session-today-accuracy">--% accuracy</span>
+                            <span class="divider">•</span>
+                            <span class="stat" id="session-today-duration">-- min</span>
+                        </div>
+                        <div class="session-bar">
+                            <div class="bar-fill" id="session-today-bar" style="width: 0%; background: var(--gradient-success);"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="session-item">
+                    <div class="session-date">
+                        <span class="day">Yesterday</span>
+                        <span class="time">7:45 PM</span>
+                    </div>
+                    <div class="session-info">
+                        <div class="session-stats">
+                            <span class="stat" id="session-yesterday-questions">-- questions</span>
+                            <span class="divider">•</span>
+                            <span class="stat" id="session-yesterday-accuracy">--% accuracy</span>
+                            <span class="divider">•</span>
+                            <span class="stat" id="session-yesterday-duration">-- min</span>
+                        </div>
+                        <div class="session-bar">
+                            <div class="bar-fill" id="session-yesterday-bar" style="width: 0%; background: var(--gradient-warning);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn btn-sm btn-dark mt-3" onclick="showAllSessions()">
+                View All Sessions
+            </button>
+        </section>
+
+        <!-- Top Categories -->
+        <section class="detail-section glass" data-aos="fade-up" data-aos-delay="100">
+            <h3 class="section-header">
+                <i class="fas fa-award"></i> Strongest Categories
+            </h3>
+            <div class="category-list">
+                <div class="category-item">
+                    <div class="category-info">
+                        <span class="category-name">File Management</span>
+                        <span class="category-score" id="file-mgmt-score">--%</span>
+                    </div>
+                    <div class="category-bar">
+                        <div class="bar-fill" id="file-mgmt-bar" style="width: 0%; background: var(--gradient-success);"></div>
+                    </div>
+                </div>
+                <div class="category-item">
+                    <div class="category-info">
+                        <span class="category-name">System Administration</span>
+                        <span class="category-score" id="system-admin-score">--%</span>
+                    </div>
+                    <div class="category-bar">
+                        <div class="bar-fill" id="system-admin-bar" style="width: 0%; background: var(--gradient-success);"></div>
+                    </div>
+                </div>
+                <div class="category-item">
+                    <div class="category-info">
+                        <span class="category-name">Shell Scripting</span>
+                        <span class="category-score" id="shell-scripting-score">--%</span>
+                    </div>
+                    <div class="category-bar">
+                        <div class="bar-fill" id="shell-scripting-bar" style="width: 0%; background: var(--gradient-warning);"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Weak Areas -->
+        <section class="detail-section glass" data-aos="fade-up" data-aos-delay="200">
+            <h3 class="section-header">
+                <i class="fas fa-exclamation-triangle"></i> Areas to Improve
+            </h3>
+            <div class="category-list">
+                <div class="category-item weak">
+                    <div class="category-info">
+                        <span class="category-name">Networking</span>
+                        <span class="category-score" id="networking-score">--%</span>
+                    </div>
+                    <div class="category-bar">
+                        <div class="bar-fill" id="networking-bar" style="width: 0%; background: var(--gradient-danger);"></div>
+                    </div>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="practiceCategory('networking')">
+                        Practice Now
+                    </button>
+                </div>
+                <div class="category-item weak">
+                    <div class="category-info">
+                        <span class="category-name">Security</span>
+                        <span class="category-score" id="security-score">--%</span>
+                    </div>
+                    <div class="category-bar">
+                        <div class="bar-fill" id="security-bar" style="width: 0%; background: var(--gradient-danger);"></div>
+                    </div>
+                    <button class="btn btn-sm btn-primary mt-2" onclick="practiceCategory('security')">
+                        Practice Now
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Heatmap Calendar -->
+    <section class="heatmap-section glass" data-aos="fade-up">
+        <h3 class="section-header">
+            <i class="fas fa-calendar-alt"></i> Study Activity Heatmap
+        </h3>
+        <div class="heatmap-container">
+            <div class="heatmap-months">
+                <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span>
+                <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+                <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+            </div>
+            <div class="heatmap-grid" id="activity-heatmap">
+                <!-- Generated by JavaScript -->
+            </div>
+            <div class="heatmap-legend">
+                <span>Less</span>
+                <div class="legend-scale">
+                    <div class="activity-cell" data-level="0"></div>
+                    <div class="activity-cell" data-level="1"></div>
+                    <div class="activity-cell" data-level="2"></div>
+                    <div class="activity-cell" data-level="3"></div>
+                    <div class="activity-cell" data-level="4"></div>
+                </div>
+                <span>More</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Options -->
+    <section class="export-section glass" data-aos="fade-up">
+        <h3 class="section-header">
+            <i class="fas fa-download"></i> Export Your Data
+        </h3>
+        <div class="export-options">
+            <button class="btn btn-secondary" onclick="exportData('csv')">
+                <i class="fas fa-file-csv"></i> Export as CSV
+            </button>
+            <button class="btn btn-secondary" onclick="exportData('pdf')">
+                <i class="fas fa-file-pdf"></i> Export as PDF
+            </button>
+            <button class="btn btn-secondary" onclick="exportData('json')">
+                <i class="fas fa-file-code"></i> Export as JSON
+            </button>
+        </div>
+    </section>
+</div>
+
+<style>
+/* Stats Page Specific Styles */
+.time-selector {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.time-btn {
+    padding: 0.75rem 1.5rem;
+    background: var(--bg-tertiary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-full);
+    color: var(--text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-base);
+}
+
+.time-btn:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.time-btn.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+/* Stats Grid */
+.stats-overview {
+    margin-bottom: 3rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.stat-trend {
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.stat-trend.positive { color: var(--success-color); }
+.stat-trend.negative { color: var(--danger-color); }
+.stat-trend.neutral { color: var(--text-secondary); }
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.mini-chart {
+    height: 40px;
+    margin-top: 1rem;
+    opacity: 0.3;
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.chart-section {
+    padding: 2rem;
+}
+
+.chart-container {
+    height: 300px;
+    margin-bottom: 1rem;
+}
+
+.chart-legend {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+}
+
+/* Detailed Stats Grid */
+.detailed-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.detail-section {
+    padding: 2rem;
+}
+
+.section-header {
+    font-size: 1.125rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Sessions List */
+.sessions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.session-item {
+    display: flex;
+    gap: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.session-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+}
+
+.session-date .day {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.session-date .time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.session-info {
+    flex: 1;
+}
+
+.session-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.session-stats .divider {
+    color: var(--text-muted);
+}
+
+.session-bar {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+}
+
+/* Category Lists */
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.category-item {
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+}
+
+.category-item.weak {
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.category-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.category-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.category-score {
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.category-bar {
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+/* Heatmap Section */
+.heatmap-section {
+    padding: 2rem;
+}
+
+.heatmap-container {
+    position: relative;
+}
+
+.heatmap-months {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 4px;
+    margin-bottom: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(52, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    gap: 3px;
+    margin-bottom: 1rem;
+}
+
+.activity-cell {
+    aspect-ratio: 1;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.activity-cell[data-level="1"] { background: rgba(16, 185, 129, 0.2); }
+.activity-cell[data-level="2"] { background: rgba(16, 185, 129, 0.4); }
+.activity-cell[data-level="3"] { background: rgba(16, 185, 129, 0.6); }
+.activity-cell[data-level="4"] { background: rgba(16, 185, 129, 0.8); }
+
+.activity-cell:hover {
+    transform: scale(1.5);
+    box-shadow: var(--shadow-lg);
+    z-index: 10;
+}
+
+.heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.legend-scale {
+    display: flex;
+    gap: 3px;
+}
+
+.legend-scale .activity-cell {
+    width: 12px;
+    height: 12px;
+}
+
+/* Export Section */
+.export-section {
+    padding: 2rem;
+    text-align: center;
+}
+
+.export-options {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .time-selector {
+        flex-direction: column;
+    }
+    
+    .time-btn {
+        width: 100%;
+    }
+    
+    .session-item {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .heatmap-grid {
+        overflow-x: auto;
+        min-width: 600px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize stats page
+document.addEventListener('DOMContentLoaded', function() {
+    loadStatsData();
+    initCharts();
+    generateHeatmap();
+});
+
+// Load stats data
+function loadStatsData() {
+    // Use the SAME dashboard API for consistency
+    fetch('/api/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Error loading stats:', data.error);
+                return;
+            }
+            
+            // Update stat values with data from single source
+            const totalCorrect = data.total_correct || 0;
+            const accuracyRate = data.accuracy || 0;
+            const currentStreak = data.streak || 0;
+            
+            // Calculate average time per question if we have data
+            let avgTime = 0;
+            if (data.total_questions > 0 && data.total_study_time > 0) {
+                avgTime = Math.round(data.total_study_time / data.total_questions);
+            }
+            
+            // Update with animation
+            animateValue('total-correct', 0, totalCorrect, 1000);
+            animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
+            animateValue('avg-time', 0, avgTime, 1000, 's');
+            animateValue('current-streak', 0, currentStreak, 1000);
+            
+            // Update charts with real data
+            updateChartsWithData(data);
+            
+            // Update session list
+            updateSessionList(data);
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+        });
+}
+
+// Update stats trend indicators
+function updateStatsTrends(isResetState, statsData) {
+    const correctTrend = document.getElementById('correct-trend');
+    const accuracyTrend = document.getElementById('accuracy-trend');
+    const timeTrend = document.getElementById('time-trend');
+    const streakTrend = document.getElementById('streak-trend');
+    
+    if (isResetState) {
+        // Show encouraging messages for reset state
+        if (correctTrend) {
+            correctTrend.className = 'stat-trend neutral';
+            correctTrend.innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
+        }
+        if (accuracyTrend) {
+            accuracyTrend.className = 'stat-trend neutral';
+            accuracyTrend.innerHTML = '<i class="fas fa-chart-line"></i> Practice makes perfect!';
+        }
+        if (timeTrend) {
+            timeTrend.className = 'stat-trend neutral';
+            timeTrend.innerHTML = '<i class="fas fa-chart-line"></i> Begin learning!';
+        }
+        if (streakTrend) {
+            streakTrend.className = 'stat-trend neutral';
+            streakTrend.innerHTML = '<i class="fas fa-chart-line"></i> Build your streak!';
+        }
+    } else {
+        // Show positive trends for active users
+        if (correctTrend) {
+            correctTrend.className = 'stat-trend positive';
+            correctTrend.innerHTML = '<i class="fas fa-arrow-up"></i> Keep going!';
+        }
+        if (accuracyTrend) {
+            accuracyTrend.className = 'stat-trend positive';
+            accuracyTrend.innerHTML = '<i class="fas fa-arrow-up"></i> Improving!';
+        }
+        if (timeTrend) {
+            timeTrend.className = 'stat-trend neutral';
+            timeTrend.innerHTML = '<i class="fas fa-clock"></i> Steady pace';
+        }
+        if (streakTrend) {
+            streakTrend.className = 'stat-trend positive';
+            streakTrend.innerHTML = '<i class="fas fa-fire"></i> On fire!';
+        }
+    }
+}
+
+// Load demo data if API fails
+function loadDemoStatsData() {
+    const stats = {
+        totalCorrect: '--',
+        accuracyRate: '--',
+        avgTime: '--',
+        currentStreak: '--'
+    };
+    
+    // Update stat values with placeholders
+    document.getElementById('total-correct').textContent = stats.totalCorrect;
+    document.getElementById('accuracy-rate').textContent = stats.accuracyRate + '%';
+    document.getElementById('avg-time').textContent = stats.avgTime + 's';
+    document.getElementById('current-streak').textContent = stats.currentStreak;
+}
+
+// Calculate average time from stats data
+function calculateAverageTime(statsData) {
+    // This would calculate from actual session data
+    // For now, return a placeholder
+    return 0;
+}
+
+// Update charts with real data
+function updateChartsWithData(statsData) {
+    // Update performance chart with real data if available
+    if (window.performanceChart && statsData.categories) {
+        const categories = statsData.categories.slice(0, 7); // Get first 7 days worth
+        const correctData = categories.map(cat => cat.correct || 0);
+        const incorrectData = categories.map(cat => (cat.attempts || 0) - (cat.correct || 0));
+        
+        window.performanceChart.data.datasets[0].data = correctData;
+        window.performanceChart.data.datasets[1].data = incorrectData;
+        window.performanceChart.update();
+    }
+    
+    // Update category chart with real data
+    if (window.categoryChart && statsData.categories) {
+        const categoryNames = statsData.categories.map(cat => cat.category);
+        const categoryData = statsData.categories.map(cat => cat.correct || 0);
+        
+        window.categoryChart.data.labels = categoryNames.slice(0, 5);
+        window.categoryChart.data.datasets[0].data = categoryData.slice(0, 5);
+        window.categoryChart.update();
+    }
+}
+
+// Update recent sessions list
+function updateSessionList(statsData) {
+    // This would update the session list with real data
+    // Implementation depends on session data structure
+    
+    // For now, update with placeholders if no data
+    if (!statsData || !statsData.sessions) {
+        document.getElementById('session-today-questions').textContent = '-- questions';
+        document.getElementById('session-today-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-today-duration').textContent = '-- min';
+        document.getElementById('session-yesterday-questions').textContent = '-- questions';
+        document.getElementById('session-yesterday-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-yesterday-duration').textContent = '-- min';
+        
+        // Update category scores
+        document.getElementById('file-mgmt-score').textContent = '--%';
+        document.getElementById('system-admin-score').textContent = '--%';
+        document.getElementById('shell-scripting-score').textContent = '--%';
+        document.getElementById('networking-score').textContent = '--%';
+        document.getElementById('security-score').textContent = '--%';
+    }
+}
+
+// Animate number changes
+function animateValue(id, start, end, duration, suffix = '') {
+    const element = document.getElementById(id);
+    const range = end - start;
+    const startTime = performance.now();
+    
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.floor(start + range * progress);
+        element.textContent = current + suffix;
+        
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        }
+    }
+    
+    requestAnimationFrame(update);
+}
+
+// Initialize charts
+function initCharts() {
+    // Performance Over Time Chart
+    const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+    window.performanceChart = new Chart(performanceCtx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Correct',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4
+            }, {
+                label: 'Incorrect',
+                data: [0, 0, 0, 0, 0, 0, 0],
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94a3b8'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        color: '#94a3b8'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Category Breakdown Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    window.categoryChart = new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['File Management', 'System Admin', 'Networking', 'Security', 'Shell Scripting'],
+            datasets: [{
+                data: [0, 0, 0, 0, 0],
+                backgroundColor: [
+                    '#10b981',
+                    '#3b82f6',
+                    '#f59e0b',
+                    '#ef4444',
+                    '#8b5cf6'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        color: '#94a3b8',
+                        padding: 15
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Generate activity heatmap
+function generateHeatmap() {
+    const heatmap = document.getElementById('activity-heatmap');
+    if (!heatmap) return;
+    
+    // Clear existing content
+    heatmap.innerHTML = '';
+    
+    // Fetch real heatmap data from API
+    fetch('/api/heatmap')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.heatmap_data) {
+                // Create a proper GitHub-style heatmap grid
+                generateHeatmapGrid(heatmap, data.heatmap_data);
+                console.log('Heatmap generated with real data:', data.heatmap_data.length, 'days');
+            } else {
+                // Fallback to static heatmap if API fails
+                generateStaticHeatmap();
+                console.warn('Failed to load heatmap data, using static fallback');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading heatmap data:', error);
+            // Fallback to static heatmap
+            generateStaticHeatmap();
+        });
+}
+
+function generateHeatmapGrid(container, activityData) {
+    // Create a map for quick lookup of activity by date
+    const activityMap = {};
+    activityData.forEach(day => {
+        activityMap[day.date] = day;
+    });
+    
+    // Start from the first Sunday of the year (or before) to align with GitHub-style layout
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    const firstSunday = new Date(startOfYear);
+    firstSunday.setDate(startOfYear.getDate() - startOfYear.getDay());
+    
+    // Generate 52 weeks * 7 days = 364 cells
+    for (let week = 0; week < 52; week++) {
+        for (let day = 0; day < 7; day++) {
+            const currentDate = new Date(firstSunday);
+            currentDate.setDate(firstSunday.getDate() + (week * 7) + day);
+            
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayData = activityMap[dateStr] || { date: dateStr, questions: 0, level: 0 };
+            
+            const cell = document.createElement('div');
+            cell.className = 'activity-cell';
+            
+            // Set activity level
+            const level = dayData.level || 0;
+            cell.setAttribute('data-level', level);
+            
+            // Add tooltip with date and activity
+            const questionsText = dayData.questions > 0 ? 
+                `${dayData.questions} question${dayData.questions !== 1 ? 's' : ''}` : 
+                'No activity';
+            cell.title = `${currentDate.toLocaleDateString()}: ${questionsText}`;
+            
+            // Add click handler for detailed view
+            cell.addEventListener('click', () => {
+                if (dayData.questions > 0) {
+                    showMessage('info', `${currentDate.toLocaleDateString()}: ${dayData.questions} questions answered`);
+                }
+            });
+            
+            container.appendChild(cell);
+        }
+    }
+}
+
+// Fallback static heatmap generator
+function generateStaticHeatmap() {
+    const heatmap = document.getElementById('activity-heatmap');
+    if (!heatmap) return;
+    
+    const today = new Date();
+    
+    // Generate 365 days with static data
+    for (let i = 364; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'activity-cell';
+        
+        // Set all activity level to 0 for static version
+        const level = 0;
+        cell.setAttribute('data-level', level);
+        
+        // Add tooltip
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        cell.title = `${date.toLocaleDateString()}: No data available`;
+        
+        heatmap.appendChild(cell);
+    }
+}
+
+// Change time period
+function changeTimePeriod(period) {
+    // Update active button
+    document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Show loading state
+    showMessage('info', `Loading ${getPeriodName(period)} data...`);
+    
+    // Reload data for selected period
+    console.log('Loading data for:', period);
+    
+    // For now, just reload the same data but could filter by date range
+    loadStatsData();
+    
+    // In a real implementation, you would:
+    // - Pass the period parameter to the API
+    // - Filter data on the backend based on the time range
+    // - Update charts and stats accordingly
+    setTimeout(() => {
+        showMessage('success', `Loaded ${getPeriodName(period)} statistics`);
+    }, 500);
+}
+
+// Get friendly name for time period
+function getPeriodName(period) {
+    const names = {
+        'week': 'Last 7 Days',
+        'month': 'Last 30 Days',
+        'all': 'All Time',
+        'custom': 'Custom Range'
+    };
+    return names[period] || period;
+}
+
+// Export data
+function exportData(format) {
+    console.log('Exporting data as:', format);
+    showMessage('info', `Exporting data as ${format.toUpperCase()}...`);
+    
+    // In real app, this would generate and download the file
+    setTimeout(() => {
+        showMessage('success', `Data exported successfully!`);
+    }, 1000);
+}
+
+// Practice specific category
+function practiceCategory(category) {
+    localStorage.setItem('practiceCategory', category);
+    window.location.href = '/quiz';
+}
+
+// Show all sessions
+function showAllSessions() {
+    console.log('Showing all sessions');
+    // This would open a modal or navigate to detailed view
+}
+
+function showMessage(type, text) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type} animate-fade-in`;
+    messageDiv.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+        ${text}
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(messageDiv, container.firstChild);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

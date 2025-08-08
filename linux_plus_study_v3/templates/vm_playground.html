@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}VM Playground - Linux Plus Study{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1><i class="fas fa-server"></i> VM Playground</h1>
+                <p class="lead">Virtual Machine Practice Environment</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-exclamation-triangle text-warning"></i> VM Integration Not Available</h5>
+                </div>
+                <div class="card-body">
+                    <p>The VM playground feature is currently not available. This requires:</p>
+                    <ul>
+                        <li>VM integration module installation</li>
+                        <li>Virtualization platform setup (KVM/QEMU, VirtualBox, etc.)</li>
+                        <li>Proper system permissions</li>
+                    </ul>
+                    
+                    <p>For now, you can use the <a href="{{ url_for('cli_playground_page') }}" class="btn btn-sm btn-primary">CLI Playground</a> to practice Linux commands.</p>
+                    
+                    <div class="alert alert-info">
+                        <strong>Coming Soon:</strong> Full VM integration with snapshot management, multiple Linux distributions, and guided lab exercises.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

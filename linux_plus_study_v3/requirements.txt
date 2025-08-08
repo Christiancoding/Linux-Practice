@@ -1,0 +1,88 @@
+# Core Flask web framework
+flask==2.3.3
+werkzeug==2.3.7
+jinja2==3.1.2
+markupsafe==2.1.3
+itsdangerous==2.1.2
+click==8.1.7
+blinker==1.6.3
+
+# Desktop application framework
+pywebview==4.4.1
+
+# CLI enhancements and rich terminal output
+rich==13.5.2
+colorama==0.4.6
+
+# YAML processing for challenge files
+pyyaml==6.0.1
+
+# SSH and VM integration
+paramiko==3.3.1
+fabric==3.2.2
+
+# Database support
+sqlalchemy==2.0.20
+alembic==1.12.0
+
+# Data processing and analysis
+pandas==2.0.3
+numpy==1.24.4
+
+# File processing and validation
+markdown==3.4.4
+python-dateutil==2.8.2
+
+# Configuration management
+python-dotenv==1.0.0
+
+# Testing framework
+pytest==7.4.2
+pytest-flask==1.2.0
+
+# Code quality and linting
+black==23.7.0
+flake8==6.0.0
+
+# Async support
+asyncio-mqtt==0.13.0
+
+# Security and encryption
+cryptography==41.0.4
+bcrypt==4.0.1
+
+# Monitoring and logging
+psutil==5.9.5
+
+# Image processing (if needed for enhanced UI)
+pillow==10.0.0
+
+# HTTP requests
+requests==2.31.0
+
+# Progress bars and CLI utilities
+tqdm==4.66.1
+
+# JSON schema validation
+jsonschema==4.19.0
+
+# File watching for development
+watchdog==3.0.0
+
+# Virtual machine management (if using libvirt)
+libvirt-python==9.7.0
+
+# Network utilities
+netaddr==0.8.0
+
+# Caching
+redis==4.6.0
+
+# Task queue (optional)
+celery==5.3.1
+
+# Documentation generation
+sphinx==7.1.2
+
+# Development utilities
+ipython==8.15.0

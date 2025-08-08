@@ -1,0 +1,565 @@
+{
+  "sessions": [],
+  "questions": {
+    "What is AppArmor?": {
+      "correct": 4,
+      "attempts": 4,
+      "history": [
+        {
+          "timestamp": "2025-08-06T12:44:51.785346",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-06T12:53:00.564719",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T12:54:06.963273",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:51:00.723165",
+          "correct": true
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 8,
+      "attempts": 9,
+      "history": [
+        {
+          "timestamp": "2025-08-06T12:52:53.636823",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T12:53:43.727412",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:04:19.838592",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:33.820250",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:51:03.777861",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:57.919529",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:48.067285",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:43.363586",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:45.347397",
+          "correct": true
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 4,
+      "attempts": 4,
+      "history": [
+        {
+          "timestamp": "2025-08-06T12:53:17.429211",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:53.753772",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:53:01.142863",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:25:00.003476",
+          "correct": true
+        }
+      ]
+    },
+    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
+      "correct": 6,
+      "attempts": 8,
+      "history": [
+        {
+          "timestamp": "2025-08-06T12:53:22.034592",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:53:51.516894",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:04:23.428657",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:36.670637",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:50:52.606392",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:41.486690",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:42.345842",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:36.824517",
+          "correct": true
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 19,
+      "attempts": 31,
+      "history": [
+        {
+          "timestamp": "2025-08-06T12:53:29.367308",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-06T14:13:17.874227",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-06T14:13:25.608844",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-06T14:13:33.817458",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-06T14:21:02.741002",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-06T14:21:08.417428",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-06T14:21:10.286762",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:53:40.988095",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:54:01.521498",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:54:11.816715",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:04:08.915764",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:04:14.887276",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:04:26.396145",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:13:40.379304",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:13:44.099491",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:14:01.025831",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:50:34.134469",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:50:55.397545",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:50:58.019377",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:31.000735",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:35.900724",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:38.855437",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:38.995970",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:50.982095",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:53.383196",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:18.874575",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:40.628531",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:20:48.435182",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:33.163290",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:36.350193",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:48.797982",
+          "correct": true
+        }
+      ]
+    },
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 3,
+      "attempts": 3,
+      "history": [
+        {
+          "timestamp": "2025-08-06T13:22:16.437606",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:04:12.260667",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:54.733821",
+          "correct": true
+        }
+      ]
+    },
+    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
+      "correct": 5,
+      "attempts": 6,
+      "history": [
+        {
+          "timestamp": "2025-08-06T14:13:21.437702",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:57.795353",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:50:43.179266",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:16:00.702496",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:33.856455",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:52.746489",
+          "correct": true
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 6,
+      "attempts": 7,
+      "history": [
+        {
+          "timestamp": "2025-08-06T14:13:28.760114",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T12:54:09.297598",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:04:30.969872",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:30.703229",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:57.144761",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:25.182793",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:39.018892",
+          "correct": true
+        }
+      ]
+    },
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 6,
+      "attempts": 9,
+      "history": [
+        {
+          "timestamp": "2025-08-06T14:20:59.702995",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:54:03.961124",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:04:28.796006",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:13:51.088965",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:50:48.217471",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:52:48.666680",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:45.384523",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:22.412334",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:29.784848",
+          "correct": true
+        }
+      ]
+    },
+    "In Kubernetes, what is an Ambassador container?": {
+      "correct": 7,
+      "attempts": 9,
+      "history": [
+        {
+          "timestamp": "2025-08-06T14:21:05.269595",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T12:53:46.995062",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:04:33.269057",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:13:47.384488",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T13:50:36.774884",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:52:44.526203",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:15:32.385820",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:28.485954",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:42.036331",
+          "correct": true
+        }
+      ]
+    },
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
+      "correct": 1,
+      "attempts": 7,
+      "history": [
+        {
+          "timestamp": "2025-08-07T12:53:57.834739",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:04:17.573129",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:50:31.330017",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T13:52:51.784956",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:15:35.464071",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:20:30.867041",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:56.930772",
+          "correct": false
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Concepts & Terms (Containers)": {
+      "correct": 7,
+      "attempts": 9
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 4,
+      "attempts": 4
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 10,
+      "attempts": 11
+    },
+    "Commands (System Management)": {
+      "correct": 29,
+      "attempts": 50
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 8,
+      "attempts": 9
+    },
+    "Troubleshooting": {
+      "correct": 11,
+      "attempts": 14
+    }
+  },
+  "total_correct": 69,
+  "total_attempts": 97,
+  "incorrect_review": [
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
+  ],
+  "leaderboard": [
+    {
+      "date": "2025-08-07T14:16:00.702548",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 110
+    },
+    {
+      "date": "2025-08-07T14:25:00.003536",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 110
+    },
+    {
+      "date": "2025-08-07T14:20:48.435332",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 105
+    },
+    {
+      "date": "2025-08-07T13:53:01.142918",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 100
+    },
+    {
+      "date": "2025-08-06T12:53:29.367419",
+      "score": 4,
+      "total": 5,
+      "accuracy": 80.0,
+      "points": 40
+    },
+    {
+      "date": "2025-08-06T14:13:33.817590",
+      "score": 4,
+      "total": 5,
+      "accuracy": 80.0,
+      "points": 40
+    },
+    {
+      "date": "2025-08-07T13:51:03.778043",
+      "score": 7,
+      "total": 10,
+      "accuracy": 70.0,
+      "points": 80
+    },
+    {
+      "date": "2025-08-07T12:54:11.816800",
+      "score": 5,
+      "total": 10,
+      "accuracy": 50.0,
+      "points": 50
+    },
+    {
+      "date": "2025-08-07T13:04:33.269103",
+      "score": 5,
+      "total": 10,
+      "accuracy": 50.0,
+      "points": 50
+    },
+    {
+      "date": "2025-08-07T13:14:01.025977",
+      "score": 5,
+      "total": 10,
+      "accuracy": 50.0,
+      "points": 50
+    }
+  ],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

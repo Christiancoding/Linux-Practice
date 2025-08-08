@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Linux+ Study Game - Master the Terminal!{% endblock %}</title>
+    
+    <!-- Google Fonts: Inter for UI, JetBrains Mono for code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&family=Poppins:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Animate On Scroll (AOS) Library for animations -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
+    <!-- Chart.js for statistics charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Main Navigation -->
+    <nav class="main-nav">
+        <div class="container">
+            <a href="{{ url_for('index') }}" class="nav-logo">
+                <i class="fas fa-terminal"></i>
+                <span>Linux+ Study Game</span>
+            </a>
+            
+            <div class="nav-links">
+                <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'quiz_page' %}active{% endif %}" href="{{ url_for('quiz_page') }}" data-page="quiz">
+                    <i class="fas fa-question-circle"></i> <span>Quiz</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'stats_page' %}active{% endif %}" href="{{ url_for('stats_page') }}" data-page="stats">
+                    <i class="fas fa-chart-line"></i> <span>Stats</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'analytics_dashboard' %}active{% endif %}" href="/analytics" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i> <span>Analytics</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'achievements_page' %}active{% endif %}" href="{{ url_for('achievements_page') }}" data-page="achievements">
+                    <i class="fas fa-trophy"></i> <span>Achievements</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'review_page' %}active{% endif %}" href="{{ url_for('review_page') }}" data-page="review">
+                    <i class="fas fa-book-open"></i> <span>Review</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'quiz_page' and 'practice' in request.args %}active{% endif %}" href="{{ url_for('quiz_page', mode='practice') }}" data-page="practice">
+                    <i class="fas fa-dumbbell"></i> <span>Practice</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'vm_playground' %}active{% endif %}" href="{{ url_for('vm_playground') }}" data-page="vm">
+                    <i class="fas fa-server"></i> <span>VM</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'cli_playground_page' %}active{% endif %}" href="{{ url_for('cli_playground_page') }}" data-page="cli">
+                    <i class="fas fa-terminal"></i> <span>CLI</span>
+                </a>
+                <a class="nav-link {% if request.endpoint == 'settings_page' %}active{% endif %}" href="{{ url_for('settings_page') }}" data-page="settings">
+                    <i class="fas fa-cog"></i> <span>Settings</span>
+                </a>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <!-- Theme Toggle -->
+                <button class="nav-link" onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                
+                <!-- Sound Toggle -->
+                <button class="nav-link" onclick="toggleSound()" title="Toggle Sound" id="soundToggle">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Content -->
+    <main class="page-content">
+        <div class="container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="message {{ category }} animate-fade-in">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif category == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>Linux+ Study Game</h4>
+                    <p>Master Linux commands and ace your certification exam!</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{{ url_for('index') }}">Dashboard</a></li>
+                        <li><a href="{{ url_for('quiz_page') }}">Practice Quiz</a></li>
+                        <li><a href="{{ url_for('cli_playground_page') }}">CLI Playground</a></li>
+                        <li><a href="{{ url_for('review_page') }}">Review</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#" onclick="openCheatSheet()">Command Cheat Sheet</a></li>
+                        <li><a href="{{ url_for('import_questions_route') }}">Import/Export</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Linux+ Study Game. Built with <i class="fas fa-heart" style="color: var(--danger-color);"></i> for Linux enthusiasts.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modals -->
+    <!-- Achievement Unlock Modal -->
+    <div class="modal" id="achievementModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Achievement Unlocked!</h2>
+                <button class="modal-close" onclick="closeModal('achievementModal')">&times;</button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="achievement-icon-large animate-bounce">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3 id="achievementName">Achievement Name</h3>
+                <p id="achievementDesc">Achievement description goes here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cheat Sheet Modal -->
+    <div class="modal" id="cheatSheetModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h2 class="modal-title">Linux Command Cheat Sheet</h2>
+                <button class="modal-close" onclick="closeModal('cheatSheetModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="cheat-sheet-grid">
+                    <div class="cheat-category">
+                        <h4><i class="fas fa-folder"></i> File System</h4>
+                        <ul>
+                            <li><code>ls</code> - List directory contents</li>
+                            <li><code>cd</code> - Change directory</li>
+                            <li><code>pwd</code> - Print working directory</li>
+                            <li><code>mkdir</code> - Make directory</li>
+                            <li><code>rm</code> - Remove files/directories</li>
+                            <li><code>cp</code> - Copy files/directories</li>
+                            <li><code>mv</code> - Move/rename files</li>
+                        </ul>
+                    </div>
+                    <div class="cheat-category">
+                        <h4><i class="fas fa-user"></i> Permissions</h4>
+                        <ul>
+                            <li><code>chmod</code> - Change file permissions</li>
+                            <li><code>chown</code> - Change file ownership</li>
+                            <li><code>umask</code> - Set default permissions</li>
+                            <li><code>su</code> - Switch user</li>
+                            <li><code>sudo</code> - Execute as superuser</li>
+                        </ul>
+                    </div>
+                    <div class="cheat-category">
+                        <h4><i class="fas fa-network-wired"></i> Networking</h4>
+                        <ul>
+                            <li><code>ifconfig</code> - Configure network interface</li>
+                            <li><code>ping</code> - Test network connectivity</li>
+                            <li><code>netstat</code> - Network statistics</li>
+                            <li><code>ss</code> - Socket statistics</li>
+                            <li><code>wget</code> - Download files</li>
+                            <li><code>curl</code> - Transfer data</li>
+                        </ul>
+                    </div>
+                    <div class="cheat-category">
+                        <h4><i class="fas fa-microchip"></i> Process Management</h4>
+                        <ul>
+                            <li><code>ps</code> - Show processes</li>
+                            <li><code>top</code> - Display tasks</li>
+                            <li><code>kill</code> - Terminate processes</li>
+                            <li><code>jobs</code> - List active jobs</li>
+                            <li><code>bg/fg</code> - Background/foreground</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Bootstrap Bundle (if still needed for some components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- AOS Animation Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    
+    <!-- Main App JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    
+    <!-- Base JavaScript Functions -->
+    <script>
+        // Initialize AOS
+        AOS.init({ duration: 800, once: true, offset: 50 });
+
+        // Sound state
+        let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+
+        // Theme Management
+        function setTheme(themeName) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            localStorage.setItem('theme', themeName);
+            
+            // Update theme icon
+            const themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.className = themeName === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+            }
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            playSound('click');
+        }
+
+        // Sound Management
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('soundEnabled', soundEnabled);
+            const icon = document.querySelector('#soundToggle i');
+            icon.className = soundEnabled ? 'fas fa-volume-up' : 'fas fa-volume-mute';
+            playSound('click');
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            
+            const sounds = {
+                click: 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi13yO/eizEIHWq+8+OWT...',
+                success: 'data:audio/wav;base64,UklGRmQCAABXQVZFZm10...',
+                error: 'data:audio/wav;base64,UklGRjoCAABXQVZFZm10...'
+            };
+            
+            // Simple sound simulation for now
+            console.log('Playing sound:', type);
+        }
+
+        // Modal Management
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('active');
+                playSound('click');
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                playSound('click');
+            }
+        }
+
+        // Cheat Sheet
+        function openCheatSheet() {
+            openModal('cheatSheetModal');
+        }
+
+        // Help Function
+        function showHelp() {
+            // You can implement a help modal or redirect to a help page
+            alert('Help & Support coming soon!');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved theme
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+            
+            // Update sound icon based on saved state
+            if (!soundEnabled) {
+                document.querySelector('#soundToggle i').className = 'fas fa-volume-mute';
+            }
+            
+            // Add click event to close modals when clicking outside
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            });
+
+            // Auto-hide messages after 5 seconds
+            document.querySelectorAll('.message').forEach(msg => {
+                setTimeout(() => {
+                    msg.style.opacity = '0';
+                    setTimeout(() => msg.remove(), 300);
+                }, 5000);
+            });
+        });
+    </script>
+    
+    <!-- Analytics Integration -->
+    {% if analytics_js_snippet %}
+        {{ analytics_js_snippet | safe }}
+    {% endif %}
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+
+<style>
+/* Footer Styles */
+.main-footer {
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    margin-top: 4rem;
+    padding: 3rem 0 1.5rem;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.footer-section h4 {
+    font-size: 1.125rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.footer-section p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.footer-section ul {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-section ul li {
+    margin-bottom: 0.5rem;
+}
+
+.footer-section ul li a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: var(--transition-base);
+}
+
+.footer-section ul li a:hover {
+    color: var(--primary-color);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Modal Enhancements */
+.modal-lg {
+    max-width: 900px;
+}
+
+.achievement-icon-large {
+    width: 120px;
+    height: 120px;
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    font-size: 3rem;
+    color: white;
+    box-shadow: var(--shadow-glow);
+}
+
+.cheat-sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.cheat-category h4 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cheat-category ul {
+    list-style: none;
+    padding: 0;
+}
+
+.cheat-category li {
+    margin-bottom: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.cheat-category code {
+    background: var(--bg-tertiary);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* Page transition animation */
+.page-content {
+    animation: fadeInUp 0.6s ease;
+    min-height: calc(100vh - 200px);
+    padding: 2rem 0;
+}
+</style>
