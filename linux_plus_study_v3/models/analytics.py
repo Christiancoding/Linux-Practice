@@ -388,6 +388,24 @@ class Analytics(Base):
         if ineffective_method:
             self.least_effective_study_method = ineffective_method
     
+    def get_custom_metrics(self) -> Dict[str, Any]:
+        """Get custom metrics dictionary."""
+        if self.custom_metrics is None:
+            return {}
+        return self.custom_metrics
+    
+    def set_custom_metrics(self, metrics: Dict[str, Any]) -> None:
+        """Set custom metrics dictionary."""
+        self.custom_metrics = metrics
+        self.updated_at = datetime.now(timezone.utc)
+    
+    def update_custom_metric(self, key: str, value: Any) -> None:
+        """Update a single custom metric."""
+        if self.custom_metrics is None:
+            self.custom_metrics = {}
+        self.custom_metrics[key] = value
+        self.updated_at = datetime.now(timezone.utc)
+    
     def get_summary_stats(self) -> Dict[str, Any]:
         """Get a summary of key statistics."""
         return {

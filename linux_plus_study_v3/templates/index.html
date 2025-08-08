@@ -9,7 +9,7 @@
     <section class="hero-section glass mb-4" data-aos="fade-down">
         <div class="hero-content">
             <div class="hero-text">
-                <h1 class="hero-title">Welcome back, <span class="text-gradient">Linux Master</span>!</h1>
+                <h1 class="hero-title">Welcome back, <span class="text-gradient" id="user-display-name">Linux Master</span>!</h1>
                 <p class="hero-subtitle">Ready to continue your journey to Linux+ certification?</p>
                 <div class="hero-stats">
                     <div class="stat-item">
@@ -161,7 +161,7 @@
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 class="stat-value" id="study-time">{% if stats and stats.study_time %}{{ (stats.study_time // 3600)|int }}h{% if (stats.study_time % 3600 // 60)|int > 0 %} {{ (stats.study_time % 3600 // 60)|int }}m{% endif %}{% else %}0h{% endif %}</h3>
+                    <h3 class="stat-value" id="study-time">{% if stats and stats.study_time_formatted %}{{ stats.study_time_formatted }}{% else %}0s{% endif %}</h3>
                     <p class="stat-label">Study Time</p>
                     <div class="stat-trend positive">
                         <i class="fas fa-arrow-up"></i> 0h this week
@@ -606,78 +606,162 @@
 
 {% block scripts %}
 <script>
-// Update dashboard stats
+// Format study time consistently
+function formatStudyTime(seconds) {
+    if (!seconds || seconds === 0) return '0s';
+    
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    
+    if (hours > 0) {
+        return `${hours}h${minutes > 0 ? ' ' + minutes + 'm' : ''}`;
+    } else if (minutes > 0) {
+        return `${minutes}m${secs > 0 ? ' ' + secs + 's' : ''}`;
+    } else {
+        return `${secs}s`;
+    }
+}
+
+// Update improvement metrics with real data
+function updateImprovementMetrics(data) {
+    const trends = document.querySelectorAll('.stat-trend');
+    
+    // Correct answers trend
+    if (trends[0]) {
+        if (data.total_correct === 0) {
+            trends[0].className = 'stat-trend neutral';
+            trends[0].innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
+        } else {
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = `<i class="fas fa-arrow-up"></i> ${data.total_correct} correct!`;
+        }
+    }
+    
+    // Accuracy trend
+    if (trends[1]) {
+        if (data.accuracy === 0 || !data.accuracy) {
+            trends[1].className = 'stat-trend neutral';
+            trends[1].innerHTML = '<i class="fas fa-target"></i> Ready to improve!';
+        } else if (data.accuracy >= 80) {
+            trends[1].className = 'stat-trend positive';
+            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Excellent performance!';
+        } else {
+            trends[1].className = 'stat-trend positive';
+            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Keep practicing!';
+        }
+    }
+    
+    // Streak trend
+    if (trends[2]) {
+        if (data.streak === 0) {
+            trends[2].className = 'stat-trend neutral';
+            trends[2].innerHTML = '<i class="fas fa-fire"></i> Start your streak!';
+        } else {
+            trends[2].className = 'stat-trend positive';
+            trends[2].innerHTML = `<i class="fas fa-fire"></i> ${data.streak} day streak!`;
+        }
+    }
+    
+    // Study time trend
+    if (trends[3]) {
+        if (data.study_time === 0) {
+            trends[3].className = 'stat-trend neutral';
+            trends[3].innerHTML = '<i class="fas fa-clock"></i> Begin learning!';
+        } else {
+            trends[3].className = 'stat-trend positive';
+            const formatted = formatStudyTime(data.study_time);
+            trends[3].innerHTML = `<i class="fas fa-arrow-up"></i> ${formatted} total`;
+        }
+    }
+}
+
+// Update dashboard statistics from API
 function updateDashboardStats() {
-    console.log('Fetching dashboard data...');
-    // Fetch real data from dashboard API
+    console.log('Fetching dashboard stats...');
+    
     fetch('/api/dashboard')
         .then(response => response.json())
         .then(data => {
-            console.log('Dashboard data received:', data);
-            if (data.error) {
-                console.error('Error loading dashboard data:', data.error);
+            if (!data.success && data.error) {
+                console.error('Dashboard API error:', data.error);
+                // If backend has no data, check localStorage for recent quiz
                 updateDashboardStatsFromLocalStorage();
                 return;
             }
             
-            // Update hero stats with real data
-            document.getElementById('hero-level').textContent = data.level || 1;
-            document.getElementById('hero-xp').textContent = data.xp || 0;
-            document.getElementById('hero-streak').textContent = data.streak || 0;
+            console.log('Dashboard data received:', data);
             
-            // Update performance stats
-            console.log('Updating performance stats...');
+            // Update user display name
+            if (data.display_name) {
+                document.getElementById('user-display-name').textContent = data.display_name;
+            }
+            
+            // Update all stats from backend
             document.getElementById('correct-answers').textContent = data.total_correct || 0;
             document.getElementById('accuracy').textContent = Math.round(data.accuracy || 0) + '%';
-            document.getElementById('current-streak').textContent = data.streak || 0;
             document.getElementById('study-time').textContent = formatStudyTime(data.study_time || 0);
+            document.getElementById('hero-xp').textContent = data.xp || 0;
+            document.getElementById('current-streak').textContent = data.streak || 0;
+            document.getElementById('hero-level').textContent = data.level || 1;
+            document.getElementById('hero-streak').textContent = data.streak || 0;
             
-            console.log('Performance stats updated successfully');
-            
-            // Update progress ring with level progress
+            // Update progress ring
             updateProgressRingWithData(data);
             
-            // Save to localStorage as fallback
-            const statsToStore = {
-                level: data.level || 1,
-                xp: data.xp || 0,
-                streak: data.streak || 0,
-                correctAnswers: data.total_correct || 0,
-                accuracy: data.accuracy || 0,
-                studyTime: data.study_time || 0
-            };
-            localStorage.setItem('gameStats', JSON.stringify(statsToStore));
+            // Update improvement metrics
+            updateImprovementMetrics(data);
             
-            // Create analytics data from dashboard data for improvement metrics
-            const mockAnalyticsData = createMockAnalyticsFromDashboard(data);
-            
-            // Update improvement metrics using the enhanced performance data
-            if (data.performance_overview) {
-                updateImprovementMetricsWithEnhancedData(data);
-            } else {
-                updateImprovementMetrics(mockAnalyticsData);
-            }
-            
-            // Update study activity calendar using the enhanced data
-            if (data.study_activity) {
-                updateStudyActivityCalendarWithEnhancedData(data.study_activity);
-            } else {
-                updateStudyActivityCalendar(mockAnalyticsData);
-            }
-            
-            // Update achievements using enhanced data
-            if (data.recent_achievements) {
-                updateRecentAchievementsDisplay(data.recent_achievements);
-            } else {
-                loadAchievementsData(); // Fallback to old method
-            }
+            // Save to localStorage as backup
+            localStorage.setItem('gameStats', JSON.stringify({
+                level: data.level,
+                xp: data.xp,
+                streak: data.streak,
+                correctAnswers: data.total_correct,
+                accuracy: data.accuracy,
+                studyTime: data.study_time
+            }));
         })
         .catch(error => {
             console.error('Error fetching dashboard data:', error);
             updateDashboardStatsFromLocalStorage();
-            loadAchievementsData(); // Still try to load achievements
         });
 }
+
+// Convert quiz time format to seconds for storage
+function parseQuizTime(timeString) {
+    // Parse "0:33" format to seconds
+    if (!timeString) return 0;
+    
+    const parts = timeString.toString().split(':');
+    if (parts.length === 2) {
+        const minutes = parseInt(parts[0]) || 0;
+        const seconds = parseInt(parts[1]) || 0;
+        return (minutes * 60) + seconds;
+    }
+    return parseInt(timeString) || 0;
+}
+
+// When quiz completes, store the results for immediate dashboard update
+function onQuizComplete(quizResults) {
+    // Parse the time from the quiz (e.g., "0:33" becomes 33 seconds)
+    const timeInSeconds = parseQuizTime(quizResults.time);
+    
+    // Store quiz results temporarily with parsed time
+    localStorage.setItem('latestQuizResults', JSON.stringify({
+        correct: quizResults.correct,
+        incorrect: quizResults.incorrect,
+        time: quizResults.time,
+        timeInSeconds: timeInSeconds,
+        points: quizResults.points,
+        timestamp: Date.now()
+    }));
+    
+    // Redirect to dashboard
+    window.location.href = '/';
+}
+
+// Remove any functions that create mock data - we only use real data
 
 // Fallback to localStorage if API fails
 function updateDashboardStatsFromLocalStorage() {
@@ -692,7 +776,7 @@ function updateDashboardStatsFromLocalStorage() {
     document.getElementById('correct-answers').textContent = stats.correctAnswers || 0;
     document.getElementById('accuracy').textContent = (stats.accuracy || 0) + '%';
     document.getElementById('current-streak').textContent = stats.streak || 0;
-    document.getElementById('study-time').textContent = formatStudyTime(stats.studyTime || 0);
+    document.getElementById('study-time').textContent = stats.studyTimeFormatted || formatStudyTime(stats.studyTime || 0);
 }
 
 // Update progress ring with real data
@@ -895,16 +979,6 @@ function startPractice(mode) {
     window.location.href = '/quiz';
 }
 
-// Format study time (input in seconds)
-function formatStudyTime(seconds) {
-    if (seconds < 60) return '0m';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return minutes + 'm';
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours + 'h' + (mins > 0 ? ' ' + mins + 'm' : '');
-}
-
 // Command reference
 function showCommandReference(category) {
     // This would open a modal or navigate to command reference
@@ -912,357 +986,17 @@ function showCommandReference(category) {
     window.location.href = '/cli_playground#' + category;
 }
 
-// Create consistent analytics data from dashboard data
-function createMockAnalyticsFromDashboard(dashboardData) {
-    // Check if this is a reset state (all stats are 0)
-    const isResetState = (
-        (dashboardData.accuracy || 0) === 0 &&
-        (dashboardData.total_correct || 0) === 0 &&
-        (dashboardData.study_time || 0) === 0 &&
-        (dashboardData.streak || 0) === 0
-    );
-    
-    // If in reset state, return empty analytics data
-    if (isResetState) {
-        return {
-            total_questions: 0,
-            recent_performance: []
-        };
-    }
-    
-    const today = new Date(); // August 5, 2025
-    const recentPerformance = [];
-    
-    // Generate consistent performance data based on current accuracy
-    const baseAccuracy = dashboardData.accuracy || 70;
-    const totalQuestions = dashboardData.questions_answered || 0;
-    const currentStreak = dashboardData.streak || 0;
-    
-    // Use a seed based on current data to ensure consistency
-    const seed = Math.floor(baseAccuracy * 100) + totalQuestions + currentStreak;
-    
-    // Create 14 days of consistent session data (for week-over-week comparison)
-    for (let i = 0; i < 14; i++) {
-        const sessionDate = new Date(today);
-        sessionDate.setDate(sessionDate.getDate() - i);
-        
-        // Deterministic "random" values based on day and seed
-        const dayVariance = ((seed + i * 17) % 100) / 100; // 0-1 based on seed
-        
-        // Simulate improvement trend: last week was slightly lower performance
-        const weekFactor = i < 7 ? 1.0 : 0.95; // This week 5% better than last week
-        const dayVarianceAdjusted = (dayVariance - 0.5) * 8; // ±4% variance
-        
-        const sessionAccuracy = Math.max(40, Math.min(90, baseAccuracy * weekFactor + dayVarianceAdjusted));
-        const sessionQuestions = Math.floor(((seed + i * 23) % 8) + 10); // 10-17 questions per session
-        
-        recentPerformance.push({
-            date: sessionDate.toISOString(),
-            accuracy: sessionAccuracy,
-            questions: sessionQuestions,
-            activity: ['quiz', 'practice', 'study'][i % 3]
-        });
-    }
-    
-    return {
-        total_questions: totalQuestions,
-        recent_performance: recentPerformance
-    };
-}
-
-// Update improvement metrics based on analytics data
-function updateImprovementMetrics(analyticsData) {
-    if (!analyticsData || !analyticsData.recent_performance || analyticsData.recent_performance.length === 0) {
-        // No data available - show neutral/empty state for reset
-        const trends = document.querySelectorAll('.stat-trend');
-        
-        // Update correct answers trend (first stat card)
-        if (trends[0]) {
-            trends[0].className = 'stat-trend neutral';
-            trends[0].innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
-        }
-        
-        // Update accuracy trend (second stat card)
-        if (trends[1]) {
-            trends[1].className = 'stat-trend neutral';
-            trends[1].innerHTML = '<i class="fas fa-chart-line"></i> Practice makes perfect!';
-        }
-        
-        // Update study time trend (fourth stat card)
-        if (trends[3]) {
-            trends[3].className = 'stat-trend neutral';
-            trends[3].innerHTML = '<i class="fas fa-chart-line"></i> Begin learning!';
-        }
-        
-        return;
-    }
-    
-    const recentPerformance = analyticsData.recent_performance;
-    if (recentPerformance.length < 14) {
-        // Not enough data for week-over-week comparison
-        const trends = document.querySelectorAll('.stat-trend');
-        
-        if (trends[0]) {
-            trends[0].className = 'stat-trend positive';
-            trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> Building momentum!';
-        }
-        
-        if (trends[1]) {
-            trends[1].className = 'stat-trend positive';
-            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Improving daily!';
-        }
-        
-        if (trends[3]) {
-            trends[3].className = 'stat-trend positive';
-            trends[3].innerHTML = '<i class="fas fa-arrow-up"></i> Keep studying!';
-        }
-        
-        return;
-    }
-    
-    // Calculate week-over-week improvements (consistent calculations)
-    const thisWeek = recentPerformance.slice(0, 7);
-    const lastWeek = recentPerformance.slice(7, 14);
-    
-    if (thisWeek.length === 7 && lastWeek.length === 7) {
-        // Calculate accuracy improvement
-        const thisWeekAccuracy = thisWeek.reduce((sum, session) => sum + (session.accuracy || 0), 0) / thisWeek.length;
-        const lastWeekAccuracy = lastWeek.reduce((sum, session) => sum + (session.accuracy || 0), 0) / lastWeek.length;
-        const accuracyImprovement = thisWeekAccuracy - lastWeekAccuracy;
-        
-        // Calculate questions answered improvement
-        const thisWeekQuestions = thisWeek.reduce((sum, session) => sum + (session.questions || 0), 0);
-        const lastWeekQuestions = lastWeek.reduce((sum, session) => sum + (session.questions || 0), 0);
-        const questionsImprovement = thisWeekQuestions - lastWeekQuestions;
-        
-        // Calculate study time for this week (in hours) - more realistic
-        const thisWeekStudyTime = thisWeek.length * 0.43; // About 26 minutes per session = 3h 2m per week
-        
-        // Update correct answers improvement (first stat card)
-        const correctAnswersTrend = document.querySelectorAll('.stat-trend')[0];
-        if (correctAnswersTrend) {
-            const questionsPercent = lastWeekQuestions > 0 ? ((questionsImprovement / lastWeekQuestions) * 100).toFixed(1) : '3.2';
-            const icon = questionsImprovement >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-            const className = questionsImprovement >= 0 ? 'positive' : 'negative';
-            const prefix = questionsImprovement >= 0 ? '+' : '';
-            
-            correctAnswersTrend.className = `stat-trend ${className}`;
-            correctAnswersTrend.innerHTML = `<i class="fas ${icon}"></i> ${prefix}${questionsPercent}% from last week`;
-        }
-        
-        // Update accuracy improvement (second stat card) - show consistent improvement
-        const accuracyTrend = document.querySelectorAll('.stat-trend')[1];
-        if (accuracyTrend) {
-            const accuracyPercent = Math.abs(accuracyImprovement).toFixed(1);
-            const icon = accuracyImprovement >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
-            const className = accuracyImprovement >= 0 ? 'positive' : 'negative';
-            const prefix = accuracyImprovement >= 0 ? '+' : '';
-            
-            accuracyTrend.className = `stat-trend ${className}`;
-            accuracyTrend.innerHTML = `<i class="fas ${icon}"></i> ${prefix}${accuracyPercent}% improvement`;
-        }
-        
-        // Update study time (fourth stat card) - show realistic weekly time
-        const studyTimeTrend = document.querySelectorAll('.stat-trend')[3];
-        if (studyTimeTrend) {
-            const hours = Math.floor(thisWeekStudyTime);
-            const minutes = Math.round((thisWeekStudyTime - hours) * 60);
-            const timeText = `${hours}h ${minutes}m`;
-            
-            studyTimeTrend.className = 'stat-trend positive';
-            studyTimeTrend.innerHTML = `<i class="fas fa-arrow-up"></i> ${timeText} this week`;
-        }
-    }
-}
-
-// Update study activity calendar based on analytics data
-function updateStudyActivityCalendar(analyticsData) {
-    if (!analyticsData || !analyticsData.recent_performance) {
-        // If no data, use the existing empty calendar
-        generateStudyCalendar();
-        return;
-    }
-    
-    const calendar = document.getElementById('study-calendar');
-    if (!calendar) return;
-    
-    // Clear existing calendar
-    calendar.innerHTML = '';
-    
-    const today = new Date();
-    const sessionsByDate = {};
-    
-    // Process session data
-    analyticsData.recent_performance.forEach(session => {
-        const sessionDate = new Date(session.date).toDateString();
-        if (!sessionsByDate[sessionDate]) {
-            sessionsByDate[sessionDate] = { count: 0, questions: 0 };
-        }
-        sessionsByDate[sessionDate].count++;
-        sessionsByDate[sessionDate].questions += session.questions || 0;
-    });
-    
-    // Generate last 35 days
-    for (let i = 34; i >= 0; i--) {
-        const cell = document.createElement('div');
-        cell.className = 'activity-cell';
-        
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateString = date.toDateString();
-        
-        // Determine activity level based on session data
-        let level = 0;
-        let tooltipText = `${date.toLocaleDateString()}: No activity`;
-        
-        if (sessionsByDate[dateString]) {
-            const questions = sessionsByDate[dateString].questions;
-            if (questions > 0) {
-                level = Math.min(4, Math.ceil(questions / 5)); // 1-4 activity levels
-                tooltipText = `${date.toLocaleDateString()}: ${questions} questions`;
-            }
-        }
-        
-        cell.setAttribute('data-level', level);
-        cell.title = tooltipText;
-        
-        calendar.appendChild(cell);
-    }
-}
-
-// Enhanced study activity calendar using dashboard data
-function updateStudyActivityCalendarWithEnhancedData(studyActivity) {
-    const calendar = document.getElementById('study-calendar');
-    if (!calendar) return;
-    
-    calendar.innerHTML = '';
-    
-    const dailyActivity = studyActivity.daily_activity || [];
-    const activityMap = {};
-    
-    // Map activity data by date
-    dailyActivity.forEach(day => {
-        const date = new Date(day.date).toDateString();
-        activityMap[date] = {
-            questions: day.questions || 0,
-            accuracy: day.accuracy || 0
-        };
-    });
-    
-    const today = new Date();
-    
-    // Generate last 35 days
-    for (let i = 34; i >= 0; i--) {
-        const cell = document.createElement('div');
-        cell.className = 'activity-cell';
-        
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
-        const dateString = date.toDateString();
-        
-        // Determine activity level
-        let level = 0;
-        let tooltipText = `${date.toLocaleDateString()}: No activity`;
-        
-        if (activityMap[dateString]) {
-            const questions = activityMap[dateString].questions;
-            const accuracy = activityMap[dateString].accuracy;
-            
-            if (questions > 0) {
-                level = Math.min(4, Math.ceil(questions / 3)); // 1-4 activity levels based on questions
-                tooltipText = `${date.toLocaleDateString()}: ${questions} questions (${accuracy.toFixed(1)}% accuracy)`;
-            }
-        }
-        
-        cell.setAttribute('data-level', level);
-        cell.title = tooltipText;
-        
-        calendar.appendChild(cell);
-    }
-}
-
-// Update improvement metrics using enhanced dashboard data
-function updateImprovementMetricsWithEnhancedData(dashboardData) {
-    const trends = document.querySelectorAll('.stat-trend');
-    const performance = dashboardData.performance_overview || {};
-    const studyActivity = dashboardData.study_activity || {};
-    const weeklyStats = studyActivity.weekly_summary || {};
-    
-    // Update Correct Answers trend (first stat card)
-    if (trends[0]) {
-        const totalQuestions = dashboardData.questions_answered || 0;
-        const correctAnswers = dashboardData.total_correct || 0;
-        
-        if (totalQuestions === 0) {
-            trends[0].className = 'stat-trend neutral';
-            trends[0].innerHTML = '<i class="fas fa-play-circle"></i> Start practicing!';
-        } else if (totalQuestions < 10) {
-            trends[0].className = 'stat-trend positive';
-            trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> Building momentum!';
-        } else {
-            const weeklyQuestions = weeklyStats.total_questions || 0;
-            trends[0].className = 'stat-trend positive';
-            trends[0].innerHTML = `<i class="fas fa-arrow-up"></i> ${weeklyQuestions} this week`;
-        }
-    }
-    
-    // Update Accuracy trend (second stat card)
-    if (trends[1]) {
-        const accuracy = dashboardData.accuracy || 0;
-        const trend = performance.overall_trend || 'neutral';
-        
-        if (accuracy === 0) {
-            trends[1].className = 'stat-trend neutral';
-            trends[1].innerHTML = '<i class="fas fa-target"></i> Ready to improve!';
-        } else if (trend === 'improving') {
-            trends[1].className = 'stat-trend positive';
-            trends[1].innerHTML = '<i class="fas fa-arrow-up"></i> Improving trend!';
-        } else if (trend === 'declining') {
-            trends[1].className = 'stat-trend negative';
-            trends[1].innerHTML = '<i class="fas fa-chart-line"></i> Keep practicing!';
-        } else {
-            trends[1].className = 'stat-trend neutral';
-            trends[1].innerHTML = '<i class="fas fa-equals"></i> Staying consistent';
-        }
-    }
-    
-    // Update Study Time trend (fourth stat card - index 3)
-    if (trends[3]) {
-        const studyTime = dashboardData.study_time || 0;
-        const weeklyTime = weeklyStats.total_time || 0;
-        
-        if (studyTime === 0) {
-            trends[3].className = 'stat-trend neutral';
-            trends[3].innerHTML = '<i class="fas fa-clock"></i> Start your journey!';
-        } else {
-            const hours = Math.floor(weeklyTime / 3600);
-            const minutes = Math.floor((weeklyTime % 3600) / 60);
-            
-            let timeText = '';
-            if (hours > 0) {
-                timeText = `${hours}h ${minutes}m`;
-            } else {
-                timeText = `${minutes}m`;
-            }
-            
-            trends[3].className = 'stat-trend positive';
-            trends[3].innerHTML = `<i class="fas fa-arrow-up"></i> ${timeText} this week`;
-        }
-    }
-    
-    // Add performance insights based on strongest/weakest topics
-    if (performance.strongest_topic && performance.weakest_topic) {
-        // Could add additional UI elements showing strongest/weakest topics
-        console.log(`Strongest: ${performance.strongest_topic}, Weakest: ${performance.weakest_topic}`);
-    }
-}
-
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Dashboard loading...');
-    console.log('Testing element access:', document.getElementById('correct-answers'));
     
-    // Add a small delay to ensure all elements are rendered
+    // Generate calendar first
+    generateStudyCalendar();
+    
+    // Load achievements
+    loadAchievementsData();
+    
+    // Then update stats with a small delay
     setTimeout(function() {
         updateDashboardStats();
     }, 100);

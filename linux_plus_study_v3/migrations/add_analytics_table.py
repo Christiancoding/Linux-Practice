@@ -20,8 +20,6 @@ def upgrade():
     """Create analytics table with comprehensive tracking fields."""
     op.create_table('analytics',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
         sa.Column('user_id', sa.String(length=255), nullable=True),
         sa.Column('session_id', sa.String(length=255), nullable=False),
         sa.Column('session_start', sa.DateTime(), nullable=False),
@@ -76,6 +74,14 @@ def upgrade():
         sa.Column('notes', sa.Text(), nullable=True),
         sa.Column('tags', sa.JSON(), nullable=True),
         sa.Column('custom_metrics', sa.JSON(), nullable=True),
+        sa.Column('quiz_mode', sa.String(length=50), nullable=True),
+        sa.Column('question_categories', sa.JSON(), nullable=True),
+        sa.Column('response_times', sa.JSON(), nullable=True),
+        sa.Column('learning_path', sa.String(length=255), nullable=True),
+        sa.Column('study_materials_accessed', sa.JSON(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), default=sa.func.now()),
+        sa.Column('updated_at', sa.DateTime(), default=sa.func.now(), onupdate=sa.func.now()),
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id')
     )
     
@@ -84,10 +90,18 @@ def upgrade():
     op.create_index('ix_analytics_session_id', 'analytics', ['session_id'], unique=False)
     op.create_index('ix_analytics_activity_type', 'analytics', ['activity_type'], unique=False)
     op.create_index('ix_analytics_topic_area', 'analytics', ['topic_area'], unique=False)
+    op.create_index('ix_analytics_created_at', 'analytics', ['created_at'], unique=False)
+    op.create_index('ix_analytics_session_start', 'analytics', ['session_start'], unique=False)
+    op.create_index('ix_analytics_quiz_mode', 'analytics', ['quiz_mode'], unique=False)
+    op.create_index('ix_analytics_difficulty_level', 'analytics', ['difficulty_level'], unique=False)
 
 
 def downgrade():
     """Drop analytics table and indexes."""
+    op.drop_index('ix_analytics_difficulty_level', table_name='analytics')
+    op.drop_index('ix_analytics_quiz_mode', table_name='analytics')
+    op.drop_index('ix_analytics_session_start', table_name='analytics')
+    op.drop_index('ix_analytics_created_at', table_name='analytics')
     op.drop_index('ix_analytics_topic_area', table_name='analytics')
     op.drop_index('ix_analytics_activity_type', table_name='analytics')
     op.drop_index('ix_analytics_session_id', table_name='analytics')

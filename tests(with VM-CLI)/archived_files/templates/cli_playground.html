@@ -1,0 +1,885 @@
+{% extends "base.html" %}
+
+{% block title %}CLI Playground - Linux+ Study Game{% endblock %}
+
+{% block content %}
+<!-- CLI Playground Page -->
+<div class="page-content active" id="page-cli">
+    <!-- Page Header -->
+    <div class="page-header" data-aos="fade-down">
+        <div class="header-content">
+            <div class="header-text">
+                <h1 class="page-title">
+                    <i class="fas fa-terminal text-gradient"></i>
+                    Interactive Terminal
+                </h1>
+                <p class="page-subtitle">Practice Linux commands in a safe, sandboxed environment</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="openFullTerminal()">
+                    <i class="fas fa-expand"></i> Full Terminal
+                </button>
+                <button class="btn btn-secondary" onclick="showCheatSheet()">
+                    <i class="fas fa-book"></i> Command Reference
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal Stats Bar -->
+    <div class="terminal-stats glass mb-4" data-aos="fade-up">
+        <div class="stat-item">
+            <i class="fas fa-keyboard"></i>
+            <span class="stat-label">Commands Run:</span>
+            <span class="stat-value" id="commands-count">0</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-clock"></i>
+            <span class="stat-label">Session Time:</span>
+            <span class="stat-value" id="session-time">00:00</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-folder-open"></i>
+            <span class="stat-label">Current Directory:</span>
+            <span class="stat-value" id="current-dir">~/sandbox</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-user"></i>
+            <span class="stat-label">User:</span>
+            <span class="stat-value">student</span>
+        </div>
+    </div>
+
+    <!-- Main Terminal Container -->
+    <div class="terminal-container glass" data-aos="fade-up" data-aos-delay="100">
+        <!-- Terminal Header -->
+        <div class="terminal-header">
+            <div class="terminal-title">
+                <i class="fas fa-terminal"></i> Linux+ Study Terminal
+            </div>
+            <div class="terminal-controls">
+                <button class="btn-terminal" onclick="clearTerminal()" title="Clear Terminal">
+                    <i class="fas fa-eraser"></i>
+                </button>
+                <button class="btn-terminal" onclick="resetTerminal()" title="Reset Environment">
+                    <i class="fas fa-redo"></i>
+                </button>
+                <button class="btn-terminal" onclick="downloadHistory()" title="Download History">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal Body -->
+        <div class="terminal-body" id="terminal-body">
+            <div class="terminal-output" id="terminal-output">
+                <div class="welcome-ascii">
+                    <pre class="text-gradient-neon">
+ _     _                  ____ _     ___ 
+| |   (_)_ __  _   ___  _|  _ \ |   |_ _|
+| |   | | '_ \| | | \ \/ / |_) | |   | | 
+| |___| | | | | |_| |>  <|  __/| |___| | 
+|_____|_|_| |_|\__,_/_/\_\_|   |_____|___|
+                    </pre>
+                </div>
+                <div class="terminal-line info">Welcome to Linux+ CLI Playground v2.0!</div>
+                <div class="terminal-line info">Type 'help' to see available commands or 'tutorial' to start the interactive guide.</div>
+                <div class="terminal-line info">This is a safe sandbox environment - feel free to experiment!</div>
+                <div class="terminal-line">&nbsp;</div>
+            </div>
+            
+            <div class="terminal-input-line">
+                <span class="terminal-prompt" id="terminal-prompt">student@linux-study:~/sandbox$ </span>
+                <input type="text" class="terminal-input" id="terminal-input" autocomplete="off" autofocus>
+                <span class="terminal-cursor"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Commands & Tips -->
+    <div class="commands-grid">
+        <div class="command-section glass" data-aos="fade-right">
+            <h3 class="section-header">
+                <i class="fas fa-bolt"></i> Quick Commands
+            </h3>
+            <div class="command-grid">
+                <button class="command-card" onclick="runCommand('ls -la')">
+                    <i class="fas fa-list"></i>
+                    <span class="command-name">ls -la</span>
+                    <span class="command-desc">List all files</span>
+                </button>
+                <button class="command-card" onclick="runCommand('pwd')">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span class="command-name">pwd</span>
+                    <span class="command-desc">Current directory</span>
+                </button>
+                <button class="command-card" onclick="runCommand('whoami')">
+                    <i class="fas fa-user"></i>
+                    <span class="command-name">whoami</span>
+                    <span class="command-desc">Current user</span>
+                </button>
+                <button class="command-card" onclick="runCommand('date')">
+                    <i class="fas fa-calendar"></i>
+                    <span class="command-name">date</span>
+                    <span class="command-desc">System date</span>
+                </button>
+                <button class="command-card" onclick="runCommand('uname -a')">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="command-name">uname -a</span>
+                    <span class="command-desc">System info</span>
+                </button>
+                <button class="command-card" onclick="runCommand('history')">
+                    <i class="fas fa-history"></i>
+                    <span class="command-name">history</span>
+                    <span class="command-desc">Command history</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="tips-section glass" data-aos="fade-left">
+            <h3 class="section-header">
+                <i class="fas fa-lightbulb"></i> Pro Tips
+            </h3>
+            <div class="tips-list">
+                <div class="tip-item">
+                    <span class="tip-icon">💡</span>
+                    <div class="tip-content">
+                        <strong>Tab Completion:</strong> Press Tab to auto-complete commands and file names
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">⬆️</span>
+                    <div class="tip-content">
+                        <strong>Command History:</strong> Use ↑/↓ arrows to navigate through previous commands
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">🔍</span>
+                    <div class="tip-content">
+                        <strong>Search History:</strong> Press Ctrl+R to search command history
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <span class="tip-icon">✨</span>
+                    <div class="tip-content">
+                        <strong>Clear Screen:</strong> Press Ctrl+L or type 'clear' to clean the terminal
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Challenges -->
+    <section class="challenges-section glass" data-aos="fade-up">
+        <h3 class="section-header">
+            <i class="fas fa-tasks"></i> Practice Challenges
+        </h3>
+        <div class="challenges-grid">
+            <div class="challenge-card" onclick="startChallenge('navigation')">
+                <div class="challenge-icon" style="background: var(--gradient-primary);">
+                    <i class="fas fa-compass"></i>
+                </div>
+                <h4>File Navigation</h4>
+                <p>Master cd, ls, and pwd commands</p>
+                <div class="challenge-difficulty">
+                    <span class="difficulty-badge easy">Easy</span>
+                    <span class="xp-reward">+0 XP</span>
+                </div>
+            </div>
+            <div class="challenge-card" onclick="startChallenge('manipulation')">
+                <div class="challenge-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-edit"></i>
+                </div>
+                <h4>File Manipulation</h4>
+                <p>Learn cp, mv, rm, and mkdir</p>
+                <div class="challenge-difficulty">
+                    <span class="difficulty-badge medium">Medium</span>
+                    <span class="xp-reward">+0 XP</span>
+                </div>
+            </div>
+            <div class="challenge-card" onclick="startChallenge('permissions')">
+                <div class="challenge-icon" style="background: var(--gradient-danger);">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h4>Permissions</h4>
+                <p>Understand chmod, chown, and umask</p>
+                <div class="challenge-difficulty">
+                    <span class="difficulty-badge hard">Hard</span>
+                    <span class="xp-reward">+0 XP</span>
+                </div>
+            </div>
+            <div class="challenge-card" onclick="startChallenge('scripting')">
+                <div class="challenge-icon" style="background: var(--gradient-accent);">
+                    <i class="fas fa-code"></i>
+                </div>
+                <h4>Shell Scripting</h4>
+                <p>Write your first bash scripts</p>
+                <div class="challenge-difficulty">
+                    <span class="difficulty-badge expert">Expert</span>
+                    <span class="xp-reward">+0 XP</span>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Command Cheat Sheet Modal -->
+<div id="cheatSheetModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 class="modal-title"><i class="fas fa-book"></i> Linux Command Reference</h2>
+            <button class="modal-close" onclick="closeCheatSheet()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="cheatsheet-categories">
+                <div class="cheatsheet-category">
+                    <h3>File Operations</h3>
+                    <dl>
+                        <dt>ls</dt><dd>List directory contents</dd>
+                        <dt>cd</dt><dd>Change directory</dd>
+                        <dt>pwd</dt><dd>Print working directory</dd>
+                        <dt>cp</dt><dd>Copy files/directories</dd>
+                        <dt>mv</dt><dd>Move/rename files</dd>
+                        <dt>rm</dt><dd>Remove files/directories</dd>
+                        <dt>mkdir</dt><dd>Make directories</dd>
+                        <dt>touch</dt><dd>Create empty file</dd>
+                    </dl>
+                </div>
+                <div class="cheatsheet-category">
+                    <h3>Text Processing</h3>
+                    <dl>
+                        <dt>cat</dt><dd>Concatenate and display files</dd>
+                        <dt>grep</dt><dd>Search text patterns</dd>
+                        <dt>sed</dt><dd>Stream editor</dd>
+                        <dt>awk</dt><dd>Pattern scanning</dd>
+                        <dt>sort</dt><dd>Sort lines</dd>
+                        <dt>uniq</dt><dd>Report unique lines</dd>
+                        <dt>wc</dt><dd>Word count</dd>
+                        <dt>head/tail</dt><dd>Display file portions</dd>
+                    </dl>
+                </div>
+                <div class="cheatsheet-category">
+                    <h3>System Information</h3>
+                    <dl>
+                        <dt>ps</dt><dd>Process status</dd>
+                        <dt>top</dt><dd>Display processes</dd>
+                        <dt>df</dt><dd>Disk free space</dd>
+                        <dt>du</dt><dd>Disk usage</dd>
+                        <dt>free</dt><dd>Memory usage</dd>
+                        <dt>uname</dt><dd>System information</dd>
+                        <dt>whoami</dt><dd>Current username</dd>
+                        <dt>date</dt><dd>Display date/time</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* CLI Playground Specific Styles */
+.terminal-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem;
+    gap: 2rem;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-item i {
+    color: var(--primary-color);
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.stat-value {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Terminal Container */
+.terminal-container {
+    background: #0a0a0f;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    margin-bottom: 2rem;
+}
+
+.terminal-header {
+    background: linear-gradient(180deg, #2d2d30 0%, #252526 100%);
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.traffic-lights {
+    display: flex;
+    gap: 8px;
+}
+
+.light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.light:hover {
+    opacity: 0.8;
+}
+
+.light.close {
+    background: #ff5f56;
+    box-shadow: 0 0 0 1px #e0443e;
+}
+
+.light.minimize {
+    background: #ffbd2e;
+    box-shadow: 0 0 0 1px #dea123;
+}
+
+.light.maximize {
+    background: #27c93f;
+    box-shadow: 0 0 0 1px #1aab29;
+}
+
+.terminal-title {
+    color: #e1e1e1;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.terminal-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-terminal {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #e1e1e1;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-terminal:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+}
+
+/* Terminal Body */
+.terminal-body {
+    background: #0a0a0a;
+    min-height: 500px;
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal-output {
+    flex: 1;
+    padding: 1.5rem;
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-y: auto;
+    color: #00ff00;
+}
+
+.welcome-ascii {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.welcome-ascii pre {
+    font-size: 12px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.text-gradient-neon {
+    background: linear-gradient(135deg, #00ff00 0%, #00ffff 50%, #00ff00 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.5));
+}
+
+.terminal-line {
+    margin-bottom: 0.5rem;
+}
+
+.terminal-line.command {
+    color: #ffffff;
+}
+
+.terminal-line.output {
+    color: #00ff00;
+}
+
+.terminal-line.error {
+    color: #ff5555;
+}
+
+.terminal-line.info {
+    color: #50fa7b;
+}
+
+.terminal-line.warning {
+    color: #f1fa8c;
+}
+
+.terminal-input-line {
+    display: flex;
+    align-items: center;
+    padding: 0 1.5rem 1.5rem;
+    position: relative;
+}
+
+.terminal-prompt {
+    color: #50fa7b;
+    margin-right: 0.5rem;
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(80, 250, 123, 0.5);
+}
+
+.terminal-input {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-family: inherit;
+    font-size: inherit;
+    flex: 1;
+    outline: none;
+}
+
+.terminal-cursor {
+    width: 8px;
+    height: 18px;
+    background: #00ff00;
+    animation: blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Terminal Scrollbar */
+.terminal-output::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terminal-output::-webkit-scrollbar-track {
+    background: #1a1a1a;
+}
+
+.terminal-output::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 4px;
+}
+
+.terminal-output::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Commands Grid */
+.commands-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.command-section, .tips-section {
+    padding: 2rem;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.command-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.command-card {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.command-card:hover {
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.command-card i {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.command-name {
+    display: block;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.command-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Tips Section */
+.tips-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.tip-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    align-items: flex-start;
+}
+
+.tip-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.tip-content {
+    flex: 1;
+}
+
+.tip-content strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+/* Challenges Section */
+.challenges-section {
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.challenges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.challenge-card {
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.challenge-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary-color);
+}
+
+.challenge-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1rem;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.challenge-card h4 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+}
+
+.challenge-card p {
+    margin: 0 0 1rem 0;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.challenge-difficulty {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.difficulty-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.difficulty-badge.easy {
+    background: rgba(16, 185, 129, 0.2);
+    color: var(--success-color);
+}
+
+.difficulty-badge.medium {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--warning-color);
+}
+
+.difficulty-badge.hard {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger-color);
+}
+
+.difficulty-badge.expert {
+    background: rgba(139, 92, 246, 0.2);
+    color: #8b5cf6;
+}
+
+.xp-reward {
+    color: var(--warning-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Cheat Sheet Modal */
+.modal-large {
+    max-width: 900px;
+    width: 90%;
+}
+
+.cheatsheet-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+}
+
+.cheatsheet-category h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.cheatsheet-category dl {
+    margin: 0;
+}
+
+.cheatsheet-category dt {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.cheatsheet-category dd {
+    color: var(--text-secondary);
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .commands-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .terminal-container {
+        margin: 0 -1rem;
+        border-radius: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .header-actions {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+    }
+    
+    .terminal-stats {
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .challenges-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/cli_playground.js') }}"></script>
+<script>
+// Initialize CLI Playground
+let cliPlayground;
+let sessionStartTime;
+let commandsCount = 0;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the playground
+    cliPlayground = new CliPlayground();
+    
+    // Start session timer
+    sessionStartTime = Date.now();
+    updateSessionTime();
+    
+    // Focus on terminal input
+    document.getElementById('terminal-input').focus();
+});
+
+// Update session time
+function updateSessionTime() {
+    const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    document.getElementById('session-time').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    setTimeout(updateSessionTime, 1000);
+}
+
+// Run a command
+function runCommand(command) {
+    const input = document.getElementById('terminal-input');
+    input.value = command;
+    cliPlayground.executeCommand();
+}
+
+// Clear terminal
+function clearTerminal() {
+    cliPlayground.clearTerminal();
+}
+
+// Reset terminal environment
+function resetTerminal() {
+    if (confirm('This will reset the entire terminal environment. Are you sure?')) {
+        cliPlayground.resetEnvironment();
+    }
+}
+
+// Download command history
+function downloadHistory() {
+    cliPlayground.downloadHistory();
+}
+
+// Open full terminal
+function openFullTerminal() {
+    window.open('/full_terminal', 'FullTerminal', 'width=1200,height=800');
+}
+
+// Show cheat sheet
+function showCheatSheet() {
+    document.getElementById('cheatSheetModal').classList.add('active');
+}
+
+// Close cheat sheet
+function closeCheatSheet() {
+    document.getElementById('cheatSheetModal').classList.remove('active');
+}
+
+// Start a challenge
+function startChallenge(type) {
+    console.log('Starting challenge:', type);
+    // This would load the specific challenge
+}
+
+// Terminal window controls
+function closeTerminal() {
+    if (confirm('Close the terminal session?')) {
+        window.location.href = '/';
+    }
+}
+
+function minimizeTerminal() {
+    const terminal = document.querySelector('.terminal-container');
+    terminal.style.display = 'none';
+    setTimeout(() => {
+        terminal.style.display = 'block';
+    }, 100);
+}
+
+function maximizeTerminal() {
+    const terminal = document.querySelector('.terminal-container');
+    terminal.classList.toggle('maximized');
+}
+
+// Override the base executeCommand to update counter
+const originalExecute = cliPlayground.executeCommand;
+cliPlayground.executeCommand = function() {
+    const command = this.input.value.trim();
+    const startTime = Date.now();
+    
+    originalExecute.call(this);
+    commandsCount++;
+    document.getElementById('commands-count').textContent = commandsCount;
+    
+    // Track CLI command execution
+    if (typeof trackCLICommand === 'function') {
+        const executionTime = (Date.now() - startTime) / 1000;
+        trackCLICommand(command, executionTime);
+    }
+    if (typeof trackFeatureUsage === 'function') {
+        trackFeatureUsage('cli_command_executed');
+        // Track specific command types
+        const commandType = command.split(' ')[0];
+        trackFeatureUsage(`cli_command_${commandType}`);
+    }
+};
+</script>
+{% endblock %}

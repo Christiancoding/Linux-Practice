@@ -91,6 +91,9 @@ class QuizController:
         # Exam mode attributes
         self.exam_mode_active = False
         self.exam_start_time: Optional[float] = None
+        
+        # Session timing
+        self.session_start_time: Optional[float] = None
 
     def get_current_question(self) -> Optional[Dict[str, Any]]:
         """Get the current question without advancing."""
@@ -127,6 +130,8 @@ class QuizController:
             dict: Session initialization data
         """
         print(f"DEBUG: Starting quiz session with mode: '{mode}'")
+        if self.custom_question_limit:
+            print(f"DEBUG: Custom question limit set to: {self.custom_question_limit}")
         self.current_quiz_mode = mode
         self.quiz_active = True
         self.session_score = 0
@@ -134,6 +139,9 @@ class QuizController:
         self.session_answers = []
         self.current_streak = 0
         self.questions_since_break = 0
+        
+        # Track session start time for real duration measurement
+        self.session_start_time = time.time()
         
         # Reset session-specific counters in game state
         self.game_state.reset_session()
@@ -152,7 +160,7 @@ class QuizController:
             total_questions = min(MINI_QUIZ_QUESTIONS, self._get_available_questions_count(category_filter))
         elif mode == QUIZ_MODE_TIMED:
             self.start_timed_mode()
-            total_questions = TIMED_CHALLENGE_QUESTIONS
+            total_questions = self.custom_question_limit if self.custom_question_limit else TIMED_CHALLENGE_QUESTIONS
         elif mode == QUIZ_MODE_SURVIVAL:
             self.start_survival_mode()
             total_questions = float('inf')  # Unlimited questions until death
@@ -163,7 +171,11 @@ class QuizController:
             # Category focus mode - use all questions from selected category
             total_questions = self._get_available_questions_count(category_filter)
         else:
-            total_questions = self._get_available_questions_count(category_filter)
+            # Standard mode - check for custom question limit first
+            if self.custom_question_limit:
+                total_questions = self.custom_question_limit
+            else:
+                total_questions = self._get_available_questions_count(category_filter)
         
         # Store category filter for later use
         self.category_filter = category_filter
@@ -228,7 +240,7 @@ class QuizController:
             elif self.current_quiz_mode == "quick_fire":
                 total_questions = QUICK_FIRE_QUESTIONS
             elif self.current_quiz_mode == QUIZ_MODE_TIMED:
-                total_questions = TIMED_CHALLENGE_QUESTIONS
+                total_questions = self.custom_question_limit if self.custom_question_limit else TIMED_CHALLENGE_QUESTIONS
             elif self.current_quiz_mode == QUIZ_MODE_EXAM:
                 total_questions = EXAM_MODE_QUESTIONS
             elif self.current_quiz_mode == QUIZ_MODE_SURVIVAL:
@@ -299,14 +311,29 @@ class QuizController:
             except Exception as e:
                 print(f"Warning: Failed to save progress during force end: {e}")
         
+        # Calculate session duration if we have start time
+        session_duration = 0
+        if self.session_start_time:
+            session_duration = time.time() - self.session_start_time
+        
         # Store results before clearing
         results: Dict[str, Any] = {
             'session_score': self.session_score,
             'session_total': self.session_total,
             'accuracy': accuracy,
             'session_points': session_points,
-            'quiz_mode': self.current_quiz_mode
+            'quiz_mode': self.current_quiz_mode,
+            'session_duration': session_duration
         }
+        
+        # Add explicit logging to verify session-specific data
+        print(f"DEBUG: End session - storing SESSION-SPECIFIC results:")
+        print(f"  session_score: {self.session_score}")
+        print(f"  session_total: {self.session_total}")
+        print(f"  accuracy: {accuracy:.1f}%")
+        print(f"  session_points: {session_points}")
+        print(f"  quiz_mode: {self.current_quiz_mode}")
+        
         # Save results for later retrieval
         self.last_session_results = results
         
@@ -437,6 +464,8 @@ class QuizController:
                 bonus_points = 5
                 result['points_earned'] += bonus_points
                 result['speed_bonus'] = bonus_points
+                # Update game state with the bonus points too
+                self.game_state.update_points(bonus_points)
         
         # Store answer for verify mode
         if self.current_quiz_mode == QUIZ_MODE_VERIFY:
@@ -510,6 +539,11 @@ class QuizController:
         # Calculate final statistics
         accuracy = (self.session_score / self.session_total * 100) if self.session_total > 0 else 0
         
+        # Calculate actual session duration
+        session_duration = 0
+        if self.session_start_time:
+            session_duration = int(time.time() - self.session_start_time)
+        
         # Update leaderboard using StatsController to avoid property issues
         if self.session_total > 0:
             try:
@@ -547,6 +581,7 @@ class QuizController:
             'session_points': self.game_state.session_points,
             'total_points': self.game_state.achievements.get('points_earned', 0),
             'mode': self.current_quiz_mode,
+            'session_duration': session_duration,  # Actual time spent in seconds
             'verify_answers': self.session_answers if self.current_quiz_mode == QUIZ_MODE_VERIFY else None
         }
         
@@ -562,6 +597,7 @@ class QuizController:
         self.questions_since_break = 0
         self.current_quiz_mode = QUIZ_MODE_STANDARD
         self.custom_question_limit = None  # Reset custom limit
+        self.session_start_time = None  # Reset session timing
         
         return session_results
     
@@ -899,10 +935,11 @@ class QuizController:
         """Sync analytics after answering a question"""
         try:
             analytics = get_analytics_manager()
+            category_filter = getattr(self, 'category_filter', None)
             analytics.track_question_answer(
                 user_id=user_id,
                 correct=is_correct,
-                category=getattr(self, 'category_filter', None)
+                category=category_filter or "All Categories"
             )
         except Exception as e:
             print(f"Error syncing analytics: {e}")

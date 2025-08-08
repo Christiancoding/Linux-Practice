@@ -508,7 +508,7 @@ class LinuxPlusStudySystem:
                 return jsonify({'success': False, 'error': str(e)})
         
         @app.route('/analytics')
-        def analytics_dashboard():
+        def main_analytics_dashboard():
             """Analytics dashboard page."""
             user_id = session.get('user_id', 'anonymous')
             stats = get_user_analytics_summary(user_id)

@@ -240,3 +240,26 @@ def save_json_file(file_path: str, data: Dict[str, Any]) -> bool:
     except Exception as e:
         logging.error(f"Failed to save JSON file {file_path}: {e}")
         return False
+
+# Alias functions for compatibility
+def get_session():
+    """Alias for get_db_session for compatibility."""
+    return get_db_session()
+
+def get_db_connection():
+    """Get a raw database connection for direct SQL operations."""
+    import sqlite3
+    
+    # For now, return a direct SQLite connection to the data directory
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(current_dir)
+    db_path = os.path.join(project_root, 'data', 'linux_plus_study.db')
+    
+    # Ensure data directory exists
+    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+    
+    return sqlite3.connect(db_path)
+
+def setup_database_for_web():
+    """Set up database for web mode - alias for get_database_manager."""
+    return get_database_manager() or initialize_database_pool()

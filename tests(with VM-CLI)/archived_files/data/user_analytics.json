@@ -1,0 +1,1078 @@
+{
+  "demo_user_001": {
+    "total_questions": 235,
+    "correct_answers": 158,
+    "incorrect_answers": 57,
+    "accuracy": 67.23404255319149,
+    "total_study_time": 14349.597332377754,
+    "total_sessions": 21,
+    "study_streak": 8,
+    "longest_streak": 8,
+    "questions_to_review": 57,
+    "level": 28.0,
+    "xp": 2835.0,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-05T18:11:47.077655",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-05T18:11:47.077657",
+        "icon": "\ud83d\udcda"
+      },
+      {
+        "id": "ten_questions",
+        "name": "Dedicated Student",
+        "description": "Answered 10 questions",
+        "earned_date": "2025-08-05T18:11:47.077658",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-05T18:11:47.077660",
+        "icon": "\u2705"
+      },
+      {
+        "id": "streak_5",
+        "name": "On Fire!",
+        "description": "Answered 5 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.077661",
+        "icon": "\ud83d\udd25"
+      },
+      {
+        "id": "twenty_five_questions",
+        "name": "Studious",
+        "description": "Answered 25 questions",
+        "earned_date": "2025-08-05T18:11:47.077798",
+        "icon": "\ud83d\udcd6"
+      },
+      {
+        "id": "fifty_questions",
+        "name": "Knowledge Seeker",
+        "description": "Answered 50 questions",
+        "earned_date": "2025-08-05T18:11:47.078446",
+        "icon": "\ud83d\udd0d"
+      },
+      {
+        "id": "category_expert",
+        "name": "Category Expert",
+        "description": "Achieved 80% accuracy in a category",
+        "earned_date": "2025-08-05T18:11:47.078449",
+        "icon": "\ud83c\udfaf"
+      },
+      {
+        "id": "hundred_questions",
+        "name": "Century Club",
+        "description": "Answered 100 questions",
+        "earned_date": "2025-08-05T18:11:47.079342",
+        "icon": "\ud83d\udcaf"
+      },
+      {
+        "id": "perfect_quiz",
+        "name": "Perfect Score",
+        "description": "Got 100% accuracy on a 10+ question quiz",
+        "earned_date": "2025-08-05T18:11:47.079638",
+        "icon": "\u2b50"
+      },
+      {
+        "id": "streak_10",
+        "name": "Unstoppable",
+        "description": "Answered 10 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.079642",
+        "icon": "\ud83d\ude80"
+      },
+      {
+        "id": "daily_streak_3",
+        "name": "Consistent",
+        "description": "Studied for 3 days in a row",
+        "earned_date": "2025-08-05T18:11:47.081381",
+        "icon": "\ud83d\udcc5"
+      },
+      {
+        "id": "daily_streak_7",
+        "name": "Weekly Warrior",
+        "description": "Studied for 7 days in a row",
+        "earned_date": "2025-08-05T18:11:47.081384",
+        "icon": "\u2694\ufe0f"
+      }
+    ],
+    "session_history": [
+      {
+        "date": "2025-07-08T18:11:47.076700",
+        "questions": 15,
+        "correct": 9,
+        "accuracy": 60.0,
+        "time": 789.8044456207365,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-09T18:11:47.076700",
+        "questions": 11,
+        "correct": 7,
+        "accuracy": 63.63636363636363,
+        "time": 747.2302461702742,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-11T18:11:47.076700",
+        "questions": 10,
+        "correct": 5,
+        "accuracy": 50.0,
+        "time": 719.0397942412001,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-13T18:11:47.076700",
+        "questions": 13,
+        "correct": 8,
+        "accuracy": 61.53846153846154,
+        "time": 738.4927726802073,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-14T18:11:47.076700",
+        "questions": 14,
+        "correct": 7,
+        "accuracy": 50.0,
+        "time": 737.1708714051629,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-17T18:11:47.076700",
+        "questions": 9,
+        "correct": 4,
+        "accuracy": 44.44444444444444,
+        "time": 540.2945140232612,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-18T18:11:47.076700",
+        "questions": 11,
+        "correct": 10,
+        "accuracy": 90.9090909090909,
+        "time": 703.5058969477238,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-19T18:11:47.076700",
+        "questions": 13,
+        "correct": 10,
+        "accuracy": 76.92307692307693,
+        "time": 712.7343589787622,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-20T18:11:47.076700",
+        "questions": 14,
+        "correct": 8,
+        "accuracy": 57.14285714285714,
+        "time": 745.539903070798,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-21T18:11:47.076700",
+        "questions": 10,
+        "correct": 10,
+        "accuracy": 100.0,
+        "time": 651.1431253117696,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-22T18:11:47.076700",
+        "questions": 12,
+        "correct": 7,
+        "accuracy": 58.333333333333336,
+        "time": 680.7464515670297,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-24T18:11:47.076700",
+        "questions": 14,
+        "correct": 6,
+        "accuracy": 42.857142857142854,
+        "time": 674.2914887653717,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-25T18:11:47.076700",
+        "questions": 10,
+        "correct": 9,
+        "accuracy": 90.0,
+        "time": 700.046609803971,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-28T18:11:47.076700",
+        "questions": 9,
+        "correct": 8,
+        "accuracy": 88.88888888888889,
+        "time": 621.6264194233901,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-29T18:11:47.076700",
+        "questions": 10,
+        "correct": 6,
+        "accuracy": 60.0,
+        "time": 608.8773287482722,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-30T18:11:47.076700",
+        "questions": 12,
+        "correct": 5,
+        "accuracy": 41.66666666666667,
+        "time": 831.8755571245279,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-31T18:11:47.076700",
+        "questions": 8,
+        "correct": 6,
+        "accuracy": 75.0,
+        "time": 533.0237018328047,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-01T18:11:47.076700",
+        "questions": 9,
+        "correct": 7,
+        "accuracy": 77.77777777777779,
+        "time": 600.5724642192598,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-02T18:11:47.076700",
+        "questions": 10,
+        "correct": 7,
+        "accuracy": 70.0,
+        "time": 606.0437773606402,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-03T18:11:47.076700",
+        "questions": 12,
+        "correct": 10,
+        "accuracy": 83.33333333333334,
+        "time": 764.9104895444292,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-04T18:11:47.076700",
+        "questions": 9,
+        "correct": 9,
+        "accuracy": 100.0,
+        "time": 642.6271155381617,
+        "session_type": "quiz"
+      }
+    ],
+    "last_activity": "2025-08-04T18:11:47.076700",
+    "topics_studied": {
+      "Concepts & Terms (Security)": {
+        "correct": 30,
+        "total": 38,
+        "questions": 38
+      },
+      "Troubleshooting": {
+        "correct": 30,
+        "total": 40,
+        "questions": 40
+      },
+      "Concepts & Terms (Containers)": {
+        "correct": 16,
+        "total": 21,
+        "questions": 21
+      },
+      "Commands (System Management)": {
+        "correct": 55,
+        "total": 78,
+        "questions": 78
+      },
+      "Concepts & Terms (Automation)": {
+        "correct": 15,
+        "total": 19,
+        "questions": 19
+      },
+      "Concepts & Terms (System Management)": {
+        "correct": 12,
+        "total": 19,
+        "questions": 19
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "Alex Chen",
+    "created_date": "2025-08-05T18:11:46.763455"
+  },
+  "demo_user_002": {
+    "total_questions": 360,
+    "correct_answers": 157,
+    "incorrect_answers": 41,
+    "accuracy": 43.611111111111114,
+    "total_study_time": 8863.818215653882,
+    "total_sessions": 18,
+    "study_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 41,
+    "level": 24.0,
+    "xp": 2350.0,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-05T18:11:47.077359",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-05T18:11:47.077364",
+        "icon": "\ud83d\udcda"
+      },
+      {
+        "id": "ten_questions",
+        "name": "Dedicated Student",
+        "description": "Answered 10 questions",
+        "earned_date": "2025-08-05T18:11:47.077366",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-05T18:11:47.077367",
+        "icon": "\u2705"
+      },
+      {
+        "id": "streak_5",
+        "name": "On Fire!",
+        "description": "Answered 5 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.077369",
+        "icon": "\ud83d\udd25"
+      },
+      {
+        "id": "twenty_five_questions",
+        "name": "Studious",
+        "description": "Answered 25 questions",
+        "earned_date": "2025-08-05T18:11:47.077524",
+        "icon": "\ud83d\udcd6"
+      },
+      {
+        "id": "fifty_questions",
+        "name": "Knowledge Seeker",
+        "description": "Answered 50 questions",
+        "earned_date": "2025-08-05T18:11:47.077932",
+        "icon": "\ud83d\udd0d"
+      },
+      {
+        "id": "category_expert",
+        "name": "Category Expert",
+        "description": "Achieved 80% accuracy in a category",
+        "earned_date": "2025-08-05T18:11:47.078630",
+        "icon": "\ud83c\udfaf"
+      },
+      {
+        "id": "hundred_questions",
+        "name": "Century Club",
+        "description": "Answered 100 questions",
+        "earned_date": "2025-08-05T18:11:47.078750",
+        "icon": "\ud83d\udcaf"
+      },
+      {
+        "id": "streak_10",
+        "name": "Unstoppable",
+        "description": "Answered 10 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.078753",
+        "icon": "\ud83d\ude80"
+      }
+    ],
+    "session_history": [
+      {
+        "date": "2025-07-06T18:11:47.076700",
+        "questions": 20,
+        "correct": 9,
+        "accuracy": 45.0,
+        "time": 501.77674433221904,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-07T18:11:47.076700",
+        "questions": 22,
+        "correct": 9,
+        "accuracy": 40.909090909090914,
+        "time": 534.4981043366257,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-10T18:11:47.076700",
+        "questions": 17,
+        "correct": 8,
+        "accuracy": 47.05882352941176,
+        "time": 464.96287006209093,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-12T18:11:47.076700",
+        "questions": 19,
+        "correct": 6,
+        "accuracy": 31.57894736842105,
+        "time": 510.0803378280248,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-16T18:11:47.076700",
+        "questions": 20,
+        "correct": 10,
+        "accuracy": 50.0,
+        "time": 495.20109737828477,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-17T18:11:47.076700",
+        "questions": 24,
+        "correct": 11,
+        "accuracy": 45.83333333333333,
+        "time": 518.0385267216549,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-18T18:11:47.076700",
+        "questions": 22,
+        "correct": 9,
+        "accuracy": 40.909090909090914,
+        "time": 467.75754444843824,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-19T18:11:47.076700",
+        "questions": 23,
+        "correct": 6,
+        "accuracy": 26.08695652173913,
+        "time": 552.3766424030432,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-20T18:11:47.076700",
+        "questions": 15,
+        "correct": 10,
+        "accuracy": 66.66666666666666,
+        "time": 493.87489041625105,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-21T18:11:47.076700",
+        "questions": 18,
+        "correct": 10,
+        "accuracy": 55.55555555555556,
+        "time": 479.7709637756098,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-22T18:11:47.076700",
+        "questions": 19,
+        "correct": 8,
+        "accuracy": 42.10526315789473,
+        "time": 465.01158018819774,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-24T18:11:47.076700",
+        "questions": 20,
+        "correct": 10,
+        "accuracy": 50.0,
+        "time": 521.1474491910406,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-26T18:11:47.076700",
+        "questions": 19,
+        "correct": 8,
+        "accuracy": 42.10526315789473,
+        "time": 459.22465349111053,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-27T18:11:47.076700",
+        "questions": 22,
+        "correct": 8,
+        "accuracy": 36.36363636363637,
+        "time": 482.4714750644663,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-30T18:11:47.076700",
+        "questions": 18,
+        "correct": 9,
+        "accuracy": 50.0,
+        "time": 451.83607384888023,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-31T18:11:47.076700",
+        "questions": 23,
+        "correct": 7,
+        "accuracy": 30.434782608695656,
+        "time": 478.9851208290403,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-01T18:11:47.076700",
+        "questions": 18,
+        "correct": 10,
+        "accuracy": 55.55555555555556,
+        "time": 519.6286928524573,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-02T18:11:47.076700",
+        "questions": 21,
+        "correct": 9,
+        "accuracy": 42.857142857142854,
+        "time": 467.17544848644854,
+        "session_type": "quiz"
+      }
+    ],
+    "last_activity": "2025-08-02T18:11:47.076700",
+    "topics_studied": {
+      "Concepts & Terms (Automation)": {
+        "correct": 13,
+        "total": 18,
+        "questions": 18
+      },
+      "Commands (System Management)": {
+        "correct": 57,
+        "total": 72,
+        "questions": 72
+      },
+      "Troubleshooting": {
+        "correct": 31,
+        "total": 36,
+        "questions": 36
+      },
+      "Concepts & Terms (System Management)": {
+        "correct": 14,
+        "total": 18,
+        "questions": 18
+      },
+      "Concepts & Terms (Security)": {
+        "correct": 29,
+        "total": 36,
+        "questions": 36
+      },
+      "Concepts & Terms (Containers)": {
+        "correct": 13,
+        "total": 18,
+        "questions": 18
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "Sam Rodriguez",
+    "created_date": "2025-08-05T18:11:46.763464"
+  },
+  "demo_user_003": {
+    "total_questions": 73,
+    "correct_answers": 32,
+    "incorrect_answers": 40,
+    "accuracy": 43.83561643835616,
+    "total_study_time": 6502.802219783952,
+    "total_sessions": 8,
+    "study_streak": 1,
+    "longest_streak": 1,
+    "questions_to_review": 40,
+    "level": 7.0,
+    "xp": 675.0,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-05T18:11:47.078338",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-05T18:11:47.078340",
+        "icon": "\ud83d\udcda"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-05T18:11:47.078342",
+        "icon": "\u2705"
+      },
+      {
+        "id": "ten_questions",
+        "name": "Dedicated Student",
+        "description": "Answered 10 questions",
+        "earned_date": "2025-08-05T18:11:47.078494",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "twenty_five_questions",
+        "name": "Studious",
+        "description": "Answered 25 questions",
+        "earned_date": "2025-08-05T18:11:47.079054",
+        "icon": "\ud83d\udcd6"
+      },
+      {
+        "id": "fifty_questions",
+        "name": "Knowledge Seeker",
+        "description": "Answered 50 questions",
+        "earned_date": "2025-08-05T18:11:47.080457",
+        "icon": "\ud83d\udd0d"
+      }
+    ],
+    "session_history": [
+      {
+        "date": "2025-07-13T18:11:47.076700",
+        "questions": 6,
+        "correct": 1,
+        "accuracy": 16.666666666666664,
+        "time": 617.0843078269941,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-14T18:11:47.076700",
+        "questions": 9,
+        "correct": 5,
+        "accuracy": 55.55555555555556,
+        "time": 716.6472570616696,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-17T18:11:47.076700",
+        "questions": 8,
+        "correct": 2,
+        "accuracy": 25.0,
+        "time": 645.6044192083707,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-18T18:11:47.076700",
+        "questions": 10,
+        "correct": 5,
+        "accuracy": 50.0,
+        "time": 943.5789431413297,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-20T18:11:47.076700",
+        "questions": 7,
+        "correct": 6,
+        "accuracy": 85.71428571428571,
+        "time": 594.4984189457637,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-27T18:11:47.076700",
+        "questions": 12,
+        "correct": 3,
+        "accuracy": 25.0,
+        "time": 1084.5015430693734,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-28T18:11:47.076700",
+        "questions": 11,
+        "correct": 4,
+        "accuracy": 36.36363636363637,
+        "time": 979.5527080466177,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-04T18:11:47.076700",
+        "questions": 10,
+        "correct": 6,
+        "accuracy": 60.0,
+        "time": 921.3346224838323,
+        "session_type": "quiz"
+      }
+    ],
+    "last_activity": "2025-08-04T18:11:47.076700",
+    "topics_studied": {
+      "Concepts & Terms (System Management)": {
+        "correct": 4,
+        "total": 7,
+        "questions": 7
+      },
+      "Commands (System Management)": {
+        "correct": 11,
+        "total": 27,
+        "questions": 27
+      },
+      "Concepts & Terms (Security)": {
+        "correct": 7,
+        "total": 13,
+        "questions": 13
+      },
+      "Troubleshooting": {
+        "correct": 5,
+        "total": 12,
+        "questions": 12
+      },
+      "Concepts & Terms (Containers)": {
+        "correct": 2,
+        "total": 6,
+        "questions": 6
+      },
+      "Concepts & Terms (Automation)": {
+        "correct": 3,
+        "total": 7,
+        "questions": 7
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "Jordan Kim",
+    "created_date": "2025-08-05T18:11:46.763471"
+  },
+  "anonymous": {
+    "total_questions": 287,
+    "correct_answers": 153,
+    "incorrect_answers": 76,
+    "accuracy": 53.31010452961672,
+    "total_study_time": 15986.60358937156,
+    "total_sessions": 24,
+    "study_streak": 3,
+    "longest_streak": 3,
+    "questions_to_review": 76,
+    "level": 26.0,
+    "xp": 2600.0,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-05T18:11:47.077423",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "five_questions",
+        "name": "Getting Started",
+        "description": "Answered 5 questions",
+        "earned_date": "2025-08-05T18:11:47.077425",
+        "icon": "\ud83d\udcda"
+      },
+      {
+        "id": "ten_questions",
+        "name": "Dedicated Student",
+        "description": "Answered 10 questions",
+        "earned_date": "2025-08-05T18:11:47.077426",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-05T18:11:47.077427",
+        "icon": "\u2705"
+      },
+      {
+        "id": "twenty_five_questions",
+        "name": "Studious",
+        "description": "Answered 25 questions",
+        "earned_date": "2025-08-05T18:11:47.077555",
+        "icon": "\ud83d\udcd6"
+      },
+      {
+        "id": "fifty_questions",
+        "name": "Knowledge Seeker",
+        "description": "Answered 50 questions",
+        "earned_date": "2025-08-05T18:11:47.077976",
+        "icon": "\ud83d\udd0d"
+      },
+      {
+        "id": "streak_5",
+        "name": "On Fire!",
+        "description": "Answered 5 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.077977",
+        "icon": "\ud83d\udd25"
+      },
+      {
+        "id": "category_expert",
+        "name": "Category Expert",
+        "description": "Achieved 80% accuracy in a category",
+        "earned_date": "2025-08-05T18:11:47.078113",
+        "icon": "\ud83c\udfaf"
+      },
+      {
+        "id": "hundred_questions",
+        "name": "Century Club",
+        "description": "Answered 100 questions",
+        "earned_date": "2025-08-05T18:11:47.078564",
+        "icon": "\ud83d\udcaf"
+      },
+      {
+        "id": "streak_10",
+        "name": "Unstoppable",
+        "description": "Answered 10 questions correctly in a row",
+        "earned_date": "2025-08-05T18:11:47.079765",
+        "icon": "\ud83d\ude80"
+      },
+      {
+        "id": "daily_streak_3",
+        "name": "Consistent",
+        "description": "Studied for 3 days in a row",
+        "earned_date": "2025-08-05T18:11:47.081452",
+        "icon": "\ud83d\udcc5"
+      }
+    ],
+    "session_history": [
+      {
+        "date": "2025-07-06T18:11:47.076700",
+        "questions": 13,
+        "correct": 6,
+        "accuracy": 46.15384615384615,
+        "time": 702.5026972288183,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-07T18:11:47.076700",
+        "questions": 15,
+        "correct": 5,
+        "accuracy": 33.33333333333333,
+        "time": 848.1579617862534,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-08T18:11:47.076700",
+        "questions": 8,
+        "correct": 5,
+        "accuracy": 62.5,
+        "time": 528.9545670078807,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-09T18:11:47.076700",
+        "questions": 8,
+        "correct": 6,
+        "accuracy": 75.0,
+        "time": 526.6367914213351,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-10T18:11:47.076700",
+        "questions": 7,
+        "correct": 7,
+        "accuracy": 100.0,
+        "time": 493.2891629950393,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-11T18:11:47.076700",
+        "questions": 16,
+        "correct": 8,
+        "accuracy": 50.0,
+        "time": 726.2863154239795,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-12T18:11:47.076700",
+        "questions": 18,
+        "correct": 8,
+        "accuracy": 44.44444444444444,
+        "time": 745.5273800347693,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-13T18:11:47.076700",
+        "questions": 10,
+        "correct": 9,
+        "accuracy": 90.0,
+        "time": 662.656457484222,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-15T18:11:47.076700",
+        "questions": 18,
+        "correct": 7,
+        "accuracy": 38.88888888888889,
+        "time": 706.9685195522751,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-16T18:11:47.076700",
+        "questions": 15,
+        "correct": 5,
+        "accuracy": 33.33333333333333,
+        "time": 821.9131591165358,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-17T18:11:47.076700",
+        "questions": 6,
+        "correct": 3,
+        "accuracy": 50.0,
+        "time": 469.41302584357805,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-18T18:11:47.076700",
+        "questions": 15,
+        "correct": 4,
+        "accuracy": 26.666666666666668,
+        "time": 693.1953123764339,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-20T18:11:47.076700",
+        "questions": 6,
+        "correct": 2,
+        "accuracy": 33.33333333333333,
+        "time": 378.7123536627578,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-21T18:11:47.076700",
+        "questions": 11,
+        "correct": 10,
+        "accuracy": 90.9090909090909,
+        "time": 748.9915095034723,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-23T18:11:47.076700",
+        "questions": 10,
+        "correct": 7,
+        "accuracy": 70.0,
+        "time": 701.2212298061146,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-24T18:11:47.076700",
+        "questions": 11,
+        "correct": 6,
+        "accuracy": 54.54545454545454,
+        "time": 720.79505603383,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-26T18:11:47.076700",
+        "questions": 17,
+        "correct": 6,
+        "accuracy": 35.294117647058826,
+        "time": 734.1345089708503,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-27T18:11:47.076700",
+        "questions": 16,
+        "correct": 8,
+        "accuracy": 50.0,
+        "time": 794.6117855129414,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-28T18:11:47.076700",
+        "questions": 16,
+        "correct": 10,
+        "accuracy": 62.5,
+        "time": 895.7339184796277,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-29T18:11:47.076700",
+        "questions": 17,
+        "correct": 10,
+        "accuracy": 58.82352941176471,
+        "time": 861.8254535777205,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-07-30T18:11:47.076700",
+        "questions": 6,
+        "correct": 2,
+        "accuracy": 33.33333333333333,
+        "time": 447.9019523975061,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-02T18:11:47.076700",
+        "questions": 8,
+        "correct": 6,
+        "accuracy": 75.0,
+        "time": 637.3730464494165,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-03T18:11:47.076700",
+        "questions": 6,
+        "correct": 4,
+        "accuracy": 66.66666666666666,
+        "time": 425.4208653716116,
+        "session_type": "quiz"
+      },
+      {
+        "date": "2025-08-04T18:11:47.076700",
+        "questions": 14,
+        "correct": 9,
+        "accuracy": 64.28571428571429,
+        "time": 714.38055933459,
+        "session_type": "quiz"
+      }
+    ],
+    "last_activity": "2025-08-04T18:11:47.076700",
+    "topics_studied": {
+      "Commands (System Management)": {
+        "correct": 57,
+        "total": 86,
+        "questions": 86
+      },
+      "Concepts & Terms (System Management)": {
+        "correct": 11,
+        "total": 20,
+        "questions": 20
+      },
+      "Concepts & Terms (Automation)": {
+        "correct": 14,
+        "total": 20,
+        "questions": 20
+      },
+      "Concepts & Terms (Security)": {
+        "correct": 26,
+        "total": 40,
+        "questions": 40
+      },
+      "Troubleshooting": {
+        "correct": 29,
+        "total": 41,
+        "questions": 41
+      },
+      "Concepts & Terms (Containers)": {
+        "correct": 16,
+        "total": 22,
+        "questions": 22
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "display_name": "RetiredFan",
+    "created_date": "2025-08-05T18:11:46.763473"
+  }
+}

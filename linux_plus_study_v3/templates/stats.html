@@ -558,6 +558,7 @@
     display: grid;
     grid-template-columns: repeat(52, 1fr);
     grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
     gap: 3px;
     margin-bottom: 1rem;
 }
@@ -657,51 +658,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load stats data
 function loadStatsData() {
-    // Fetch real statistics from API
-    Promise.all([
-        fetch('/api/statistics').then(response => response.json()),
-        fetch('/api/dashboard').then(response => response.json())
-    ])
-    .then(([statsData, dashboardData]) => {
-        if (statsData.error || dashboardData.error) {
-            console.error('Error loading stats:', statsData.error || dashboardData.error);
-            loadDemoStatsData();
-            return;
-        }
-        
-        // Update stat values with real data
-        const totalCorrect = statsData.overall?.total_correct || 0;
-        const accuracyRate = statsData.overall?.overall_accuracy || 0;
-        const avgTime = calculateAverageTime(statsData);
-        const currentStreak = dashboardData.streak || 0;
-        
-        // Check if this is a reset state
-        const isResetState = (
-            totalCorrect === 0 &&
-            accuracyRate === 0 &&
-            currentStreak === 0 &&
-            (!dashboardData.progress_summary || dashboardData.progress_summary.questions_answered === 0)
-        );
-        
-        // Update with animation
-        animateValue('total-correct', 0, totalCorrect, 1000);
-        animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
-        animateValue('avg-time', 0, avgTime, 1000, 's');
-        animateValue('current-streak', 0, currentStreak, 1000);
-        
-        // Update trend indicators based on reset state
-        updateStatsTrends(isResetState, statsData);
-        
-        // Update charts with real data
-        updateChartsWithData(statsData);
-        
-        // Update session list
-        updateSessionList(statsData);
-    })
-    .catch(error => {
-        console.error('Error loading stats:', error);
-        loadDemoStatsData();
-    });
+    // Use the SAME dashboard API for consistency
+    fetch('/api/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Error loading stats:', data.error);
+                return;
+            }
+            
+            // Update stat values with data from single source
+            const totalCorrect = data.total_correct || 0;
+            const accuracyRate = data.accuracy || 0;
+            const currentStreak = data.streak || 0;
+            
+            // Calculate average time per question if we have data
+            let avgTime = 0;
+            if (data.total_questions > 0 && data.total_study_time > 0) {
+                avgTime = Math.round(data.total_study_time / data.total_questions);
+            }
+            
+            // Update with animation
+            animateValue('total-correct', 0, totalCorrect, 1000);
+            animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
+            animateValue('avg-time', 0, avgTime, 1000, 's');
+            animateValue('current-streak', 0, currentStreak, 1000);
+            
+            // Update charts with real data
+            updateChartsWithData(data);
+            
+            // Update session list
+            updateSessionList(data);
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+        });
 }
 
 // Update stats trend indicators
@@ -929,21 +920,98 @@ function initCharts() {
 // Generate activity heatmap
 function generateHeatmap() {
     const heatmap = document.getElementById('activity-heatmap');
+    if (!heatmap) return;
+    
+    // Clear existing content
+    heatmap.innerHTML = '';
+    
+    // Fetch real heatmap data from API
+    fetch('/api/heatmap')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.heatmap_data) {
+                // Create a proper GitHub-style heatmap grid
+                generateHeatmapGrid(heatmap, data.heatmap_data);
+                console.log('Heatmap generated with real data:', data.heatmap_data.length, 'days');
+            } else {
+                // Fallback to static heatmap if API fails
+                generateStaticHeatmap();
+                console.warn('Failed to load heatmap data, using static fallback');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading heatmap data:', error);
+            // Fallback to static heatmap
+            generateStaticHeatmap();
+        });
+}
+
+function generateHeatmapGrid(container, activityData) {
+    // Create a map for quick lookup of activity by date
+    const activityMap = {};
+    activityData.forEach(day => {
+        activityMap[day.date] = day;
+    });
+    
+    // Start from the first Sunday of the year (or before) to align with GitHub-style layout
+    const startOfYear = new Date(new Date().getFullYear(), 0, 1);
+    const firstSunday = new Date(startOfYear);
+    firstSunday.setDate(startOfYear.getDate() - startOfYear.getDay());
+    
+    // Generate 52 weeks * 7 days = 364 cells
+    for (let week = 0; week < 52; week++) {
+        for (let day = 0; day < 7; day++) {
+            const currentDate = new Date(firstSunday);
+            currentDate.setDate(firstSunday.getDate() + (week * 7) + day);
+            
+            const dateStr = currentDate.toISOString().split('T')[0];
+            const dayData = activityMap[dateStr] || { date: dateStr, questions: 0, level: 0 };
+            
+            const cell = document.createElement('div');
+            cell.className = 'activity-cell';
+            
+            // Set activity level
+            const level = dayData.level || 0;
+            cell.setAttribute('data-level', level);
+            
+            // Add tooltip with date and activity
+            const questionsText = dayData.questions > 0 ? 
+                `${dayData.questions} question${dayData.questions !== 1 ? 's' : ''}` : 
+                'No activity';
+            cell.title = `${currentDate.toLocaleDateString()}: ${questionsText}`;
+            
+            // Add click handler for detailed view
+            cell.addEventListener('click', () => {
+                if (dayData.questions > 0) {
+                    showMessage('info', `${currentDate.toLocaleDateString()}: ${dayData.questions} questions answered`);
+                }
+            });
+            
+            container.appendChild(cell);
+        }
+    }
+}
+
+// Fallback static heatmap generator
+function generateStaticHeatmap() {
+    const heatmap = document.getElementById('activity-heatmap');
+    if (!heatmap) return;
+    
     const today = new Date();
     
-    // Generate 365 days
+    // Generate 365 days with static data
     for (let i = 364; i >= 0; i--) {
         const cell = document.createElement('div');
         cell.className = 'activity-cell';
         
-        // Set all activity level to 0
+        // Set all activity level to 0 for static version
         const level = 0;
         cell.setAttribute('data-level', level);
         
         // Add tooltip
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        cell.title = `${date.toLocaleDateString()}: -- questions`;
+        cell.title = `${date.toLocaleDateString()}: No data available`;
         
         heatmap.appendChild(cell);
     }

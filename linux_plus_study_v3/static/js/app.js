@@ -17,6 +17,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 // Global app functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize quiz timing if on quiz page
+    if (window.location.pathname.includes('quiz')) {
+        initializeQuizTiming();
+    }
+
     // Update active nav link on every page
     updateActiveNavLink();
 
@@ -632,3 +637,46 @@ function showToast(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', function() {
     updateQuestionCount();
 });
+
+// Quiz timing functionality
+let quizStartTime = 0;
+let questionsAnswered = 0;
+
+function initializeQuizTiming() {
+    quizStartTime = Date.now();
+    questionsAnswered = 0;
+    
+    // Hook into existing quiz completion (if it exists)
+    const originalCompleteQuiz = window.completeQuiz;
+    if (originalCompleteQuiz) {
+        window.completeQuiz = function() {
+            trackQuizCompletion();
+            return originalCompleteQuiz.apply(this, arguments);
+        };
+    }
+}
+
+function trackQuizCompletion() {
+    if (quizStartTime > 0 && questionsAnswered > 0) {
+        const endTime = Date.now();
+        const sessionDuration = Math.round((endTime - quizStartTime) / 1000); // Convert to seconds
+        
+        // Send actual session duration to backend
+        fetch('/api/update-session-time', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                duration: sessionDuration,
+                questions: questionsAnswered
+            })
+        }).catch(error => {
+            console.log('Note: Could not update session time:', error);
+        });
+    }
+}
+
+function incrementQuestionCount() {
+    questionsAnswered++;
+}

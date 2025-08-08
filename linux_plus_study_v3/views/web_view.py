@@ -17,17 +17,17 @@ import traceback
 import atexit
 import secrets
 import hashlib
-from utils.cli_playground import get_cli_playground
+#from utils.cli_playground import get_cli_playground
 import subprocess
 import shlex
 import re
 from urllib.parse import urlparse
-try:
-    from vm_integration.utils.vm_manager import VMManager
-except ImportError:
-    VMManager = None
+#try:
+#    from vm_integration.utils.vm_manager import VMManager
+#except ImportError:
+#    VMManager = None
 
-from vm_integration.utils.ssh_manager import SSHManager
+#from vm_integration.utils.ssh_manager import SSHManager
 try:
     import libvirt  # type: ignore
 except ImportError:
@@ -144,7 +144,7 @@ class ExportDataDict(TypedDict):
     metadata: ExportMetadataDict
     questions: List[QuestionExportDict]
 
-cli_playground = get_cli_playground()
+#cli_playground = get_cli_playground()
 
 def setup_database_for_web() -> Optional["DatabasePoolManager"]:
     """Initialize database connection pooling for web mode."""
@@ -187,6 +187,8 @@ class StatsControllerProtocol(Protocol):
 # Initialize analytics for current session
 def get_current_user_id():
     from flask import session
+    # Try to get user_id from session, if not present, default to anonymous
+    # This prevents automatic random user creation and maintains consistency
     return session.get('user_id', 'anonymous')
 
 def ensure_analytics_user_sync():
@@ -275,6 +277,8 @@ class LinuxPlusStudyWeb:
         
         # Setup export/import routes
         self.setup_export_import_routes()
+        
+        # Analytics and error tracking are handled by simple_analytics service
     def set_debug_mode(self, enabled: bool = True):
         """Toggle debug mode for the application."""
         self.debug = enabled
@@ -582,6 +586,97 @@ class LinuxPlusStudyWeb:
         
         # Store reference to prevent "not accessed" warning
         self.get_cli_history_handler = get_cli_history
+
+        @app.route('/api/admin/switch_user', methods=['POST'])
+        def switch_user():
+            """Admin endpoint to switch current session user for testing demo data"""
+            try:
+                from flask import session
+                data = request.get_json()
+                user_id = data.get('user_id')
+                
+                if not user_id:
+                    return jsonify({
+                        'success': False,
+                        'error': 'user_id is required'
+                    })
+                
+                # Check if user exists in analytics data
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data(user_id)
+                
+                if not user_data:
+                    return jsonify({
+                        'success': False,
+                        'error': f'User {user_id} not found in analytics data'
+                    })
+                
+                # Switch session to this user
+                session['user_id'] = user_id
+                
+                return jsonify({
+                    'success': True,
+                    'message': f'Switched to user {user_id}',
+                    'user_data': {
+                        'user_id': user_id,
+                        'total_questions': user_data.get('total_questions', 0),
+                        'accuracy': user_data.get('accuracy', 0),
+                        'total_sessions': user_data.get('total_sessions', 0),
+                        'xp': user_data.get('xp', 0)
+                    }
+                })
+                
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Error switching user: {str(e)}'
+                })
+
+        @app.route('/api/admin/list_users', methods=['GET'])
+        def list_demo_users():
+            """Admin endpoint to list available demo users"""
+            try:
+                from flask import session
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                
+                # Get all users from analytics using the public method
+                users = []
+                analytics_data = analytics.get_all_profiles()  # Use the correct public method
+                
+                for user_id, user_data in analytics_data.items():
+                    if user_data.get('total_questions', 0) > 0:  # Only users with data
+                        users.append({
+                            'user_id': user_id,
+                            'total_questions': user_data.get('total_questions', 0),
+                            'accuracy': user_data.get('accuracy', 0),
+                            'total_sessions': user_data.get('total_sessions', 0),
+                            'xp': user_data.get('xp', 0)
+                        })
+                
+                # Sort by total questions descending
+                try:
+                    users.sort(key=lambda x: x['total_questions'], reverse=True)
+                except (TypeError, ValueError, KeyError) as e:
+                    print(f"Warning: Could not sort users by total_questions: {e}")
+                    # Users will remain in original order
+                
+                return jsonify({
+                    'success': True,
+                    'users': users,
+                    'current_user': session.get('user_id', 'anonymous')
+                })
+                
+            except Exception as e:
+                return jsonify({
+                    'success': False,
+                    'error': f'Error listing users: {str(e)}'
+                })
+
+        # Store references to prevent "not accessed" warning
+        self.switch_user_handler = switch_user
+        self.list_demo_users_handler = list_demo_users
     
     def setup_vm_routes(self) -> None:
         """Setup routes for VM management functionality."""
@@ -1593,57 +1688,24 @@ class LinuxPlusStudyWeb:
         def index():
             # Get analytics data for server-side rendering
             try:
-                from services.analytics_integration import get_user_analytics_summary
+                from services.simple_analytics import get_analytics_manager
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics_stats = get_user_analytics_summary(user_id)
+                analytics = get_analytics_manager()
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
                 
-                # If anonymous user has no data, try demo user data
-                if (analytics_stats and 
-                    (analytics_stats.get('total_questions', 0) == 0 or 'error' in analytics_stats) and 
-                    user_id == 'anonymous'):
-                    demo_stats = get_user_analytics_summary('demo_user_001')
-                    if demo_stats and demo_stats.get('total_questions', 0) > 0:
-                        analytics_stats = demo_stats
-                
-                # Prepare dashboard data for template
-                if analytics_stats and 'error' not in analytics_stats and analytics_stats.get('total_questions', 0) > 0:
-                    total_questions = analytics_stats.get('total_questions', 0)
-                    overall_accuracy = analytics_stats.get('overall_accuracy', 0)
-                    total_study_time = analytics_stats.get('total_study_time', 0)
-                    study_streak = analytics_stats.get('study_streak', 0)
-                    
-                    level = max(1, (total_questions // 50) + 1)
-                    total_correct = int(total_questions * (overall_accuracy / 100)) if total_questions > 0 else 0
-                    base_xp = total_questions * 10
-                    accuracy_bonus = int((overall_accuracy / 100) * total_questions * 5)
-                    total_xp = base_xp + accuracy_bonus
-                    
-                    dashboard_stats = {
-                        'level': level,
-                        'xp': total_xp,
-                        'streak': study_streak,
-                        'total_correct': total_correct,
-                        'accuracy': overall_accuracy,
-                        'study_time': total_study_time
-                    }
-                else:
-                    # Default stats
-                    dashboard_stats = {
-                        'level': 1,
-                        'xp': 0,
-                        'streak': 0,
-                        'total_correct': 0,
-                        'accuracy': 0,
-                        'study_time': 0
-                    }
+                # If no data, try demo user
+                if dashboard_stats.get('questions_answered', 0) == 0:
+                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats.get('questions_answered', 0) > 0:
+                        dashboard_stats = demo_stats
                 
                 return render_template('index.html', stats=dashboard_stats)
             except Exception as e:
                 print(f"Error loading dashboard stats: {e}")
                 return render_template('index.html', stats={
-                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0, 'study_time': 0
+                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0, 'study_time': 0, 'study_time_formatted': '0s'
                 })
         # Store reference to make it clear the route is being used
         self.index_handler = index
@@ -1692,6 +1754,165 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.settings_page_handler = settings_page
         
+        @self.app.route('/analytics')
+        def analytics_page():
+            try:
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data(user_id)
+                
+                # Calculate recent achievements properly
+                recent_achievements = []
+                all_achievements = user_data.get('achievements', [])
+                
+                # Sort achievements by date and get last 3
+                if all_achievements:
+                    try:
+                        # Ensure all achievements have a comparable earned_date
+                        sorted_achievements = sorted(all_achievements, 
+                                                   key=lambda x: x.get('earned_date', ''), 
+                                                   reverse=True)
+                        recent_achievements = sorted_achievements[:3]
+                    except (TypeError, ValueError) as e:
+                        print(f"Warning: Could not sort achievements: {e}")
+                        # Fallback: just take the first 3 achievements
+                        recent_achievements = all_achievements[:3]
+                
+                # Calculate study activity properly
+                from datetime import datetime, timedelta
+                today = datetime.now()
+                
+                # Generate last 7 days activity
+                activity_data = []
+                for i in range(7):
+                    date = today - timedelta(days=i)
+                    date_str = date.strftime('%Y-%m-%d')
+                    
+                    # Check if user was active on this date
+                    active = False
+                    questions_count = 0
+                    
+                    if user_data.get('last_activity'):
+                        try:
+                            last_activity = datetime.fromisoformat(user_data['last_activity'].replace('Z', '+00:00'))
+                            if last_activity.date() == date.date():
+                                active = True
+                                # For today's activity, use a portion of total questions as estimate
+                                if i == 0:  # Today
+                                    questions_count = min(user_data.get('total_questions', 0), 10)
+                        except Exception:
+                            pass
+                    
+                    activity_data.insert(0, {
+                        'date': date_str,
+                        'active': active,
+                        'questions': questions_count
+                    })
+                
+                # Calculate performance overview changes
+                total_questions = user_data.get('total_questions', 0)
+                correct_answers = user_data.get('correct_answers', 0)
+                accuracy = user_data.get('accuracy', 0.0)
+                study_streak = user_data.get('study_streak', 0)
+                total_study_time = user_data.get('total_study_time', 0)
+                
+                # Estimate session count more accurately
+                estimated_sessions = max(1, total_questions // 5) if total_questions > 0 else 0
+                
+                # Generate recent performance data
+                recent_performance = []
+                if total_questions > 0:
+                    # Create sample recent sessions based on user's actual performance
+                    sessions_to_show = min(5, estimated_sessions)
+                    questions_per_session = max(1, total_questions // max(1, sessions_to_show))
+                    
+                    for i in range(sessions_to_show):
+                        session_date = today - timedelta(days=i)
+                        session_questions = min(questions_per_session, total_questions - (i * questions_per_session))
+                        session_correct = round((session_questions * accuracy) / 100) if accuracy else 0
+                        session_accuracy = (session_correct / session_questions) * 100 if session_questions > 0 else 0
+                        
+                        recent_performance.append({
+                            'date': session_date.isoformat(),
+                            'accuracy': session_accuracy,
+                            'questions': session_questions,
+                            'activity': 'quiz'
+                        })
+                
+                # Build topic breakdown with numeric accuracies (template expects numbers, not dicts)
+                from typing import Dict as _Dict, List as _List, Tuple as _Tuple
+                topics_studied: _Dict[str, Any] = user_data.get('topics_studied', {}) or {}
+                topic_breakdown: _Dict[str, float] = {}
+                questions_per_topic: _Dict[str, int] = {}
+                for topic, data in topics_studied.items():
+                    if isinstance(topic, str):
+                        if isinstance(data, dict):
+                            total_t = int(data.get('total', data.get('questions', 0)) or 0)
+                            correct_t = int(data.get('correct', 0) or 0)
+                            acc_val: float = round((correct_t / total_t) * 100, 1) if total_t > 0 else 0.0
+                            topic_breakdown[topic] = acc_val
+                            questions_per_topic[topic] = int(data.get('questions', data.get('total', 0)) or 0)
+                        else:
+                            try:
+                                topic_breakdown[topic] = float(data)  # type: ignore[arg-type]
+                            except Exception:
+                                topic_breakdown[topic] = 0.0
+                            questions_per_topic[topic] = 0
+                topic_breakdown_list: _List[_Tuple[str, float]] = sorted(topic_breakdown.items(), key=lambda x: x[1], reverse=True)
+                
+                # Prepare comprehensive stats for dashboard
+                stats = {
+                    'total_questions': total_questions,
+                    'overall_accuracy': round(accuracy, 1),
+                    'accuracy': round(accuracy, 1),  # ensure alias
+                    'total_study_time': total_study_time,
+                    'total_vm_commands': 0,  # VM commands not tracked in simple analytics
+                    'study_streak': study_streak,
+                    'total_sessions': estimated_sessions,
+                    'recent_achievements': recent_achievements,
+                    'recent_performance': recent_performance,
+                    'activity_data': activity_data,
+                    'topic_breakdown': topic_breakdown,
+                    'topic_breakdown_list': topic_breakdown_list,
+                    'questions_per_topic': questions_per_topic,
+                    'activity_breakdown': {'quiz': estimated_sessions, 'practice': 0},
+                    'level': user_data.get('level', 1),
+                    'xp': user_data.get('xp', 0),
+                    'display_name': user_data.get('display_name', user_id.replace('_', ' ').title()),
+                    'certification_progress': user_data.get('certification_progress', 0)
+                }
+                
+                return render_template('analytics_dashboard.html', stats=stats)
+            except Exception as e:
+                print(f"Error in analytics page: {e}")
+                # Return template with empty stats on error
+                empty_stats = {
+                    'total_questions': 0,
+                    'overall_accuracy': 0.0,
+                    'accuracy': 0.0,
+                    'total_study_time': 0,
+                    'total_vm_commands': 0,
+                    'study_streak': 0,
+                    'total_sessions': 0,
+                    'recent_achievements': [],
+                    'recent_performance': [],
+                    'activity_data': [],
+                    'topic_breakdown': {},
+                    'topic_breakdown_list': [],
+                    'questions_per_topic': {},
+                    'activity_breakdown': {},
+                    'level': 1,
+                    'xp': 0,
+                    'display_name': 'User',
+                    'certification_progress': 0
+                }
+                return render_template('analytics_dashboard.html', stats=empty_stats)
+        # Store reference to make it clear the route is being used
+        self.analytics_page_handler = analytics_page
+        
         @self.app.route('/profile-test')
         def profile_test():
             # Serve the HTML test file
@@ -1729,18 +1950,36 @@ class LinuxPlusStudyWeb:
             try:
                 # Use quiz controller as single source of truth
                 status = self.quiz_controller.get_session_status()
+                
+                # Get analytics data for consistent scoring
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data('anonymous')
+                
+                # Determine total questions based on quiz state
+                total_questions = len(self.game_state.questions)  # Default to all available questions
+                
+                # If quiz is active and has a custom limit, use that instead
+                if status['quiz_active'] and hasattr(self.quiz_controller, 'custom_question_limit') and self.quiz_controller.custom_question_limit:
+                    total_questions = self.quiz_controller.custom_question_limit
+                
                 return jsonify({
                     'quiz_active': status['quiz_active'],
-                    'total_questions': len(self.game_state.questions),
+                    'total_questions': total_questions,
                     'categories': sorted(list(self.game_state.categories)),
                     'session_score': status['session_score'],
                     'session_total': status['session_total'],
                     'current_streak': status['current_streak'],
-                    'total_points': self.game_state.achievements.get('points_earned', 0),
-                    'session_points': self.game_state.session_points,
+                    'total_points': user_data['xp'],  # Use analytics XP for total accumulated points
+                    'session_points': self.game_state.session_points,  # Use actual session points
                     'quiz_mode': status['mode']
                 })
             except Exception as e:
+                # Get analytics data for consistent scoring even in error case
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data('anonymous')
+                
                 return jsonify({
                     'quiz_active': False,
                     'total_questions': len(self.game_state.questions),
@@ -1748,8 +1987,8 @@ class LinuxPlusStudyWeb:
                     'session_score': 0,
                     'session_total': 0,
                     'current_streak': 0,
-                    'total_points': 0,
-                    'session_points': 0,
+                    'total_points': user_data.get('xp', 0),  # Use analytics XP for total
+                    'session_points': 0,  # No session active, so 0 session points
                     'quiz_mode': None,
                     'error': str(e)
                 })
@@ -1765,6 +2004,15 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.cli_playground_page_handler = cli_playground_page
         
+        @self.app.route('/vm-playground')
+        def vm_playground():
+            """VM Playground page"""
+            return render_template('vm_playground.html', 
+                                title='VM Playground',
+                                active_page='vm_playground')
+        # Store reference to make it clear the route is being used
+        self.vm_playground_handler = vm_playground
+        
         @self.app.route('/api/start_quiz', methods=['POST'])
         def api_start_quiz():
             try:
@@ -1774,10 +2022,28 @@ class LinuxPlusStudyWeb:
                 num_questions: Optional[int] = data.get('num_questions')
                 
                 # Normalize category filter
+
                 category_filter = None if category == "All Categories" else category
                 
                 # Ensure current settings are applied to quiz controller
                 self._ensure_settings_applied()
+                
+                # Store number of questions if provided BEFORE starting the session
+                if num_questions and quiz_mode not in ['survival', 'exam']:
+                    # Validate that num_questions is a valid positive integer
+                    try:
+                        num_questions_int = int(num_questions)
+                        if num_questions_int > 0:
+                            self.quiz_controller.custom_question_limit = num_questions_int
+                        else:
+                            print(f"Warning: Invalid num_questions value: {num_questions}")
+                            self.quiz_controller.custom_question_limit = None
+                    except (ValueError, TypeError):
+                        print(f"Warning: Could not convert num_questions to int: {num_questions}")
+                        self.quiz_controller.custom_question_limit = None
+                else:
+                    # Clear custom limit for modes that don't use it
+                    self.quiz_controller.custom_question_limit = None
                 
                 # Force end any existing session to ensure clean state
                 if self.quiz_controller.quiz_active:
@@ -1790,10 +2056,6 @@ class LinuxPlusStudyWeb:
                 
                 # Store category filter in web interface for consistency
                 self.current_category_filter = category_filter
-                
-                # Store number of questions if provided
-                if num_questions and quiz_mode not in ['survival', 'exam']:
-                    self.quiz_controller.custom_question_limit = num_questions
                 
                 if result.get('session_active'):
                     return jsonify({'success': True, **result})
@@ -1947,12 +2209,12 @@ class LinuxPlusStudyWeb:
                 try:
                     user_id, analytics = ensure_analytics_user_sync()
                     if analytics and user_id:
-                        # Update quiz statistics
-                        analytics.track_question_answer(
+                        # Use update_quiz_results for proper XP and achievement tracking
+                        analytics.update_quiz_results(
                             user_id=user_id,
                             correct=result.get('is_correct', False),
-                            category=getattr(self.quiz_controller, 'category_filter', None),
-                            time_taken=None  # Could add timing if needed
+                            topic=getattr(self.quiz_controller, 'category_filter', None) or question_data[3],  # Use question category
+                            difficulty="intermediate"  # Default difficulty
                         )
                 except Exception as e:
                     print(f"Error tracking analytics: {e}")
@@ -1983,6 +2245,37 @@ class LinuxPlusStudyWeb:
                 
                 # Quiz is still active, force end it
                 result = self.quiz_controller.force_end_session()
+                
+                # Update analytics with actual session duration if available
+                if 'session_duration' in result and 'session_total' in result:
+                    try:
+                        from services.simple_analytics import get_analytics_manager
+                        from flask import session
+                        
+                        user_id = session.get('user_id', 'anonymous')
+                        analytics = get_analytics_manager()
+                        
+                        print(f"🐛 DEBUG: About to call update_session_with_actual_time")
+                        print(f"   user_id: {user_id}")
+                        print(f"   actual_duration: {result['session_duration']}")
+                        print(f"   questions_answered: {result['session_total']}")
+                        
+                        analytics.update_session_with_actual_time(
+                            user_id=user_id,
+                            actual_duration=result['session_duration'],
+                            questions_answered=result['session_total']
+                        )
+                        print(f"✅ DEBUG: update_session_with_actual_time completed successfully")
+                    except Exception as e:
+                        print(f"❌ DEBUG: Error updating analytics with actual time: {e}")
+                else:
+                    print(f"🚨 DEBUG: Condition failed! result keys: {list(result.keys())}")
+                    print(f"   session_duration in result: {'session_duration' in result}")
+                    print(f"   session_total in result: {'session_total' in result}")
+                    if 'session_duration' in result:
+                        print(f"   session_duration value: {result['session_duration']}")
+                    if 'session_total' in result:
+                        print(f"   session_total value: {result['session_total']}")
                 
                 return jsonify({'success': True, **result})
                 
@@ -2081,11 +2374,27 @@ class LinuxPlusStudyWeb:
                 data = cast(CategoryRequestData, request.get_json() or {})
                 category: Optional[str] = data.get('category')
                 category_filter: Optional[str] = None if category == "All Categories" else category
+                
+                # Handle custom question limit for timed mode
+                if 'num_questions' in data:
+                    try:
+                        custom_question_limit = int(data['num_questions'])
+                        if custom_question_limit > 0:
+                            self.quiz_controller.custom_question_limit = custom_question_limit
+                        else:
+                            self.quiz_controller.custom_question_limit = None
+                    except (ValueError, TypeError):
+                        self.quiz_controller.custom_question_limit = None
+                else:
+                    self.quiz_controller.custom_question_limit = None
 
                 if self.quiz_controller.quiz_active:
                     self.quiz_controller.force_end_session()
                 
-                result = self.quiz_controller.start_quiz_session(mode="timed", category_filter=category_filter)
+                result = self.quiz_controller.start_quiz_session(
+                    mode="timed", 
+                    category_filter=category_filter
+                )
                 self.current_quiz_mode = "timed"
                 self.current_category_filter = category_filter
                 
@@ -2102,6 +2411,10 @@ class LinuxPlusStudyWeb:
                 data = cast(CategoryRequestData, request.get_json() or {})
                 category: Optional[str] = data.get('category')
                 category_filter: Optional[str] = None if category == "All Categories" else category
+
+                # Handle custom question limit for survival mode (unlimited)
+                # Survival mode typically doesn't use a limit, but we should clear any existing limit
+                self.quiz_controller.custom_question_limit = None
 
                 if self.quiz_controller.quiz_active:
                     self.quiz_controller.force_end_session()
@@ -2120,6 +2433,9 @@ class LinuxPlusStudyWeb:
         @self.app.route('/api/start_exam_mode', methods=['POST'])
         def api_start_exam_mode():
             try:
+                # Set exam mode to use 90 questions (standard Linux+ exam length)
+                self.quiz_controller.custom_question_limit = 90
+                
                 if self.quiz_controller.quiz_active:
                     self.quiz_controller.force_end_session()
                 
@@ -2154,7 +2470,7 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 return jsonify({'success': False, 'error': str(e)})
         
-        # Store reference to the route function
+        # Store reference to make it clear the route is being used
         self.api_start_category_focus_handler = api_start_category_focus
         
         @self.app.route('/api/get_categories')
@@ -2172,6 +2488,23 @@ class LinuxPlusStudyWeb:
         
         # Store reference to make it clear the route is being used
         self.api_get_categories_handler = api_get_categories
+        
+        @self.app.route('/api/get_difficulties')
+        def api_get_difficulties():
+            """Get available difficulty levels."""
+            try:
+                # Since questions don't have difficulty levels in the current structure,
+                # return standard difficulty levels for now
+                difficulties = ['beginner', 'intermediate', 'advanced']
+                return jsonify({
+                    'success': True,
+                    'difficulties': difficulties
+                })
+            except Exception as e:
+                print(f"Error getting difficulties: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+        # Store reference to make it clear the route is being used
+        self.api_get_difficulties_handler = api_get_difficulties
         
         @self.app.route('/api/get_hint', methods=['POST'])
         def api_get_hint():
@@ -2210,189 +2543,106 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_get_hint_handler = api_get_hint
         
-        @self.app.route('/api/statistics')
-        def api_statistics():
-            try:
-                # Use simple JSON-based analytics for consistent data
-                from services.simple_analytics import get_analytics_manager
-                from flask import session
-                
-                user_id = session.get('user_id', 'anonymous')
-                analytics = get_analytics_manager()
-                analytics_stats = analytics.get_analytics_stats(user_id)
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
-                
-                # Format data in the expected statistics format
-                statistics_data = {
-                    'overall': {
-                        'total_questions': analytics_stats['total_questions'],
-                        'correct_answers': analytics_stats['correct_answers'],
-                        'overall_accuracy': analytics_stats['accuracy'],
-                        'total_study_time': analytics_stats['total_study_time'],
-                        'total_sessions': analytics_stats['total_sessions'],
-                        'level': dashboard_stats['level'],
-                        'xp': dashboard_stats['xp']
-                    },
-                    'topics': analytics_stats['topics_studied'],
-                    'difficulty': analytics_stats['difficulty_progress'],
-                    'recent_sessions': analytics_stats.get('session_history', [])
-                }
-                
-                return jsonify(statistics_data)
-            except Exception as e:
-                return jsonify({'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_statistics_handler = api_statistics
-        
         @self.app.route('/api/dashboard')
         def api_dashboard():
+            """API endpoint for dashboard data - single source of truth"""
             try:
-                # Use simple JSON-based analytics
                 from services.simple_analytics import get_analytics_manager
                 from flask import session
                 
-                user_id = session.get('user_id', 'anonymous')
                 analytics = get_analytics_manager()
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                user_id = session.get('user_id', 'anonymous')
                 
-                return jsonify(dashboard_stats)
+                # Get stats from simple analytics (single source of truth)
+                stats = analytics.get_dashboard_stats(user_id)
                 
+                # Ensure we have all required fields for the frontend
+                stats['success'] = True
+                
+                return jsonify(stats)
             except Exception as e:
-                return jsonify({'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_dashboard_handler = api_dashboard
-        
+                self.logger.error(f"Dashboard API error: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'questions_answered': 0,
+                    'total_correct': 0,
+                    'accuracy': 0,
+                    'study_time': 0,
+                    'streak': 0,
+                    'level': 1,
+                    'xp': 0
+                })
+
         @self.app.route('/api/analytics')
         def api_analytics():
+            """API endpoint for analytics data - must match dashboard"""
             try:
-                # Use simple JSON-based analytics
                 from services.simple_analytics import get_analytics_manager
                 from flask import session
                 
-                user_id = session.get('user_id', 'anonymous')
                 analytics = get_analytics_manager()
-                analytics_stats = analytics.get_analytics_stats(user_id)
+                user_id = session.get('user_id', 'anonymous')
                 
-                return jsonify(analytics_stats)
+                # Get stats from same source as dashboard
+                stats = analytics.get_analytics_stats(user_id)
                 
+                return jsonify({
+                    'success': True,
+                    'stats': stats
+                })
             except Exception as e:
-                return jsonify({'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_analytics_handler = api_analytics
-        
-        @self.app.route('/api/achievements')
-        def api_achievements():
+                self.logger.error(f"Analytics API error: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'stats': {}
+                })
+
+        @self.app.route('/api/statistics')
+        def api_statistics():
+            """API endpoint for statistics - uses same data as dashboard"""
             try:
-                # Use simple JSON-based analytics for consistent data
                 from services.simple_analytics import get_analytics_manager
                 from flask import session
                 
-                user_id = session.get('user_id', 'anonymous')
                 analytics = get_analytics_manager()
+                user_id = session.get('user_id', 'anonymous')
+                
+                # Use dashboard stats to ensure consistency
+                stats = analytics.get_dashboard_stats(user_id)
                 user_data = analytics.get_user_data(user_id)
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
                 
-                # Calculate achievements based on simple analytics
-                total_questions = user_data['total_questions']
-                correct_answers = user_data['correct_answers']
-                accuracy = user_data['accuracy']
-                level = dashboard_stats['level']
-                xp = dashboard_stats['xp']
+                # Format topic data for statistics display
+                def _format_category_stats(topics_studied):
+                    categories = []
+                    for topic, data in topics_studied.items():
+                        if isinstance(data, dict):
+                            categories.append({
+                                'category': topic,
+                                'correct': data.get('correct', 0),
+                                'attempts': data.get('total', 0),
+                                'accuracy': data.get('accuracy', 0)
+                            })
+                    return categories
                 
-                # Simple achievement system based on progress
-                achievements = []
-                unlocked_count = 0
-                
-                # Achievement definitions based on analytics data
-                achievement_defs = [
-                    {'name': 'First Steps', 'desc': 'Answer your first question', 'threshold': 1, 'type': 'questions'},
-                    {'name': 'Getting Started', 'desc': 'Answer 5 questions', 'threshold': 5, 'type': 'questions'},
-                    {'name': 'On a Roll', 'desc': 'Answer 10 questions', 'threshold': 10, 'type': 'questions'},
-                    {'name': 'Dedicated Learner', 'desc': 'Answer 25 questions', 'threshold': 25, 'type': 'questions'},
-                    {'name': 'Knowledge Seeker', 'desc': 'Answer 50 questions', 'threshold': 50, 'type': 'questions'},
-                    {'name': 'First Correct', 'desc': 'Get your first answer right', 'threshold': 1, 'type': 'correct'},
-                    {'name': 'Accuracy Expert', 'desc': 'Achieve 80% accuracy (min 10 questions)', 'threshold': 80, 'type': 'accuracy'},
-                    {'name': 'Perfect Score', 'desc': 'Achieve 100% accuracy (min 5 questions)', 'threshold': 100, 'type': 'accuracy'},
-                    {'name': 'Level Up', 'desc': 'Reach level 2', 'threshold': 2, 'type': 'level'},
-                    {'name': 'XP Collector', 'desc': 'Earn 100 XP', 'threshold': 100, 'type': 'xp'},
-                ]
-                
-                # Check which achievements are unlocked
-                for achievement in achievement_defs:
-                    unlocked = False
-                    
-                    if achievement['type'] == 'questions':
-                        unlocked = total_questions >= achievement['threshold']
-                    elif achievement['type'] == 'correct':
-                        unlocked = correct_answers >= achievement['threshold']
-                    elif achievement['type'] == 'accuracy':
-                        if achievement['threshold'] == 100:
-                            unlocked = accuracy >= 100 and total_questions >= 5
-                        else:
-                            unlocked = accuracy >= achievement['threshold'] and total_questions >= 10
-                    elif achievement['type'] == 'level':
-                        unlocked = level >= achievement['threshold']
-                    elif achievement['type'] == 'xp':
-                        unlocked = xp >= achievement['threshold']
-                    
-                    achievement['unlocked'] = unlocked
-                    if unlocked:
-                        unlocked_count += 1
-                    
-                    achievements.append(achievement)
-                
-                # Calculate total points based on unlocked achievements
-                total_points = unlocked_count * 10  # 10 points per achievement
-                
-                # Prepare response data consistent with simple analytics
-                achievements_data = {
-                    'unlocked': [a for a in achievements if a['unlocked']],
-                    'available': [a for a in achievements if not a['unlocked']],
-                    'stats': {
-                        'unlocked': unlocked_count,
-                        'total': len(achievement_defs),
-                        'points': total_points,
-                        'completion': round((unlocked_count / len(achievement_defs)) * 100, 1),
-                        'rarest': 'Perfect Score' if any(a['name'] == 'Perfect Score' and a['unlocked'] for a in achievements) else 'None',
-                        'level': level,
-                        'xp': xp,
-                        'level_progress': dashboard_stats['level_progress'],
-                        'accuracy': accuracy
+                # Format for statistics page
+                return jsonify({
+                    'overall': {
+                        'total_attempts': stats['total_questions'],
+                        'total_correct': stats['total_correct'],
+                        'overall_accuracy': stats['accuracy'],
+                        'level': stats['level'],
+                        'xp': stats['xp']
                     },
-                    'questions_answered': total_questions
-                }
-                
-                return jsonify(achievements_data)
+                    'categories': _format_category_stats(user_data.get('topics_studied', {})),
+                    'questions': [],  # Would need question-level tracking
+                    'success': True
+                })
             except Exception as e:
-                return jsonify({'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_achievements_handler = api_achievements
-        
-        @self.app.route('/api/leaderboard')
-        def api_leaderboard():
-            try:
-                return jsonify(self.stats_controller.get_leaderboard_data())
-            except Exception as e:
-                return jsonify({'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_leaderboard_handler = api_leaderboard
-        
-        @self.app.route('/api/clear_statistics', methods=['POST'])
-        def api_clear_statistics():
-            try:
-                success = self.stats_controller.clear_statistics()
-                return jsonify({'success': success})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        
-        # Store reference to the route function
-        self.api_clear_statistics_handler = api_clear_statistics
-        
+                self.logger.error(f"Statistics API error: {e}")
+                return jsonify({'error': str(e), 'success': False})
+
         # Profile Management API Routes
         @self.app.route('/api/profiles', methods=['GET'])
         def api_get_profiles():
@@ -2402,1540 +2652,207 @@ class LinuxPlusStudyWeb:
                 from flask import session
                 
                 analytics = get_analytics_manager()
-                profiles = analytics.get_all_profiles()
+                user_id = session.get('user_id', 'anonymous')
                 
-                # Convert display_name to name for frontend compatibility
-                for profile_id, profile_data in profiles.items():
-                    profile_data['name'] = profile_data.get('display_name', profile_id)
+                # For now, just return the current user as a single profile
+                # This can be expanded later for multi-profile support
+                user_data = analytics.get_user_data(user_id)
                 
-                current_profile = session.get('user_id', 'anonymous')
-                return jsonify({'success': True, 'profiles': profiles, 'current_profile': current_profile})
+                profiles = {
+                    user_id: {
+                        'name': user_data.get('display_name', 'Default Profile'),
+                        'analytics': {
+                            'sessions': user_data.get('sessions', []),
+                            'total_questions': user_data.get('total_questions', 0),
+                            'accuracy': user_data.get('accuracy', 0),
+                            'study_time': user_data.get('total_study_time', 0)
+                        }
+                    }
+                }
+                
+                return jsonify({
+                    'success': True,
+                    'profiles': profiles,
+                    'current_profile': user_id
+                })
             except Exception as e:
+                self.logger.error(f"Get profiles error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
-        
+
         @self.app.route('/api/profiles', methods=['POST'])
         def api_create_profile():
             """Create a new user profile"""
             try:
-                from services.simple_analytics import get_analytics_manager
-                import uuid
-                data = request.get_json()
+                data = request.get_json() or {}
+                profile_name = data.get('name', '').strip()
                 
-                # Frontend sends 'name', use it as display_name and generate user_id
-                display_name = data.get('name', '').strip()
-                
-                if not display_name:
+                if not profile_name:
                     return jsonify({'success': False, 'error': 'Profile name is required'})
                 
-                # Generate a unique user_id based on the display name
-                user_id = display_name.lower().replace(' ', '_').replace('-', '_')
-                user_id = ''.join(c for c in user_id if c.isalnum() or c == '_')
-                
-                # Add timestamp to ensure uniqueness
-                user_id = f"{user_id}_{str(uuid.uuid4())[:8]}"
-                
-                analytics = get_analytics_manager()
-                success = analytics.create_profile(user_id, display_name)
-                
-                if success:
-                    return jsonify({'success': True, 'message': 'Profile created successfully', 'user_id': user_id})
-                else:
-                    return jsonify({'success': False, 'error': 'Profile already exists or invalid name'})
+                # For now, just return success - multi-profile support can be added later
+                return jsonify({
+                    'success': True, 
+                    'message': 'Profile creation will be available in a future update',
+                    'profile_id': 'new_profile_id'
+                })
             except Exception as e:
+                self.logger.error(f"Create profile error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
-        
-        @self.app.route('/api/profiles/<user_id>', methods=['DELETE'])
-        def api_delete_profile(user_id):
-            """Delete a user profile"""
-            try:
-                from services.simple_analytics import get_analytics_manager
-                analytics = get_analytics_manager()
-                success = analytics.delete_profile(user_id)
-                
-                if success:
-                    return jsonify({'success': True, 'message': 'Profile deleted successfully'})
-                else:
-                    return jsonify({'success': False, 'error': 'Profile not found or cannot be deleted'})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        
-        @self.app.route('/api/profiles/<user_id>/rename', methods=['PUT'])
-        def api_rename_profile(user_id):
-            """Rename a user profile"""
-            try:
-                from services.simple_analytics import get_analytics_manager
-                data = request.get_json()
-                
-                # Frontend sends 'name', but backend expects 'display_name'
-                new_display_name = data.get('name', '').strip()
-                
-                if not new_display_name:
-                    return jsonify({'success': False, 'error': 'Profile name is required'})
-                
-                analytics = get_analytics_manager()
-                success = analytics.rename_profile(user_id, new_display_name)
-                
-                if success:
-                    return jsonify({'success': True, 'message': 'Profile renamed successfully'})
-                else:
-                    return jsonify({'success': False, 'error': 'Profile not found'})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        
-        @self.app.route('/api/profiles/<user_id>/reset', methods=['POST'])
-        def api_reset_profile(user_id):
-            """Reset a user profile to default state"""
-            try:
-                from services.simple_analytics import get_analytics_manager
-                analytics = get_analytics_manager()
-                success = analytics.reset_profile(user_id)
-                
-                if success:
-                    return jsonify({'success': True, 'message': 'Profile reset successfully'})
-                else:
-                    return jsonify({'success': False, 'error': 'Profile not found'})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        
+
         @self.app.route('/api/profiles/switch', methods=['POST'])
         def api_switch_profile():
-            """Switch active user profile"""
+            """Switch to a different profile"""
             try:
-                data = request.get_json()
+                data = request.get_json() or {}
+                profile_id = data.get('profile_id')
                 
-                # Frontend sends 'profile_id', but we expect 'user_id'
-                user_id = data.get('profile_id', '').strip()
-                
-                if not user_id:
+                if not profile_id:
                     return jsonify({'success': False, 'error': 'Profile ID is required'})
                 
-                # Store current user in session
+                # For now, just return success - actual switching can be implemented later
                 from flask import session
-                session['user_id'] = user_id
+                session['user_id'] = profile_id
                 
-                # Ensure analytics is synced with new user
-                ensure_analytics_user_sync()
-                
-                # Initialize quiz controller with new user context
-                if hasattr(self, 'quiz_controller'):
-                    # Reset quiz controller state for new user
-                    self.quiz_controller.reset_session()
-                
-                return jsonify({'success': True, 'message': f'Switched to profile: {user_id}'})
+                return jsonify({'success': True, 'message': 'Profile switched successfully'})
             except Exception as e:
+                self.logger.error(f"Switch profile error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
-        
+
+        @self.app.route('/api/profiles/<profile_id>/rename', methods=['PUT'])
+        def api_rename_profile(profile_id):
+            """Rename a user profile"""
+            try:
+                data = request.get_json() or {}
+                new_name = data.get('name', '').strip()
+                
+                if not new_name:
+                    return jsonify({'success': False, 'error': 'New name is required'})
+                
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                user_data = analytics.get_user_data(profile_id)
+                user_data['display_name'] = new_name
+                analytics._update_user_data(profile_id, user_data)
+                
+                return jsonify({'success': True, 'message': 'Profile renamed successfully'})
+            except Exception as e:
+                self.logger.error(f"Rename profile error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/profiles/<profile_id>/reset', methods=['POST'])
+        def api_reset_profile(profile_id):
+            """Reset profile data"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                analytics = get_analytics_manager()
+                
+                # Reset user data to defaults
+                default_data = analytics._get_default_user_data()
+                default_data['display_name'] = f'Profile {profile_id}'
+                analytics._update_user_data(profile_id, default_data)
+                
+                return jsonify({'success': True, 'message': 'Profile data reset successfully'})
+            except Exception as e:
+                self.logger.error(f"Reset profile error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/profiles/<profile_id>', methods=['DELETE'])
+        def api_delete_profile(profile_id):
+            """Delete a user profile"""
+            try:
+                # For now, prevent deletion of the current user
+                from flask import session
+                current_user_id = session.get('user_id', 'anonymous')
+                
+                if profile_id == current_user_id:
+                    return jsonify({'success': False, 'error': 'Cannot delete the active profile'})
+                
+                # Profile deletion can be implemented later
+                return jsonify({
+                    'success': True, 
+                    'message': 'Profile deletion will be available in a future update'
+                })
+            except Exception as e:
+                self.logger.error(f"Delete profile error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        # Review API Routes
         @self.app.route('/api/review_incorrect')
         def api_review_incorrect():
-            try:
-                # Use simple JSON-based analytics for consistent data
-                from services.simple_analytics import get_analytics_manager
-                from flask import session
-                
-                user_id = session.get('user_id', 'anonymous')
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data(user_id)
-                
-                # Simple review system based on analytics
-                review_data = {
-                    'questions_to_review': user_data['questions_to_review'],
-                    'total_incorrect': user_data['incorrect_answers'],
-                    'review_questions': [],  # Would need to implement question storage for full review
-                    'missing_questions': [],
-                    'stats': {
-                        'total_questions': user_data['total_questions'],
-                        'correct_answers': user_data['correct_answers'],
-                        'accuracy': user_data['accuracy']
-                    }
-                }
-                
-                return jsonify(review_data)
-            except Exception as e:
-                return jsonify({'error': str(e)})
-
-        # Store reference to the route function
-        self.api_review_incorrect_handler = api_review_incorrect
-
-        @self.app.route('/api/remove_from_review', methods=['POST'])
-        def api_remove_from_review():
-            try:
-                data = cast(RemoveFromReviewData, request.get_json() or {})
-                question_text: Optional[str] = data.get('question_text')
-                if not question_text:
-                    return jsonify({'success': False, 'error': 'No question text provided'})
-                
-                success = self.stats_controller.remove_from_review_list(question_text)
-                return jsonify({'success': success})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to the route function
-        self.api_remove_from_review_handler = api_remove_from_review
-
-        @self.app.route('/api/cleanup_review_list', methods=['POST'])
-        def api_cleanup_review_list():
-            """Manual cleanup endpoint to remove outdated questions from review list."""
+            """Get questions marked for review"""
             try:
                 review_data = self.stats_controller.get_review_questions_data()
                 
-                if review_data.get('missing_questions'):
-                    removed_count: int = self.stats_controller.cleanup_missing_review_questions(
+                # Convert to regular dict to allow additional fields
+                result = dict(review_data)
+                
+                # Clean up missing questions automatically
+                if review_data['missing_questions']:
+                    questions_cleaned = self.stats_controller.cleanup_missing_review_questions(
                         review_data['missing_questions']
                     )
-                    # Save the cleanup changes
-                    self.game_state.save_all_data()
-                    return jsonify({
-                        'success': True, 
-                        'removed_count': removed_count,
-                        'message': f'Cleaned up {removed_count} outdated question(s) from your review list.'
-                    })
+                    # Re-fetch data after cleanup
+                    updated_review_data = self.stats_controller.get_review_questions_data()
+                    result.update(updated_review_data)
+                    result['cleanup_performed'] = True
+                    result['questions_cleaned'] = questions_cleaned
                 else:
-                    return jsonify({
-                        'success': True, 
-                        'removed_count': 0,
-                        'message': 'No outdated questions found in your review list.'
-                    })
+                    result['cleanup_performed'] = False
+                    result['questions_cleaned'] = 0
+                
+                return jsonify(result)
             except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
+                self.logger.error(f"Review incorrect API error: {e}")
+                return jsonify({
+                    'has_questions': False,
+                    'questions': [],
+                    'missing_questions': [],
+                    'cleanup_performed': False,
+                    'questions_cleaned': 0,
+                    'error': str(e)
+                })
 
-        # Store reference to the route function  
-        self.api_cleanup_review_list_handler = api_cleanup_review_list
-
-        @self.app.route('/api/export_history')
-        def api_export_history():
+        @self.app.route('/api/remove_from_review', methods=['POST'])
+        def api_remove_from_review():
+            """Remove a question from the review list"""
             try:
-                from flask import make_response
-                
-                export_data = self.game_state.study_history.copy()
-                export_data["export_metadata"] = {
-                    "export_date": datetime.now().isoformat(),
-                    "total_questions_in_pool": len(self.game_state.questions),
-                    "categories_available": list(self.game_state.categories)
-                }
-                
-                response = make_response(json.dumps(export_data, indent=2))
-                response.headers['Content-Type'] = 'application/json'
-                response.headers['Content-Disposition'] = f'attachment; filename=linux_plus_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'
-                
-                return response
-            except Exception as e:
-                return jsonify({'error': str(e)}), 500
-        self.export_history_handler = api_export_history
-        @self.app.errorhandler(404)
-        def not_found_error(error: Any) -> Tuple[Any, int]:
-            # If it's an API call, return JSON
-            if request.path.startswith('/api/'):
-                return jsonify({'success': False, 'error': 'API endpoint not found'}), 404
-            return render_template('error.html', error="Page not found"), 404
-
-        @self.app.errorhandler(500)
-        def internal_error(error: Any) -> Tuple[Any, int]:
-            # If it's an API call, return JSON
-            if request.path.startswith('/api/'):
-                return jsonify({'success': False, 'error': 'Internal server error'}), 500
-            return render_template('error.html', error="Internal server error"), 500
-            
-        # Store references to error handlers to prevent "not accessed" warnings
-        self.not_found_error_handler = not_found_error
-        self.internal_error_handler = internal_error
-
-        @self.app.route('/api/load_settings')
-        def api_load_settings():
-            try:
-                persistence_manager = get_persistence_manager()
-                settings = persistence_manager.load_settings()
-                return jsonify({'success': True, 'settings': settings})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        self.api_load_settings_handler = api_load_settings
-        @self.app.route('/api/save_settings', methods=['POST'])
-        def api_save_settings():
-            try:
-                data = cast(SettingsRequestData, request.get_json() or {})
-                if not data:
-                    return jsonify({'success': False, 'error': 'No data provided'})
-                
-                # Validate required fields
-                required_fields = ['focusMode', 'breakReminder', 'debugMode', 'pointsPerQuestion', 'streakBonus', 'maxStreakBonus']
-                for field in required_fields:
-                    if field not in data:
-                        return jsonify({'success': False, 'error': f'Missing field: {field}'})
-                
-                # Validate values
-                if data['maxStreakBonus'] < data['streakBonus']:
-                    data['maxStreakBonus'] = data['streakBonus']
-                
-                # Save using persistence manager
-                persistence_manager = get_persistence_manager()
-                persistence_manager.save_settings(cast(Dict[str, Any], data))
-                
-                # Apply settings to controllers and game state
-                success = self._apply_settings_to_game_state(cast(Dict[str, Any], data))
-                if not success:
-                    return jsonify({'success': False, 'error': 'Failed to apply settings to game state'})
-                
-                return jsonify({'success': True, 'settings': data})
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-                
-        # Store reference to make it clear the route is being used
-        self.api_save_settings_handler = api_save_settings
-
-        @self.app.route('/api/load_game_values')
-        def api_load_game_values():
-            """Load game values configuration."""
-            try:
-                from utils.game_values import get_game_value_manager
-                manager = get_game_value_manager()
-                values = manager.get_all_config()
-                return jsonify({'success': True, 'values': values})
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        self.api_load_game_values_handler = api_load_game_values
-        
-        @self.app.route('/api/save_game_values', methods=['POST'])
-        def api_save_game_values():
-            """Save game values configuration."""
-            try:
-                from utils.game_values import get_game_value_manager
                 data = cast(Dict[str, Any], request.get_json() or {})
-                if not data:
-                    return jsonify({'success': False, 'error': 'No data provided'})
+                question_text = str(data.get('question_text', '')).strip()
                 
-                manager = get_game_value_manager()
-                success = manager.update_settings(**data)
+                if not question_text:
+                    return jsonify({'success': False, 'error': 'Question text is required'})
                 
-                if success:
-                    return jsonify({'success': True})
-                else:
-                    return jsonify({'success': False, 'error': 'Failed to save game values'})
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        self.api_save_game_values_handler = api_save_game_values
-        
-        @self.app.route('/api/reset_game_values', methods=['POST'])
-        def api_reset_game_values():
-            """Reset game values to defaults."""
-            try:
-                from utils.game_values import get_game_value_manager
-                manager = get_game_value_manager()
-                success = manager.reset_to_defaults()
+                success = self.stats_controller.remove_from_review_list(question_text)
                 
                 if success:
-                    return jsonify({'success': True})
+                    return jsonify({'success': True, 'message': 'Question removed from review list'})
                 else:
-                    return jsonify({'success': False, 'error': 'Failed to reset game values'})
-                
+                    return jsonify({'success': False, 'error': 'Question not found in review list'})
             except Exception as e:
+                self.logger.error(f"Remove from review API error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
-        self.api_reset_game_values_handler = api_reset_game_values
 
-        @self.app.route('/api/set_fullscreen', methods=['POST'])
-        def api_set_fullscreen():
+        @self.app.route('/api/cleanup_review_list', methods=['POST'])
+        def api_cleanup_review_list():
+            """Clean up the review list by removing missing questions"""
             try:
-                data = cast(FullscreenRequestData, request.get_json() or {})
-                enable: bool = data.get('enable', True)
-                result = self.toggle_fullscreen(enable)
-                return jsonify(result)
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_set_fullscreen_handler = api_set_fullscreen
-
-        @self.app.route('/api/get_fullscreen_status')
-        def api_get_fullscreen_status():
-            try:
-                result = self.is_fullscreen()
-                return jsonify(result)
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_get_fullscreen_status_handler = api_get_fullscreen_status
+                review_data = self.stats_controller.get_review_questions_data()
                 
-        @self.app.route('/api/question-count')
-        def get_question_count():
-            """Get the current number of questions available."""
-            try:
-                count = len(self.game_state.questions)
-                return jsonify({
-                    'success': True,
-                    'count': count
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-        # Store reference to make it clear the route is being used
-        self.get_question_count_handler = get_question_count
-        
-        @self.app.route('/api/quiz_results')
-        def api_quiz_results():
-            """Get the results of the completed quiz session."""
-            try:
-                # Get results from the quiz controller
-                results = self.quiz_controller.get_quiz_results()
-                
-                if results is None:
-                    return jsonify({
-                        'success': False,
-                        'error': 'No quiz results available'
-                    })
-                
-                return jsonify({
-                    'success': True,
-                    **results
-                })
-                
-            except Exception as e:
-                print(f"Error getting quiz results: {e}")
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                })
-        # Store reference to make it clear the route is being used
-        self.api_quiz_results_handler = api_quiz_results
-
-        @self.app.route('/api/session_summary')
-        def api_session_summary():
-            """Get a summary of the current/last quiz session."""
-            try:
-                summary = self.quiz_controller.get_session_summary()
-                print(f"Session summary: {summary}")
-                if summary is None:
-                    return jsonify({
-                        'success': False,
-                        'error': 'No session summary available'
-                    })
-                
-                return jsonify({
-                    'success': True,
-                    **summary
-                })
-                
-            except Exception as e:
-                print(f"Error getting session summary: {e}")
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                })
-        # Store reference to make it clear the route is being used
-        self.api_session_summary_handler = api_session_summary
-        
-        @self.app.route('/vm_playground')
-        def vm_playground():
-            """Render VM management playground interface."""
-            return render_template('vm_playground.html')
-        # Store reference to make it clear the route is being used
-        self.vm_playground_handler = vm_playground
-
-        @self.app.route('/api/vm/start_ttyd', methods=['POST'])
-        def api_start_ttyd():
-            """API endpoint to start ttyd server on the VM with OS detection."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = cast(TTYDRequestData, request.get_json() or {})
-                vm_name: str = data.get('vm_name', 'ubuntu-practice')  # Default VM name
-                port: int = data.get('port', 7682)  # Default ttyd port
-                
-                # Detect OS type from VM name
-                vm_name_lower = vm_name.lower()
-                is_windows = any(keyword in vm_name_lower for keyword in ['win', 'windows', 'w10', 'w11'])
-                
-                if is_windows:
-                    vm_manager = VMManager()
-                    try:
-                        domain = vm_manager.find_vm(vm_name)
-                    except Exception as e:
-                        return jsonify({'success': False, 'error': f'VM {vm_name} not found: {e}'})
-                    
-                    if not domain.isActive():
-                        return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
-                    
-                    vm_ip = vm_manager.get_vm_ip(vm_name)
-                    
-                    return jsonify({
-                        'success': False,
-                        'error': 'ttyd is not supported on Windows VMs',
-                        'suggestions': [
-                            'Windows VMs require different remote access methods',
-                            'Enable SSH first with: Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
-                            'Or use Remote Desktop Protocol (RDP)',
-                            f'RDP URL: rdp://{vm_ip}:3389'
-                        ],
-                        'rdp_url': f'rdp://{vm_ip}:3389',
-                        'ssh_setup_commands': [
-                            'Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
-                            'Start-Service sshd',
-                            'Set-Service -Name sshd -StartupType "Automatic"',
-                            'New-NetFirewallRule -Name sshd -DisplayName "OpenSSH Server" -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22'
-                        ]
-                    })
-                
-                # Linux VM ttyd setup (existing logic)
-                vm_manager = VMManager()
-                ssh_manager = SSHManager()
-                
-                # Get VM and check if running
-                try:
-                    domain = vm_manager.find_vm(vm_name)
-                except Exception as e:
-                    return jsonify({'success': False, 'error': f'VM {vm_name} not found: {e}'})
-                
-                if not domain.isActive():
-                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
-                
-                vm_ip = vm_manager.get_vm_ip(vm_name)
-                
-                # SSH key path (adjust as needed)
-                from pathlib import Path
-                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'
-                
-                # Try different users for Linux VMs
-                users_to_try = ['roo', 'root', 'ubuntu', 'vagrant', 'user']
-                working_user = None
-                
-                # Find a working SSH user
-                for username in users_to_try:
-                    try:
-                        test_result = ssh_manager.run_ssh_command(
-                            host=vm_ip,
-                            username=username,
-                            key_path=ssh_key_path,
-                            command="echo 'test'",
-                            timeout=5
-                        )
-                        if test_result.get('exit_status') == 0:
-                            working_user = username
-                            break
-                    except Exception:
-                        continue
-                
-                if not working_user:
-                    return jsonify({
-                        'success': False,
-                        'error': f'SSH connection failed for all attempted users: {users_to_try}',
-                        'suggestions': [
-                            'Check if SSH service is running: sudo systemctl status ssh',
-                            'Verify SSH key is installed in ~/.ssh/authorized_keys',
-                            'Check firewall rules: sudo ufw status'
-                        ]
-                    })
-                
-                # Check if ttyd is already running
-                check_cmd = f"pgrep -f 'ttyd.*{port}'"
-                check_result = ssh_manager.run_ssh_command(
-                    host=vm_ip,
-                    username=working_user,
-                    key_path=ssh_key_path,
-                    command=check_cmd,
-                    timeout=10
-                )
-                
-                if check_result.get('exit_status') == 0:
-                    return jsonify({
-                        'success': True,
-                        'message': f'ttyd is already running on port {port}',
-                        'url': f'http://{vm_ip}:{port}',
-                        'username': working_user
-                    })
-                
-                # Install ttyd if not present (run in background)
-                install_cmd = "which ttyd || (sudo apt update && sudo apt install -y ttyd)"
-                install_result = ssh_manager.run_ssh_command(
-                    host=vm_ip,
-                    username=working_user,
-                    key_path=ssh_key_path,
-                    command=install_cmd,
-                    timeout=120  # Allow time for package installation
-                )
-                
-                if install_result.get('exit_status') != 0:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to install ttyd: {install_result.get("stderr", "Unknown error")}'
-                    })
-                
-                # Start ttyd in background with the requested command
-                ttyd_cmd = f"sudo ttyd -p {port} -W -R bash"
-                start_cmd = f"nohup {ttyd_cmd} > /dev/null 2>&1 & echo $!"
-                
-                start_result = ssh_manager.run_ssh_command(
-                    host=vm_ip,
-                    username=working_user,
-                    key_path=ssh_key_path,
-                    command=start_cmd,
-                    timeout=10
-                )
-                
-                if start_result.get('exit_status') == 0:
-                    # Give ttyd a moment to start up
-                    import time
-                    time.sleep(2)
-                    
-                    # Verify ttyd is running
-                    verify_result = ssh_manager.run_ssh_command(
-                        host=vm_ip,
-                        username=working_user,
-                        key_path=ssh_key_path,
-                        command=check_cmd,
-                        timeout=5
+                if review_data['missing_questions']:
+                    questions_cleaned = self.stats_controller.cleanup_missing_review_questions(
+                        review_data['missing_questions']
                     )
-                    
-                    if verify_result.get('exit_status') == 0:
-                        return jsonify({
-                            'success': True,
-                            'message': f'ttyd started successfully on port {port}',
-                            'url': f'http://{vm_ip}:{port}',
-                            'pid': start_result.get('stdout', '').strip(),
-                            'username': working_user
-                        })
-                    else:
-                        return jsonify({
-                            'success': False,
-                            'error': 'ttyd failed to start or is not responding'
-                        })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to start ttyd: {start_result.get("stderr", "Unknown error")}'
-                    })
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to make it clear the route is being used
-        self.api_start_ttyd_handler = api_start_ttyd
-
-        @self.app.route('/api/vm/create', methods=['POST'])
-        def api_vm_create():
-            """API endpoint to create a new VM."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('name')
-                template = data.get('template', 'ubuntu-22.04')
-                memory = data.get('memory', 2048)  # Now in MB
-                memory_unit = data.get('memory_unit', 'MB')
-                cpus = data.get('cpus', 2)
-                disk = data.get('disk', 20)  # In GB
-                disk_unit = data.get('disk_unit', 'GB')
-                auto_start = data.get('auto_start', False)
-                download_iso = data.get('download_iso', True)
-                custom_iso_url = data.get('custom_iso_url')
-                notes = data.get('notes', '')
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                # Validate VM name (alphanumeric, hyphens, underscores only)
-                import re
-                if not re.match(r'^[a-zA-Z0-9_-]+$', vm_name):
-                    return jsonify({
-                        'success': False, 
-                        'error': 'VM name must contain only alphanumeric characters, hyphens, and underscores'
-                    })
-                
-                # Convert memory to GB for VMManager (it expects GB)
-                if memory_unit == 'MB':
-                    memory_gb = memory / 1024
-                elif memory_unit == 'TB':
-                    memory_gb = memory * 1024
-                else:  # GB
-                    memory_gb = memory
-                
-                # Convert disk to GB if needed
-                if disk_unit == 'TB':
-                    disk_gb = disk * 1024
-                else:  # GB
-                    disk_gb = disk
-                
-                # Ensure minimum values and convert to integers
-                memory_gb = max(1, int(round(memory_gb)))  # Minimum 1GB, convert to int
-                disk_gb = max(1, int(round(disk_gb)))      # Minimum 1GB, convert to int
-                
-                vm_manager = VMManager()
-                
-                # Check if VM already exists
-                try:
-                    vm_manager.find_vm(vm_name)
-                    return jsonify({
-                        'success': False,
-                        'error': f'VM "{vm_name}" already exists'
-                    })
-                except Exception:
-                    # VM doesn't exist, we can create it
-                    pass
-                
-                # Handle ISO download if requested
-                iso_path = None
-                if download_iso:
-                    try:
-                        iso_path = self._handle_iso_download(template, custom_iso_url)
-                    except Exception as iso_error:
-                        # Continue without ISO if download fails
-                        print(f"ISO download failed: {iso_error}")
-                
-                # Create VM using VMManager
-                try:
-                    success = vm_manager.create_vm(
-                        vm_name=vm_name,
-                        memory_gb=memory_gb,
-                        cpus=int(cpus),
-                        disk_gb=disk_gb,
-                        iso_path=iso_path
-                    )
-                    
-                    if not success:
-                        return jsonify({
-                            'success': False,
-                            'error': 'Failed to create VM'
-                        })
-                    
-                    # Save VM metadata if notes provided
-                    if notes:
-                        try:
-                            vm_metadata: Dict[str, Any] = {
-                                'name': vm_name,
-                                'template': template,
-                                'notes': notes,
-                                'created_at': time.time(),
-                                'memory_mb': memory,
-                                'cpus': cpus,
-                                'disk_gb': disk_gb
-                            }
-                            # Save metadata to file or database
-                            metadata_file = f'/var/lib/vms/metadata/{vm_name}.json'
-                            os.makedirs(os.path.dirname(metadata_file), exist_ok=True)
-                            with open(metadata_file, 'w') as f:
-                                json.dump(vm_metadata, f, indent=2)
-                        except Exception as meta_error:
-                            print(f"Failed to save VM metadata: {meta_error}")
-                    
-                    # Auto-start if requested
-                    if auto_start:
-                        try:
-                            vm_manager.start_vm(vm_name)
-                            message = f'VM "{vm_name}" created and started successfully'
-                        except Exception as start_error:
-                            message = f'VM "{vm_name}" created successfully but failed to start: {start_error}'
-                    else:
-                        message = f'VM "{vm_name}" created successfully (not started)'
-                    
                     return jsonify({
                         'success': True,
-                        'message': message,
-                        'vm_info': {
-                            'name': vm_name,
-                            'template': template,
-                            'memory': f'{memory_gb:.1f} GB',
-                            'cpus': cpus,
-                            'disk': f'{disk_gb} GB',
-                            'auto_started': auto_start,
-                            'iso_downloaded': iso_path is not None
-                        }
-                    })
-                    
-                except Exception as e:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to create VM: {str(e)}'
-                    })
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_create_handler = api_vm_create
-
-        @self.app.route('/api/vm/delete', methods=['POST'])
-        def api_vm_delete():
-            """API endpoint to delete a VM."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('name')
-                remove_disk = data.get('remove_disk', True)
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                
-                # Check if VM exists
-                try:
-                    vm_manager.find_vm(vm_name)
-                except Exception:
-                    return jsonify({
-                        'success': False,
-                        'error': f'VM "{vm_name}" not found'
-                    })
-                
-                # Delete the VM
-                success = vm_manager.delete_vm(vm_name, remove_disk=remove_disk)
-                
-                if success:
-                    disk_msg = " and its disk" if remove_disk else ""
-                    return jsonify({
-                        'success': True,
-                        'message': f'VM "{vm_name}"{disk_msg} deleted successfully'
+                        'questions_cleaned': questions_cleaned,
+                        'message': f'Cleaned up {questions_cleaned} outdated question(s)'
                     })
                 else:
                     return jsonify({
-                        'success': False,
-                        'error': f'Failed to delete VM "{vm_name}"'
-                    })
-                    
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_delete_handler = api_vm_delete
-
-        @self.app.route('/full_terminal')
-        def full_terminal():
-            """Render full terminal access with ttyd integration."""
-            return render_template('full_terminal.html')
-        # Store reference to make it clear the route is being used
-        self.full_terminal_handler = full_terminal
-
-        @self.app.route('/debug_terminal')
-        def debug_terminal():
-            """Debug terminal functionality."""
-            return render_template('debug_terminal.html')
-        # Store reference to make it clear the route is being used
-        self.debug_terminal_handler = debug_terminal
-
-        @self.app.route('/terminal_test')
-        def terminal_test():
-            """Standalone terminal test page."""
-            return render_template('terminal_test.html')
-        # Store reference to make it clear the route is being used
-        self.terminal_test_handler = terminal_test
-
-        @self.app.route('/vm_test')
-        def vm_test():
-            """Render VM test page for debugging."""
-            return render_template('vm_test.html')
-        # Store reference to make it clear the route is being used
-        self.vm_test_handler = vm_test
-
-        @self.app.route('/api/vm/list', methods=['GET'])
-        def api_vm_list():
-            """API endpoint to list all VMs with enhanced error handling."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                # Check if libvirt is available
-                try:
-                    import libvirt  # type: ignore
-                except ImportError:
-                    return jsonify({
-                        'success': False, 
-                        'error': 'libvirt-python not installed. Please install with: pip install libvirt-python'
-                    })
-                
-                # Check if VM manager can be initialized
-                try:
-                    vm_manager = VMManager()
-                except Exception as e:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to initialize VM manager: {str(e)}'
-                    })
-                
-                # Try to connect to libvirt
-                try:
-                    conn = vm_manager.connect_libvirt()
-                except Exception as e:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Failed to connect to libvirt: {str(e)}. Make sure libvirt is running.'
-                    })
-                
-                vms: List[Dict[str, Any]] = []
-                try:
-                    # Get defined VMs with proper type annotation
-                    defined_vms: List[str] = cast(List[str], conn.listDefinedDomains())
-                    
-                    # Get running VMs with proper type annotation
-                    running_vm_ids = cast(List[int], conn.listDomainsID())
-                    running_vms: List[str] = []
-                    for vm_id in running_vm_ids:
-                        try:
-                            # Add proper type annotation for libvirt function
-                            domain = cast(Any, conn).lookupByID(vm_id)
-                            running_vms.append(str(domain.name()))
-                        except Exception as e:
-                            if hasattr(self, 'logger'):
-                                self.logger.warning(f"Could not get running VM with ID {vm_id}: {e}")
-            
-                    # Combine all VMs with proper typing
-                    all_vm_names: Set[str] = set(defined_vms + running_vms)
-            
-                    for vm_name in all_vm_names:
-                        try:
-                            # Add proper type annotation for libvirt function
-                            domain = cast(Any, conn).lookupByName(vm_name)
-                            is_active = bool(domain.isActive())
-                            
-                            vm_info: Dict[str, Any] = {
-                                'name': vm_name,
-                                'status': 'running' if is_active else 'stopped',
-                                'id': domain.ID() if is_active else None
-                            }
-                            
-                            # Try to get IP if running
-                            if is_active:
-                                try:
-                                    vm_info['ip'] = vm_manager.get_vm_ip(vm_name)
-                                except Exception as e:
-                                    if hasattr(self, 'logger'):
-                                        self.logger.debug(f"Could not get IP for VM {vm_name}: {e}")
-                                    vm_info['ip'] = 'Unknown'
-                            else:
-                                vm_info['ip'] = 'Not running'
-                            
-                            vms.append(vm_info)
-                            
-                        except Exception as e:
-                            if hasattr(self, 'logger'):
-                                self.logger.warning(f"Error processing VM {vm_name}: {e}")
-                            # Add error VM entry
-                            vms.append({
-                                'name': vm_name,
-                                'status': 'error',
-                                'error': str(e)
-                            })
-            
-                except Exception as e:
-                    return jsonify({
-                        'success': False,
-                        'error': f'Error listing VMs: {str(e)}'
-                    })
-                finally:
-                    try:
-                        conn.close()
-                    except:
-                        pass
-            
-                return jsonify({
-                    'success': True, 
-                    'vms': sorted(vms, key=lambda x: x.get('name', ''))
-                })
-                
-            except Exception as e:
-                if hasattr(self, 'logger'):
-                    self.logger.error(f"Unexpected error in VM list API: {e}", exc_info=True)
-                return jsonify({
-                    'success': False,
-                    'error': f'Unexpected error: {str(e)}'
-                })
-        # Store reference to make it clear the route is being used
-        self.api_vm_list_handler = api_vm_list
-
-        @self.app.route('/api/vm/start', methods=['POST'])
-        def api_vm_start():
-            """API endpoint to start a VM."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                if domain.isActive():
-                    return jsonify({'success': False, 'error': f'VM {vm_name} is already running'})
-                
-                vm_manager.start_vm(vm_name)
-                
-                return jsonify({'success': True, 'message': f'VM {vm_name} started successfully'})
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to make it clear the route is being used
-        self.api_vm_start_handler = api_vm_start
-
-        @self.app.route('/api/vm/stop', methods=['POST'])
-        def api_vm_stop():
-            """API endpoint to stop a VM."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                force = data.get('force', False)
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                if not domain.isActive():
-                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
-                
-                vm_manager.shutdown_vm(vm_name, force=force)
-                
-                action = 'force stopped' if force else 'shutdown initiated'
-                return jsonify({'success': True, 'message': f'VM {vm_name} {action}'})
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to make it clear the route is being used
-        self.api_vm_stop_handler = api_vm_stop
-
-        @self.app.route('/api/vm/execute', methods=['POST'])
-        def api_vm_execute():
-            """API endpoint to execute commands on a VM via SSH with OS detection."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name')
-                command = data.get('command')
-                
-                if not vm_name or not command:
-                    return jsonify({'success': False, 'error': 'VM name and command are required'})
-                
-                vm_manager = VMManager()
-                ssh_manager = SSHManager()
-                
-                # Get VM and check if running
-                domain = vm_manager.find_vm(vm_name)
-                
-                if not domain.isActive():
-                    return jsonify({'success': False, 'error': f'VM {vm_name} is not running'})
-                
-                vm_ip = vm_manager.get_vm_ip(vm_name)
-                
-                # Detect OS type from VM name
-                vm_name_lower = vm_name.lower()
-                is_windows = any(keyword in vm_name_lower for keyword in ['win', 'windows', 'w10', 'w11'])
-                
-                if is_windows:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Windows VMs require SSH to be enabled first',
-                        'suggestions': [
-                            'Enable SSH: Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0',
-                            'Start SSH service: Start-Service sshd',
-                            'Allow firewall: New-NetFirewallRule -Name sshd -DisplayName "OpenSSH Server" -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22',
-                            f'Alternative: Use RDP at rdp://{vm_ip}:3389'
-                        ],
-                        'rdp_url': f'rdp://{vm_ip}:3389'
-                    })
-                
-                # Execute command via SSH (Linux VMs)
-                from pathlib import Path
-                ssh_key_path = Path.home() / '.ssh' / 'id_ed25519'
-                
-                # Try different users for Linux VMs
-                users_to_try = ['roo', 'root', 'ubuntu', 'vagrant', 'user']
-                successful_result = None
-                
-                for username in users_to_try:
-                    try:
-                        # Check if the command requires interactive mode (TTY)
-                        interactive_commands = ['vim', 'nano', 'htop', 'top', 'man', 'less', 'more', 'vi']
-                        is_interactive = any(cmd in command.lower() for cmd in interactive_commands)
-                        
-                        if is_interactive:
-                            # Use interactive SSH method for commands that need TTY
-                            result = ssh_manager.run_interactive_ssh_command(
-                                host=vm_ip,
-                                username=username,
-                                key_path=ssh_key_path,
-                                command=command,
-                                timeout=60,  # Longer timeout for interactive commands
-                                verbose=True
-                            )
-                        else:
-                            # Use regular SSH method for non-interactive commands
-                            result = ssh_manager.run_ssh_command(
-                                host=vm_ip,
-                                username=username,
-                                key_path=ssh_key_path,
-                                command=command,
-                                timeout=30,
-                                verbose=True
-                            )
-                        
-                        # If successful, break the loop
-                        if result.get('error') is None and result.get('exit_status') == 0:
-                            successful_result = result
-                            successful_result['username'] = username
-                            break
-                            
-                    except Exception as e:
-                        # Try next user
-                        continue
-                
-                if successful_result:
-                    return jsonify({
                         'success': True,
-                        'output': successful_result.get('stdout', ''),
-                        'error': successful_result.get('stderr', ''),
-                        'exit_status': successful_result.get('exit_status', 0),
-                        'username': successful_result.get('username', 'unknown')
+                        'questions_cleaned': 0,
+                        'message': 'No cleanup needed - all questions are current'
                     })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': f'SSH connection failed for all attempted users: {users_to_try}',
-                        'suggestions': [
-                            'Check if SSH service is running: sudo systemctl status ssh',
-                            'Verify SSH key is installed in ~/.ssh/authorized_keys',
-                            'Check firewall rules: sudo ufw status',
-                            'Verify VM is fully booted and network is configured'
-                        ]
-                    })
-                
             except Exception as e:
+                self.logger.error(f"Cleanup review list API error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
-
-        # Store reference to make it clear the route is being used
-        self.api_vm_execute_handler = api_vm_execute
-
-        @self.app.route('/api/vm/status', methods=['GET'])
-        def api_vm_status():
-            """API endpoint to get detailed VM status."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                vm_name = request.args.get('vm_name')
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                is_active = bool(cast(int, domain.isActive()))
-                status_info: Dict[str, Any] = {
-                    'name': vm_name,
-                    'status': 'running' if is_active else 'stopped',
-                    'id': domain.ID() if is_active else None,
-                    'ip': None,
-                    'uptime': None
-                }
-                
-                # Try to get IP if running
-                if is_active:
-                    try:
-                        status_info['ip'] = vm_manager.get_vm_ip(vm_name)
-                    except Exception:
-                        status_info['ip'] = 'Unknown'
-                
-                return jsonify({'success': True, 'status': status_info})
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_status_handler = api_vm_status
-        
-        @self.app.route('/api/vm/details', methods=['GET'])
-        def api_vm_details():
-            """API endpoint to get detailed VM information."""
-            if not VMManager:
-                return jsonify({
-                    'success': False,
-                    'error': 'VM Manager not available. Please check libvirt installation.'
-                })
-            try:
-                vm_name = request.args.get('vm_name')
-                
-                if not vm_name:
-                    return jsonify({'success': False, 'error': 'VM name is required'})
-                
-                vm_manager = VMManager()
-                domain = vm_manager.find_vm(vm_name)
-                
-                is_active = bool(cast(int, domain.isActive()))
-                
-                # Get VM info
-                info = cast(Any, domain.info())
-                
-                # Format memory more intelligently
-                def format_memory(memory_kb: int) -> str:
-                    """Format memory from KB to human readable format"""
-                    if not memory_kb:
-                        return 'Unknown'
-                    
-                    memory_mb: int = memory_kb // 1024
-                    if memory_mb >= 1024:
-                        memory_gb: float = memory_mb / 1024
-                        return f"{memory_gb:.1f} GB"
-                    else:
-                        return f"{memory_mb} MB"
-                
-                # Safely extract memory and CPU info
-                memory_info = 'Unknown'
-                cpu_info = 'Unknown'
-                
-                try:
-                    if info:
-                        info_list = cast(List[Any], info)
-                        if len(info_list) > 1:
-                            memory_info = format_memory(int(info_list[1]))
-                except (TypeError, IndexError, ValueError):
-                    memory_info = 'Unknown'
-                    
-                try:
-                    if info:
-                        info_list = cast(List[Any], info)
-                        if len(info_list) > 3:
-                            cpu_info = str(int(info_list[3]))
-                except (TypeError, IndexError, ValueError):
-                    cpu_info = 'Unknown'
-
-                vm_details: Dict[str, Any] = {
-                    'name': vm_name,
-                    'status': 'running' if is_active else 'stopped',
-                    'id': domain.ID() if is_active else None,
-                    'memory': memory_info,
-                    'cpu': cpu_info,
-                    'ip': None
-                }
-                
-                # Try to get IP if running
-                if is_active:
-                    try:
-                        vm_details['ip'] = vm_manager.get_vm_ip(vm_name)
-                    except Exception:
-                        vm_details['ip'] = 'Unknown'
-                
-                return jsonify({
-                    'success': True, 
-                    'vm': vm_details
-                })
-                
-            except Exception as e:
-                return jsonify({'success': False, 'error': str(e)})
-        # Store reference to make it clear the route is being used
-        self.api_vm_details_handler = api_vm_details
-
-    def _handle_iso_download(self, template: Dict[str, Any], custom_iso_url: Optional[str] = None) -> Optional[str]:
-        """Handle ISO file download for VM creation."""
-        
-        # Load settings to get ISO URLs and download path
-        settings = self._load_web_settings()
-        iso_settings = settings.get('isoDownloads', {})
-        
-        if not iso_settings.get('enabled', True):
-            return None
-            
-        download_path = iso_settings.get('downloadPath', '~/vm-storage/isos')
-        download_path = os.path.expanduser(download_path)  # Expand ~ to home directory
-        iso_urls = iso_settings.get('urls', {})
-        
-        # Determine the ISO URL
-        iso_url: str
-        filename: str
-        
-        if custom_iso_url:
-            iso_url = custom_iso_url
-            filename = os.path.basename(urlparse(iso_url).path) or 'custom.iso'
-        else:
-            template_name = template.get('name', 'default')
-            iso_url = iso_urls.get(template_name)
-            if not iso_url:
-                return None
-            filename = f"{template_name}.iso"
-        
-        # Create download directory
-        os.makedirs(download_path, exist_ok=True)
-        iso_path = os.path.join(download_path, filename)
-        
-        # Check if ISO already exists
-        if os.path.exists(iso_path) and os.path.getsize(iso_path) > 1024 * 1024:  # At least 1MB
-            return iso_path
-        
-        try:
-            # Download the ISO
-            print(f"Downloading ISO from {iso_url} to {iso_path}")
-            response = requests.get(iso_url, stream=True, timeout=30)
-            response.raise_for_status()
-            
-            with open(iso_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-            
-            return iso_path
-            
-        except Exception as e:
-            print(f"Failed to download ISO: {e}")
-            # Clean up partial download
-            if os.path.exists(iso_path):
-                try:
-                    os.remove(iso_path)
-                except:
-                    pass
-            return None
-
-        @self.app.route('/api/vm/cleanup_isos', methods=['POST'])
-        def api_vm_cleanup_isos():
-            """API endpoint to cleanup unused ISO files."""
-            try:
-                settings = self._load_web_settings()
-                iso_settings = settings.get('isoDownloads', {})
-                download_path = iso_settings.get('downloadPath', '~/vm-storage/isos')
-                download_path = os.path.expanduser(download_path)  # Expand ~ to home directory
-                
-                if not os.path.exists(download_path):
-                    return jsonify({
-                        'success': True,
-                        'message': 'ISO directory does not exist',
-                        'removed_count': 0,
-                        'space_freed': '0 MB'
-                    })
-                
-                removed_count: int = 0
-                space_freed = 0
-                
-                # Get list of ISO files
-                for filename in os.listdir(download_path):
-                    if filename.endswith('.iso'):
-                        iso_path = os.path.join(download_path, filename)
-                        
-                        # Check if file is older than 30 days and not recently used
-                        if os.path.exists(iso_path):
-                            file_size = os.path.getsize(iso_path)
-                            file_age = time.time() - os.path.getmtime(iso_path)
-                            
-                            # Remove if older than 30 days (30 * 24 * 3600 seconds)
-                            if file_age > (30 * 24 * 3600):
-                                try:
-                                    os.remove(iso_path)
-                                    removed_count += 1
-                                    space_freed += file_size
-                                except Exception as e:
-                                    print(f"Failed to remove {iso_path}: {e}")
-                
-                # Format space freed
-                if space_freed < 1024 * 1024:
-                    space_freed_str = f"{space_freed // 1024} KB"
-                elif space_freed < 1024 * 1024 * 1024:
-                    space_freed_str = f"{space_freed // (1024 * 1024)} MB"
-                else:
-                    space_freed_str = f"{space_freed // (1024 * 1024 * 1024):.1f} GB"
-                
-                return jsonify({
-                    'success': True,
-                    'message': f'Cleanup completed. Removed {removed_count} old ISO files.',
-                    'removed_count': removed_count,
-                    'space_freed': space_freed_str
-                })
-                
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': f'Failed to cleanup ISOs: {str(e)}'
-                })
-        # Store reference to make it clear the route is being used
-        self.api_vm_cleanup_isos_handler = api_vm_cleanup_isos
-
-        @self.app.route('/api/vm/challenges', methods=['GET'])
-        def api_vm_challenges():
-            """API endpoint to list available challenges."""
-            try:
-                from vm_integration.controllers.vm_controller import list_available_challenges
-                challenges = list_available_challenges()
-                return jsonify({
-                    'success': True,
-                    'challenges': challenges
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-
-        @self.app.route('/api/vm/run_challenge', methods=['POST'])
-        def api_vm_run_challenge():
-            """API endpoint to run a challenge."""
-            try:
-                data = request.get_json()
-                challenge_id = data.get('challenge_id')
-                vm_name = data.get('vm_name', 'ubuntu-practice')
-                
-                if not challenge_id:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Challenge ID is required'
-                    }), 400
-                
-                from vm_integration.controllers.vm_controller import run_challenge_workflow
-                result = run_challenge_workflow(challenge_id=challenge_id, vm_name=vm_name)
-                
-                return jsonify({
-                    'success': True,
-                    'result': result
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-        @self.app.route('/api/vm/setup_user', methods=['POST'])
-        def api_vm_setup_user():
-            """API endpoint to setup VM user."""
-            try:
-                data = request.get_json()
-                vm_name = data.get('vm_name', 'ubuntu-practice')
-                new_user = data.get('new_user', 'student')
-                
-                from vm_integration.controllers.vm_controller import setup_vm_user
-                result = setup_vm_user(vm_name=vm_name, new_user=new_user)
-                
-                return jsonify({
-                    'success': True,
-                    'result': result
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-
-        @self.app.route('/api/vm/create_template', methods=['POST'])
-        def api_vm_create_template():
-            """API endpoint to create challenge template."""
-            try:
-                data = request.get_json()
-                template_name = data.get('template_name')
-                
-                if not template_name:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Template name is required'
-                    }), 400
-                
-                from vm_integration.controllers.vm_controller import create_challenge_template
-                result = create_challenge_template(template_name)
-                
-                return jsonify({
-                    'success': True,
-                    'result': result
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-
-        @self.app.route('/api/vm/validate_challenge', methods=['POST'])
-        def api_vm_validate_challenge():
-            """API endpoint to validate challenge file."""
-            try:
-                data = request.get_json()
-                challenge_path = data.get('challenge_path')
-                
-                if not challenge_path:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Challenge path is required'
-                    }), 400
-                
-                from vm_integration.controllers.vm_controller import validate_challenge
-                result = validate_challenge(challenge_path)
-                
-                return jsonify({
-                    'success': True,
-                    'result': result
-                })
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                }), 500
-    
-    def handle_api_errors(self, f: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
-            try:
-                return f(*args, **kwargs)
-            except Exception as e:
-                logging.error(f"API Error in {f.__name__}: {str(e)}")
-                logging.error(traceback.format_exc())
-                return jsonify({
-                    'error': f'Server error: {str(e)}',
-                    'success': False
-                }), 500
-        wrapper.__name__ = f.__name__
-        return wrapper
-    
-    def run_flask_app(self):
-        """Run the Flask app in a separate thread."""
-        self.app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False)
-    
-    def start(self):
-        """Start the web interface in a desktop window."""
-        # Start Flask in a separate thread
-        flask_thread = threading.Thread(target=self.run_flask_app, daemon=True)
-        flask_thread.start()
-        
-        # Wait a moment for Flask to start
-        time.sleep(1)
-        
-        # Create the desktop window
-        window = webview.create_window(
-            title='Linux+ Study Game',
-            url='http://127.0.0.1:5000',
-            width=1200,
-            height=900,
-            min_size=(800, 600),
-            resizable=True
-        )
-        
-        # Store window reference for fullscreen control
-        self.window = window
-        
-        # Start the webview (this blocks until window is closed)
-        webview.start(debug=self.debug)
-    
-    def quit_app(self):
-        """Clean shutdown of the application."""
-        # Save any pending data
-        self.game_state.save_history()
-        # Add runtime check for save_achievements
-        if hasattr(self.game_state, "save_achievements") and callable(self.game_state.save_achievements):
-            self.game_state.save_achievements()
-        
-        # Close the webview window
-        if self.window:
-            self.window.destroy()

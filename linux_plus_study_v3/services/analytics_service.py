@@ -90,7 +90,8 @@ class AnalyticsService:
             topic_breakdown = {}
             for topic in topic_stats:
                 if topic.questions and topic.questions > 0:
-                    topic_breakdown[topic.topic_area] = topic.questions
+                    accuracy = (topic.correct / topic.questions) * 100 if topic.correct else 0
+                    topic_breakdown[topic.topic_area] = round(accuracy, 1)
             
             # Get activity breakdown
             activity_stats = self.db_session.query(
@@ -277,14 +278,14 @@ class AnalyticsService:
             'total_vm_commands': 23,
             'recent_performance': demo_sessions,
             'topic_breakdown': {
-                'File Management': 34,
-                'System Administration': 28,
-                'Network Configuration': 22,
-                'Security': 18,
-                'Shell Scripting': 16,
-                'Process Management': 14,
-                'Package Management': 12,
-                'Text Processing': 12
+                'File Management': 78.5,
+                'System Administration': 82.1,
+                'Network Configuration': 71.4,
+                'Security': 85.0,
+                'Shell Scripting': 73.6,
+                'Process Management': 80.2,
+                'Package Management': 76.8,
+                'Text Processing': 79.3
             },
             'activity_breakdown': {
                 'quiz': 18,
@@ -377,7 +378,8 @@ class AnalyticsService:
             topic_breakdown = {}
             for topic in topic_stats:
                 if topic.questions and topic.questions > 0:
-                    topic_breakdown[topic.topic_area] = topic.questions
+                    accuracy = (topic.correct / topic.questions) * 100 if topic.correct else 0
+                    topic_breakdown[topic.topic_area] = round(accuracy, 1)
             
             # Get activity breakdown from demo user
             activity_stats = self.db_session.query(
@@ -498,6 +500,77 @@ class AnalyticsService:
         except Exception as e:
             logger.error(f"Error recording session for {user_id}: {e}")
             return False
+    
+    def get_daily_activity_for_user(self, user_id: str, days: int = 365) -> List[Dict[str, Any]]:
+        """Get daily activity data for heatmap visualization."""
+        try:
+            from datetime import datetime, timedelta
+            
+            # Use anonymous as fallback, but also check for demo data
+            query_user_id = user_id if user_id != 'anonymous' else None
+            
+            today = datetime.now()
+            start_date = today - timedelta(days=days-1)
+            
+            # Query daily activity from analytics database
+            daily_stats = self.db_session.query(
+                func.date(Analytics.created_at).label('date'),
+                func.sum(Analytics.questions_attempted).label('questions'),
+                func.sum(Analytics.session_duration).label('study_time'),
+                func.count(Analytics.id).label('sessions')
+            ).filter(
+                and_(
+                    Analytics.user_id == query_user_id if query_user_id else Analytics.user_id.is_(None),
+                    Analytics.created_at >= start_date,
+                    Analytics.activity_type.in_(['quiz', 'practice'])
+                )
+            ).group_by(func.date(Analytics.created_at)).all()
+            
+            # Create a dictionary for quick lookup
+            activity_by_date = {}
+            for stat in daily_stats:
+                activity_by_date[str(stat.date)] = {
+                    'questions': stat.questions or 0,
+                    'study_time': stat.study_time or 0,
+                    'sessions': stat.sessions or 0
+                }
+            
+            # Generate complete 365-day dataset
+            activity_data = []
+            for i in range(days):
+                date = start_date + timedelta(days=i)
+                date_str = date.strftime('%Y-%m-%d')
+                
+                # Get activity for this date or default to 0
+                day_activity = activity_by_date.get(date_str, {'questions': 0, 'study_time': 0, 'sessions': 0})
+                
+                # Calculate activity level (0-4) based on questions answered
+                questions = day_activity['questions']
+                if questions == 0:
+                    level = 0
+                elif questions <= 2:
+                    level = 1
+                elif questions <= 5:
+                    level = 2
+                elif questions <= 10:
+                    level = 3
+                else:
+                    level = 4
+                
+                activity_data.append({
+                    'date': date_str,
+                    'questions': questions,
+                    'study_time': day_activity['study_time'],
+                    'sessions': day_activity['sessions'],
+                    'level': level
+                })
+            
+            return activity_data
+            
+        except Exception as e:
+            logger.error(f"Error getting daily activity for user {user_id}: {e}")
+            # Return empty activity data as fallback
+            return []
     
     def track_activity(self, user_id: str, activity_type: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
         """Track user activity."""
