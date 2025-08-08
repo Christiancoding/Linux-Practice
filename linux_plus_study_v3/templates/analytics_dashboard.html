@@ -1374,11 +1374,15 @@
                                 <span class="metric-label">Strongest Area</span>
                                 <span class="metric-value" id="strongest-topic">
                                     {% if stats.topic_breakdown %}
-                                        {% set sorted_topics = stats.topic_breakdown_list or [] %}
-                                        {{ sorted_topics[0][0] if sorted_topics else 'Not Available' }}
+                                        {% set sorted_topics = stats.topic_breakdown_list %}
                                     {% else %}
-                                        Not Available
+                                        <!-- Fallback if topic_breakdown_list is not available -->
+                                        {% set sorted_topics = [] %}
+                                        {% for topic, accuracy in stats.topic_breakdown.items() %}
+                                            {% set _ = sorted_topics.append((topic, accuracy)) %}
+                                        {% endfor %}
                                     {% endif %}
+                                    {{ sorted_topics[0][0] if sorted_topics|length > 0 else 'Not Available' }}
                                 </span>
                             </div>
                         </div>
@@ -1387,11 +1391,15 @@
                                 <span class="metric-label">Focus Area</span>
                                 <span class="metric-value" id="focus-topic">
                                     {% if stats.topic_breakdown %}
-                                        {% set sorted_topics = stats.topic_breakdown_list or [] %}
-                                        {{ sorted_topics[0][0] if sorted_topics else 'Not Available' }}
+                                        {% set sorted_topics = stats.topic_breakdown_list %}
                                     {% else %}
-                                        Not Available
+                                        <!-- Fallback if topic_breakdown_list is not available -->
+                                        {% set sorted_topics = [] %}
+                                        {% for topic, accuracy in stats.topic_breakdown.items() %}
+                                            {% set _ = sorted_topics.append((topic, accuracy)) %}
+                                        {% endfor %}
                                     {% endif %}
+                                    {{ sorted_topics[0][0] if sorted_topics|length > 0 else 'Not Available' }}
                                 </span>
                             </div>
                         </div>
@@ -1493,30 +1501,31 @@
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">🎯 Suggested Focus Areas</h4>
                         <div class="focus-areas">
                             {% if stats.topic_breakdown %}
-                                {% set sorted_topics = stats.topic_breakdown_list or [] %}
-                                {% if sorted_topics|length >= 1 %}
-                                <div class="focus-item priority-high">
-                                    <span class="focus-label">High Priority</span>
-                                    <span class="focus-topic">{{ sorted_topics[0][0] }} ({{ "%.0f"|format(sorted_topics[0][1]) }}%)</span>
-                                </div>
-                                {% endif %}
-                                {% if sorted_topics|length >= 2 %}
-                                <div class="focus-item priority-medium">
-                                    <span class="focus-label">Medium Priority</span>
-                                    <span class="focus-topic">{{ sorted_topics[1][0] }} ({{ "%.0f"|format(sorted_topics[1][1]) }}%)</span>
-                                </div>
-                                {% endif %}
-                                {% if sorted_topics|length >= 3 %}
-                                <div class="focus-item priority-low">
-                                    <span class="focus-label">Review</span>
-                                    <span class="focus-topic">{{ sorted_topics[2][0] }} ({{ "%.0f"|format(sorted_topics[2][1]) }}%)</span>
-                                </div>
-                                {% endif %}
+                                {% set sorted_topics = stats.topic_breakdown_list %}
                             {% else %}
-                                <div class="focus-item priority-medium">
-                                    <span class="focus-label">Start</span>
-                                    <span class="focus-topic">No focus areas identified yet</span>
-                                </div>
+                                <!-- Fallback if topic_breakdown_list is not available -->
+                                {% set sorted_topics = [] %}
+                                {% for topic, accuracy in stats.topic_breakdown.items() %}
+                                    {% set _ = sorted_topics.append((topic, accuracy)) %}
+                                {% endfor %}
+                            {% endif %}
+                            {% if sorted_topics|length >= 1 %}
+                            <div class="focus-item priority-high">
+                                <span class="focus-label">High Priority</span>
+                                <span class="focus-topic">{{ sorted_topics[0][0] }} ({{ "%.0f"|format(sorted_topics[0][1]) }}%)</span>
+                            </div>
+                            {% endif %}
+                            {% if sorted_topics|length >= 2 %}
+                            <div class="focus-item priority-medium">
+                                <span class="focus-label">Medium Priority</span>
+                                <span class="focus-topic">{{ sorted_topics[1][0] }} ({{ "%.0f"|format(sorted_topics[1][1]) }}%)</span>
+                            </div>
+                            {% endif %}
+                            {% if sorted_topics|length >= 3 %}
+                            <div class="focus-item priority-low">
+                                <span class="focus-label">Review</span>
+                                <span class="focus-topic">{{ sorted_topics[2][0] }} ({{ "%.0f"|format(sorted_topics[2][1]) }}%)</span>
+                            </div>
                             {% endif %}
                         </div>
                     </div>
@@ -1811,8 +1820,7 @@ function initializeCharts() {
                             }
                         }
                     }
-                }
-            });
+                });
         }
     } catch (e) {
         console.error('Error creating performance chart:', e);
@@ -1944,14 +1952,6 @@ function initializeCharts() {
     // VM Usage Chart
     try {
         const vmCtx = document.getElementById('vmUsageChart');
-        if (vmCtx && vmCtx.getContext) {
-            const ctx = vmCtx.getContext('2d');
-            chartInstances.vmUsage = new Chart(ctx, {
-                type: 'radar',
-                data: {
-                    labels: ['VM Sessions', 'Commands Executed', 'Lab Exercises', 'CLI Usage', 'Uptime'],
-                    datasets: [{
-                        label: 'VM & CLI Performance',
                         data: [
                             Math.min((statsData.vm_sessions || 0) * 10, 100),
                             Math.min((statsData.total_vm_commands || 0) / 5, 100),
