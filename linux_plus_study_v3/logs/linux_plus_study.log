@@ -4522,3 +4522,135 @@ NameError: name 'login_required' is not defined
 2025-08-09 14:07:36,244 - utils.database - INFO: Database connection test successful
 2025-08-09 14:07:36,253 - views.web_view - WARNING: VM management features not available - vm_integration module not found
 2025-08-09 14:07:36,257 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 14:17:57,695 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:18:09,039 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:18:09,039 - __main__ - INFO: Starting web application mode
+2025-08-09 14:18:09,039 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:18:09,040 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:18:09,046 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:18:09,052 - utils.database - INFO: Database connection test successful
+2025-08-09 14:18:09,060 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:18:09,063 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-09 14:18:19,135 - werkzeug - ERROR: 127.0.0.1 - - [09/Aug/2025 14:18:19] code 400, message Bad request version ('RÛ')
+2025-08-09 14:18:49,888 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:18:49,889 - __main__ - INFO: Starting web application mode
+2025-08-09 14:18:49,889 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:18:49,890 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:18:49,895 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:18:49,903 - utils.database - INFO: Database connection test successful
+2025-08-09 14:18:49,912 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:18:49,916 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-09 14:19:31,983 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:19:31,983 - utils.database - INFO: All database connections closed
+2025-08-09 14:19:33,038 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:19:33,038 - __main__ - INFO: Starting web application mode
+2025-08-09 14:19:33,039 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:19:33,039 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:19:33,045 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:19:33,052 - utils.database - INFO: Database connection test successful
+2025-08-09 14:19:33,060 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:19:33,073 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-09 14:50:47,536 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:50:47,537 - utils.database - INFO: All database connections closed
+2025-08-09 14:50:48,442 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:50:48,443 - __main__ - INFO: Starting web application mode
+2025-08-09 14:50:48,443 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:50:48,444 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:50:48,449 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:50:48,457 - utils.database - INFO: Database connection test successful
+2025-08-09 14:50:48,465 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:50:48,468 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-09 14:51:33,212 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:51:33,213 - utils.database - INFO: All database connections closed
+2025-08-09 14:51:38,258 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:51:38,258 - utils.database - INFO: All database connections closed
+2025-08-09 14:51:45,261 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:51:45,262 - __main__ - INFO: Starting web application mode
+2025-08-09 14:51:45,262 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:51:45,262 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:51:45,268 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:51:45,275 - utils.database - INFO: Database connection test successful
+2025-08-09 14:51:45,283 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:51:45,287 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 14:54:22,496 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:54:22,496 - utils.database - INFO: All database connections closed
+2025-08-09 14:54:23,379 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:54:23,380 - __main__ - INFO: Starting web application mode
+2025-08-09 14:54:23,380 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:54:23,380 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:54:23,386 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:54:23,392 - utils.database - INFO: Database connection test successful
+2025-08-09 14:54:23,400 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:54:23,403 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 14:55:13,260 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 14:55:13,285 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 14:55:13,285 - views.web_view - ERROR: Simple analytics clear error: 'SimpleAnalyticsManager' object has no attribute '_save_user_data'
+2025-08-09 14:55:13,285 - views.web_view - INFO: Reset game state history
+2025-08-09 14:55:13,285 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 14:59:52,770 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 14:59:52,770 - utils.database - INFO: All database connections closed
+2025-08-09 14:59:53,933 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 14:59:53,933 - __main__ - INFO: Starting web application mode
+2025-08-09 14:59:53,934 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 14:59:53,934 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 14:59:53,942 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 14:59:53,952 - utils.database - INFO: Database connection test successful
+2025-08-09 14:59:53,962 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 14:59:53,967 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 15:00:07,382 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 15:00:07,417 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 15:00:07,418 - views.web_view - ERROR: Simple analytics clear error: 'SimpleAnalyticsManager' object has no attribute '_save_user_data'
+2025-08-09 15:00:07,418 - views.web_view - INFO: Reset game state data
+2025-08-09 15:00:07,418 - views.web_view - INFO: Reset quiz controller session
+2025-08-09 15:00:07,418 - views.web_view - INFO: Reset time tracking data
+2025-08-09 15:00:07,419 - views.web_view - INFO: Reset achievements file
+2025-08-09 15:00:07,419 - views.web_view - INFO: Reset history file
+2025-08-09 15:00:07,419 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 15:04:32,413 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 15:04:32,413 - utils.database - INFO: All database connections closed
+2025-08-09 15:04:33,388 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 15:04:33,388 - __main__ - INFO: Starting web application mode
+2025-08-09 15:04:33,388 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 15:04:33,389 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 15:04:33,396 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 15:04:33,406 - utils.database - INFO: Database connection test successful
+2025-08-09 15:04:33,416 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 15:04:33,420 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 15:08:32,168 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 15:08:32,169 - utils.database - INFO: All database connections closed
+2025-08-09 15:08:33,593 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 15:08:33,594 - __main__ - INFO: Starting web application mode
+2025-08-09 15:08:33,595 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 15:08:33,596 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 15:08:33,603 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 15:08:33,613 - utils.database - INFO: Database connection test successful
+2025-08-09 15:08:33,622 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 15:08:33,626 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 15:09:00,808 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 15:09:01,479 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 15:09:01,479 - views.web_view - ERROR: Simple analytics clear error: 'SimpleAnalyticsManager' object has no attribute '_save_user_data'
+2025-08-09 15:09:01,479 - views.web_view - INFO: Reset game state data
+2025-08-09 15:09:01,480 - views.web_view - INFO: Reset quiz controller session
+2025-08-09 15:09:01,484 - views.web_view - INFO: Reset time tracking data
+2025-08-09 15:09:01,504 - views.web_view - INFO: Reset achievements file
+2025-08-09 15:09:01,514 - views.web_view - INFO: Reset history file
+2025-08-09 15:09:01,515 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 15:10:12,039 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 15:10:12,040 - utils.database - INFO: All database connections closed
+2025-08-09 15:10:15,754 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 15:10:15,754 - __main__ - INFO: Starting web application mode
+2025-08-09 15:10:15,755 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 15:10:15,755 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 15:10:15,763 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 15:10:15,772 - utils.database - INFO: Database connection test successful
+2025-08-09 15:10:15,782 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 15:10:15,786 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 15:10:25,862 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 15:10:26,525 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 15:10:26,530 - views.web_view - INFO: Cleared simple analytics user data
+2025-08-09 15:10:26,530 - views.web_view - INFO: Reset game state data
+2025-08-09 15:10:26,530 - views.web_view - INFO: Reset quiz controller session
+2025-08-09 15:10:26,549 - views.web_view - INFO: Reset time tracking data
+2025-08-09 15:10:26,549 - views.web_view - INFO: Reset achievements file
+2025-08-09 15:10:26,550 - views.web_view - INFO: Reset history file
+2025-08-09 15:10:26,550 - views.web_view - INFO: Clear statistics operation completed successfully

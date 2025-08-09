@@ -303,45 +303,14 @@
             alert('Help & Support coming soon!');
         }
 
-        // Load all appearance settings globally
-        function loadGlobalAppearanceSettings() {
-            console.log('Loading global appearance settings...');
-            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-            
-            // Load theme (fallback to old theme storage)
-            const savedTheme = settings.theme || localStorage.getItem('theme') || 'dark';
-            setTheme(savedTheme);
-            
-            // Load accent color
-            const savedAccentColor = settings.accentColor || '#7c3aed';
-            document.documentElement.style.setProperty('--primary-color', savedAccentColor);
-            document.documentElement.style.setProperty('--accent-color', savedAccentColor);
-            document.documentElement.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${savedAccentColor}, ${savedAccentColor}88)`);
-            
-            // Load font size
-            const savedFontSize = settings.fontSize || 100;
-            document.documentElement.style.setProperty('--base-font-size', savedFontSize + '%');
-            
-            // Load animation settings
-            const animationsEnabled = settings.animations !== false; // Default to enabled
-            const reduceMotion = settings.reduceMotion === true; // Default to disabled
-            
-            document.body.classList.toggle('no-animations', !animationsEnabled);
-            document.body.classList.toggle('reduce-motion', reduceMotion);
-            
-            console.log('Applied settings:', {
-                theme: savedTheme,
-                accentColor: savedAccentColor,
-                fontSize: savedFontSize + '%',
-                animations: animationsEnabled,
-                reduceMotion: reduceMotion
-            });
-        }
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Load all appearance settings globally
-            loadGlobalAppearanceSettings();
+            // Load saved theme (basic fallback - app.js will handle full settings)
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (!window.loadGlobalAppearanceSettings) {
+                // Fallback if app.js hasn't loaded yet
+                setTheme(savedTheme);
+            }
             
             // Update sound icon based on saved state
             if (!soundEnabled) {

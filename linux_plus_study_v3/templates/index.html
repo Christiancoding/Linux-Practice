@@ -157,14 +157,26 @@
             </div>
 
             <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="400">
+                <div class="stat-icon" style="background: var(--gradient-warning);">
+                    <i class="fas fa-stopwatch"></i>
+                </div>
+                <div class="stat-content">
+                    <h3 class="stat-value" id="quiz-time-today">0s</h3>
+                    <p class="stat-label">Quiz Time Today</p>
+                    <div class="stat-trend neutral">
+                        <i class="fas fa-info-circle"></i> Resets at 12:59 AM
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card glass" data-aos="zoom-in" data-aos-delay="500">
                 <div class="stat-icon" style="background: var(--gradient-accent);">
                     <i class="fas fa-clock"></i>
                 </div>
                 <div class="stat-content">
-                    <h3 class="stat-value" id="study-time">{% if stats and stats.study_time_formatted %}{{ stats.study_time_formatted }}{% else %}0s{% endif %}</h3>
-                    <p class="stat-label">Study Time</p>
+                    <h3 class="stat-value" id="study-time-total">0s</h3>
+                    <p class="stat-label">Total Study Time</p>
                     <div class="stat-trend positive">
-                        <i class="fas fa-arrow-up"></i> 0h this week
+                        <i class="fas fa-arrow-up"></i> Lifetime total
                     </div>
                 </div>
             </div>
@@ -434,6 +446,10 @@
     color: var(--danger-color);
 }
 
+.stat-trend.neutral {
+    color: var(--text-secondary);
+}
+
 /* Dashboard Grid */
 .dashboard-grid {
     display: grid;
@@ -663,15 +679,25 @@ function updateImprovementMetrics(data) {
         }
     }
     
-    // Study time trend
+    // Quiz time trend (index 3)
     if (trends[3]) {
-        if (data.study_time === 0) {
+        if (data.quiz_time_today === 0) {
             trends[3].className = 'stat-trend neutral';
-            trends[3].innerHTML = '<i class="fas fa-clock"></i> Begin learning!';
+            trends[3].innerHTML = '<i class="fas fa-info-circle"></i> Resets at 12:59 AM';
         } else {
             trends[3].className = 'stat-trend positive';
-            const formatted = formatStudyTime(data.study_time);
-            trends[3].innerHTML = `<i class="fas fa-arrow-up"></i> ${formatted} total`;
+            trends[3].innerHTML = `<i class="fas fa-stopwatch"></i> ${data.quiz_time_formatted} today`;
+        }
+    }
+    
+    // Study time trend (index 4)
+    if (trends[4]) {
+        if (data.study_time_total === 0) {
+            trends[4].className = 'stat-trend neutral';
+            trends[4].innerHTML = '<i class="fas fa-clock"></i> Begin learning!';
+        } else {
+            trends[4].className = 'stat-trend positive';
+            trends[4].innerHTML = `<i class="fas fa-arrow-up"></i> Lifetime total`;
         }
     }
 }
@@ -700,7 +726,8 @@ function updateDashboardStats() {
             // Update all stats from backend
             document.getElementById('correct-answers').textContent = data.total_correct || 0;
             document.getElementById('accuracy').textContent = Math.round(data.accuracy || 0) + '%';
-            document.getElementById('study-time').textContent = formatStudyTime(data.study_time || 0);
+            document.getElementById('quiz-time-today').textContent = data.quiz_time_formatted || '0s';
+            document.getElementById('study-time-total').textContent = data.study_time_formatted || '0s';
             document.getElementById('hero-xp').textContent = data.xp || 0;
             document.getElementById('current-streak').textContent = data.streak || 0;
             document.getElementById('hero-level').textContent = data.level || 1;

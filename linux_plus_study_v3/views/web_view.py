@@ -2548,13 +2548,24 @@ class LinuxPlusStudyWeb:
             """API endpoint for dashboard data - single source of truth"""
             try:
                 from services.simple_analytics import get_analytics_manager
+                from services.time_tracking_service import get_time_tracker
                 from flask import session
                 
                 analytics = get_analytics_manager()
+                time_tracker = get_time_tracker()
                 user_id = session.get('user_id', 'anonymous')
                 
                 # Get stats from simple analytics (single source of truth)
                 stats = analytics.get_dashboard_stats(user_id)
+                
+                # Add time tracking data
+                time_data = time_tracker.get_daily_summary()
+                stats.update({
+                    'quiz_time_today': time_data['quiz_time_today'],
+                    'quiz_time_formatted': time_data['quiz_time_formatted'],
+                    'study_time_total': time_data['study_time_total'],
+                    'study_time_formatted': time_data['study_time_formatted']
+                })
                 
                 # Ensure we have all required fields for the frontend
                 stats['success'] = True
@@ -2569,9 +2580,34 @@ class LinuxPlusStudyWeb:
                     'total_correct': 0,
                     'accuracy': 0,
                     'study_time': 0,
+                    'quiz_time_today': 0,
+                    'quiz_time_formatted': '0s',
+                    'study_time_formatted': '0s',
                     'streak': 0,
                     'level': 1,
                     'xp': 0
+                })
+
+        @self.app.route('/api/time-tracking')
+        def api_time_tracking():
+            """API endpoint for time tracking data"""
+            try:
+                from services.time_tracking_service import get_time_tracker
+                
+                time_tracker = get_time_tracker()
+                stats = time_tracker.get_statistics()
+                stats['success'] = True
+                
+                return jsonify(stats)
+            except Exception as e:
+                self.logger.error(f"Time tracking API error: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'quiz_time_today': 0,
+                    'quiz_time_formatted': '0s',
+                    'study_time_total': 0,
+                    'study_time_formatted': '0s'
                 })
 
         @self.app.route('/api/analytics')
@@ -2802,7 +2838,7 @@ class LinuxPlusStudyWeb:
                     if analytics:
                         # Reset all user data to defaults
                         analytics.user_data = {}
-                        analytics._save_user_data()
+                        analytics._save_data(analytics.user_data)
                         self.logger.info("Cleared simple analytics user data")
                 except Exception as simple_analytics_error:
                     self.logger.error(f"Simple analytics clear error: {simple_analytics_error}")
@@ -2810,10 +2846,48 @@ class LinuxPlusStudyWeb:
                 # Reset game state if available
                 try:
                     if hasattr(self, 'game_state') and self.game_state:
-                        self.game_state.study_history = self.game_state._default_history()
-                        self.logger.info("Reset game state history")
+                        self.game_state.reset_all_data()
+                        self.logger.info("Reset game state data")
                 except Exception as game_state_error:
                     self.logger.error(f"Game state reset error: {game_state_error}")
+                
+                # Reset quiz controller if available
+                try:
+                    if hasattr(self, 'quiz_controller') and self.quiz_controller:
+                        self.quiz_controller.force_end_session()
+                        self.logger.info("Reset quiz controller session")
+                except Exception as quiz_controller_error:
+                    self.logger.error(f"Quiz controller reset error: {quiz_controller_error}")
+                
+                # Clear time tracking data
+                try:
+                    from services.time_tracking_service import get_time_tracker
+                    time_tracker = get_time_tracker()
+                    time_tracker.reset_all_data()
+                    self.logger.info("Reset time tracking data")
+                except Exception as time_tracking_error:
+                    self.logger.error(f"Time tracking reset error: {time_tracking_error}")
+                
+                # Clear JSON data files (achievements, history)
+                try:
+                    import os
+                    import json
+                    from utils.config import ACHIEVEMENTS_FILE, HISTORY_FILE
+                    
+                    # Reset achievements file
+                    if os.path.exists(ACHIEVEMENTS_FILE):
+                        with open(ACHIEVEMENTS_FILE, 'w') as f:
+                            json.dump({}, f, indent=2)
+                        self.logger.info("Reset achievements file")
+                    
+                    # Reset history file  
+                    if os.path.exists(HISTORY_FILE):
+                        with open(HISTORY_FILE, 'w') as f:
+                            json.dump({}, f, indent=2)
+                        self.logger.info("Reset history file")
+                        
+                except Exception as file_reset_error:
+                    self.logger.error(f"File reset error: {file_reset_error}")
                 
                 self.logger.info("Clear statistics operation completed successfully")
                 return jsonify({

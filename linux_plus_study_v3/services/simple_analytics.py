@@ -514,13 +514,8 @@ class SimpleAnalyticsManager:
         else:
             accuracy = 0.0
         
-        # Calculate XP and level consistently
+        # Use actual XP earned from gameplay (don't recalculate)
         xp = user_data.get("xp", 0)
-        if xp == 0 and correct_answers > 0:
-            # Recalculate XP: 10 per correct answer ONLY
-            xp = correct_answers * 10
-            user_data["xp"] = xp
-            self._update_user_data(user_id, user_data)
         
         level = max(1, (xp // 100) + 1)
         level_progress = xp % 100

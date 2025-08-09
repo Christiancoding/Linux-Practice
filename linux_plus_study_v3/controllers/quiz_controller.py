@@ -13,6 +13,7 @@ from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
 from services.simple_analytics import get_analytics_manager
+from services.time_tracking_service import get_time_tracker
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -314,7 +315,14 @@ class QuizController:
         # Calculate session duration if we have start time
         session_duration = 0
         if self.session_start_time:
-            session_duration = time.time() - self.session_start_time
+            session_duration = int(time.time() - self.session_start_time)
+        
+        # Track quiz time in the time tracking service
+        try:
+            time_tracker = get_time_tracker()
+            time_tracker.add_quiz_time(session_duration)
+        except Exception as e:
+            print(f"Warning: Failed to track quiz time in force end: {e}")
         
         # Store results before clearing
         results: Dict[str, Any] = {
@@ -565,6 +573,26 @@ class QuizController:
         # End Quick Fire if active
         if self.quick_fire_active:
             self.quick_fire_active = False
+        
+        # Track quiz time in the time tracking service
+        try:
+            time_tracker = get_time_tracker()
+            time_tracker.add_quiz_time(session_duration)
+        except Exception as e:
+            print(f"Warning: Failed to track quiz time: {e}")
+        
+        # Sync total points to analytics to ensure consistency  
+        try:
+            from services.simple_analytics import get_analytics_manager
+            analytics = get_analytics_manager()
+            total_earned_points = self.game_state.achievements.get('points_earned', 0)
+            if total_earned_points > 0:
+                # Update analytics with actual earned points to maintain consistency
+                user_data = analytics.get_user_data('anonymous')
+                user_data['xp'] = total_earned_points
+                analytics._update_user_data('anonymous', user_data)
+        except Exception as e:
+            print(f"Warning: Failed to sync points to analytics: {e}")
         
         # Save progress using unified save method
         try:

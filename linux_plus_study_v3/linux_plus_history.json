@@ -1,36 +1,148 @@
 {
   "sessions": [],
-  "questions": {},
+  "questions": {
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:10:37.686448",
+          "correct": true
+        }
+      ]
+    },
+    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:10:42.515369",
+          "correct": true
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:10:48.728184",
+          "correct": true
+        }
+      ]
+    },
+    "What is AppArmor?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:10:53.846312",
+          "correct": true
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:10:57.981190",
+          "correct": true
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:11:02.488302",
+          "correct": true
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:11:05.172922",
+          "correct": true
+        }
+      ]
+    },
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:11:09.807905",
+          "correct": false
+        }
+      ]
+    },
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:11:12.830838",
+          "correct": true
+        }
+      ]
+    },
+    "In Kubernetes, what is an Ambassador container?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:11:16.130374",
+          "correct": false
+        }
+      ]
+    }
+  },
   "categories": {
-    "Concepts & Terms (System Management)": {
-      "correct": 0,
-      "attempts": 0
-    },
     "Commands (System Management)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (Automation)": {
-      "correct": 0,
-      "attempts": 0
+      "correct": 3,
+      "attempts": 4
     },
     "Concepts & Terms (Security)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Troubleshooting": {
-      "correct": 0,
-      "attempts": 0
+      "correct": 2,
+      "attempts": 2
     },
     "Concepts & Terms (Containers)": {
       "correct": 0,
-      "attempts": 0
+      "attempts": 1
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Troubleshooting": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 1,
+      "attempts": 1
     }
   },
-  "total_correct": 0,
-  "total_attempts": 0,
-  "incorrect_review": [],
-  "leaderboard": [],
+  "total_correct": 8,
+  "total_attempts": 10,
+  "incorrect_review": [
+    "What is the primary function of the `mkinitrd` command?",
+    "In Kubernetes, what is an Ambassador container?"
+  ],
+  "leaderboard": [
+    {
+      "date": "2025-08-09T15:11:16.130445",
+      "score": 8,
+      "total": 10,
+      "accuracy": 80.0,
+      "points": 95
+    }
+  ],
   "settings": {},
   "export_metadata": {},
   "achievements": {}

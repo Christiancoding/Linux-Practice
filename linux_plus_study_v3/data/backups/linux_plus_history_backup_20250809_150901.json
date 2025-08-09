@@ -1,0 +1,137 @@
+{
+  "sessions": [],
+  "questions": {
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:19.112492",
+          "correct": true
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 2,
+      "attempts": 3,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:22.027264",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-09T15:00:33.864494",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-09T15:00:42.956089",
+          "correct": true
+        }
+      ]
+    },
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:25.872485",
+          "correct": false
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:28.895112",
+          "correct": true
+        }
+      ]
+    },
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:31.446486",
+          "correct": false
+        }
+      ]
+    },
+    "What is AppArmor?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:36.517850",
+          "correct": true
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:39.625253",
+          "correct": true
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-09T15:00:47.482573",
+          "correct": true
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Commands (System Management)": {
+      "correct": 3,
+      "attempts": 6
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 2,
+      "attempts": 2
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    }
+  },
+  "total_correct": 7,
+  "total_attempts": 10,
+  "incorrect_review": [
+    "What is the primary function of the `mkinitrd` command?",
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
+  ],
+  "leaderboard": [
+    {
+      "date": "2025-08-09T15:00:47.482648",
+      "score": 7,
+      "total": 10,
+      "accuracy": 70.0,
+      "points": 75
+    }
+  ],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}
