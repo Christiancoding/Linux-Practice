@@ -1,0 +1,19 @@
+2025-07-31 15:34:10,801 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-07-31 15:34:10,802 - __main__ - INFO: Starting web application mode
+2025-07-31 15:34:10,802 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-07-31 15:34:10,803 - __main__ - INFO: Web application components loaded successfully
+2025-07-31 15:34:10,808 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-07-31 15:34:10,820 - utils.database - INFO: Database connection test successful
+2025-07-31 15:34:10,836 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-07-31 15:34:49,904 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 16:13:23,647 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-07-31 16:13:26,841 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-01 00:19:59,612 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
+2025-08-06 10:43:59,103 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-06 10:43:59,104 - __main__ - INFO: Starting web application mode
+2025-08-06 10:43:59,104 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-06 10:43:59,105 - __main__ - INFO: Web application components loaded successfully
+2025-08-06 10:43:59,111 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-06 10:43:59,119 - utils.database - INFO: Database connection test successful
+2025-08-06 10:43:59,131 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-06 10:44:59,411 - vm_integration.utils.lpem_manager - INFO: Connected to libvirt at qemu:///system
