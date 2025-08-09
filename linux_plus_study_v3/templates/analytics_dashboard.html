@@ -1678,7 +1678,7 @@ function initializeAnalyticsDashboard() {
             // Update all metrics with the SAME calculations
             document.getElementById('total-questions').textContent = stats.total_questions || 0;
             document.getElementById('correct-answers').textContent = stats.total_correct || 0;
-            document.getElementById('accuracy').textContent = (stats.accuracy || 0).toFixed(1) + '%';
+            document.getElementById('accuracy').textContent = (stats.overall_accuracy || 0).toFixed(1) + '%';
             document.getElementById('study-time').textContent = ((stats.total_study_time || 0) / 3600).toFixed(1) + 'h';
             document.getElementById('vm-commands').textContent = stats.total_vm_commands || 0;
             document.getElementById('study-streak').textContent = stats.study_streak || 0;
@@ -1687,23 +1687,15 @@ function initializeAnalyticsDashboard() {
             // Update all other elements that show these metrics
             document.getElementById('questions-attempted').textContent = stats.total_questions || 0;
             document.getElementById('questions-correct').textContent = stats.total_correct || 0;
-            document.getElementById('completion-percentage').textContent = (stats.accuracy || 0).toFixed(1) + '%';
-            
-            // Update charts with real data
-            if (stats.recent_performance) {
-                updatePerformanceChart(stats.recent_performance);
-            }
-            
-            if (stats.topic_breakdown) {
-                updateTopicBreakdown(stats.topic_breakdown);
-            }
-            
+            document.getElementById('completion-percentage').textContent = (stats.overall_accuracy || 0).toFixed(1) + '%';
+
             if (stats.recent_sessions) {
                 updateRecentSessions(stats.recent_sessions);
             }
-            
+
             // Store stats data globally for other functions
             window.statsData = stats;
+            initializeCharts();
         })
         .catch(error => {
             console.error('Error loading analytics:', error);
