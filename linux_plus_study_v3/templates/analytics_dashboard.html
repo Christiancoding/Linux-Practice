@@ -800,7 +800,7 @@
             <button class="refresh-btn" id="refresh-btn" onclick="refreshAnalytics()">
                 <i class="fas fa-sync-alt"></i> Refresh Data
             </button>
-            <button class="refresh-btn" onclick="exportAnalytics()">
+            <button class="refresh-btn" id="export-btn" onclick="exportAnalytics()">
                 <i class="fas fa-download"></i> Export Report
             </button>
         </div>
@@ -2265,80 +2265,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeAnalyticsDashboard();
 });
 
-// Manual refresh function
-function refreshAnalytics() {
-    const refreshBtn = document.getElementById('refresh-btn');
-    const originalText = refreshBtn.innerHTML;
-    
-    refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
-    refreshBtn.disabled = true;
-    
-    // Call the same initialization function to ensure consistency
-    initializeAnalyticsDashboard();
-    
-    setTimeout(() => {
-        refreshBtn.innerHTML = originalText;
-        refreshBtn.disabled = false;
-    }, 1000);
-}
-
-// Export analytics function
-function exportAnalytics() {
-    const exportBtn = document.querySelector('.refresh-btn:last-child');
-    const originalText = exportBtn.innerHTML;
-    
-    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-    exportBtn.disabled = true;
-    
-    // Simulate export process
-    setTimeout(() => {
-        // Create CSV data
-        const csvData = [
-            ['Metric', 'Value'],
-            ['Total Questions', statsData.total_questions || 0],
-            ['Overall Accuracy', (statsData.overall_accuracy || 0).toFixed(1) + '%'],
-            ['Total Study Time', ((statsData.total_study_time || 0) / 3600).toFixed(1) + ' hours'],
-            ['Study Streak', statsData.study_streak || 0],
-            ['Total Sessions', statsData.total_sessions || 0]
-        ];
-        
-        const csvContent = csvData.map(row => row.join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `linux_plus_analytics_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        
-        const toast = document.createElement('div');
-        toast.className = 'toast toast-success';
-        toast.textContent = 'Analytics report exported successfully';
-        toast.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            background: #10b981;
-            color: white;
-            font-weight: 600;
-            z-index: 10000;
-            transition: all 0.3s ease;
-        `;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 3000);
-        
-        exportBtn.innerHTML = originalText;
-        exportBtn.disabled = false;
-    }, 1500);
-}
 
 // Load system data function
 function loadSystemData() {
@@ -2545,8 +2471,13 @@ function showToast(message, type = 'info') {
 
 // Export Analytics Function
 function exportAnalytics() {
+    const exportBtn = document.getElementById('export-btn');
+    const originalText = exportBtn.innerHTML;
+    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
+    exportBtn.disabled = true;
+
     showToast('Preparing comprehensive analytics export...', 'info');
-    
+
     // Create comprehensive analytics data
     const analyticsData = {
         summary: {
@@ -2583,6 +2514,9 @@ function exportAnalytics() {
     window.URL.revokeObjectURL(url);
     
     showToast('Analytics report exported successfully!', 'success');
+
+    exportBtn.innerHTML = originalText;
+    exportBtn.disabled = false;
 }
 
 // Track analytics dashboard view
