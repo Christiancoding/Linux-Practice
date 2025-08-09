@@ -2,8 +2,8 @@
   "sessions": [],
   "questions": {
     "What is AppArmor?": {
-      "correct": 4,
-      "attempts": 4,
+      "correct": 5,
+      "attempts": 5,
       "history": [
         {
           "timestamp": "2025-08-06T12:44:51.785346",
@@ -20,12 +20,16 @@
         {
           "timestamp": "2025-08-07T13:51:00.723165",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:35.319151",
+          "correct": true
         }
       ]
     },
     "What is Ansible primarily used for?": {
-      "correct": 6,
-      "attempts": 7,
+      "correct": 8,
+      "attempts": 9,
       "history": [
         {
           "timestamp": "2025-08-06T12:52:53.636823",
@@ -54,12 +58,20 @@
         {
           "timestamp": "2025-08-07T14:15:48.067285",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:43.363586",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:45.347397",
+          "correct": true
         }
       ]
     },
     "What is an AppImage?": {
-      "correct": 3,
-      "attempts": 3,
+      "correct": 4,
+      "attempts": 4,
       "history": [
         {
           "timestamp": "2025-08-06T12:53:17.429211",
@@ -72,12 +84,16 @@
         {
           "timestamp": "2025-08-07T13:53:01.142863",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:25:00.003476",
+          "correct": true
         }
       ]
     },
     "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
-      "correct": 5,
-      "attempts": 7,
+      "correct": 7,
+      "attempts": 9,
       "history": [
         {
           "timestamp": "2025-08-06T12:53:22.034592",
@@ -106,12 +122,20 @@
         {
           "timestamp": "2025-08-07T14:15:42.345842",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:36.824517",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:38.221353",
+          "correct": true
         }
       ]
     },
     "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 14,
-      "attempts": 25,
+      "correct": 22,
+      "attempts": 34,
       "history": [
         {
           "timestamp": "2025-08-06T12:53:29.367308",
@@ -212,6 +236,42 @@
         {
           "timestamp": "2025-08-07T14:15:53.383196",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:18.874575",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:40.628531",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:20:48.435182",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:33.163290",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:36.350193",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:48.797982",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:19.644104",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:30.224666",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:44.325285",
+          "correct": true
         }
       ]
     },
@@ -234,8 +294,8 @@
       ]
     },
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
-      "correct": 3,
-      "attempts": 4,
+      "correct": 6,
+      "attempts": 7,
       "history": [
         {
           "timestamp": "2025-08-06T14:13:21.437702",
@@ -252,12 +312,24 @@
         {
           "timestamp": "2025-08-07T14:16:00.702496",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:33.856455",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:52.746489",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:47.306798",
+          "correct": true
         }
       ]
     },
     "What does ACL stand for in Linux security?": {
-      "correct": 4,
-      "attempts": 5,
+      "correct": 7,
+      "attempts": 8,
       "history": [
         {
           "timestamp": "2025-08-06T14:13:28.760114",
@@ -278,12 +350,24 @@
         {
           "timestamp": "2025-08-07T14:15:57.144761",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:25.182793",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:39.018892",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:51.193314",
+          "correct": true
         }
       ]
     },
     "What is the primary function of the `mkinitrd` command?": {
-      "correct": 4,
-      "attempts": 7,
+      "correct": 7,
+      "attempts": 10,
       "history": [
         {
           "timestamp": "2025-08-06T14:20:59.702995",
@@ -312,12 +396,24 @@
         {
           "timestamp": "2025-08-07T14:15:45.384523",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:22.412334",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:29.784848",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:23.520671",
+          "correct": true
         }
       ]
     },
     "In Kubernetes, what is an Ambassador container?": {
-      "correct": 5,
-      "attempts": 7,
+      "correct": 8,
+      "attempts": 10,
       "history": [
         {
           "timestamp": "2025-08-06T14:21:05.269595",
@@ -346,12 +442,24 @@
         {
           "timestamp": "2025-08-07T14:15:32.385820",
           "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:20:28.485954",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:42.036331",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T15:22:33.292457",
+          "correct": true
         }
       ]
     },
     "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
-      "correct": 0,
-      "attempts": 5,
+      "correct": 1,
+      "attempts": 8,
       "history": [
         {
           "timestamp": "2025-08-07T12:53:57.834739",
@@ -372,38 +480,50 @@
         {
           "timestamp": "2025-08-07T14:15:35.464071",
           "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T14:20:30.867041",
+          "correct": true
+        },
+        {
+          "timestamp": "2025-08-07T14:24:56.930772",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-07T15:22:41.086420",
+          "correct": false
         }
       ]
     }
   },
   "categories": {
     "Concepts & Terms (Containers)": {
-      "correct": 5,
-      "attempts": 7
+      "correct": 8,
+      "attempts": 10
     },
     "Concepts & Terms (System Management)": {
-      "correct": 3,
-      "attempts": 3
+      "correct": 4,
+      "attempts": 4
     },
     "Concepts & Terms (Security)": {
+      "correct": 12,
+      "attempts": 13
+    },
+    "Commands (System Management)": {
+      "correct": 33,
+      "attempts": 55
+    },
+    "Concepts & Terms (Automation)": {
       "correct": 8,
       "attempts": 9
     },
-    "Commands (System Management)": {
-      "correct": 21,
-      "attempts": 40
-    },
-    "Concepts & Terms (Automation)": {
-      "correct": 6,
-      "attempts": 7
-    },
     "Troubleshooting": {
-      "correct": 8,
-      "attempts": 11
+      "correct": 13,
+      "attempts": 16
     }
   },
-  "total_correct": 51,
-  "total_attempts": 77,
+  "total_correct": 78,
+  "total_attempts": 107,
   "incorrect_review": [
     "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
   ],
@@ -416,7 +536,28 @@
       "points": 110
     },
     {
+      "date": "2025-08-07T14:25:00.003536",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 110
+    },
+    {
+      "date": "2025-08-07T14:20:48.435332",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 105
+    },
+    {
       "date": "2025-08-07T13:53:01.142918",
+      "score": 9,
+      "total": 10,
+      "accuracy": 90.0,
+      "points": 100
+    },
+    {
+      "date": "2025-08-07T15:22:51.193386",
       "score": 9,
       "total": 10,
       "accuracy": 90.0,
@@ -456,20 +597,6 @@
       "total": 10,
       "accuracy": 50.0,
       "points": 50
-    },
-    {
-      "date": "2025-08-07T13:14:01.025977",
-      "score": 5,
-      "total": 10,
-      "accuracy": 50.0,
-      "points": 50
-    },
-    {
-      "date": "2025-08-06T14:21:10.286872",
-      "score": 1,
-      "total": 5,
-      "accuracy": 20.0,
-      "points": 10
     }
   ],
   "settings": {},

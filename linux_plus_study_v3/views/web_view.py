@@ -2756,6 +2756,78 @@ class LinuxPlusStudyWeb:
                 self.logger.error(f"Reset profile error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
 
+        @self.app.route('/api/clear_statistics', methods=['POST'])
+        def api_clear_statistics():
+            """Clear all statistics data across all profiles"""
+            try:
+                self.logger.info("Starting clear statistics operation")
+                
+                # Clear statistics using the stats controller
+                if hasattr(self, 'stats_controller') and self.stats_controller:
+                    success = self.stats_controller.clear_statistics()
+                    if not success:
+                        return jsonify({'success': False, 'error': 'Failed to clear statistics via controller'})
+                else:
+                    self.logger.warning("Stats controller not available, attempting direct clear")
+                
+                # Clear analytics database records
+                try:
+                    from utils.database import get_database_manager
+                    from models.analytics import Analytics
+                    
+                    db_manager = get_database_manager()
+                    if db_manager and db_manager.session_factory:
+                        session = db_manager.session_factory()
+                        try:
+                            # Clear all analytics records
+                            deleted_count = session.query(Analytics).delete()
+                            session.commit()
+                            self.logger.info(f"Cleared {deleted_count} analytics records")
+                        except Exception as db_error:
+                            session.rollback()
+                            self.logger.error(f"Database clear error: {db_error}")
+                            return jsonify({'success': False, 'error': f'Database clear failed: {str(db_error)}'})
+                        finally:
+                            session.close()
+                    else:
+                        self.logger.warning("Database manager not available for analytics clear")
+                except Exception as analytics_error:
+                    self.logger.error(f"Analytics clear error: {analytics_error}")
+                    # Don't fail completely if analytics clear fails
+                
+                # Clear simple analytics data
+                try:
+                    from services.simple_analytics import get_analytics_manager
+                    analytics = get_analytics_manager()
+                    if analytics:
+                        # Reset all user data to defaults
+                        analytics.user_data = {}
+                        analytics._save_user_data()
+                        self.logger.info("Cleared simple analytics user data")
+                except Exception as simple_analytics_error:
+                    self.logger.error(f"Simple analytics clear error: {simple_analytics_error}")
+                
+                # Reset game state if available
+                try:
+                    if hasattr(self, 'game_state') and self.game_state:
+                        self.game_state.study_history = self.game_state._default_history()
+                        self.logger.info("Reset game state history")
+                except Exception as game_state_error:
+                    self.logger.error(f"Game state reset error: {game_state_error}")
+                
+                self.logger.info("Clear statistics operation completed successfully")
+                return jsonify({
+                    'success': True, 
+                    'message': 'All statistics and progress data have been cleared successfully'
+                })
+                
+            except Exception as e:
+                self.logger.error(f"Clear statistics error: {e}", exc_info=True)
+                return jsonify({
+                    'success': False, 
+                    'error': f'Failed to clear statistics: {str(e)}'
+                })
+
         @self.app.route('/api/profiles/<profile_id>', methods=['DELETE'])
         def api_delete_profile(profile_id):
             """Delete a user profile"""

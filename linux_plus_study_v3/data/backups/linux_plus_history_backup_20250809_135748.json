@@ -6,11 +6,7 @@
       "correct": 0,
       "attempts": 0
     },
-    "Commands (System Management)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (Automation)": {
+    "Troubleshooting": {
       "correct": 0,
       "attempts": 0
     },
@@ -18,11 +14,15 @@
       "correct": 0,
       "attempts": 0
     },
-    "Troubleshooting": {
+    "Concepts & Terms (Automation)": {
       "correct": 0,
       "attempts": 0
     },
     "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
       "correct": 0,
       "attempts": 0
     }

@@ -228,15 +228,21 @@
         // Sound state
         let soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
 
-        // Theme Management
+        // Theme Management  
         function setTheme(themeName) {
             document.documentElement.setAttribute('data-theme', themeName);
             localStorage.setItem('theme', themeName);
             
+            // Also save to appSettings for consistency
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            settings.theme = themeName;
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+            
             // Update theme icon
             const themeIcon = document.getElementById('themeIcon');
             if (themeIcon) {
-                themeIcon.className = themeName === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
+                themeIcon.className = themeName === 'dark' ? 'fas fa-moon' : 
+                                     themeName === 'light' ? 'fas fa-sun' : 'fas fa-star';
             }
         }
 
@@ -297,15 +303,52 @@
             alert('Help & Support coming soon!');
         }
 
+        // Load all appearance settings globally
+        function loadGlobalAppearanceSettings() {
+            console.log('Loading global appearance settings...');
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            
+            // Load theme (fallback to old theme storage)
+            const savedTheme = settings.theme || localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
+            
+            // Load accent color
+            const savedAccentColor = settings.accentColor || '#7c3aed';
+            document.documentElement.style.setProperty('--primary-color', savedAccentColor);
+            document.documentElement.style.setProperty('--accent-color', savedAccentColor);
+            document.documentElement.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${savedAccentColor}, ${savedAccentColor}88)`);
+            
+            // Load font size
+            const savedFontSize = settings.fontSize || 100;
+            document.documentElement.style.setProperty('--base-font-size', savedFontSize + '%');
+            
+            // Load animation settings
+            const animationsEnabled = settings.animations !== false; // Default to enabled
+            const reduceMotion = settings.reduceMotion === true; // Default to disabled
+            
+            document.body.classList.toggle('no-animations', !animationsEnabled);
+            document.body.classList.toggle('reduce-motion', reduceMotion);
+            
+            console.log('Applied settings:', {
+                theme: savedTheme,
+                accentColor: savedAccentColor,
+                fontSize: savedFontSize + '%',
+                animations: animationsEnabled,
+                reduceMotion: reduceMotion
+            });
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
-            // Load saved theme
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            setTheme(savedTheme);
+            // Load all appearance settings globally
+            loadGlobalAppearanceSettings();
             
             // Update sound icon based on saved state
             if (!soundEnabled) {
-                document.querySelector('#soundToggle i').className = 'fas fa-volume-mute';
+                const soundToggle = document.querySelector('#soundToggle i');
+                if (soundToggle) {
+                    soundToggle.className = 'fas fa-volume-mute';
+                }
             }
             
             // Add click event to close modals when clicking outside

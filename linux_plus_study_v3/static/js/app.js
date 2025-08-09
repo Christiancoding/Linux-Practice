@@ -1,22 +1,68 @@
-// Theme Management
+// Global Appearance Settings Management
 function setTheme(themeName) {
+    console.log('Setting theme to:', themeName);
     document.documentElement.setAttribute('data-theme', themeName);
     localStorage.setItem('theme', themeName);
+    
+    // Also save to appSettings for consistency
+    const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+    settings.theme = themeName;
+    localStorage.setItem('appSettings', JSON.stringify(settings));
     
     // Update theme buttons if they exist
     document.querySelectorAll('.theme-option').forEach(btn => btn.classList.remove('active'));
     const themeButton = document.querySelector(`.theme-option[onclick="setTheme('${themeName}')"]`);
     if (themeButton) themeButton.classList.add('active');
+    
+    // Update theme icon
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.className = themeName === 'dark' ? 'fas fa-moon' : 
+                             themeName === 'light' ? 'fas fa-sun' : 'fas fa-star';
+    }
 }
 
-// Initialize theme on page load
-document.addEventListener('DOMContentLoaded', function() {
-    // Load saved theme or default to dark
-    const savedTheme = localStorage.getItem('theme') || 'dark';
+// Load all appearance settings globally
+function loadGlobalAppearanceSettings() {
+    console.log('Loading global appearance settings from app.js...');
+    const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+    
+    // Load theme (fallback to old theme storage)
+    const savedTheme = settings.theme || localStorage.getItem('theme') || 'dark';
     setTheme(savedTheme);
-});
+    
+    // Load accent color
+    const savedAccentColor = settings.accentColor || '#7c3aed';
+    document.documentElement.style.setProperty('--primary-color', savedAccentColor);
+    document.documentElement.style.setProperty('--accent-color', savedAccentColor);
+    document.documentElement.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${savedAccentColor}, ${savedAccentColor}88)`);
+    
+    // Load font size
+    const savedFontSize = settings.fontSize || 100;
+    document.documentElement.style.setProperty('--base-font-size', savedFontSize + '%');
+    
+    // Load animation settings
+    const animationsEnabled = settings.animations !== false; // Default to enabled
+    const reduceMotion = settings.reduceMotion === true; // Default to disabled
+    
+    document.body.classList.toggle('no-animations', !animationsEnabled);
+    document.body.classList.toggle('reduce-motion', reduceMotion);
+    
+    console.log('Applied global settings:', {
+        theme: savedTheme,
+        accentColor: savedAccentColor,
+        fontSize: savedFontSize + '%',
+        animations: animationsEnabled,
+        reduceMotion: reduceMotion
+    });
+}
 // Global app functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('App.js DOMContentLoaded - initializing...');
+    
+    // Load appearance settings on every page load
+    loadGlobalAppearanceSettings();
+
     // Initialize quiz timing if on quiz page
     if (window.location.pathname.includes('quiz')) {
         initializeQuizTiming();
@@ -40,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Check for saved dark mode preference
+    // Legacy dark mode check (for backward compatibility)
     if (localStorage.getItem('darkMode') === 'enabled') {
         document.body.classList.add('dark-mode');
     }

@@ -45,6 +45,9 @@
 
     --transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-spring: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    
+    /* Font size scaling */
+    --base-font-size: 100%;
 }
 
 /* Dark Theme Variables */
@@ -98,13 +101,29 @@ html {
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: var(--base-font-size);
     background: var(--bg-primary);
     color: var(--text-primary);
     line-height: 1.6;
     overflow-x: hidden;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    transition: background-color 0.3s ease, color 0.3s ease, font-size 0.3s ease;
     min-height: 100vh;
     position: relative;
+}
+
+/* Animation control classes */
+body.no-animations,
+body.no-animations * {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0.01ms !important;
+}
+
+body.reduce-motion,
+body.reduce-motion * {
+    animation-duration: 0.5s;
+    transition-duration: 0.5s;
 }
 
 body::before {

@@ -1040,33 +1040,78 @@
 <script>
 // Settings page functionality
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing settings page...');
+    
+    // Load saved settings first
     loadSettings();
     loadGameValues();
+    
+    // Initialize all interactive elements
     initializeSliders();
+    initializeFontSizeSlider();
+    initializeToggles();
     
     // Preload profiles to avoid confusion
     loadProfiles();
+    
+    console.log('Settings page initialization complete');
 });
 
 // Load saved settings
 function loadSettings() {
     const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
     
-    // Apply saved settings
-    if (settings.theme) {
-        setTheme(settings.theme);
+    // Apply saved theme
+    const savedTheme = settings.theme || localStorage.getItem('theme') || 'dark';
+    setTheme(savedTheme);
+    updateActiveThemeButton(savedTheme);
+    
+    // Apply saved accent color
+    const savedAccentColor = settings.accentColor || '#7c3aed';
+    document.documentElement.style.setProperty('--primary-color', savedAccentColor);
+    document.documentElement.style.setProperty('--accent-color', savedAccentColor);
+    updateActiveColorButton(savedAccentColor);
+    
+    // Apply saved font size
+    const savedFontSize = settings.fontSize || 100;
+    const fontSizeSlider = document.getElementById('font-size');
+    if (fontSizeSlider) {
+        fontSizeSlider.value = savedFontSize;
+        document.documentElement.style.setProperty('--base-font-size', savedFontSize + '%');
+        updateSliderValue('font-size');
     }
     
-    // Load other settings...
-    document.getElementById('question-count').value = settings.questionCount || '20';
-    document.getElementById('time-limit').value = settings.timeLimit || '30';
-    document.getElementById('show-hints').checked = settings.showHints !== false;
-    document.getElementById('instant-feedback').checked = settings.instantFeedback !== false;
-    document.getElementById('sound-effects').checked = settings.soundEffects !== false;
-    document.getElementById('volume').value = settings.volume || 70;
+    // Load other settings with error handling...
+    const questionCountEl = document.getElementById('question-count');
+    const timeLimitEl = document.getElementById('time-limit');
+    const showHintsEl = document.getElementById('show-hints');
+    const instantFeedbackEl = document.getElementById('instant-feedback');
+    const soundEffectsEl = document.getElementById('sound-effects');
+    const volumeEl = document.getElementById('volume');
     
-    // Update volume display
-    updateSliderValue('volume');
+    if (questionCountEl) questionCountEl.value = settings.questionCount || '20';
+    if (timeLimitEl) timeLimitEl.value = settings.timeLimit || '30';
+    if (showHintsEl) showHintsEl.checked = settings.showHints !== false;
+    if (instantFeedbackEl) instantFeedbackEl.checked = settings.instantFeedback !== false;
+    if (soundEffectsEl) soundEffectsEl.checked = settings.soundEffects !== false;
+    if (volumeEl) {
+        volumeEl.value = settings.volume || 70;
+        updateSliderValue('volume');
+    }
+    
+    // Apply animations setting
+    const animationsEl = document.getElementById('animations-toggle');
+    if (animationsEl) {
+        animationsEl.checked = settings.animations !== false;
+        document.body.classList.toggle('no-animations', !animationsEl.checked);
+    }
+    
+    // Apply reduce motion setting
+    const reduceMotionEl = document.getElementById('reduce-motion');
+    if (reduceMotionEl) {
+        reduceMotionEl.checked = settings.reduceMotion === true;
+        document.body.classList.toggle('reduce-motion', reduceMotionEl.checked);
+    }
 }
 
 // Switch settings tabs
@@ -1108,33 +1153,149 @@ function updateSliderValue(sliderId) {
     }
 }
 
+// Set theme with proper button state management
+function setTheme(themeName) {
+    console.log('Setting theme to:', themeName);
+    document.documentElement.setAttribute('data-theme', themeName);
+    localStorage.setItem('theme', themeName);
+    
+    // Update theme button active states
+    updateActiveThemeButton(themeName);
+    
+    // Update theme icon if it exists
+    const themeIcon = document.getElementById('themeIcon');
+    if (themeIcon) {
+        themeIcon.className = themeName === 'dark' ? 'fas fa-moon' : 
+                             themeName === 'light' ? 'fas fa-sun' : 'fas fa-star';
+    }
+}
+
+// Update active theme button
+function updateActiveThemeButton(themeName) {
+    document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.classList.remove('active');
+        const btnText = btn.textContent.trim().toLowerCase();
+        if (btnText.includes(themeName)) {
+            btn.classList.add('active');
+        }
+    });
+}
+
 // Set accent color
 function setAccentColor(color) {
+    console.log('Setting accent color to:', color);
     document.documentElement.style.setProperty('--primary-color', color);
+    document.documentElement.style.setProperty('--accent-color', color);
+    document.documentElement.style.setProperty('--gradient-primary', `linear-gradient(135deg, ${color}, ${color}88)`);
     
     // Update active state
-    document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
-    event.target.classList.add('active');
+    updateActiveColorButton(color);
+    
+    // Save to localStorage immediately
+    const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+    settings.accentColor = color;
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+}
+
+// Update active color button
+function updateActiveColorButton(color) {
+    document.querySelectorAll('.color-option').forEach(btn => {
+        btn.classList.remove('active');
+        const btnColor = btn.style.backgroundColor;
+        const btnColorHex = rgbToHex(btnColor);
+        if (btnColorHex === color.toLowerCase() || btn.style.background.includes(color)) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+// Convert RGB to Hex
+function rgbToHex(rgb) {
+    if (rgb.startsWith('#')) return rgb.toLowerCase();
+    
+    const result = rgb.match(/\d+/g);
+    if (!result || result.length < 3) return rgb;
+    
+    const r = parseInt(result[0]);
+    const g = parseInt(result[1]);
+    const b = parseInt(result[2]);
+    
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toLowerCase();
+}
+
+// Initialize font size slider functionality
+function initializeFontSizeSlider() {
+    const fontSizeSlider = document.getElementById('font-size');
+    if (fontSizeSlider) {
+        fontSizeSlider.addEventListener('input', function() {
+            const fontSize = this.value;
+            console.log('Setting font size to:', fontSize + '%');
+            
+            // Apply font size immediately
+            document.documentElement.style.setProperty('--base-font-size', fontSize + '%');
+            
+            // Update slider display
+            updateSliderValue('font-size');
+            
+            // Save to localStorage immediately
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            settings.fontSize = parseInt(fontSize);
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+        });
+    }
+}
+
+// Initialize toggle functionality
+function initializeToggles() {
+    // Animations toggle
+    const animationsToggle = document.getElementById('animations-toggle');
+    if (animationsToggle) {
+        animationsToggle.addEventListener('change', function() {
+            document.body.classList.toggle('no-animations', !this.checked);
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            settings.animations = this.checked;
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+        });
+    }
+    
+    // Reduce motion toggle
+    const reduceMotionToggle = document.getElementById('reduce-motion');
+    if (reduceMotionToggle) {
+        reduceMotionToggle.addEventListener('change', function() {
+            document.body.classList.toggle('reduce-motion', this.checked);
+            const settings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+            settings.reduceMotion = this.checked;
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+        });
+    }
 }
 
 // Save settings
 function saveSettings() {
-    const settings = {
-        theme: document.documentElement.getAttribute('data-theme'),
-        questionCount: document.getElementById('question-count').value,
-        timeLimit: document.getElementById('time-limit').value,
-        showHints: document.getElementById('show-hints').checked,
-        instantFeedback: document.getElementById('instant-feedback').checked,
-        soundEffects: document.getElementById('sound-effects').checked,
-        volume: document.getElementById('volume').value,
-        animations: document.getElementById('animations-toggle').checked,
-        studyReminders: document.getElementById('study-reminders').checked,
-        achievementAlerts: document.getElementById('achievement-alerts').checked,
-        // Add more settings...
-    };
-    
-    localStorage.setItem('appSettings', JSON.stringify(settings));
-    showMessage('success', 'Settings saved successfully!');
+    try {
+        const settings = {
+            theme: document.documentElement.getAttribute('data-theme'),
+            accentColor: document.documentElement.style.getPropertyValue('--primary-color') || '#7c3aed',
+            fontSize: parseInt(document.getElementById('font-size')?.value || 100),
+            animations: document.getElementById('animations-toggle')?.checked !== false,
+            reduceMotion: document.getElementById('reduce-motion')?.checked === true,
+            questionCount: document.getElementById('question-count')?.value || '20',
+            timeLimit: document.getElementById('time-limit')?.value || '30',
+            showHints: document.getElementById('show-hints')?.checked !== false,
+            instantFeedback: document.getElementById('instant-feedback')?.checked !== false,
+            soundEffects: document.getElementById('sound-effects')?.checked !== false,
+            volume: document.getElementById('volume')?.value || 70,
+            studyReminders: document.getElementById('study-reminders')?.checked === true,
+            achievementAlerts: document.getElementById('achievement-alerts')?.checked === true,
+        };
+        
+        console.log('Saving settings:', settings);
+        localStorage.setItem('appSettings', JSON.stringify(settings));
+        showMessage('success', 'Settings saved successfully!');
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showMessage('error', 'Failed to save settings');
+    }
 }
 
 // Reset settings to defaults
