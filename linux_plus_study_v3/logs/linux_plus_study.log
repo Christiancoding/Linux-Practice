@@ -4973,3 +4973,43 @@ NameError: name 'login_required' is not defined
 2025-08-11 14:00:25,172 - utils.database - INFO: Database connection test successful
 2025-08-11 14:00:25,182 - views.web_view - WARNING: VM management features not available - vm_integration module not found
 2025-08-11 14:00:25,187 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 14:14:26,801 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 14:14:26,802 - utils.database - INFO: All database connections closed
+2025-08-11 14:14:28,041 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 14:14:28,041 - __main__ - INFO: Starting web application mode
+2025-08-11 14:14:28,041 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 14:14:28,042 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 14:14:28,051 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 14:14:28,061 - utils.database - INFO: Database connection test successful
+2025-08-11 14:14:28,071 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 14:14:28,075 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 14:15:12,388 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 14:15:12,389 - utils.database - INFO: All database connections closed
+2025-08-11 14:15:13,321 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 14:15:13,321 - __main__ - INFO: Starting web application mode
+2025-08-11 14:15:13,322 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 14:15:13,322 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 14:15:13,328 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 14:15:13,335 - utils.database - INFO: Database connection test successful
+2025-08-11 14:15:13,343 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 14:15:13,346 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 14:20:49,052 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 14:20:49,053 - utils.database - INFO: All database connections closed
+2025-08-11 14:20:50,089 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 14:20:50,089 - __main__ - INFO: Starting web application mode
+2025-08-11 14:20:50,089 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 14:20:50,090 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 14:20:50,097 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 14:20:50,107 - utils.database - INFO: Database connection test successful
+2025-08-11 14:20:50,119 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 14:20:50,123 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 14:25:00,882 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 14:25:00,884 - utils.database - INFO: All database connections closed
+2025-08-11 14:25:02,079 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 14:25:02,079 - __main__ - INFO: Starting web application mode
+2025-08-11 14:25:02,080 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 14:25:02,080 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 14:25:02,090 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 14:25:02,102 - utils.database - INFO: Database connection test successful
+2025-08-11 14:25:02,119 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 14:25:02,127 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

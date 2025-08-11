@@ -1,13 +1,12 @@
 {
   "badges": [
-    "streak_master",
-    "point_collector"
+    "streak_master"
   ],
-  "points_earned": 720,
+  "points_earned": 390,
   "days_studied": [
     "2025-08-11"
   ],
-  "questions_answered": 20,
+  "questions_answered": 5,
   "streaks_achieved": 1,
   "perfect_sessions": 0,
   "daily_warrior_dates": [],
@@ -20,28 +19,7 @@
       "points": 360
     },
     {
-      "date": "2025-08-11T14:15:43.386448",
-      "score": 2,
-      "total": 5,
-      "accuracy": 40.0,
-      "points": 20
-    },
-    {
-      "date": "2025-08-11T14:25:25.181080",
-      "score": 2,
-      "total": 5,
-      "accuracy": 40.0,
-      "points": 20
-    },
-    {
       "date": "2025-08-11T14:14:44.355388",
-      "score": 1,
-      "total": 4,
-      "accuracy": 25.0,
-      "points": 10
-    },
-    {
-      "date": "2025-08-11T14:21:06.476292",
       "score": 1,
       "total": 4,
       "accuracy": 25.0,
@@ -62,6 +40,5 @@
       "points": 0
     }
   ],
-  "survival_high_score": 7,
-  "survival_high_score_xp": 150
+  "survival_high_score": 5
 }

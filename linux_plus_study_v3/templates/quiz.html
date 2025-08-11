@@ -918,6 +918,26 @@
     color: var(--text-secondary);
 }
 
+/* New High Score Animation */
+.new-high-score {
+    animation: highScorePulse 2s ease-in-out infinite;
+    border: 2px solid var(--success-color);
+    border-radius: 10px;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+}
+
+@keyframes highScorePulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+    }
+    50% { 
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+    }
+}
+
 /* Category Performance */
 .results-breakdown {
     margin-bottom: 2rem;
@@ -2180,10 +2200,19 @@ function updateSurvivalLives() {
 function showSurvivalGameOver(data) {
     console.log('Showing survival game over screen with data:', data);
     
-    // Calculate final score from session data
+    // Calculate final scores from session data
     const finalScore = data.session_score || quizState.score || 0;
     const questionsAnswered = data.session_total || quizState.answers.length || 0;
     const highScore = data.survival_high_score || 0;
+    const highScoreXP = data.survival_high_score_xp || 0;
+    const sessionXP = data.session_points || 0;
+    const isNewHighScore = data.survival_new_high_score || false;
+    const isNewHighScoreXP = data.survival_new_high_score_xp || false;
+    
+    // Special messages for new high scores
+    const highScoreMessage = (isNewHighScore || isNewHighScoreXP) ? 
+        '<p style="color: var(--success-color); font-weight: bold; margin-top: 0.5rem;"><i class="fas fa-fire"></i> NEW HIGH SCORE!</p>' : 
+        '';
     
     const gameOverHtml = `
         <div class="quiz-complete">
@@ -2193,9 +2222,10 @@ function showSurvivalGameOver(data) {
                 </div>
                 <h2 style="color: var(--danger-color); font-size: 2.5rem; margin-bottom: 0.5rem;">Game Over!</h2>
                 <p style="color: var(--text-secondary); font-size: 1.25rem;">You ran out of lives in Survival Mode</p>
+                ${highScoreMessage}
             </div>
             
-            <div class="results-stats" style="margin: 2rem 0;">
+            <div class="results-stats" style="margin: 2rem 0; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
                 <div class="result-stat">
                     <i class="fas fa-trophy" style="color: var(--warning-color);"></i>
                     <div>
@@ -2203,15 +2233,29 @@ function showSurvivalGameOver(data) {
                         <p>Final Score</p>
                     </div>
                 </div>
-                <div class="result-stat">
-                    <i class="fas fa-star" style="color: var(--primary-color);"></i>
+                <div class="result-stat ${isNewHighScore ? 'new-high-score' : ''}">
+                    <i class="fas fa-crown" style="color: var(--success-color);"></i>
                     <div>
                         <h3 id="high-score">${highScore}</h3>
-                        <p>High Score</p>
+                        <p>Best Score</p>
                     </div>
                 </div>
                 <div class="result-stat">
-                    <i class="fas fa-question" style="color: var(--accent-color);"></i>
+                    <i class="fas fa-bolt" style="color: var(--primary-color);"></i>
+                    <div>
+                        <h3>${sessionXP}</h3>
+                        <p>XP Earned</p>
+                    </div>
+                </div>
+                <div class="result-stat ${isNewHighScoreXP ? 'new-high-score' : ''}">
+                    <i class="fas fa-star" style="color: var(--accent-color);"></i>
+                    <div>
+                        <h3>${highScoreXP}</h3>
+                        <p>Best XP</p>
+                    </div>
+                </div>
+                <div class="result-stat">
+                    <i class="fas fa-question" style="color: var(--info-color);"></i>
                     <div>
                         <h3>${questionsAnswered}</h3>
                         <p>Questions Answered</p>

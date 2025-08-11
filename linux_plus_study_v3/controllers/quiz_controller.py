@@ -87,7 +87,9 @@ class QuizController:
         # Survival mode attributes
         self.survival_mode_active = False
         self.survival_lives = SURVIVAL_MODE_LIVES
-        self.survival_high_score = 0
+        # Load survival high score from achievements
+        self.survival_high_score = self.game_state.achievement_system.get_survival_high_score()
+        self.survival_high_score_xp = self.game_state.achievement_system.get_survival_high_score_xp()
         
         # Exam mode attributes
         self.exam_mode_active = False
@@ -506,9 +508,30 @@ class QuizController:
             response['survival_lives'] = self.survival_lives
             response['survival_game_over'] = self.survival_lives <= 0
             if self.survival_lives <= 0:
-                response['survival_final_score'] = self.session_score
-                response['survival_high_score'] = getattr(self, 'survival_high_score', 0)
-                print(f"DEBUG: Adding survival game over data to response")
+                # Game over - check and update both high scores
+                final_score = self.session_score
+                final_xp = self.game_state.session_points
+                
+                # Update both high scores
+                score_high_score_updated = self.game_state.achievement_system.update_survival_high_score(final_score)
+                xp_high_score_updated = self.game_state.achievement_system.update_survival_high_score_xp(final_xp)
+                
+                # Get the (potentially updated) high scores
+                current_high_score = self.game_state.achievement_system.get_survival_high_score()
+                current_high_score_xp = self.game_state.achievement_system.get_survival_high_score_xp()
+                
+                response['survival_final_score'] = final_score
+                response['survival_final_xp'] = final_xp
+                response['survival_high_score'] = current_high_score
+                response['survival_high_score_xp'] = current_high_score_xp
+                response['survival_new_high_score'] = score_high_score_updated
+                response['survival_new_high_score_xp'] = xp_high_score_updated
+                print(f"DEBUG: Survival game over - Final Score: {final_score}, High Score: {current_high_score}, New High Score: {score_high_score_updated}")
+                print(f"DEBUG: Survival game over - Final XP: {final_xp}, High XP: {current_high_score_xp}, New High XP: {xp_high_score_updated}")
+                
+                # Update our local copies
+                self.survival_high_score = current_high_score
+                self.survival_high_score_xp = current_high_score_xp
         
         # Add mode-specific information (keep the existing timed mode logic)
         if self.timed_mode_active and self.current_question_start_time:
@@ -682,6 +705,9 @@ class QuizController:
         # Reset mode-specific flags
         self.survival_mode_active = False
         self.survival_lives = SURVIVAL_MODE_LIVES
+        # Reload survival high scores in case they were updated
+        self.survival_high_score = self.game_state.achievement_system.get_survival_high_score()
+        self.survival_high_score_xp = self.game_state.achievement_system.get_survival_high_score_xp()
         self.timed_mode_active = False
         self.exam_mode_active = False
         
@@ -721,7 +747,8 @@ class QuizController:
         return {
             'survival_mode_active': True,
             'lives': self.survival_lives,
-            'high_score': getattr(self, 'survival_high_score', 0)
+            'high_score': self.survival_high_score,
+            'high_score_xp': self.survival_high_score_xp
         }
 
     def start_exam_mode(self) -> Dict[str, Any]:

@@ -1,17 +1,17 @@
 {
   "anonymous": {
-    "total_questions": 52,
-    "correct_answers": 28,
-    "incorrect_answers": 24,
-    "accuracy": 53.85,
-    "total_study_time": 624,
-    "total_sessions": 15,
+    "total_questions": 103,
+    "correct_answers": 54,
+    "incorrect_answers": 49,
+    "accuracy": 52.43,
+    "total_study_time": 1236,
+    "total_sessions": 29,
     "study_streak": 2,
     "current_streak": 0,
     "longest_streak": 2,
     "questions_to_review": 10,
-    "level": 4,
-    "xp": 360,
+    "level": 8,
+    "xp": 720,
     "achievements": [
       {
         "id": "first_question",
@@ -43,52 +43,52 @@
       }
     ],
     "session_history": [],
-    "last_activity": "2025-08-11T14:02:14.564106",
+    "last_activity": "2025-08-11T15:29:33.786558",
     "topics_studied": {
       "Concepts & Terms (Security)": {
-        "correct": 5,
-        "total": 7,
-        "questions": 7
+        "correct": 10,
+        "total": 13,
+        "questions": 13
       },
       "Troubleshooting": {
-        "correct": 4,
-        "total": 9,
-        "questions": 9
+        "correct": 6,
+        "total": 13,
+        "questions": 13
       },
       "Commands (System Management)": {
-        "correct": 11,
-        "total": 24,
-        "questions": 24
+        "correct": 23,
+        "total": 57,
+        "questions": 57
       },
       "Concepts & Terms (Automation)": {
-        "correct": 4,
-        "total": 7,
-        "questions": 7
+        "correct": 7,
+        "total": 11,
+        "questions": 11
       },
       "Concepts & Terms (System Management)": {
-        "correct": 2,
-        "total": 3,
-        "questions": 3
+        "correct": 4,
+        "total": 5,
+        "questions": 5
       },
       "Concepts & Terms (Containers)": {
-        "correct": 2,
-        "total": 2,
-        "questions": 2
+        "correct": 4,
+        "total": 4,
+        "questions": 4
       }
     },
     "difficulty_progress": {
       "beginner": 0,
-      "intermediate": 52,
+      "intermediate": 103,
       "advanced": 0
     },
     "display_name": "Anonymous",
     "created_date": "2025-08-10T00:12:06.729796",
     "current_session": {
-      "start": "2025-08-11T14:02:14.564106",
-      "questions": 1,
-      "last_activity": "2025-08-11T14:02:14.564106"
+      "start": "2025-08-11T15:29:32.482210",
+      "questions": 2,
+      "last_activity": "2025-08-11T15:29:33.786558"
     },
-    "overall_accuracy": 54.90196078431373
+    "overall_accuracy": 52.94117647058824
   },
   "demo_user_001": {
     "total_questions": 0,

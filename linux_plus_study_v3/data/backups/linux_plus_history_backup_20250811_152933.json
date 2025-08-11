@@ -3,7 +3,7 @@
   "questions": {
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
       "correct": 3,
-      "attempts": 6,
+      "attempts": 5,
       "history": [
         {
           "timestamp": "2025-08-11T14:00:32.788939",
@@ -24,16 +24,12 @@
         {
           "timestamp": "2025-08-11T15:25:15.901759",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:19.886085",
-          "correct": false
         }
       ]
     },
     "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 12,
-      "attempts": 30,
+      "correct": 9,
+      "attempts": 24,
       "history": [
         {
           "timestamp": "2025-08-11T14:00:34.295765",
@@ -130,36 +126,12 @@
         {
           "timestamp": "2025-08-11T15:25:08.386053",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:26:50.037491",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:48.793105",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:50.594230",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:19.720851",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-11T15:29:31.199004",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-11T15:29:32.481927",
-          "correct": false
         }
       ]
     },
     "What is Ansible primarily used for?": {
-      "correct": 6,
-      "attempts": 8,
+      "correct": 5,
+      "attempts": 6,
       "history": [
         {
           "timestamp": "2025-08-11T14:00:36.924564",
@@ -184,20 +156,12 @@
         {
           "timestamp": "2025-08-11T15:25:20.021109",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:03.041563",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:27.617956",
-          "correct": false
         }
       ]
     },
     "What is the purpose of the `grub2-mkconfig` command?": {
-      "correct": 3,
-      "attempts": 3,
+      "correct": 2,
+      "attempts": 2,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:02.119779",
@@ -206,16 +170,12 @@
         {
           "timestamp": "2025-08-11T14:01:34.679221",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:00.640781",
-          "correct": true
         }
       ]
     },
     "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
-      "correct": 3,
-      "attempts": 3,
+      "correct": 2,
+      "attempts": 2,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:08.853064",
@@ -224,16 +184,12 @@
         {
           "timestamp": "2025-08-11T14:02:01.417805",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:08.096197",
-          "correct": true
         }
       ]
     },
     "What is the primary function of the `mkinitrd` command?": {
-      "correct": 6,
-      "attempts": 10,
+      "correct": 5,
+      "attempts": 8,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:11.161981",
@@ -266,20 +222,12 @@
         {
           "timestamp": "2025-08-11T15:25:12.023423",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:52.731526",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:29.442267",
-          "correct": false
         }
       ]
     },
     "What is AppArmor?": {
-      "correct": 4,
-      "attempts": 5,
+      "correct": 3,
+      "attempts": 3,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:12.965743",
@@ -292,20 +240,12 @@
         {
           "timestamp": "2025-08-11T14:25:23.275250",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:54.987920",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:33.783696",
-          "correct": false
         }
       ]
     },
     "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
       "correct": 2,
-      "attempts": 5,
+      "attempts": 3,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:20.084106",
@@ -318,20 +258,12 @@
         {
           "timestamp": "2025-08-11T15:25:28.981236",
           "correct": false
-        },
-        {
-          "timestamp": "2025-08-11T15:27:26.647517",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-11T15:29:22.719627",
-          "correct": false
         }
       ]
     },
     "What does ACL stand for in Linux security?": {
-      "correct": 6,
-      "attempts": 6,
+      "correct": 5,
+      "attempts": 5,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:22.933941",
@@ -352,16 +284,12 @@
         {
           "timestamp": "2025-08-11T15:25:22.509124",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:10.801715",
-          "correct": true
         }
       ]
     },
     "In Kubernetes, what is an Ambassador container?": {
-      "correct": 4,
-      "attempts": 4,
+      "correct": 3,
+      "attempts": 3,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:27.668514",
@@ -374,16 +302,12 @@
         {
           "timestamp": "2025-08-11T15:25:35.065902",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:29:04.956131",
-          "correct": true
         }
       ]
     },
     "What is an AppImage?": {
-      "correct": 4,
-      "attempts": 4,
+      "correct": 3,
+      "attempts": 3,
       "history": [
         {
           "timestamp": "2025-08-11T14:01:30.153685",
@@ -396,49 +320,40 @@
         {
           "timestamp": "2025-08-11T15:25:24.957692",
           "correct": true
-        },
-        {
-          "timestamp": "2025-08-11T15:28:56.919936",
-          "correct": true
         }
       ]
     }
   },
   "categories": {
     "Concepts & Terms (System Management)": {
-      "correct": 4,
-      "attempts": 4
+      "correct": 3,
+      "attempts": 3
     },
     "Concepts & Terms (Security)": {
-      "correct": 10,
-      "attempts": 11
-    },
-    "Troubleshooting": {
-      "correct": 6,
-      "attempts": 9
-    },
-    "Concepts & Terms (Containers)": {
-      "correct": 4,
-      "attempts": 4
-    },
-    "Concepts & Terms (Automation)": {
-      "correct": 6,
+      "correct": 8,
       "attempts": 8
     },
+    "Troubleshooting": {
+      "correct": 5,
+      "attempts": 7
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 3,
+      "attempts": 3
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 5,
+      "attempts": 6
+    },
     "Commands (System Management)": {
-      "correct": 23,
-      "attempts": 48
+      "correct": 18,
+      "attempts": 37
     }
   },
-  "total_correct": 53,
-  "total_attempts": 84,
+  "total_correct": 42,
+  "total_attempts": 64,
   "incorrect_review": [
-    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?",
-    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?",
-    "Which command installs the GRUB2 bootloader to a specified device?",
-    "What is Ansible primarily used for?",
-    "What is the primary function of the `mkinitrd` command?",
-    "What is AppArmor?"
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
   ],
   "leaderboard": [
     {
@@ -454,13 +369,6 @@
       "total": 10,
       "accuracy": 90.0,
       "points": 110
-    },
-    {
-      "date": "2025-08-11T15:29:33.783827",
-      "score": 11,
-      "total": 20,
-      "accuracy": 55.00000000000001,
-      "points": 190
     },
     {
       "date": "2025-08-11T14:15:43.386448",

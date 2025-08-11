@@ -496,6 +496,58 @@ class AchievementSystem:
         """
         return self.achievements.get("badges", []).copy()
     
+    def get_survival_high_score(self) -> int:
+        """
+        Get the current survival mode high score (questions correct).
+        
+        Returns:
+            int: Current survival mode high score
+        """
+        return self.achievements.get("survival_high_score", 0)
+    
+    def get_survival_high_score_xp(self) -> int:
+        """
+        Get the current survival mode XP high score.
+        
+        Returns:
+            int: Current survival mode XP high score
+        """
+        return self.achievements.get("survival_high_score_xp", 0)
+    
+    def update_survival_high_score(self, score: int) -> bool:
+        """
+        Update survival mode high score (questions correct) if the new score is higher.
+        
+        Args:
+            score (int): New score to potentially set as high score
+            
+        Returns:
+            bool: True if high score was updated, False otherwise
+        """
+        current_high_score = self.get_survival_high_score()
+        if score > current_high_score:
+            self.achievements["survival_high_score"] = score
+            self.save_achievements()
+            return True
+        return False
+    
+    def update_survival_high_score_xp(self, xp: int) -> bool:
+        """
+        Update survival mode XP high score if the new XP is higher.
+        
+        Args:
+            xp (int): New XP to potentially set as high score
+            
+        Returns:
+            bool: True if XP high score was updated, False otherwise
+        """
+        current_high_score_xp = self.get_survival_high_score_xp()
+        if xp > current_high_score_xp:
+            self.achievements["survival_high_score_xp"] = xp
+            self.save_achievements()
+            return True
+        return False
+    
     def clear_achievements(self) -> None:
         """Clear all achievement data."""
         self.achievements = self._get_default_achievements()
@@ -517,5 +569,7 @@ class AchievementSystem:
             "streaks_achieved": 0,
             "perfect_sessions": 0,
             "daily_warrior_dates": [],
-            "leaderboard": []
+            "leaderboard": [],
+            "survival_high_score": 0,
+            "survival_high_score_xp": 0
         }
