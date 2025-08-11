@@ -5296,3 +5296,14 @@ NameError: name 'login_required' is not defined
 2025-08-11 17:50:34,108 - views.web_view - ERROR: Load game values error: name 'get_game_value_manager' is not defined
 2025-08-11 17:50:41,648 - views.web_view - ERROR: Load game values error: name 'get_game_value_manager' is not defined
 2025-08-11 17:51:09,701 - views.web_view - ERROR: Load game values error: name 'get_game_value_manager' is not defined
+2025-08-11 17:52:45,989 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 17:52:45,990 - utils.database - INFO: All database connections closed
+2025-08-11 17:52:47,126 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 17:52:47,126 - __main__ - INFO: Starting web application mode
+2025-08-11 17:52:47,126 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 17:52:47,127 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 17:52:47,133 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 17:52:47,143 - utils.database - INFO: Database connection test successful
+2025-08-11 17:52:47,154 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 17:52:47,158 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 17:52:52,605 - views.web_view - ERROR: Load game values error: name 'get_game_value_manager' is not defined
