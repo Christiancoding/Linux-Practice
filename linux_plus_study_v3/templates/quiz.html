@@ -996,6 +996,11 @@
 @media (max-width: 768px) {
     .mode-cards {
         grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .mode-card {
+        padding: 1.5rem;
     }
     
     .mode-description {
@@ -1010,11 +1015,96 @@
     
     .custom-actions {
         flex-direction: column;
+        gap: 0.75rem;
     }
     
     .custom-actions button {
         width: 100%;
+        min-height: 44px;
     }
+    
+    .quiz-container {
+        padding: 1rem;
+    }
+    
+    .quiz-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .question-text {
+        font-size: 1.1rem;
+        line-height: 1.5;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .option-button {
+        padding: 1rem;
+        font-size: 0.95rem;
+        text-align: left;
+    }
+}
+
+@media (max-width: 480px) {
+    .mode-card {
+        padding: 1.25rem;
+    }
+    
+    .mode-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .quiz-progress-bar {
+        height: 6px;
+    }
+    
+    .quiz-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .option-button {
+        padding: 0.875rem;
+        font-size: 0.9rem;
+    }
+    
+    .quiz-controls {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .quiz-controls button {
+        width: 100%;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 320px) {
+    .mode-card {
+        padding: 1rem;
+    }
+    
+    .mode-card h3 {
+        font-size: 1.1rem;
+    }
+    
+    .mode-card p {
+        font-size: 0.9rem;
+    }
+    
+    .option-button {
+        padding: 0.75rem;
+        font-size: 0.85rem;
+    }
+}
     
     .quiz-header {
         flex-direction: column;

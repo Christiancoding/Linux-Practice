@@ -182,6 +182,19 @@ code, pre {
     z-index: 2;
 }
 
+/* Responsive container padding */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+}
+
 /* ============================================ */
 /* MAIN NAVIGATION (NAVBAR) */
 /* ============================================ */
@@ -256,6 +269,20 @@ code, pre {
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     margin: 0 2rem;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-shrink: 1;
+    min-width: 0;
+    transition: all 0.3s ease;
+}
+
+.nav-links::-webkit-scrollbar {
+    display: none;
+}
+
+.nav-links {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Regular Navigation Links */
@@ -273,6 +300,15 @@ code, pre {
     align-items: center;
     gap: 0.5rem;
     min-width: auto;
+    flex-shrink: 0;
+}
+
+.nav-link span {
+    transition: all 0.3s ease;
+}
+
+.nav-link i {
+    transition: all 0.3s ease;
 }
 
 .nav-link i {
@@ -312,20 +348,130 @@ code, pre {
     transform: scale(1.1);
 }
 
-/* Responsive Navigation */
-@media (max-width: 1200px) {
+/* 1600px and similar wide screens with navigation issues */
+@media (max-width: 1680px) and (min-width: 1500px) {
     .nav-links {
-        margin: 0 1rem;
+        margin: 0 0.5rem;
+        gap: 0.0625rem;
+        padding: 0.25rem;
+    }
+    
+    .nav-link {
+        padding: 0.4375rem 0.5rem;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        gap: 0.375rem;
+    }
+    
+    .nav-link i {
+        font-size: 0.875rem;
+    }
+    
+    .nav-logo {
+        font-size: 1.125rem;
+        padding: 0.4375rem 0.625rem;
+    }
+    
+    .nav-logo i {
+        font-size: 1.375rem;
+    }
+}
+
+/* Medium-wide screens */
+@media (max-width: 1499px) and (min-width: 1367px) {
+    .nav-links {
+        margin: 0 0.5rem;
+        gap: 0.125rem;
+        padding: 0.375rem;
+    }
+    
+    .nav-link {
+        padding: 0.5rem 0.625rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    
+    .nav-logo {
+        font-size: 1.2rem;
+        padding: 0.5rem 0.75rem;
+    }
+}
+
+/* Small Desktop/Laptop Screens - including 1600x900 */
+@media (max-width: 1366px) and (min-width: 1025px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 1rem;
+    }
+    
+    .nav-links {
+        margin: 0 0.5rem;
+        gap: 0.125rem;
+        padding: 0.375rem;
+    }
+    
+    .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+    
+    .nav-link span {
+        display: inline;
+    }
+    
+    .nav-logo {
+        font-size: 1.2rem;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .hero-section {
+        padding: 2.5rem 1.5rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+}
+
+/* Medium Desktop Screens */
+@media (max-width: 1200px) and (min-width: 993px) {
+    .nav-links {
+        margin: 0 0.75rem;
         gap: 0.125rem;
     }
     
     .nav-link {
-        padding: 0.625rem 1rem;
+        padding: 0.625rem 0.875rem;
         font-size: 0.85rem;
+    }
+    
+    .hero-content {
+        gap: 2rem;
+    }
+    
+    .hero-title {
+        font-size: 2.25rem;
+    }
+    
+    .progress-ring {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .progress-ring circle {
+        r: 80;
     }
 }
 
-@media (max-width: 992px) {
+/* Only stack navigation on smaller screens */
+@media (max-width: 900px) {
     .main-nav .container {
         flex-direction: column;
         gap: 1rem;
@@ -342,6 +488,29 @@ code, pre {
         margin-bottom: 0.5rem;
         font-size: 1.3rem;
         white-space: nowrap;
+    }
+}
+
+/* Small PC monitors - keep horizontal layout */
+@media (max-width: 1024px) and (min-width: 901px) {
+    .nav-links {
+        margin: 0 0.5rem;
+        gap: 0.125rem;
+        padding: 0.375rem;
+    }
+    
+    .nav-link {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    .nav-link span {
+        display: inline;
+    }
+    
+    .nav-logo {
+        font-size: 1.25rem;
+        padding: 0.5rem 0.875rem;
     }
 }
 
@@ -1818,23 +1987,342 @@ label {
     background: rgba(255, 255, 255, 0.2);
 }
 
+/* ============================================ */
+/* COMPREHENSIVE RESPONSIVE DESIGN IMPROVEMENTS */
+/* ============================================ */
+
+/* Very Small Desktop Screens (1024x768 and smaller desktops) */
+@media (max-width: 1024px) and (min-width: 769px) and (pointer: fine) {
+    .container {
+        max-width: 960px;
+        padding: 0 1rem;
+    }
+    
+    .hero-section {
+        padding: 2rem 1.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .mode-card {
+        padding: 1.5rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .dashboard-grid {
+        gap: 1.25rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .command-category-card {
+        padding: 1.25rem;
+    }
+}
+
+/* Extra Small Mobile Devices */
+@media (max-width: 320px) {
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.5rem; }
+    h3 { font-size: 1.25rem; }
+    
+    .container {
+        padding: 0 0.5rem;
+    }
+    
+    .nav-logo {
+        font-size: 1rem;
+        padding: 0.375rem 0.75rem;
+        max-width: 200px;
+    }
+    
+    .nav-link {
+        padding: 0.375rem;
+        min-width: 36px;
+    }
+}
+
+/* Small Mobile Devices - Portrait */
+@media (max-width: 480px) and (orientation: portrait) {
+    .hero-content {
+        flex-direction: column;
+        gap: 2rem;
+    }
+    
+    .hero-title {
+        font-size: 1.75rem;
+        text-align: center;
+    }
+    
+    .hero-stats {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .stat-divider {
+        width: 80%;
+        height: 1px;
+    }
+    
+    .progress-ring {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .progress-ring circle {
+        r: 65;
+    }
+}
+
+/* Medium Mobile Devices - Landscape */
+@media (max-width: 768px) and (orientation: landscape) {
+    .main-nav {
+        padding: 0.5rem 0;
+    }
+    
+    .nav-links {
+        gap: 0.125rem;
+        padding: 0.25rem;
+    }
+    
+    .nav-link {
+        padding: 0.375rem 0.5rem;
+        font-size: 0.75rem;
+    }
+    
+    .hero-section {
+        padding: 2rem 1rem;
+    }
+}
+
+/* Tablet Portrait */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+    .hero-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 2.5rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+/* Small PC Monitors & Laptop Screens */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    .container {
+        max-width: 1200px;
+        padding: 0 1.5rem;
+    }
+    
+    .nav-links {
+        margin: 0 1rem;
+        gap: 0.1875rem;
+    }
+    
+    .nav-link {
+        padding: 0.625rem 0.875rem;
+        font-size: 0.875rem;
+    }
+    
+    .hero-content {
+        gap: 2.5rem;
+    }
+    
+    .hero-section {
+        padding: 2.5rem 2rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .mode-card {
+        padding: 1.75rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .dashboard-grid {
+        gap: 1.5rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.875rem;
+    }
+}
+
+/* Standard Desktop breakpoint */
+@media (min-width: 1200px) and (max-width: 1399px) {
+    .container {
+        max-width: 1140px;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Touch Device Optimizations */
+@media (pointer: coarse) {
+    .nav-link {
+        min-height: 44px;
+        padding: 0.75rem 1rem;
+    }
+    
+    .btn {
+        min-height: 44px;
+        padding: 0.75rem 1.5rem;
+    }
+    
+    .mode-card {
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+    
+    .activity-cell {
+        min-width: 24px;
+        min-height: 24px;
+    }
+}
+
+/* High DPI Screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .nav-logo i {
+        image-rendering: crisp-edges;
+    }
+    
+    .mode-icon, .stat-icon {
+        image-rendering: crisp-edges;
+    }
+}
+
+/* Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .progress-ring-fill {
+        transition: none;
+    }
+}
+
+/* Dark Mode Media Query */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+        --bg-primary: #0a0a0f;
+        --bg-secondary: #1a1a25;
+        --bg-tertiary: #25253a;
+        --bg-card: rgba(30, 30, 45, 0.8);
+        --text-primary: #f1f5f9;
+        --text-secondary: #94a3b8;
+        --text-muted: #64748b;
+        --border-color: rgba(148, 163, 184, 0.2);
+    }
+}
+
 /* Print Styles */
 @media print {
     body {
         background: white;
         color: black;
+        font-size: 12pt;
     }
     
-    .navbar, .cli-controls, .modal {
+    .main-nav, .floating-actions, .modal {
         display: none !important;
     }
     
     .container {
         max-width: 100%;
+        padding: 0;
     }
     
-    .card, .glass {
+    .glass, .card {
         box-shadow: none;
         border: 1px solid #ddd;
+        background: white;
+    }
+    
+    .page-content {
+        margin: 0;
+        padding: 0;
+    }
+    
+    h1, h2, h3 {
+        color: black;
+        page-break-after: avoid;
+    }
+    
+    .hero-section {
+        padding: 1rem 0;
+        background: white;
+    }
+}
+
+/* Focus Management for Keyboard Navigation */
+@media (prefers-reduced-motion: no-preference) {
+    .nav-link:focus,
+    .btn:focus,
+    .mode-card:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+}
+
+/* Wide Screen Optimizations */
+@media (min-width: 1400px) {
+    .container {
+        max-width: 1600px;
+    }
+    
+    .hero-content {
+        gap: 4rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(5, 1fr);
     }
 }

@@ -2654,6 +2654,31 @@ class LinuxPlusStudyWeb:
                     'xp': 0
                 })
 
+        @self.app.route('/api/heatmap')
+        def api_heatmap():
+            """API endpoint for study activity heatmap data"""
+            try:
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                analytics = get_analytics_manager()
+                user_id = session.get('user_id', 'anonymous')
+                
+                # Get heatmap data from analytics
+                heatmap_data = analytics.get_heatmap_data(user_id)
+                
+                return jsonify({
+                    'success': True,
+                    'heatmap_data': heatmap_data
+                })
+            except Exception as e:
+                self.logger.error(f"Heatmap API error: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'heatmap_data': []
+                })
+
         @self.app.route('/api/time-tracking')
         def api_time_tracking():
             """API endpoint for time tracking data"""

@@ -270,11 +270,50 @@ class SimpleAnalyticsManager:
         if user_data["total_questions"] > 0 and user_data["total_sessions"] == 0:
             user_data["total_sessions"] = 1
         
+        # Update session history for real-time activity tracking
+        self._update_session_history_for_question(user_data, correct)
+        
         # Check and award achievements
         self._check_and_award_achievements(user_data)
         
         self._save_data(data)
         return user_data
+    
+    def _update_session_history_for_question(self, user_data: dict, correct: bool):
+        """Update session history for real-time calendar tracking"""
+        current_time = datetime.now()
+        today_str = current_time.strftime("%Y-%m-%d")
+        session_history = user_data.get("session_history", [])
+        
+        # Check if there's already a session for today
+        today_session = None
+        for session in session_history:
+            if session.get("start_time"):
+                try:
+                    session_dt = datetime.fromisoformat(session["start_time"].replace('Z', '+00:00'))
+                    if session_dt.strftime("%Y-%m-%d") == today_str:
+                        today_session = session
+                        break
+                except (ValueError, AttributeError):
+                    continue
+        
+        if today_session:
+            # Update existing today's session
+            today_session["questions_answered"] = today_session.get("questions_answered", 0) + 1
+            if correct:
+                today_session["questions_correct"] = today_session.get("questions_correct", 0) + 1
+        else:
+            # Create new session for today
+            new_session = {
+                "start_time": current_time.isoformat(),
+                "questions_answered": 1,
+                "questions_correct": 1 if correct else 0
+            }
+            session_history.append(new_session)
+            
+            # Keep only last 15 sessions (increased from 10 for better history)
+            if len(session_history) > 15:
+                user_data["session_history"] = session_history[-15:]
 
     def update_session_with_actual_time(self, user_id: str, actual_duration: int, questions_answered: int) -> Dict[str, Any]:
         """
@@ -730,6 +769,63 @@ class SimpleAnalyticsManager:
         )
         
         return sorted_achievements[:5]
+    
+    def get_heatmap_data(self, user_id: str) -> list:
+        """Get study activity heatmap data for the last year"""
+        user_data = self.get_user_data(user_id)
+        session_history = user_data.get("session_history", [])
+        activity_map = {}
+        
+        # Create a map of dates to activity counts from actual session data
+        for session in session_history:
+            session_date = session.get("start_time")
+            if session_date:
+                try:
+                    # Convert session date to date string
+                    if isinstance(session_date, str):
+                        # Try to parse ISO format date
+                        session_dt = datetime.fromisoformat(session_date.replace('Z', '+00:00'))
+                        date_str = session_dt.strftime("%Y-%m-%d")
+                    else:
+                        date_str = session_date.strftime("%Y-%m-%d")
+                    
+                    questions = session.get("questions_answered", 0)
+                    if date_str not in activity_map:
+                        activity_map[date_str] = 0
+                    activity_map[date_str] += questions
+                except (ValueError, AttributeError):
+                    continue
+        
+        # Generate heatmap data for the past year
+        today = datetime.now()
+        heatmap_data = []
+        
+        for i in range(365):
+            current_date = today - timedelta(days=i)
+            date_str = current_date.strftime("%Y-%m-%d")
+            questions_count = activity_map.get(date_str, 0)
+            
+            # Calculate activity level (0-4 scale for GitHub-style heatmap)
+            level = 0
+            if questions_count > 0:
+                if questions_count >= 20:
+                    level = 4  # Very high activity
+                elif questions_count >= 15:
+                    level = 3  # High activity
+                elif questions_count >= 10:
+                    level = 2  # Medium activity
+                else:
+                    level = 1  # Low activity
+            
+            heatmap_data.append({
+                "date": date_str,
+                "questions": questions_count,
+                "level": level
+            })
+        
+        # Sort by date (oldest first for proper display)
+        heatmap_data.sort(key=lambda x: x["date"])
+        return heatmap_data
 
 # Global instance
 _analytics_manager = None

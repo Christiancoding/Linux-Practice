@@ -589,6 +589,45 @@
 }
 
 /* Responsive */
+/* Small PC Monitor optimizations */
+@media (min-width: 1024px) and (max-width: 1366px) {
+    .hero-content {
+        gap: 2.5rem;
+    }
+    
+    .hero-title {
+        font-size: 2.25rem;
+    }
+    
+    .modes-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.25rem;
+    }
+    
+    .mode-card {
+        padding: 1.75rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 0.875rem;
+    }
+    
+    .progress-ring {
+        width: 180px;
+        height: 180px;
+    }
+    
+    .progress-ring circle {
+        r: 80;
+    }
+}
+
 @media (max-width: 1200px) {
     .hero-content {
         flex-direction: column;
@@ -603,18 +642,132 @@
 @media (max-width: 768px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
     .hero-title {
         font-size: 2rem;
+        line-height: 1.2;
+    }
+    
+    .hero-section {
+        padding: 2rem 1.5rem;
     }
     
     .modes-grid {
         grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+    
+    .mode-card {
+        padding: 1.5rem;
     }
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1.25rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .command-category-card {
+        padding: 1.25rem;
+    }
+    
+    .command-category-card i {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-section {
+        padding: 1.5rem 1rem;
+    }
+    
+    .hero-title {
+        font-size: 1.75rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1.1rem;
+    }
+    
+    .mode-card {
+        padding: 1.25rem;
+    }
+    
+    .mode-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+    
+    .command-category-card {
+        padding: 1rem;
+    }
+    
+    .study-calendar {
+        gap: 2px;
+    }
+    
+    .activity-cell {
+        min-width: 20px;
+        min-height: 20px;
+    }
+}
+
+@media (max-width: 320px) {
+    .hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .mode-card h3 {
+        font-size: 1.1rem;
+    }
+    
+    .mode-card p {
+        font-size: 0.9rem;
+    }
+    
+    .stat-card {
+        padding: 0.875rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .command-categories-grid {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -965,12 +1118,74 @@ function updateRecentAchievementsDisplay(recentAchievements) {
     container.innerHTML = achievementsHTML;
 }
 
-// Generate study calendar
+// Generate study calendar with real data
 function generateStudyCalendar() {
+    const calendar = document.getElementById('study-calendar');
+    
+    // Clear existing content
+    calendar.innerHTML = '';
+    
+    // Fetch real heatmap data
+    fetch('/api/heatmap')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.heatmap_data) {
+                generateStudyCalendarWithData(data.heatmap_data);
+            } else {
+                // Fallback to static calendar if API fails
+                generateStaticStudyCalendar();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading heatmap data:', error);
+            // Fallback to static calendar
+            generateStaticStudyCalendar();
+        });
+}
+
+// Generate calendar with real activity data
+function generateStudyCalendarWithData(heatmapData) {
     const calendar = document.getElementById('study-calendar');
     const today = new Date();
     
+    // Create activity map for quick lookup
+    const activityMap = {};
+    heatmapData.forEach(day => {
+        activityMap[day.date] = day;
+    });
+    
     // Generate last 35 days
+    for (let i = 34; i >= 0; i--) {
+        const cell = document.createElement('div');
+        cell.className = 'activity-cell';
+        
+        // Calculate date for this cell
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Get activity data for this date
+        const dayData = activityMap[dateStr] || { questions: 0, level: 0 };
+        
+        // Set activity level
+        cell.setAttribute('data-level', dayData.level);
+        
+        // Add tooltip with actual data
+        const questionsText = dayData.questions > 0 ? 
+            `${dayData.questions} question${dayData.questions !== 1 ? 's' : ''}` : 
+            'No activity';
+        cell.title = `${date.toLocaleDateString()}: ${questionsText}`;
+        
+        calendar.appendChild(cell);
+    }
+}
+
+// Fallback static calendar generator
+function generateStaticStudyCalendar() {
+    const calendar = document.getElementById('study-calendar');
+    const today = new Date();
+    
+    // Generate last 35 days with no activity
     for (let i = 34; i >= 0; i--) {
         const cell = document.createElement('div');
         cell.className = 'activity-cell';
@@ -982,7 +1197,7 @@ function generateStudyCalendar() {
         // Add tooltip
         const date = new Date(today);
         date.setDate(date.getDate() - i);
-        cell.title = `${date.toLocaleDateString()}: -- questions`;
+        cell.title = `${date.toLocaleDateString()}: No data available`;
         
         calendar.appendChild(cell);
     }
