@@ -589,44 +589,6 @@
 }
 
 /* Responsive */
-/* Small PC Monitor optimizations */
-@media (min-width: 1024px) and (max-width: 1366px) {
-    .hero-content {
-        gap: 2.5rem;
-    }
-    
-    .hero-title {
-        font-size: 2.25rem;
-    }
-    
-    .modes-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.25rem;
-    }
-    
-    .mode-card {
-        padding: 1.75rem;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-    }
-    
-    .command-categories-grid {
-        grid-template-columns: repeat(6, 1fr);
-        gap: 0.875rem;
-    }
-    
-    .progress-ring {
-        width: 180px;
-        height: 180px;
-    }
-    
-    .progress-ring circle {
-        r: 80;
-    }
-}
 
 @media (max-width: 1200px) {
     .hero-content {
@@ -642,7 +604,6 @@
 @media (max-width: 768px) {
     .dashboard-grid {
         grid-template-columns: 1fr;
-        gap: 1.5rem;
     }
     
     .hero-title {
@@ -656,118 +617,10 @@
     
     .modes-grid {
         grid-template-columns: 1fr;
-        gap: 1.25rem;
-    }
-    
-    .mode-card {
-        padding: 1.5rem;
     }
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1.25rem;
-    }
-    
-    .command-categories-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75rem;
-    }
-    
-    .command-category-card {
-        padding: 1.25rem;
-    }
-    
-    .command-category-card i {
-        font-size: 1.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-section {
-        padding: 1.5rem 1rem;
-    }
-    
-    .hero-title {
-        font-size: 1.75rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1.1rem;
-    }
-    
-    .mode-card {
-        padding: 1.25rem;
-    }
-    
-    .mode-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 1.25rem;
-    }
-    
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1rem;
-    }
-    
-    .stat-value {
-        font-size: 1.5rem;
-    }
-    
-    .command-categories-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
-    }
-    
-    .command-category-card {
-        padding: 1rem;
-    }
-    
-    .study-calendar {
-        gap: 2px;
-    }
-    
-    .activity-cell {
-        min-width: 20px;
-        min-height: 20px;
-    }
-}
-
-@media (max-width: 320px) {
-    .hero-title {
-        font-size: 1.5rem;
-    }
-    
-    .hero-subtitle {
-        font-size: 1rem;
-    }
-    
-    .mode-card h3 {
-        font-size: 1.1rem;
-    }
-    
-    .mode-card p {
-        font-size: 0.9rem;
-    }
-    
-    .stat-card {
-        padding: 0.875rem;
-    }
-    
-    .stat-value {
-        font-size: 1.25rem;
-    }
-    
-    .command-categories-grid {
-        grid-template-columns: 1fr;
     }
 }
 </style>
