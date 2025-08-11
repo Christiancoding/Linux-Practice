@@ -4654,3 +4654,254 @@ NameError: name 'login_required' is not defined
 2025-08-09 15:10:26,549 - views.web_view - INFO: Reset achievements file
 2025-08-09 15:10:26,550 - views.web_view - INFO: Reset history file
 2025-08-09 15:10:26,550 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 22:21:02,732 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 22:21:02,734 - utils.database - INFO: All database connections closed
+2025-08-09 22:21:03,710 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:21:03,711 - __main__ - INFO: Starting web application mode
+2025-08-09 22:21:03,711 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:21:03,711 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:21:03,720 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:21:03,729 - utils.database - INFO: Database connection test successful
+2025-08-09 22:21:03,737 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:21:03,743 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 22:21:30,460 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 22:21:30,494 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 22:21:30,495 - views.web_view - INFO: Cleared simple analytics user data
+2025-08-09 22:21:30,495 - views.web_view - INFO: Reset game state data
+2025-08-09 22:21:30,495 - views.web_view - INFO: Reset quiz controller session
+2025-08-09 22:21:30,496 - views.web_view - INFO: Reset time tracking data
+2025-08-09 22:21:30,496 - views.web_view - INFO: Reset achievements file
+2025-08-09 22:21:30,496 - views.web_view - INFO: Reset history file
+2025-08-09 22:21:30,496 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 22:36:31,069 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:36:31,069 - __main__ - INFO: Starting web application mode
+2025-08-09 22:36:31,070 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:36:31,070 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:36:31,076 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:36:31,082 - utils.database - INFO: Database connection test successful
+2025-08-09 22:36:31,090 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:36:31,093 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 22:37:32,438 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 22:37:32,439 - utils.database - INFO: All database connections closed
+2025-08-09 22:37:34,071 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:37:34,071 - __main__ - INFO: Starting web application mode
+2025-08-09 22:37:34,072 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:37:34,072 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:37:34,079 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:37:34,087 - utils.database - INFO: Database connection test successful
+2025-08-09 22:37:34,095 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:37:34,099 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 22:43:34,270 - views.web_view - INFO: Starting clear statistics operation
+2025-08-09 22:43:34,303 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-09 22:43:34,304 - views.web_view - INFO: Cleared simple analytics user data
+2025-08-09 22:43:34,304 - views.web_view - INFO: Reset game state data
+2025-08-09 22:43:34,305 - views.web_view - INFO: Reset quiz controller session
+2025-08-09 22:43:34,305 - views.web_view - INFO: Reset time tracking data
+2025-08-09 22:43:34,305 - views.web_view - INFO: Reset achievements file
+2025-08-09 22:43:34,306 - views.web_view - INFO: Reset history file
+2025-08-09 22:43:34,306 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-09 22:46:48,348 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:46:48,349 - __main__ - INFO: Starting web application mode
+2025-08-09 22:46:48,349 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:46:48,349 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:46:48,355 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:46:48,365 - utils.database - INFO: Database connection test successful
+2025-08-09 22:46:48,373 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:46:48,377 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 22:47:15,290 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 22:47:15,290 - utils.database - INFO: All database connections closed
+2025-08-09 22:47:16,543 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:47:16,543 - __main__ - INFO: Starting web application mode
+2025-08-09 22:47:16,543 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:47:16,544 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:47:16,550 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:47:16,557 - utils.database - INFO: Database connection test successful
+2025-08-09 22:47:16,567 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:47:16,571 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 22:58:07,618 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:58:07,619 - __main__ - INFO: Starting web application mode
+2025-08-09 22:58:07,619 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:58:07,620 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:58:07,626 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:58:07,633 - utils.database - INFO: Database connection test successful
+2025-08-09 22:58:07,643 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:58:07,647 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 22:58:13,399 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 22:58:13,399 - utils.database - INFO: All database connections closed
+2025-08-09 22:58:15,093 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 22:58:15,093 - __main__ - INFO: Starting web application mode
+2025-08-09 22:58:15,094 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 22:58:15,095 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 22:58:15,102 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 22:58:15,111 - utils.database - INFO: Database connection test successful
+2025-08-09 22:58:15,121 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 22:58:15,125 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 23:06:45,028 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:06:45,028 - __main__ - INFO: Starting web application mode
+2025-08-09 23:06:45,028 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:06:45,030 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:06:45,036 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:06:45,043 - utils.database - INFO: Database connection test successful
+2025-08-09 23:06:45,052 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:06:45,056 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 23:07:26,640 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 23:07:26,640 - utils.database - INFO: All database connections closed
+2025-08-09 23:07:29,038 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:07:29,038 - __main__ - INFO: Starting web application mode
+2025-08-09 23:07:29,038 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:07:29,038 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:07:29,044 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:07:29,052 - utils.database - INFO: Database connection test successful
+2025-08-09 23:07:29,060 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:07:29,063 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 23:10:06,514 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:10:06,514 - __main__ - INFO: Starting web application mode
+2025-08-09 23:10:06,514 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:10:06,515 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:10:06,522 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:10:06,529 - utils.database - INFO: Database connection test successful
+2025-08-09 23:10:06,538 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:10:06,541 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 23:10:57,949 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 23:10:57,949 - utils.database - INFO: All database connections closed
+2025-08-09 23:10:59,902 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:10:59,902 - __main__ - INFO: Starting web application mode
+2025-08-09 23:10:59,902 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:10:59,903 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:10:59,909 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:10:59,918 - utils.database - INFO: Database connection test successful
+2025-08-09 23:10:59,929 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:10:59,933 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 23:15:47,860 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:15:47,860 - __main__ - INFO: Starting web application mode
+2025-08-09 23:15:47,861 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:15:47,861 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:15:47,867 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:15:47,876 - utils.database - INFO: Database connection test successful
+2025-08-09 23:15:47,884 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:15:47,888 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 23:16:22,178 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 23:16:22,179 - utils.database - INFO: All database connections closed
+2025-08-09 23:16:24,360 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:16:24,361 - __main__ - INFO: Starting web application mode
+2025-08-09 23:16:24,361 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:16:24,361 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:16:24,369 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:16:24,382 - utils.database - INFO: Database connection test successful
+2025-08-09 23:16:24,393 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:16:24,397 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 23:20:49,283 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:20:49,283 - __main__ - INFO: Starting web application mode
+2025-08-09 23:20:49,283 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:20:49,284 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:20:49,291 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:20:49,298 - utils.database - INFO: Database connection test successful
+2025-08-09 23:20:49,307 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:20:49,310 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8081
+2025-08-09 23:23:57,211 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 23:23:57,212 - utils.database - INFO: All database connections closed
+2025-08-09 23:23:58,965 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:23:58,965 - __main__ - INFO: Starting web application mode
+2025-08-09 23:23:58,965 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:23:58,966 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:23:58,974 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:23:58,985 - utils.database - INFO: Database connection test successful
+2025-08-09 23:23:58,999 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:23:59,003 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-09 23:57:02,458 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-09 23:57:02,459 - utils.database - INFO: All database connections closed
+2025-08-09 23:57:06,640 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-09 23:57:06,640 - __main__ - INFO: Starting web application mode
+2025-08-09 23:57:06,640 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-09 23:57:06,641 - __main__ - INFO: Web application components loaded successfully
+2025-08-09 23:57:06,647 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-09 23:57:06,656 - utils.database - INFO: Database connection test successful
+2025-08-09 23:57:06,666 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-09 23:57:06,670 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:11:08,729 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:11:08,730 - utils.database - INFO: All database connections closed
+2025-08-10 00:11:09,855 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:11:09,855 - __main__ - INFO: Starting web application mode
+2025-08-10 00:11:09,855 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:11:09,856 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:11:09,863 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:11:09,873 - utils.database - INFO: Database connection test successful
+2025-08-10 00:11:09,883 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:11:09,888 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:12:05,072 - views.web_view - INFO: Starting clear statistics operation
+2025-08-10 00:12:05,279 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-10 00:12:05,279 - views.web_view - INFO: Cleared simple analytics user data
+2025-08-10 00:12:05,279 - views.web_view - INFO: Reset game state data
+2025-08-10 00:12:05,281 - views.web_view - INFO: Reset quiz controller session
+2025-08-10 00:12:05,281 - views.web_view - INFO: Reset time tracking data
+2025-08-10 00:12:05,282 - views.web_view - INFO: Reset achievements file
+2025-08-10 00:12:05,282 - views.web_view - INFO: Reset history file
+2025-08-10 00:12:05,282 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-10 00:22:50,914 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:22:50,915 - utils.database - INFO: All database connections closed
+2025-08-10 00:22:52,428 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:22:52,428 - __main__ - INFO: Starting web application mode
+2025-08-10 00:22:52,429 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:22:52,439 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:22:52,445 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:22:52,453 - utils.database - INFO: Database connection test successful
+2025-08-10 00:22:52,465 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:22:52,468 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:22:54,193 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:22:54,193 - __main__ - INFO: Starting web application mode
+2025-08-10 00:22:54,194 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:22:54,195 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:22:54,201 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:22:54,211 - utils.database - INFO: Database connection test successful
+2025-08-10 00:22:54,221 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:22:54,224 - __main__ - INFO: Web interface loaded successfully - Starting server on 0.0.0.0:8082
+2025-08-10 00:28:12,263 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:28:12,264 - utils.database - INFO: All database connections closed
+2025-08-10 00:28:13,751 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:28:13,752 - __main__ - INFO: Starting web application mode
+2025-08-10 00:28:13,752 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:28:13,752 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:28:13,759 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:28:13,767 - utils.database - INFO: Database connection test successful
+2025-08-10 00:28:13,778 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:28:13,782 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:36:39,290 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:36:39,291 - utils.database - INFO: All database connections closed
+2025-08-10 00:36:40,712 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:36:40,712 - __main__ - INFO: Starting web application mode
+2025-08-10 00:36:40,713 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:36:40,713 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:36:40,721 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:36:40,730 - utils.database - INFO: Database connection test successful
+2025-08-10 00:36:40,740 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:36:40,744 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:46:12,088 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:46:12,089 - utils.database - INFO: All database connections closed
+2025-08-10 00:46:13,473 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:46:13,473 - __main__ - INFO: Starting web application mode
+2025-08-10 00:46:13,473 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:46:13,474 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:46:13,480 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:46:13,488 - utils.database - INFO: Database connection test successful
+2025-08-10 00:46:13,496 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:46:13,500 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:50:53,952 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-10 00:50:53,952 - utils.database - INFO: All database connections closed
+2025-08-10 00:50:56,745 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:50:56,745 - __main__ - INFO: Starting web application mode
+2025-08-10 00:50:56,745 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:50:56,746 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:50:56,752 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:50:56,759 - utils.database - INFO: Database connection test successful
+2025-08-10 00:50:56,770 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:50:56,773 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-10 00:51:44,967 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-10 00:51:44,967 - __main__ - INFO: Starting web application mode
+2025-08-10 00:51:44,967 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-10 00:51:44,968 - __main__ - INFO: Web application components loaded successfully
+2025-08-10 00:51:44,974 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-10 00:51:44,982 - utils.database - INFO: Database connection test successful
+2025-08-10 00:51:44,990 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-10 00:51:44,994 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-10 00:51:54,551 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-10 00:51:54,552 - utils.database - INFO: All database connections closed

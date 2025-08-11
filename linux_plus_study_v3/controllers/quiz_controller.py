@@ -185,17 +185,22 @@ class QuizController:
         self.clear_current_question_cache()
         
         print(f"DEBUG: Quiz mode set to: '{self.current_quiz_mode}'")
+        
+        # Handle infinite total_questions for JSON serialization
+        json_total_questions = None if total_questions == float('inf') else total_questions
+        
         return {
             'mode': mode,
             'category_filter': category_filter,
-            'total_questions': total_questions,
+            'total_questions': json_total_questions,
             'session_active': True,
             'quick_fire_active': self.quick_fire_active,
             'timed_mode_active': self.timed_mode_active,
             'survival_mode_active': self.survival_mode_active,
             'exam_mode_active': self.exam_mode_active,
             'survival_lives': getattr(self, 'survival_lives', SURVIVAL_MODE_LIVES) if mode == QUIZ_MODE_SURVIVAL else None,
-            'time_per_question': self.time_per_question if mode == QUIZ_MODE_TIMED else None
+            'time_per_question': self.time_per_question if mode == QUIZ_MODE_TIMED else None,
+            'unlimited_questions': total_questions == float('inf')
         }
     
     def get_next_question(self, category_filter: Optional[str] = None) -> Optional[Dict[str, Any]]:
@@ -228,6 +233,8 @@ class QuizController:
         question_data, original_index = question_result
         
         if question_data is not None:
+            print(f"DEBUG: Normal question_data type: {type(question_data)}")
+            print(f"DEBUG: Normal question_data: {question_data}")
             quick_fire_remaining = self._get_quick_fire_remaining() if self.quick_fire_active else None
             
             # Start timer for timed mode questions
@@ -273,6 +280,44 @@ class QuizController:
             return result
         
         # No more questions available
+        # For survival mode, reset the answered list and try again
+        if self.current_quiz_mode == QUIZ_MODE_SURVIVAL and self.survival_lives > 0:
+            print("DEBUG: Survival mode - resetting answered questions to allow repetition")
+            self.game_state.question_manager.reset_session()
+            
+            # Try to get a question again after reset
+            question_result = self.game_state.select_question(category_filter)
+            question_data, original_index = question_result
+            
+            if question_data is not None:
+                print("DEBUG: Survival mode - got question after reset")
+                print(f"DEBUG: Recycled question_data type: {type(question_data)}")
+                print(f"DEBUG: Recycled question_data: {question_data}")
+                # Use the same logic as the main path to ensure consistent data structure
+                quick_fire_remaining = self._get_quick_fire_remaining() if self.quick_fire_active else None
+                
+                # Start timer for timed mode questions
+                if self.timed_mode_active:
+                    self.current_question_start_time = time.time()
+                
+                result: Dict[str, Any] = {
+                    'question_data': question_data,
+                    'original_index': original_index,
+                    'question_number': self.session_total + 1,
+                    'total_questions': None,  # Unlimited for survival
+                    'streak': self.current_streak,
+                    'quick_fire_remaining': quick_fire_remaining,
+                    'timed_mode_active': self.timed_mode_active,
+                    'time_per_question': self.time_per_question if self.timed_mode_active else None,
+                    'survival_mode_active': self.survival_mode_active,
+                    'survival_lives': getattr(self, 'survival_lives', SURVIVAL_MODE_LIVES) if self.survival_mode_active else None,
+                    'exam_mode_active': self.exam_mode_active
+                }
+                # Cache the current question
+                self.cache_current_question(result)
+                return result
+        
+        # No more questions available and not survival mode (or survival with no lives)
         self.quiz_active = False
         return None
     
@@ -315,7 +360,7 @@ class QuizController:
         # Calculate session duration if we have start time
         session_duration = 0
         if self.session_start_time:
-            session_duration = int(time.time() - self.session_start_time)
+            session_duration = time.time() - self.session_start_time
         
         # Track quiz time in the time tracking service
         try:
@@ -550,7 +595,7 @@ class QuizController:
         # Calculate actual session duration
         session_duration = 0
         if self.session_start_time:
-            session_duration = int(time.time() - self.session_start_time)
+            session_duration = time.time() - self.session_start_time
         
         # Update leaderboard using StatsController to avoid property issues
         if self.session_total > 0:
@@ -1062,7 +1107,7 @@ class QuizController:
             print(f"DEBUG: Single question mode - complete: {complete}")
             return complete
         
-        # For standard, verify, category focus, and survival quizzes, check if there are more questions available
+        # For standard, verify, and category focus quizzes, check if there are more questions available
         if self.current_quiz_mode in ["standard", "verify", QUIZ_MODE_CATEGORY_FOCUS]:
             # Check custom question limit first (for web interface)
             if self.custom_question_limit and self.session_total >= self.custom_question_limit:
@@ -1091,7 +1136,7 @@ class QuizController:
                 print(f"DEBUG: Standard mode - only {self.session_total} questions answered, continuing")
                 return False
         
-        # Survival mode continues until death (handled above)
+        # Survival mode continues until death (lives handled at the top)
         if self.current_quiz_mode == QUIZ_MODE_SURVIVAL:
             print(f"DEBUG: Survival mode continuing - {self.survival_lives} lives remaining")
             return False

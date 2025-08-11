@@ -75,8 +75,28 @@
             </div>
         </section>
 
-        <!-- Quiz Options -->
-        <section class="quiz-options glass" data-aos="fade-up" data-aos-delay="400">
+        <!-- Quick Start Section -->
+        <section class="quick-start glass" data-aos="fade-up" data-aos-delay="400">
+            <div class="mode-description" id="mode-description">
+                <div class="description-content">
+                    <h3 id="selected-mode-title">Standard Mode</h3>
+                    <p id="selected-mode-desc">Learn at your own pace with instant feedback. 10 questions from all categories.</p>
+                </div>
+                <button class="btn btn-primary btn-lg" onclick="startQuiz()" id="quick-start-btn">
+                    <i class="fas fa-play"></i> Start Quiz
+                </button>
+            </div>
+            
+            <!-- Customize Toggle -->
+            <div class="customize-toggle">
+                <button class="btn btn-secondary btn-sm" onclick="toggleCustomOptions()" id="customize-btn">
+                    <i class="fas fa-sliders-h"></i> Customize Options
+                </button>
+            </div>
+        </section>
+
+        <!-- Quiz Options (Hidden by default) -->
+        <section class="quiz-options glass" data-aos="fade-up" data-aos-delay="500" id="custom-options" style="display: none;">
             <h2 class="section-header">
                 <i class="fas fa-sliders-h"></i> Customize Your Quiz
             </h2>
@@ -103,9 +123,14 @@
                     </select>
                 </div>
             </div>
-            <button class="btn btn-primary btn-lg mt-4" onclick="startQuiz()">
-                <i class="fas fa-play"></i> Start Quiz
-            </button>
+            <div class="custom-actions">
+                <button class="btn btn-secondary" onclick="toggleCustomOptions()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary btn-lg" onclick="startQuiz()">
+                    <i class="fas fa-play"></i> Start Custom Quiz
+                </button>
+            </div>
         </section>
     </div>
 
@@ -313,6 +338,23 @@
     </div>
 </div>
 
+<!-- Break Reminder Modal -->
+<div id="break-modal" class="modal">
+    <div class="modal-content glass">
+        <h2><i class="fas fa-mug-hot"></i> Time for a quick break</h2>
+        <p>
+            You've answered <strong><span id="break-questions-count">0</span></strong> questions.
+            Consider a short rest every <strong><span id="break-interval">10</span></strong> questions to stay fresh.
+        </p>
+        <div class="modal-actions">
+            <button class="btn btn-primary" onclick="acknowledgeBreak()">
+                <i class="fas fa-check"></i> Continue
+            </button>
+        </div>
+    </div>
+    <div class="modal-overlay" onclick="acknowledgeBreak()"></div>
+</div>
+
 <style>
 /* Quiz Page Specific Styles */
 .quiz-setup-container {
@@ -393,10 +435,64 @@
     margin-right: 0.5rem;
 }
 
+/* Quick Start Section */
+.quick-start {
+    padding: 2rem;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.mode-description {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.description-content {
+    flex: 1;
+    text-align: left;
+}
+
+.description-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+}
+
+.description-content p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.customize-toggle {
+    text-align: center;
+}
+
+.customize-toggle .btn {
+    transition: all 0.3s ease;
+}
+
+.customize-toggle .btn:hover {
+    transform: translateY(-2px);
+}
+
 /* Quiz Options */
 .quiz-options {
     padding: 2rem;
     text-align: center;
+}
+
+.custom-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2rem;
 }
 
 .options-grid {
@@ -882,6 +978,24 @@
         grid-template-columns: 1fr;
     }
     
+    .mode-description {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .description-content {
+        text-align: center;
+    }
+    
+    .custom-actions {
+        flex-direction: column;
+    }
+    
+    .custom-actions button {
+        width: 100%;
+    }
+    
     .quiz-header {
         flex-direction: column;
         gap: 1rem;
@@ -931,7 +1045,8 @@ const quizState = {
     timeLimit: 30,
     selectedAnswer: undefined,
     timer: null,
-    questionStartTime: null
+    questionStartTime: null,
+    gameOver: false  // Initialize game over flag
 };
 
 // Function to fetch and update session status from server
@@ -995,6 +1110,9 @@ function loadQuizOptions() {
             return Promise.all([loadCategories(), loadDifficultyLevels()]);
         })
         .then(() => {
+            // Check if we should disable exam mode
+            checkExamModeAvailability();
+            
             // Re-enable start button once everything is loaded
             if (startButton) {
                 startButton.disabled = false;
@@ -1025,12 +1143,17 @@ function updateQuestionCountOptions() {
                 select.innerHTML = '';
                 
                 // Add appropriate options based on available questions
-                const baseOptions = [5, 10, 15, 20, 25];
+                const baseOptions = [5, 10, 15, 20, 25, 50, 100];
                 const validOptions = baseOptions.filter(opt => opt <= totalQuestions);
                 
-                // Always include the total available
-                if (!validOptions.includes(totalQuestions)) {
+                // Always include the total available if it's different from base options
+                if (!validOptions.includes(totalQuestions) && totalQuestions > 0) {
                     validOptions.push(totalQuestions);
+                }
+                
+                // Ensure we have at least one option
+                if (validOptions.length === 0) {
+                    validOptions.push(Math.min(10, totalQuestions));
                 }
                 
                 // Sort options
@@ -1167,9 +1290,92 @@ function formatDifficultyName(difficulty) {
     return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
 }
 
+// Check if exam mode should be available
+function checkExamModeAvailability() {
+    fetch('/api/get_question_count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const totalQuestions = data.total_questions;
+                const examCard = document.querySelector('.mode-card[onclick*="exam"]');
+                
+                if (totalQuestions < 90) {
+                    // Disable exam mode
+                    examCard.classList.add('disabled');
+                    examCard.onclick = null;
+                    
+                    // Update the description to show why it's disabled
+                    const descElement = examCard.querySelector('p');
+                    descElement.textContent = `Requires 90 questions (only ${totalQuestions} available)`;
+                    descElement.style.color = 'var(--danger-color)';
+                    
+                    // Add disabled styling
+                    examCard.style.opacity = '0.6';
+                    examCard.style.cursor = 'not-allowed';
+                    
+                    console.log(`Exam mode disabled: only ${totalQuestions} questions available, need 90`);
+                } else {
+                    // Ensure exam mode is enabled
+                    examCard.classList.remove('disabled');
+                    examCard.onclick = () => selectMode('exam');
+                    examCard.style.opacity = '1';
+                    examCard.style.cursor = 'pointer';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking exam mode availability:', error);
+        });
+}
+
+// Mode descriptions mapping
+const modeDescriptions = {
+    'standard': {
+        title: 'Standard Mode',
+        description: 'Learn at your own pace with instant feedback. 10 questions from all categories and difficulty levels.'
+    },
+    'timed': {
+        title: 'Timed Challenge', 
+        description: 'Race against the clock! 10 questions with 30 seconds each for bonus points.'
+    },
+    'survival': {
+        title: 'Survival Mode',
+        description: 'Keep your streak alive with 3 lives. Unlimited questions from all categories.'
+    },
+    'exam': {
+        title: 'Exam Simulation',
+        description: 'Practice like the real Linux+ exam. 90 questions in 90 minutes with final score only.'
+    }
+};
+
+// Toggle custom options visibility
+function toggleCustomOptions() {
+    const customOptions = document.getElementById('custom-options');
+    const customizeBtn = document.getElementById('customize-btn');
+    
+    if (customOptions.style.display === 'none') {
+        customOptions.style.display = 'block';
+        customizeBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Options';
+        // Scroll to custom options
+        customOptions.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        customOptions.style.display = 'none';
+        customizeBtn.innerHTML = '<i class="fas fa-sliders-h"></i> Customize Options';
+    }
+}
+
 // Select quiz mode
 function selectMode(mode) {
     console.log('🎯 selectMode() called with mode:', mode);
+    
+    // Check if trying to select a disabled mode
+    if (mode === 'exam') {
+        const examCard = document.querySelector('.mode-card[onclick*="exam"]');
+        if (examCard && examCard.classList.contains('disabled')) {
+            showMessage('warning', 'Exam mode is not available - not enough questions in database');
+            return;
+        }
+    }
     
     // Remove previous selection
     document.querySelectorAll('.mode-card').forEach(card => {
@@ -1196,6 +1402,9 @@ function selectMode(mode) {
     // Update quiz state
     quizState.mode = mode;
     
+    // Update mode description
+    updateModeDescription(mode);
+    
     // Show/hide and configure options based on mode
     const numQuestionsGroup = document.getElementById('num-questions-group');
     const numQuestionsSelect = document.getElementById('num-questions');
@@ -1212,6 +1421,17 @@ function selectMode(mode) {
         // Standard and timed modes allow question customization
         numQuestionsSelect.disabled = false;
         numQuestionsGroup.style.display = 'block';
+    }
+}
+
+// Update mode description in the quick start section
+function updateModeDescription(mode) {
+    const titleElement = document.getElementById('selected-mode-title');
+    const descElement = document.getElementById('selected-mode-desc');
+    
+    if (modeDescriptions[mode]) {
+        titleElement.textContent = modeDescriptions[mode].title;
+        descElement.textContent = modeDescriptions[mode].description;
     }
 }
 
@@ -1358,15 +1578,24 @@ function startQuizWithValidatedData(requestData, apiEndpoint) {
             }
             
             // Update quiz state with backend data
-            console.log('🔍 Backend data.total_questions:', data.total_questions);
+            console.log('🔍 Backend data:', data);
             quizState.mode = data.mode;
-            quizState.totalQuestions = data.total_questions || parseInt(document.getElementById('num-questions').value) || 10;
+            
+            // Handle unlimited questions for survival mode
+            if (data.unlimited_questions) {
+                quizState.totalQuestions = Infinity;
+                quizState.isUnlimited = true;
+            } else {
+                quizState.totalQuestions = data.total_questions || parseInt(document.getElementById('num-questions').value) || 10;
+                quizState.isUnlimited = false;
+            }
             console.log('🎯 Final quizState.totalQuestions:', quizState.totalQuestions);
             quizState.currentQuestion = 0;
             quizState.answers = [];
             quizState.startTime = Date.now();
             quizState.score = 0;
             quizState.streak = 0;
+            quizState.gameOver = false;  // Reset game over flag
             
             // Store mode-specific data
             if (data.survival_mode_active) {
@@ -1426,6 +1655,11 @@ function initializeModeUI() {
 // Load question from backend API
 function loadQuestionFromBackend() {
     console.log('Loading question from backend...');
+    // If survival game is over, do not request more questions
+    if (quizState.mode === 'survival' && (quizState.gameOver || (quizState.survivalLives !== undefined && quizState.survivalLives <= 0))) {
+        console.log('Survival game over locally; skipping question fetch');
+        return;
+    }
     
     fetch('/api/get_question')
         .then(response => {
@@ -1437,8 +1671,20 @@ function loadQuestionFromBackend() {
         })
         .then(data => {
             console.log('Question response:', data);
+            // Handle server-side break reminder gracefully
+            if (data && data.break_reminder) {
+                showBreakReminder(data);
+                return;
+            }
             
             if (data.error) {
+                // Gracefully handle survival end-of-session
+                if (quizState.mode === 'survival' && /No active quiz session/i.test(data.error || '')) {
+                    quizState.gameOver = true;
+                    // If we reached here without showing the game over UI, show a friendly message
+                    showMessage('warning', 'Survival run ended. Start a new run to continue.');
+                    return;
+                }
                 console.error('Question error:', data.error);
                 showMessage('error', data.error);
                 return;
@@ -1463,9 +1709,46 @@ function loadQuestionFromBackend() {
 function displayQuestionFromBackend(data) {
     console.log('Displaying question from backend:', data);
     
+    // Enhanced validation with better error handling
+    if (!data || typeof data !== 'object') {
+        console.error('❌ Invalid question data object:', data);
+        showMessage('error', 'Question data error - invalid data object');
+        return;
+    }
+    
+    if (!data.question || typeof data.question !== 'string') {
+        console.error('❌ Question text missing or invalid:', data.question);
+        showMessage('error', 'Question data error - invalid question text');
+        return;
+    }
+    
+    if (!data.options) {
+        console.error('❌ Question data missing options:', data);
+        showMessage('error', 'Question data error - missing options at question ' + (data.question_number || 'unknown'));
+        return;
+    }
+    
+    if (!Array.isArray(data.options)) {
+        console.error('❌ Question options is not an array:', data.options);
+        showMessage('error', 'Question data error - options is not an array');
+        return;
+    }
+    
+    if (data.options.length < 2) {
+        console.error('❌ Insufficient options for question:', data.options);
+        showMessage('error', 'Question data error - insufficient options');
+        return;
+    }
+    
     // Update question display
     document.getElementById('current-question').textContent = data.question_number || quizState.currentQuestion + 1;
-    document.getElementById('total-questions').textContent = data.total_questions || quizState.totalQuestions;
+    
+    // Handle unlimited questions display
+    if (quizState.isUnlimited) {
+        document.getElementById('total-questions').textContent = '∞';
+    } else {
+        document.getElementById('total-questions').textContent = data.total_questions || quizState.totalQuestions;
+    }
     document.getElementById('question-category').innerHTML = `<i class="fas fa-tag"></i> ${data.category}`;
     document.getElementById('question-text').textContent = data.question;
     
@@ -1512,6 +1795,50 @@ function displayQuestionFromBackend(data) {
     // Reset answer selection
     quizState.selectedAnswer = undefined;
     
+
+// --- Break Reminder Handling ---
+function showBreakReminder(data) {
+    try {
+        const modal = document.getElementById('break-modal');
+        const countEl = document.getElementById('break-questions-count');
+        const intervalEl = document.getElementById('break-interval');
+        if (countEl && typeof data.questions_since_break === 'number') {
+            countEl.textContent = data.questions_since_break;
+        }
+        if (intervalEl && typeof data.break_interval === 'number') {
+            intervalEl.textContent = data.break_interval;
+        }
+        if (modal) {
+            modal.classList.add('active');
+        }
+    } catch (e) {
+        console.error('Failed to show break reminder:', e);
+    }
+}
+
+function hideBreakReminder() {
+    const modal = document.getElementById('break-modal');
+    if (modal) modal.classList.remove('active');
+}
+
+function acknowledgeBreak() {
+    // Tell backend we've acknowledged the break, then continue with next question
+    fetch('/api/acknowledge_break', { method: 'POST' })
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        })
+        .then(() => {
+            hideBreakReminder();
+            loadQuestionFromBackend();
+        })
+        .catch(err => {
+            console.error('Error acknowledging break:', err);
+            // Even on error, attempt to continue to avoid blocking the session
+            hideBreakReminder();
+            loadQuestionFromBackend();
+        });
+}
     // Reset timer for timed mode
     if (quizState.mode === 'timed') {
         resetTimer();
@@ -1525,6 +1852,17 @@ function initializeProgressDots() {
     console.log('🔍 initializeProgressDots called with quizState.totalQuestions:', quizState.totalQuestions);
     const dotsContainer = document.getElementById('progress-dots');
     dotsContainer.innerHTML = '';
+    
+    // For unlimited questions (survival mode), don't show dots
+    if (quizState.isUnlimited) {
+        console.log('🎯 Unlimited questions - hiding progress dots');
+        dotsContainer.style.display = 'none';
+        document.querySelector('.progress-track').style.display = 'none';
+        return;
+    }
+    
+    dotsContainer.style.display = 'flex';
+    document.querySelector('.progress-track').style.display = 'block';
     
     const dotsToShow = Math.min(quizState.totalQuestions, 20);
     console.log('🎯 Creating', dotsToShow, 'progress dots');
@@ -1727,9 +2065,19 @@ function submitAnswer(isTimeout = false) {
                 updateSurvivalLives();
                 
                 if (data.survival_game_over) {
+                    quizState.gameOver = true;
+                    console.log('🔥 Survival mode game over detected - showing game over screen');
                     showSurvivalGameOver(data);
-                    return;
+                    return; // Critical: Stop all further processing
                 }
+            }
+            
+            // Double-check for survival mode game over (defensive programming)
+            if (quizState.mode === 'survival' && quizState.survivalLives <= 0) {
+                quizState.gameOver = true;
+                console.log('🔥 Survival mode game over detected via lives check - showing game over screen');
+                showSurvivalGameOver(data);
+                return; // Critical: Stop all further processing
             }
         }
         
@@ -1764,7 +2112,12 @@ function submitAnswer(isTimeout = false) {
         if (data.session_complete) {
             setTimeout(() => showResults(data), 1000);
         } else {
-            document.getElementById('next-btn').style.display = 'inline-flex';
+            // Only show next button if game is not over (extra defensive check)
+            if (!quizState.gameOver && !(quizState.mode === 'survival' && quizState.survivalLives <= 0)) {
+                document.getElementById('next-btn').style.display = 'inline-flex';
+            } else {
+                console.log('🛡️ Preventing next button display - game over detected');
+            }
         }
     })
     .catch(error => {
@@ -1776,6 +2129,11 @@ function submitAnswer(isTimeout = false) {
 // Next question
 function nextQuestion() {
     console.log('Loading next question');
+    // If survival is over, do not advance
+    if (quizState.mode === 'survival' && (quizState.gameOver || (quizState.survivalLives !== undefined && quizState.survivalLives <= 0))) {
+        console.log('Cannot advance: survival game over');
+        return;
+    }
     quizState.currentQuestion++;
     quizState.selectedAnswer = undefined;
     
@@ -2169,18 +2527,20 @@ function displayResultsWithData(data) {
     const incorrect = sessionTotal - correct;
     const percentage = Math.round(accuracy);
     
-    // Calculate time
+    // Calculate time with decimal precision
     let timeTaken = 0;
-    if (data.duration) {
-        timeTaken = Math.floor(data.duration);
+    if (data.session_duration !== undefined) {
+        timeTaken = data.session_duration;
+    } else if (data.duration) {
+        timeTaken = data.duration;
     } else if (data.session_time) {
-        timeTaken = Math.floor(data.session_time);
+        timeTaken = data.session_time;
     } else if (quizState.startTime) {
-        timeTaken = Math.floor((Date.now() - quizState.startTime) / 1000);
+        timeTaken = (Date.now() - quizState.startTime) / 1000;
     }
     
     const minutes = Math.floor(timeTaken / 60);
-    const seconds = timeTaken % 60;
+    const seconds = Math.round((timeTaken % 60) * 10) / 10;
     
     // Points
     const points = data.session_points || data.points_earned || quizState.score || 0;
@@ -2193,7 +2553,7 @@ function displayResultsWithData(data) {
     document.getElementById('score-percent').textContent = percentage + '%';
     document.getElementById('correct-count').textContent = correct;
     document.getElementById('incorrect-count').textContent = incorrect;
-    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
     document.getElementById('points-earned').textContent = points;
     
     // Animate score ring
@@ -2228,9 +2588,9 @@ function displayResultsWithFrontendData() {
     const total = quizState.totalQuestions || quizState.answers.length || 1;
     const incorrect = total - correct;
     const percentage = Math.round((correct / total) * 100);
-    const timeTaken = quizState.startTime ? Math.floor((Date.now() - quizState.startTime) / 1000) : 0;
+    const timeTaken = quizState.startTime ? (Date.now() - quizState.startTime) / 1000 : 0;
     const minutes = Math.floor(timeTaken / 60);
-    const seconds = timeTaken % 60;
+    const seconds = Math.round((timeTaken % 60) * 10) / 10;
     
     // Hide quiz, show results
     document.getElementById('quiz-container').style.display = 'none';
@@ -2240,7 +2600,7 @@ function displayResultsWithFrontendData() {
     document.getElementById('score-percent').textContent = percentage + '%';
     document.getElementById('correct-count').textContent = correct;
     document.getElementById('incorrect-count').textContent = incorrect;
-    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+    document.getElementById('time-taken').textContent = `${minutes}:${seconds.toFixed(1).padStart(4, '0')}`;
     document.getElementById('points-earned').textContent = quizState.score || 0;
     
     // Animate score ring

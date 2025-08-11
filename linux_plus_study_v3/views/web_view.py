@@ -2115,23 +2115,44 @@ class LinuxPlusStudyWeb:
                 
                 if current_question is not None:
                     # Return the existing current question
-                    question_data = current_question['question_data']
-                    q_text, options, _, category, _ = question_data
-                    
-                    return jsonify({
-                        'question': q_text,
-                        'options': options,
-                        'category': category,
-                        'question_number': current_question.get('question_number', 1),
-                        'total_questions': current_question.get('total_questions'),
-                        'streak': current_question.get('streak', 0),
-                        'mode': self.quiz_controller.current_quiz_mode,
-                        'is_single_question': self.quiz_controller.current_quiz_mode in ['daily_challenge', 'pop_quiz'],
-                        'quiz_complete': False,
-                        'quick_fire_remaining': current_question.get('quick_fire_remaining'),
-                        'break_reminder': False,
-                        'returning_to_question': True  # Flag to indicate this is not a new question
-                    })
+                    try:
+                        question_data_tuple = current_question['question_data']
+                        
+                        # Validate current question data structure
+                        if not isinstance(question_data_tuple, (tuple, list)) or len(question_data_tuple) < 5:
+                            print(f"ERROR: Invalid current question_data structure: {type(question_data_tuple)}")
+                            return jsonify({'error': 'Invalid current question data format', 'quiz_complete': True})
+                        
+                        q_text, options, _, category, _ = question_data_tuple
+                        
+                        # Validate current question components
+                        if not q_text or not isinstance(q_text, str):
+                            print(f"ERROR: Invalid current question text: {type(q_text)} = {q_text}")
+                            return jsonify({'error': 'Invalid current question text', 'quiz_complete': True})
+                        
+                        if not isinstance(options, list) or len(options) < 2:
+                            print(f"ERROR: Invalid current question options: {type(options)} = {options}")
+                            return jsonify({'error': 'Invalid current question options', 'quiz_complete': True})
+                        
+                        return jsonify({
+                            'question': q_text,
+                            'options': options,
+                            'category': category,
+                            'question_number': current_question.get('question_number', 1),
+                            'total_questions': current_question.get('total_questions'),
+                            'streak': current_question.get('streak', 0),
+                            'mode': self.quiz_controller.current_quiz_mode,
+                            'is_single_question': self.quiz_controller.current_quiz_mode in ['daily_challenge', 'pop_quiz'],
+                            'quiz_complete': False,
+                            'quick_fire_remaining': current_question.get('quick_fire_remaining'),
+                            'break_reminder': False,
+                            'returning_to_question': True  # Flag to indicate this is not a new question
+                        })
+                        
+                    except (TypeError, ValueError, IndexError) as e:
+                        print(f"ERROR: Failed to process current question: {e}")
+                        print(f"Current question data: {current_question}")
+                        return jsonify({'error': f'Failed to process current question: {str(e)}', 'quiz_complete': True})
                 
                 # No current question, so get the next one
                 result = self.quiz_controller.get_next_question(self.quiz_controller.category_filter)
@@ -2144,7 +2165,36 @@ class LinuxPlusStudyWeb:
                 self.current_question_index = result['original_index']
                 
                 # Format response for web interface
-                q_text, options, _, category, _ = result['question_data']
+                try:
+                    question_data_tuple = result['question_data']
+                    
+                    # Validate tuple structure before unpacking
+                    if not isinstance(question_data_tuple, (tuple, list)) or len(question_data_tuple) < 5:
+                        print(f"ERROR: Invalid question_data structure: {type(question_data_tuple)} with length {len(question_data_tuple) if hasattr(question_data_tuple, '__len__') else 'N/A'}")
+                        print(f"Question data: {question_data_tuple}")
+                        return jsonify({'error': 'Invalid question data format', 'quiz_complete': True})
+                    
+                    q_text, options, correct_index, category, explanation = question_data_tuple
+                    
+                    # Enhanced validation
+                    if not q_text or not isinstance(q_text, str):
+                        print(f"ERROR: Invalid question text: {type(q_text)} = {q_text}")
+                        return jsonify({'error': 'Invalid question text', 'quiz_complete': True})
+                    
+                    if not isinstance(options, list) or len(options) < 2:
+                        print(f"ERROR: Invalid question options: {type(options)} = {options}")
+                        print(f"Full question_data: {question_data_tuple}")
+                        return jsonify({'error': 'Invalid question options format', 'quiz_complete': True})
+                    
+                    if not isinstance(correct_index, int) or correct_index < 0 or correct_index >= len(options):
+                        print(f"ERROR: Invalid correct answer index: {correct_index} for {len(options)} options")
+                        return jsonify({'error': 'Invalid answer index', 'quiz_complete': True})
+                    
+                except (TypeError, ValueError, IndexError) as e:
+                    print(f"ERROR: Failed to unpack question data: {e}")
+                    print(f"Question data type: {type(result.get('question_data', 'N/A'))}")
+                    print(f"Question data: {result.get('question_data', 'N/A')}")
+                    return jsonify({'error': f'Failed to parse question data: {str(e)}', 'quiz_complete': True})
                 
                 return jsonify({
                     'question': q_text,
@@ -2488,6 +2538,22 @@ class LinuxPlusStudyWeb:
         
         # Store reference to make it clear the route is being used
         self.api_get_categories_handler = api_get_categories
+        
+        @self.app.route('/api/get_question_count')
+        def api_get_question_count():
+            """Get total count of available questions."""
+            try:
+                total_questions = self.game_state.get_question_count()
+                return jsonify({
+                    'success': True,
+                    'total_questions': total_questions
+                })
+            except Exception as e:
+                print(f"Error getting question count: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+        
+        # Store reference to make it clear the route is being used
+        self.api_get_question_count_handler = api_get_question_count
         
         @self.app.route('/api/get_difficulties')
         def api_get_difficulties():

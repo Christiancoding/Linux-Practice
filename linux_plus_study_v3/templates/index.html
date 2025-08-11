@@ -622,20 +622,23 @@
 
 {% block scripts %}
 <script>
-// Format study time consistently
+// Format study time consistently with decimal precision
 function formatStudyTime(seconds) {
     if (!seconds || seconds === 0) return '0s';
     
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
+    const secs = seconds % 60;
     
     if (hours > 0) {
-        return `${hours}h${minutes > 0 ? ' ' + minutes + 'm' : ''}`;
+        const mins = Math.floor((seconds % 3600) / 60);
+        return `${hours}h${mins > 0 ? ' ' + mins + 'm' : ''}`;
     } else if (minutes > 0) {
-        return `${minutes}m${secs > 0 ? ' ' + secs + 's' : ''}`;
+        const remainingSecs = Math.round(secs * 10) / 10;
+        return `${minutes}m${remainingSecs > 0 ? ' ' + remainingSecs + 's' : ''}`;
     } else {
-        return `${secs}s`;
+        const roundedSecs = Math.round(secs * 10) / 10;
+        return `${roundedSecs}s`;
     }
 }
 

@@ -2,11 +2,7 @@
   "sessions": [],
   "questions": {},
   "categories": {
-    "Concepts & Terms (System Management)": {
-      "correct": 0,
-      "attempts": 0
-    },
-    "Concepts & Terms (Security)": {
+    "Commands (System Management)": {
       "correct": 0,
       "attempts": 0
     },
@@ -18,11 +14,15 @@
       "correct": 0,
       "attempts": 0
     },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
     "Concepts & Terms (Automation)": {
       "correct": 0,
       "attempts": 0
     },
-    "Commands (System Management)": {
+    "Concepts & Terms (Security)": {
       "correct": 0,
       "attempts": 0
     }

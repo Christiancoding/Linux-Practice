@@ -119,7 +119,7 @@ class TimeTrackingService:
         
         self._save_data()
     
-    def add_quiz_time(self, seconds: int) -> None:
+    def add_quiz_time(self, seconds: float) -> None:
         """Add time spent on quizzes."""
         if seconds <= 0:
             return
@@ -211,20 +211,20 @@ class TimeTrackingService:
         
         return next_reset.isoformat()
     
-    def _format_time(self, seconds: int) -> str:
-        """Format seconds into human readable time."""
+    def _format_time(self, seconds: float) -> str:
+        """Format seconds into human readable time with decimal precision."""
         if seconds < 60:
-            return f"{seconds}s"
+            return f"{seconds:.1f}s"
         elif seconds < 3600:
-            minutes = seconds // 60
+            minutes = int(seconds // 60)
             remaining_seconds = seconds % 60
-            if remaining_seconds == 0:
+            if remaining_seconds < 0.1:
                 return f"{minutes}m"
             else:
-                return f"{minutes}m {remaining_seconds}s"
+                return f"{minutes}m {remaining_seconds:.1f}s"
         else:
-            hours = seconds // 3600
-            remaining_minutes = (seconds % 3600) // 60
+            hours = int(seconds // 3600)
+            remaining_minutes = int((seconds % 3600) // 60)
             if remaining_minutes == 0:
                 return f"{hours}h"
             else:

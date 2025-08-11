@@ -280,7 +280,14 @@ class GameState:
         )
         
         if question is None:
-            return None, -1
+            # The question manager should have already handled resetting and reshuffling
+            # Try one more time to get a question after reset
+            question, index = self.question_manager.select_question(
+                category_filter=category_filter,
+                game_history=QuestionGameHistory(questions=self.study_history.get('questions', {}))
+            )
+            if question is None:
+                return None, -1
         
         # Convert Question object back to tuple for backwards compatibility
         return question.to_tuple(), index

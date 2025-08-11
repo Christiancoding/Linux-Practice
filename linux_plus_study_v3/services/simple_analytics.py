@@ -29,18 +29,18 @@ class SimpleAnalyticsManager:
         self._ensure_data_file_exists()
     
     @staticmethod
-    def _format_time(seconds: int) -> str:
-        """Format seconds into readable time format (e.g., '2m 30s')"""
+    def _format_time(seconds: float) -> str:
+        """Format seconds into readable time format (e.g., '2m 30.5s')"""
         if seconds < 60:
-            return f"{seconds}s"
+            return f"{seconds:.1f}s"
         
-        minutes = seconds // 60
+        minutes = int(seconds // 60)
         remaining_seconds = seconds % 60
         
-        if remaining_seconds == 0:
+        if remaining_seconds < 0.1:
             return f"{minutes}m"
         else:
-            return f"{minutes}m {remaining_seconds}s"
+            return f"{minutes}m {remaining_seconds:.1f}s"
     
     def _ensure_data_file_exists(self):
         """Create data file if it doesn't exist"""

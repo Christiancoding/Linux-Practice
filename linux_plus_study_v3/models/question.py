@@ -383,9 +383,14 @@ class QuestionManager:
             if idx not in self.answered_indices_session
         ]
         
-        # If all questions in category have been answered this session, return None
+        # If all questions in category have been answered this session, reset and shuffle
         if not available_indices:
-            return None, -1
+            print("DEBUG: All questions answered, resetting session and reshuffling")
+            self.reset_session()
+            # Re-shuffle questions for variety
+            random.shuffle(self.questions)
+            # Use all possible indices again
+            available_indices = possible_indices.copy()
         
         # Apply intelligent weighting if history is available
         if game_history:
