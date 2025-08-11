@@ -2009,7 +2009,7 @@ function submitAnswer(isTimeout = false) {
         
         // Track analytics for quiz answer
         if (typeof trackQuizAnswer === 'function') {
-            trackQuizAnswer(data.correct, timeTaken);
+            trackQuizAnswer(data.is_correct, timeTaken);
         }
         
         // Track feature usage
@@ -2021,14 +2021,22 @@ function submitAnswer(isTimeout = false) {
         }
         
         // Update UI based on answer correctness
+        console.log('DEBUG: Answer feedback data:', {
+            correct_answer_index: data.correct_answer_index,
+            selectedAnswer: quizState.selectedAnswer,
+            is_correct: data.is_correct
+        });
+        
         const options = document.querySelectorAll('.answer-option');
         options.forEach((option, index) => {
             option.classList.add('disabled');
             option.onclick = null;
             
             if (index === data.correct_answer_index) {
+                console.log(`DEBUG: Adding 'correct' class to option ${index}`);
                 option.classList.add('correct');
             } else if (index === quizState.selectedAnswer && !data.is_correct) {
+                console.log(`DEBUG: Adding 'incorrect' class to option ${index}`);
                 option.classList.add('incorrect');
             }
         });
@@ -2064,59 +2072,61 @@ function submitAnswer(isTimeout = false) {
                 quizState.survivalLives = data.survival_lives;
                 updateSurvivalLives();
                 
-                if (data.survival_game_over) {
+                // Check for game over IMMEDIATELY after updating lives
+                if (data.survival_lives <= 0 || data.survival_game_over) {
                     quizState.gameOver = true;
                     console.log('🔥 Survival mode game over detected - showing game over screen');
-                    showSurvivalGameOver(data);
+                    
+                    // Hide the answer buttons and explanation immediately
+                    document.getElementById('submit-btn').style.display = 'none';
+                    document.getElementById('next-btn').style.display = 'none';
+                    document.getElementById('hint-btn').style.display = 'none';
+                    
+                    // Show game over after a short delay to let the user see the final answer
+                    setTimeout(() => {
+                        showSurvivalGameOver(data);
+                    }, 1500);
                     return; // Critical: Stop all further processing
                 }
             }
+        }
+        
+        // Store answer (only if not game over)
+        if (!quizState.gameOver) {
+            quizState.answers.push({
+                question: quizState.currentQuestion,
+                selected: quizState.selectedAnswer,
+                correct: data.correct_answer_index,
+                time: Date.now() - quizState.startTime,
+                timeout: isTimeout
+            });
             
-            // Double-check for survival mode game over (defensive programming)
-            if (quizState.mode === 'survival' && quizState.survivalLives <= 0) {
-                quizState.gameOver = true;
-                console.log('🔥 Survival mode game over detected via lives check - showing game over screen');
-                showSurvivalGameOver(data);
-                return; // Critical: Stop all further processing
+            console.log('Answer stored - quizState.answers length:', quizState.answers.length);
+            console.log('Last answer details:', quizState.answers[quizState.answers.length - 1]);
+            
+            // Show explanation if provided
+            if (data.explanation && quizState.mode === 'standard') {
+                document.getElementById('explanation-text').textContent = data.explanation;
+                document.getElementById('explanation-box').style.display = 'block';
             }
-        }
-        
-        // Store answer
-        quizState.answers.push({
-            question: quizState.currentQuestion,
-            selected: quizState.selectedAnswer,
-            correct: data.correct_answer_index,
-            time: Date.now() - quizState.startTime,
-            timeout: isTimeout
-        });
-        
-        console.log('Answer stored - quizState.answers length:', quizState.answers.length);
-        console.log('Last answer details:', quizState.answers[quizState.answers.length - 1]);
-        
-        // Show explanation if provided
-        if (data.explanation && quizState.mode === 'standard') {
-            document.getElementById('explanation-text').textContent = data.explanation;
-            document.getElementById('explanation-box').style.display = 'block';
-        }
-        
-        // Show speed bonus message if applicable
-        if (data.speed_bonus) {
-            showMessage('success', `Speed bonus: +${data.speed_bonus} points!`);
-        }
-        
-        // Update buttons
-        document.getElementById('submit-btn').style.display = 'none';
-        document.getElementById('hint-btn').disabled = true;
-        
-        // Check if quiz is complete
-        if (data.session_complete) {
-            setTimeout(() => showResults(data), 1000);
-        } else {
-            // Only show next button if game is not over (extra defensive check)
-            if (!quizState.gameOver && !(quizState.mode === 'survival' && quizState.survivalLives <= 0)) {
-                document.getElementById('next-btn').style.display = 'inline-flex';
+            
+            // Show speed bonus message if applicable
+            if (data.speed_bonus) {
+                showMessage('success', `Speed bonus: +${data.speed_bonus} points!`);
+            }
+            
+            // Update buttons
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('hint-btn').disabled = true;
+            
+            // Check if quiz is complete
+            if (data.session_complete) {
+                setTimeout(() => showResults(data), 1000);
             } else {
-                console.log('🛡️ Preventing next button display - game over detected');
+                // Only show next button if game is not over
+                if (!quizState.gameOver) {
+                    document.getElementById('next-btn').style.display = 'inline-flex';
+                }
             }
         }
     })
@@ -2166,56 +2176,87 @@ function updateSurvivalLives() {
     }
 }
 
-// Show survival game over
+// Show survival game over - ENHANCED VERSION
 function showSurvivalGameOver(data) {
+    console.log('Showing survival game over screen with data:', data);
+    
+    // Calculate final score from session data
+    const finalScore = data.session_score || quizState.score || 0;
+    const questionsAnswered = data.session_total || quizState.answers.length || 0;
+    const highScore = data.survival_high_score || 0;
+    
     const gameOverHtml = `
         <div class="quiz-complete">
             <div class="complete-header">
-                <div class="complete-icon game-over">
+                <div class="complete-icon game-over" style="font-size: 4rem; margin-bottom: 1rem;">
                     💀
                 </div>
-                <h2>Game Over!</h2>
-                <p>You ran out of lives in Survival Mode</p>
+                <h2 style="color: var(--danger-color); font-size: 2.5rem; margin-bottom: 0.5rem;">Game Over!</h2>
+                <p style="color: var(--text-secondary); font-size: 1.25rem;">You ran out of lives in Survival Mode</p>
             </div>
             
-            <div class="results-stats">
+            <div class="results-stats" style="margin: 2rem 0;">
                 <div class="result-stat">
                     <i class="fas fa-trophy" style="color: var(--warning-color);"></i>
                     <div>
-                        <h3 id="final-score">${data.survival_final_score || quizState.score}</h3>
+                        <h3 id="final-score">${finalScore}</h3>
                         <p>Final Score</p>
                     </div>
                 </div>
                 <div class="result-stat">
                     <i class="fas fa-star" style="color: var(--primary-color);"></i>
                     <div>
-                        <h3 id="high-score">${data.survival_high_score || 0}</h3>
+                        <h3 id="high-score">${highScore}</h3>
                         <p>High Score</p>
                     </div>
                 </div>
                 <div class="result-stat">
                     <i class="fas fa-question" style="color: var(--accent-color);"></i>
                     <div>
-                        <h3>${quizState.answers.length}</h3>
+                        <h3>${questionsAnswered}</h3>
                         <p>Questions Answered</p>
                     </div>
                 </div>
             </div>
 
-            <div class="results-actions">
-                <button class="btn btn-danger" onclick="startNewSurvivalMode()">
+            <div class="results-actions" style="margin-top: 2rem;">
+                <button class="btn btn-danger btn-lg" onclick="startNewSurvivalMode()">
                     <i class="fas fa-redo"></i> Try Again
                 </button>
-                <button class="btn btn-secondary" onclick="window.location.href='/'">
+                <button class="btn btn-secondary btn-lg" onclick="window.location.href='/'">
                     <i class="fas fa-home"></i> Home
                 </button>
             </div>
         </div>
     `;
 
-    document.getElementById('question-container').innerHTML = gameOverHtml;
-    document.getElementById('quiz-container').classList.add('quiz-complete');
+    // Clear the entire question container and replace with game over screen
+    const questionContainer = document.getElementById('question-container');
+    questionContainer.innerHTML = gameOverHtml;
+    questionContainer.classList.add('game-over-container');
+    
+    // Hide quiz header elements that are not needed
+    const quizActions = document.querySelector('.quiz-actions');
+    if (quizActions) {
+        quizActions.style.display = 'none';
+    }
+    
+    // Hide progress bar
+    const progressBar = document.querySelector('.quiz-progress-bar');
+    if (progressBar) {
+        progressBar.style.display = 'none';
+    }
+    
+    // Update the quiz container class for styling
+    const quizContainer = document.getElementById('quiz-container');
+    quizContainer.classList.add('quiz-complete');
+    
+    // Track the game over event
+    if (typeof trackFeatureUsage === 'function') {
+        trackFeatureUsage('survival_game_over');
+    }
 }
+
 
 // Start new survival mode
 function startNewSurvivalMode() {

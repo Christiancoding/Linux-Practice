@@ -456,14 +456,16 @@ class QuizController:
             # Handle survival mode - lose a life on wrong answer
             if self.survival_mode_active:
                 self.survival_lives -= 1
+                print(f"DEBUG: Survival mode - lives remaining: {self.survival_lives}")
                 if self.survival_lives <= 0:
                     # Game over in survival mode
                     self.quiz_active = False
+                    print(f"DEBUG: Survival mode GAME OVER - setting quiz_active to False")
         
         self.session_total += 1
         self.questions_since_break += 1
         
-                # Calculate points
+        # Calculate points
         points_earned = self._calculate_points(is_correct, self.current_streak)
         
         # Update game state
@@ -481,42 +483,44 @@ class QuizController:
         # Check achievements
         new_badges = self.game_state.check_achievements(is_correct, self.current_streak)
         
-        # Handle mode-specific logic
-        result: Dict[str, Any] = {
+        # Build the response - REPLACE THE OLD response DICTIONARY WITH THIS
+        response: Dict[str, Union[bool, int, float, str, List[str], List[Dict[str, Any]], None]] = {
             'is_correct': is_correct,
             'correct_answer_index': correct_answer_index,
-            'user_answer_index': user_answer_index,
-            'explanation': explanation,
-            'points_earned': points_earned,
-            'streak': self.current_streak,
-            'new_badges': new_badges,
+            'points_earned': points_earned,  # Note: changed from 'points' to 'points_earned'
             'session_score': self.session_score,
             'session_total': self.session_total,
+            'session_points': self.game_state.session_points,  # Add this line
+            'streak': self.current_streak,
+            'session_complete': self._check_session_complete(),
+            'accuracy': (self.session_score / self.session_total * 100) if self.session_total > 0 else 0,
+            'user_answer_index': user_answer_index,
+            'explanation': explanation,
+            'new_badges': new_badges,
             'options': options,
             'mode': self.current_quiz_mode
         }
         
-        # Add mode-specific information
+        # Add survival mode specific data
         if self.survival_mode_active:
-            result['survival_lives'] = self.survival_lives
-            result['survival_game_over'] = self.survival_lives <= 0
+            response['survival_lives'] = self.survival_lives
+            response['survival_game_over'] = self.survival_lives <= 0
             if self.survival_lives <= 0:
-                # Update high score if needed
-                if self.session_score > getattr(self, 'survival_high_score', 0):
-                    self.survival_high_score = self.session_score
-                result['survival_high_score'] = self.survival_high_score
-                result['survival_final_score'] = self.session_score
+                response['survival_final_score'] = self.session_score
+                response['survival_high_score'] = getattr(self, 'survival_high_score', 0)
+                print(f"DEBUG: Adding survival game over data to response")
         
+        # Add mode-specific information (keep the existing timed mode logic)
         if self.timed_mode_active and self.current_question_start_time:
             # Calculate time taken for this question
             time_taken = time.time() - self.current_question_start_time
-            result['time_taken'] = time_taken
-            result['time_per_question'] = self.time_per_question
+            response['time_taken'] = time_taken
+            response['time_per_question'] = self.time_per_question
             # Award bonus points for fast answers in timed mode
             if time_taken < self.time_per_question / 2 and is_correct:
                 bonus_points = 5
-                result['points_earned'] += bonus_points
-                result['speed_bonus'] = bonus_points
+                response['points_earned'] += bonus_points
+                response['speed_bonus'] = bonus_points
                 # Update game state with the bonus points too
                 self.game_state.update_points(bonus_points)
         
@@ -527,22 +531,22 @@ class QuizController:
         # Update Quick Fire if active
         if self.quick_fire_active:
             self.quick_fire_questions_answered += 1
-            result['quick_fire_questions_answered'] = self.quick_fire_questions_answered
-            result['quick_fire_complete'] = self.quick_fire_questions_answered >= QUICK_FIRE_QUESTIONS
+            response['quick_fire_questions_answered'] = self.quick_fire_questions_answered
+            response['quick_fire_complete'] = self.quick_fire_questions_answered >= QUICK_FIRE_QUESTIONS
         
         # Check for session completion
-        result['session_complete'] = self._check_session_complete()
+        response['session_complete'] = self._check_session_complete()
         
         # If session is complete, automatically end the session
-        if result['session_complete']:
+        if response['session_complete']:
             # Call the proper end_session method to ensure data is saved
-            session_results = self.end_session()
+            session_results: Dict[str, Any] = self.end_session()
             self.last_session_results = session_results
             # Add final results to the response
-            result.update(session_results)
+            response.update(session_results)
                 
         # Ensure results are saved if session is complete
-        if not self.quiz_active and self.session_total > 0 and not result['session_complete']:
+        if not self.quiz_active and self.session_total > 0 and not response['session_complete']:
             self.last_session_results = {
                 'session_score': self.session_score,
                 'session_total': self.session_total,
@@ -550,13 +554,15 @@ class QuizController:
                 'session_points': getattr(self.game_state, 'session_points', 0),
                 'mode': self.current_quiz_mode
             }
+        
         # Cache the current question
         self.last_question = {
             'question_data': question_data,
             'user_answer_index': user_answer_index,
             'is_correct': is_correct
         }
-        return result
+        
+        return response
     
     def skip_question(self) -> Dict[str, Any]:
         """
