@@ -1,17 +1,17 @@
 {
   "anonymous": {
-    "total_questions": 19,
-    "correct_answers": 1,
-    "incorrect_answers": 18,
-    "accuracy": 5.26,
-    "total_study_time": 228,
-    "total_sessions": 6,
+    "total_questions": 52,
+    "correct_answers": 28,
+    "incorrect_answers": 24,
+    "accuracy": 53.85,
+    "total_study_time": 624,
+    "total_sessions": 15,
     "study_streak": 2,
     "current_streak": 0,
     "longest_streak": 2,
     "questions_to_review": 10,
-    "level": 1,
-    "xp": 10,
+    "level": 4,
+    "xp": 360,
     "achievements": [
       {
         "id": "first_question",
@@ -43,46 +43,52 @@
       }
     ],
     "session_history": [],
-    "last_activity": "2025-08-11T13:48:48.848347",
+    "last_activity": "2025-08-11T14:02:14.564106",
     "topics_studied": {
       "Concepts & Terms (Security)": {
-        "correct": 0,
-        "total": 2,
-        "questions": 2
+        "correct": 5,
+        "total": 7,
+        "questions": 7
       },
       "Troubleshooting": {
-        "correct": 0,
-        "total": 4,
-        "questions": 4
-      },
-      "Commands (System Management)": {
-        "correct": 0,
+        "correct": 4,
         "total": 9,
         "questions": 9
       },
+      "Commands (System Management)": {
+        "correct": 11,
+        "total": 24,
+        "questions": 24
+      },
       "Concepts & Terms (Automation)": {
-        "correct": 1,
+        "correct": 4,
+        "total": 7,
+        "questions": 7
+      },
+      "Concepts & Terms (System Management)": {
+        "correct": 2,
         "total": 3,
         "questions": 3
       },
-      "Concepts & Terms (System Management)": {
-        "correct": 0,
-        "total": 1,
-        "questions": 1
+      "Concepts & Terms (Containers)": {
+        "correct": 2,
+        "total": 2,
+        "questions": 2
       }
     },
     "difficulty_progress": {
       "beginner": 0,
-      "intermediate": 19,
+      "intermediate": 52,
       "advanced": 0
     },
     "display_name": "Anonymous",
     "created_date": "2025-08-10T00:12:06.729796",
     "current_session": {
-      "start": "2025-08-11T13:48:48.848347",
+      "start": "2025-08-11T14:02:14.564106",
       "questions": 1,
-      "last_activity": "2025-08-11T13:48:48.848347"
-    }
+      "last_activity": "2025-08-11T14:02:14.564106"
+    },
+    "overall_accuracy": 54.90196078431373
   },
   "demo_user_001": {
     "total_questions": 0,

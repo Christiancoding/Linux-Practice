@@ -458,9 +458,9 @@ class QuizController:
                 self.survival_lives -= 1
                 print(f"DEBUG: Survival mode - lives remaining: {self.survival_lives}")
                 if self.survival_lives <= 0:
-                    # Game over in survival mode
-                    self.quiz_active = False
-                    print(f"DEBUG: Survival mode GAME OVER - setting quiz_active to False")
+                    # Game over in survival mode - but don't set quiz_active = False yet
+                    # We'll handle the session end properly later in this method
+                    print(f"DEBUG: Survival mode GAME OVER - lives exhausted")
         
         self.session_total += 1
         self.questions_since_break += 1
@@ -590,7 +590,8 @@ class QuizController:
         Returns:
             dict: Session summary data
         """
-        if not self.quiz_active:
+        # Allow ending session for survival mode game over even if quiz_active is False
+        if not self.quiz_active and not (self.survival_mode_active and self.survival_lives <= 0):
             return {'error': 'No active session'}
         
         self.quiz_active = False
@@ -677,6 +678,12 @@ class QuizController:
         self.current_quiz_mode = QUIZ_MODE_STANDARD
         self.custom_question_limit = None  # Reset custom limit
         self.session_start_time = None  # Reset session timing
+        
+        # Reset mode-specific flags
+        self.survival_mode_active = False
+        self.survival_lives = SURVIVAL_MODE_LIVES
+        self.timed_mode_active = False
+        self.exam_mode_active = False
         
         return session_results
     

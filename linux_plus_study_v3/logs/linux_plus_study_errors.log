@@ -4963,3 +4963,13 @@ NameError: name 'login_required' is not defined
 2025-08-11 13:48:07,464 - utils.database - INFO: Database connection test successful
 2025-08-11 13:48:07,473 - views.web_view - WARNING: VM management features not available - vm_integration module not found
 2025-08-11 13:48:07,477 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-11 14:00:23,972 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-11 14:00:23,973 - utils.database - INFO: All database connections closed
+2025-08-11 14:00:25,153 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-11 14:00:25,153 - __main__ - INFO: Starting web application mode
+2025-08-11 14:00:25,153 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-11 14:00:25,154 - __main__ - INFO: Web application components loaded successfully
+2025-08-11 14:00:25,161 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-11 14:00:25,172 - utils.database - INFO: Database connection test successful
+2025-08-11 14:00:25,182 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-11 14:00:25,187 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
