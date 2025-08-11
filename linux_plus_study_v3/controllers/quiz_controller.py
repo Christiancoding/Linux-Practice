@@ -1070,6 +1070,12 @@ class QuizController:
                 # Apply streak bonus (but cap it to reasonable limits)
                 bonus_multiplier = min(2.0, 1.0 + (streak_multiplier / 100.0))
                 points = int(points * bonus_multiplier)
+            
+            # Apply XP multiplier
+            game_values = get_game_value_manager()
+            xp_multiplier = game_values.get_value('scoring', 'xp_multiplier', 1.0)
+            points = int(points * xp_multiplier)
+            
             return points
         else:
             # For incorrect answers, use negative points or 0 based on settings

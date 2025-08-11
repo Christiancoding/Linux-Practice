@@ -2745,6 +2745,184 @@ class LinuxPlusStudyWeb:
                 self.logger.error(f"Statistics API error: {e}")
                 return jsonify({'error': str(e), 'success': False})
 
+        @self.app.route('/api/achievements')
+        def api_achievements():
+            """API endpoint for achievements data"""
+            try:
+                # Load achievements data directly
+                from models.achievements import AchievementSystem
+                achievement_system = AchievementSystem()
+                
+                # Get current statistics
+                from services.simple_analytics import get_analytics_manager
+                from flask import session
+                
+                analytics = get_analytics_manager()
+                user_id = session.get('user_id', 'anonymous')
+                stats = analytics.get_dashboard_stats(user_id)
+                user_data = analytics.get_user_data(user_id)
+                
+                # Get achievements data
+                achievements_data = achievement_system.achievements
+                badges = achievements_data.get("badges", [])
+                total_points = achievements_data.get("points_earned", 0)
+                questions_answered = achievements_data.get("questions_answered", 0)
+                days_studied = len(achievements_data.get("days_studied", []))
+                
+                # Define all available achievements
+                all_achievements = {
+                    "First Steps": {
+                        "name": "First Steps",
+                        "description": "Complete your first quiz",
+                        "category": "mastery",
+                        "points": 10,
+                        "unlocked": questions_answered > 0
+                    },
+                    "Speed Demon": {
+                        "name": "Speed Demon", 
+                        "description": "Answer 10 questions correctly in under 2 minutes",
+                        "category": "speed",
+                        "points": 25,
+                        "unlocked": "speed_demon" in badges
+                    },
+                    "On Fire!": {
+                        "name": "On Fire!",
+                        "description": "Maintain a 7-day study streak",
+                        "category": "streak", 
+                        "points": 50,
+                        "unlocked": days_studied >= 7
+                    },
+                    "Perfect Score": {
+                        "name": "Perfect Score",
+                        "description": "Get 100% accuracy on a 20-question quiz",
+                        "category": "mastery",
+                        "points": 100,
+                        "unlocked": "perfect_session" in badges
+                    },
+                    "Night Owl": {
+                        "name": "Night Owl",
+                        "description": "Study between midnight and 3 AM",
+                        "category": "special",
+                        "points": 15,
+                        "unlocked": "night_owl" in badges
+                    },
+                    "Linux Master": {
+                        "name": "Linux Master",
+                        "description": "Achieve 95% overall accuracy across 1000 questions",
+                        "category": "legendary",
+                        "points": 500,
+                        "unlocked": questions_answered >= 1000 and stats.get('accuracy', 0) >= 95
+                    },
+                    "Category Expert": {
+                        "name": "Category Expert",
+                        "description": "Achieve 90% accuracy in any category",
+                        "category": "mastery",
+                        "points": 75,
+                        "unlocked": stats.get('accuracy', 0) >= 90
+                    },
+                    "Streak Master": {
+                        "name": "Streak Master",
+                        "description": "Answer 5 questions correctly in a row",
+                        "category": "streak",
+                        "points": 25,
+                        "unlocked": "streak_master" in badges
+                    },
+                    "Point Collector": {
+                        "name": "Point Collector", 
+                        "description": "Earn 500 points total",
+                        "category": "mastery",
+                        "points": 50,
+                        "unlocked": "point_collector" in badges
+                    },
+                    "Dedicated Learner": {
+                        "name": "Dedicated Learner",
+                        "description": "Study for 3 different days", 
+                        "category": "streak",
+                        "points": 30,
+                        "unlocked": "dedicated_learner" in badges
+                    },
+                    "Century Club": {
+                        "name": "Century Club",
+                        "description": "Answer 100 questions total",
+                        "category": "mastery", 
+                        "points": 100,
+                        "unlocked": "century_club" in badges
+                    },
+                    "Quick Fire Champion": {
+                        "name": "Quick Fire Champion",
+                        "description": "Complete Quick Fire mode",
+                        "category": "speed",
+                        "points": 35,
+                        "unlocked": "quick_fire_champion" in badges
+                    },
+                    "Daily Warrior": {
+                        "name": "Daily Warrior",
+                        "description": "Complete a daily challenge",
+                        "category": "special",
+                        "points": 25,
+                        "unlocked": "daily_warrior" in badges
+                    }
+                }
+                
+                # Separate unlocked and locked achievements
+                unlocked = []
+                locked = []
+                for achievement in all_achievements.values():
+                    if achievement["unlocked"]:
+                        unlocked.append(achievement)
+                    else:
+                        locked.append(achievement)
+                
+                # Calculate completion percentage
+                completion_percentage = round((len(unlocked) / len(all_achievements)) * 100) if all_achievements else 0
+                
+                # Find rarest achievement (least unlocked)
+                rarest_achievement = "Linux Master" if len(unlocked) > 0 else None
+                
+                return jsonify({
+                    'total_points': total_points,
+                    'questions_answered': questions_answered, 
+                    'days_studied': days_studied,
+                    'badges': badges,
+                    'unlocked': unlocked,
+                    'locked': locked,
+                    'achievements': {
+                        'unlocked': unlocked,
+                        'locked': locked
+                    },
+                    'stats': {
+                        'unlocked': len(unlocked),
+                        'total': len(all_achievements),
+                        'completion': completion_percentage,
+                        'points': total_points,
+                        'rarest': rarest_achievement,
+                        'accuracy': stats.get('accuracy', 0),
+                        'level': stats.get('level', 1)
+                    },
+                    'progress': {
+                        'perfect_score': min(questions_answered, 20),
+                        'linux_master': min(questions_answered, 1000),
+                        'category_expert': stats.get('accuracy', 0)
+                    },
+                    'success': True
+                })
+            except Exception as e:
+                self.logger.error(f"Achievements API error: {e}")
+                return jsonify({
+                    'total_points': 0,
+                    'unlocked': [],
+                    'locked': [],
+                    'stats': {
+                        'unlocked': 0,
+                        'total': 45,
+                        'completion': 0,
+                        'points': 0,
+                        'rarest': None
+                    },
+                    'error': str(e),
+                    'success': False
+                })
+
         # Profile Management API Routes
         @self.app.route('/api/profiles', methods=['GET'])
         def api_get_profiles():
@@ -3067,4 +3245,183 @@ class LinuxPlusStudyWeb:
                     })
             except Exception as e:
                 self.logger.error(f"Cleanup review list API error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/load_game_values', methods=['GET'])
+        def api_load_game_values():
+            """Load game values configuration"""
+            try:
+                game_values = get_game_value_manager()
+                config = game_values.get_all_config()
+                return jsonify({'success': True, 'values': config})
+            except Exception as e:
+                self.logger.error(f"Load game values error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/save_game_values', methods=['POST'])
+        def api_save_game_values():
+            """Save game values configuration"""
+            try:
+                data = request.get_json() or {}
+                game_values = get_game_value_manager()
+                
+                success = game_values.update_settings(**data)
+                if success:
+                    return jsonify({'success': True, 'message': 'Game values saved successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to save game values'})
+            except Exception as e:
+                self.logger.error(f"Save game values error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/reset_game_values', methods=['POST'])
+        def api_reset_game_values():
+            """Reset game values to defaults"""
+            try:
+                game_values = get_game_value_manager()
+                success = game_values.reset_to_defaults()
+                if success:
+                    return jsonify({'success': True, 'message': 'Game values reset to defaults'})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to reset game values'})
+            except Exception as e:
+                self.logger.error(f"Reset game values error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/create_achievement', methods=['POST'])
+        def api_create_achievement():
+            """Create a custom achievement"""
+            try:
+                data = request.get_json() or {}
+                name = data.get('name', '').strip()
+                description = data.get('description', '').strip()
+                condition_type = data.get('condition_type', '')
+                condition_value = int(data.get('condition_value', 0))
+                xp_reward = int(data.get('xp_reward', 0))
+                
+                if not all([name, description, condition_type]):
+                    return jsonify({'success': False, 'error': 'All fields are required'})
+                
+                if condition_type not in ['questions', 'points', 'streaks', 'days']:
+                    return jsonify({'success': False, 'error': 'Invalid condition type'})
+                
+                from models.achievements import AchievementSystem
+                achievement_system = AchievementSystem()
+                
+                success = achievement_system.create_custom_achievement(
+                    name, description, condition_type, condition_value, xp_reward
+                )
+                
+                if success:
+                    achievement_system.save_achievements()
+                    return jsonify({'success': True, 'message': 'Achievement created successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Achievement with this name already exists'})
+                    
+            except ValueError as e:
+                return jsonify({'success': False, 'error': 'Invalid numeric values'})
+            except Exception as e:
+                self.logger.error(f"Create achievement error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/get_custom_achievements', methods=['GET'])
+        def api_get_custom_achievements():
+            """Get all custom achievements"""
+            try:
+                from models.achievements import AchievementSystem
+                achievement_system = AchievementSystem()
+                achievements = achievement_system.get_custom_achievements()
+                return jsonify({'success': True, 'achievements': achievements})
+            except Exception as e:
+                self.logger.error(f"Get custom achievements error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/delete_achievement', methods=['POST'])
+        def api_delete_achievement():
+            """Delete a custom achievement"""
+            try:
+                data = request.get_json() or {}
+                name = data.get('name', '').strip()
+                
+                if not name:
+                    return jsonify({'success': False, 'error': 'Achievement name is required'})
+                
+                from models.achievements import AchievementSystem
+                achievement_system = AchievementSystem()
+                
+                success = achievement_system.delete_custom_achievement(name)
+                if success:
+                    achievement_system.save_achievements()
+                    return jsonify({'success': True, 'message': 'Achievement deleted successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Achievement not found'})
+                    
+            except Exception as e:
+                self.logger.error(f"Delete achievement error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/get_system_settings', methods=['GET'])
+        def api_get_system_settings():
+            """Get system settings including focus mode and break reminders"""
+            try:
+                game_values = get_game_value_manager()
+                system_settings = game_values.get_value('system', None, {})
+                
+                # Add backward compatibility with web_settings.json
+                try:
+                    import json
+                    from pathlib import Path
+                    web_settings_file = Path("web_settings.json")
+                    if web_settings_file.exists():
+                        with open(web_settings_file, 'r') as f:
+                            web_settings = json.load(f)
+                            system_settings.update({
+                                'focus_mode_enabled': web_settings.get('focusMode', False),
+                                'break_reminder_interval': web_settings.get('breakReminder', 15)
+                            })
+                except Exception as e:
+                    self.logger.warning(f"Could not load web_settings.json: {e}")
+                
+                return jsonify({'success': True, 'settings': system_settings})
+            except Exception as e:
+                self.logger.error(f"Get system settings error: {e}")
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/save_system_settings', methods=['POST'])
+        def api_save_system_settings():
+            """Save system settings including focus mode and break reminders"""
+            try:
+                data = request.get_json() or {}
+                game_values = get_game_value_manager()
+                
+                success = game_values.update_settings(system=data)
+                
+                # Also update web_settings.json for backward compatibility
+                try:
+                    import json
+                    from pathlib import Path
+                    web_settings_file = Path("web_settings.json")
+                    web_settings = {}
+                    if web_settings_file.exists():
+                        with open(web_settings_file, 'r') as f:
+                            web_settings = json.load(f)
+                    
+                    web_settings.update({
+                        'focusMode': data.get('focus_mode_enabled', False),
+                        'breakReminder': data.get('break_reminder_interval', 15)
+                    })
+                    
+                    with open(web_settings_file, 'w') as f:
+                        json.dump(web_settings, f, indent=2)
+                        
+                except Exception as e:
+                    self.logger.warning(f"Could not update web_settings.json: {e}")
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'System settings saved successfully'})
+                else:
+                    return jsonify({'success': False, 'error': 'Failed to save system settings'})
+                    
+            except Exception as e:
+                self.logger.error(f"Save system settings error: {e}")
                 return jsonify({'success': False, 'error': str(e)})

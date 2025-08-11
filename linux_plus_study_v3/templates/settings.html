@@ -34,6 +34,12 @@
         <button class="settings-tab" onclick="switchSettingsTab('data')">
             <i class="fas fa-database"></i> Data
         </button>
+        <button class="settings-tab" onclick="switchSettingsTab('system')">
+            <i class="fas fa-cogs"></i> System
+        </button>
+        <button class="settings-tab" onclick="switchSettingsTab('achievements')">
+            <i class="fas fa-trophy"></i> Achievements
+        </button>
     </div>
 
     <!-- Settings Content -->
@@ -383,6 +389,15 @@
                         <input type="number" class="form-input" id="achievement-question-threshold" min="10" max="500" value="100">
                     </div>
                 </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>XP Multiplier</h4>
+                        <p>Global multiplier for all XP/point values (affects achievements)</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="xp-multiplier" min="0.1" max="10" step="0.1" value="1.0">
+                    </div>
+                </div>
             </section>
 
             <section class="settings-section glass" data-aos="fade-up" data-aos-delay="300">
@@ -588,6 +603,125 @@
                             Reset All Data
                         </button>
                     </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- System Settings -->
+        <div class="settings-panel" id="system-panel">
+            <section class="settings-section glass" data-aos="fade-up">
+                <h2 class="section-header">
+                    <i class="fas fa-focus"></i> Focus & Productivity
+                </h2>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Focus Mode</h4>
+                        <p>Hide distracting UI elements during quiz sessions</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="focus-mode-toggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Break Reminders</h4>
+                        <p>Show periodic break reminders during study sessions</p>
+                    </div>
+                    <div class="setting-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="break-reminder-toggle" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Break Reminder Interval</h4>
+                        <p>Minutes between break reminder notifications</p>
+                    </div>
+                    <div class="setting-control">
+                        <input type="number" class="form-input" id="break-reminder-interval" min="5" max="60" value="15">
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Achievement Management -->
+        <div class="settings-panel" id="achievements-panel">
+            <section class="settings-section glass" data-aos="fade-up">
+                <h2 class="section-header">
+                    <i class="fas fa-plus-circle"></i> Create Achievement
+                </h2>
+                <div class="achievement-form">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Achievement Name</h4>
+                            <p>Unique name for your custom achievement</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" class="form-input" id="achievement-name" placeholder="My Custom Achievement" maxlength="50">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Description</h4>
+                            <p>What the user needs to do to earn this achievement</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="text" class="form-input" id="achievement-description" placeholder="Complete 50 questions in Advanced category" maxlength="100">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Condition Type</h4>
+                            <p>What metric to track for this achievement</p>
+                        </div>
+                        <div class="setting-control">
+                            <select class="form-select" id="achievement-condition-type">
+                                <option value="questions">Total Questions Answered</option>
+                                <option value="points">Total Points Earned</option>
+                                <option value="streaks">Streaks Achieved</option>
+                                <option value="days">Days Studied</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>Condition Value</h4>
+                            <p>Target value required to unlock the achievement</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" class="form-input" id="achievement-condition-value" min="1" max="10000" value="100">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h4>XP Reward</h4>
+                            <p>Experience points awarded when achievement is unlocked</p>
+                        </div>
+                        <div class="setting-control">
+                            <input type="number" class="form-input" id="achievement-xp-reward" min="1" max="1000" value="100">
+                        </div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-control" style="justify-content: flex-end;">
+                            <button class="btn btn-primary" onclick="createCustomAchievement()">
+                                <i class="fas fa-plus"></i> Create Achievement
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="settings-section glass" data-aos="fade-up" data-aos-delay="100">
+                <h2 class="section-header">
+                    <i class="fas fa-list"></i> Custom Achievements
+                </h2>
+                <div id="custom-achievements-list">
+                    <div class="achievement-loading">Loading achievements...</div>
                 </div>
             </section>
         </div>
@@ -1033,6 +1167,111 @@
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* Achievement Management Styles */
+.achievement-form {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-info h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.achievement-info p {
+    margin: 0 0 0.25rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.achievement-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.achievement-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.achievement-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.achievement-status.unlocked {
+    background: rgba(34, 197, 94, 0.2);
+    color: #22c55e;
+}
+
+.achievement-status.locked {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9ca3af;
+}
+
+.achievement-loading {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.achievement-empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.form-input {
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    transition: var(--transition-base);
+    width: 200px;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+}
+
+/* System Settings Styles */
+.system-panel .setting-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.system-panel .setting-item:last-child {
+    border-bottom: none;
+}
+
+/* Focus mode indicator */
+.focus-mode-active {
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}
 </style>
 {% endblock %}
 
@@ -1129,6 +1368,16 @@ function switchSettingsTab(tab) {
     // Load profiles when profiles tab is selected
     if (tab === 'profiles') {
         loadProfiles();
+    }
+    
+    // Load system settings when system panel is shown
+    if (tab === 'system') {
+        loadSystemSettings();
+    }
+    
+    // Load achievements when achievements panel is shown
+    if (tab === 'achievements') {
+        loadCustomAchievements();
     }
 }
 
@@ -1482,6 +1731,7 @@ function populateGameValues(values) {
         setIfExists('daily-challenge-bonus', values.scoring.daily_challenge_bonus);
         setIfExists('achievement-point-threshold', values.scoring.achievement_point_threshold);
         setIfExists('achievement-question-threshold', values.scoring.achievement_question_threshold);
+        setIfExists('xp-multiplier', values.scoring.xp_multiplier);
     }
     
     // Streak settings
@@ -1519,7 +1769,8 @@ function saveGameValues() {
             perfect_quiz_bonus: parseInt(document.getElementById('perfect-quiz-bonus')?.value) || 25,
             daily_challenge_bonus: parseInt(document.getElementById('daily-challenge-bonus')?.value) || 50,
             achievement_point_threshold: parseInt(document.getElementById('achievement-point-threshold')?.value) || 500,
-            achievement_question_threshold: parseInt(document.getElementById('achievement-question-threshold')?.value) || 100
+            achievement_question_threshold: parseInt(document.getElementById('achievement-question-threshold')?.value) || 100,
+            xp_multiplier: parseFloat(document.getElementById('xp-multiplier')?.value) || 1.0
         },
         streaks: {
             daily_streak_threshold: parseInt(document.getElementById('daily-streak-threshold')?.value) || 3,
@@ -1902,5 +2153,218 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// System Settings Functions
+function loadSystemSettings() {
+    fetch('/api/get_system_settings')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const settings = data.settings;
+                const focusModeToggle = document.getElementById('focus-mode-toggle');
+                const breakReminderToggle = document.getElementById('break-reminder-toggle');
+                const breakReminderInterval = document.getElementById('break-reminder-interval');
+                
+                if (focusModeToggle) {
+                    focusModeToggle.checked = settings.focus_mode_enabled || false;
+                }
+                if (breakReminderToggle) {
+                    breakReminderToggle.checked = settings.break_reminder_enabled !== false;
+                }
+                if (breakReminderInterval) {
+                    breakReminderInterval.value = settings.break_reminder_interval || 15;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading system settings:', error);
+        });
+}
+
+function saveSystemSettings() {
+    const focusModeToggle = document.getElementById('focus-mode-toggle');
+    const breakReminderToggle = document.getElementById('break-reminder-toggle');
+    const breakReminderInterval = document.getElementById('break-reminder-interval');
+    
+    const systemSettings = {
+        focus_mode_enabled: focusModeToggle ? focusModeToggle.checked : false,
+        break_reminder_enabled: breakReminderToggle ? breakReminderToggle.checked : true,
+        break_reminder_interval: breakReminderInterval ? parseInt(breakReminderInterval.value) || 15 : 15
+    };
+    
+    fetch('/api/save_system_settings', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(systemSettings)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'System settings saved successfully!');
+        } else {
+            showMessage('error', 'Failed to save system settings: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error saving system settings:', error);
+        showMessage('error', 'An error occurred while saving system settings');
+    });
+}
+
+// Achievement Management Functions
+function createCustomAchievement() {
+    const nameInput = document.getElementById('achievement-name');
+    const descriptionInput = document.getElementById('achievement-description');
+    const conditionTypeInput = document.getElementById('achievement-condition-type');
+    const conditionValueInput = document.getElementById('achievement-condition-value');
+    const xpRewardInput = document.getElementById('achievement-xp-reward');
+    
+    const achievementData = {
+        name: nameInput.value.trim(),
+        description: descriptionInput.value.trim(),
+        condition_type: conditionTypeInput.value,
+        condition_value: parseInt(conditionValueInput.value) || 0,
+        xp_reward: parseInt(xpRewardInput.value) || 0
+    };
+    
+    // Validation
+    if (!achievementData.name || !achievementData.description) {
+        showMessage('error', 'Name and description are required');
+        return;
+    }
+    
+    if (achievementData.condition_value <= 0) {
+        showMessage('error', 'Condition value must be greater than 0');
+        return;
+    }
+    
+    if (achievementData.xp_reward <= 0) {
+        showMessage('error', 'XP reward must be greater than 0');
+        return;
+    }
+    
+    fetch('/api/create_achievement', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(achievementData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'Achievement created successfully!');
+            
+            // Clear form
+            nameInput.value = '';
+            descriptionInput.value = '';
+            conditionValueInput.value = '100';
+            xpRewardInput.value = '100';
+            
+            // Reload achievements list
+            loadCustomAchievements();
+        } else {
+            showMessage('error', 'Failed to create achievement: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error creating achievement:', error);
+        showMessage('error', 'An error occurred while creating achievement');
+    });
+}
+
+function loadCustomAchievements() {
+    const achievementsList = document.getElementById('custom-achievements-list');
+    if (!achievementsList) return;
+    
+    achievementsList.innerHTML = '<div class="achievement-loading">Loading achievements...</div>';
+    
+    fetch('/api/get_custom_achievements')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayCustomAchievements(data.achievements);
+            } else {
+                achievementsList.innerHTML = '<div class="achievement-empty">Failed to load achievements</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading custom achievements:', error);
+            achievementsList.innerHTML = '<div class="achievement-empty">Error loading achievements</div>';
+        });
+}
+
+function displayCustomAchievements(achievements) {
+    const achievementsList = document.getElementById('custom-achievements-list');
+    if (!achievementsList) return;
+    
+    if (achievements.length === 0) {
+        achievementsList.innerHTML = '<div class="achievement-empty">No custom achievements created yet</div>';
+        return;
+    }
+    
+    achievementsList.innerHTML = achievements.map(achievement => `
+        <div class="achievement-item">
+            <div class="achievement-info">
+                <h5>${achievement.name}</h5>
+                <p>${achievement.description}</p>
+                <div class="achievement-meta">
+                    <span>Condition: ${achievement.condition_value} ${achievement.condition_type}</span>
+                    <span>Reward: ${achievement.xp_reward} XP</span>
+                    <span class="achievement-status ${achievement.unlocked ? 'unlocked' : 'locked'}">
+                        ${achievement.unlocked ? 'Unlocked' : 'Locked'}
+                    </span>
+                </div>
+            </div>
+            <div class="achievement-actions">
+                <button class="btn btn-sm btn-danger" onclick="deleteCustomAchievement('${achievement.name}')">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function deleteCustomAchievement(name) {
+    if (!confirm(`Are you sure you want to delete the achievement "${name}"?`)) {
+        return;
+    }
+    
+    fetch('/api/delete_achievement', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name: name })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('success', 'Achievement deleted successfully!');
+            loadCustomAchievements();
+        } else {
+            showMessage('error', 'Failed to delete achievement: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error deleting achievement:', error);
+        showMessage('error', 'An error occurred while deleting achievement');
+    });
+}
+
+// Enhanced saveSettings function to include system settings
+function saveAllSettings() {
+    // Save regular settings
+    saveSettings();
+    
+    // Save game values
+    saveGameValues();
+    
+    // Save system settings
+    saveSystemSettings();
+}
+
 </script>
 {% endblock %}

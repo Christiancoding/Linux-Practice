@@ -114,18 +114,23 @@ class AchievementSystem:
         else:
             return []
     
-    def update_points(self, points_change: int) -> None:
+    def update_points(self, points_change: int, apply_multiplier: bool = True) -> None:
         """
         Update points and session points.
         
         Args:
             points_change (int): Points to add (can be negative)
+            apply_multiplier (bool): Whether to apply XP multiplier (default True)
         """
-        self.session_points += points_change
+        final_points = points_change
+        if apply_multiplier and points_change > 0:
+            final_points = self.apply_xp_multiplier(points_change)
+        
+        self.session_points += final_points
         
         # Only add positive points to total earned
-        if points_change > 0:
-            self.achievements["points_earned"] = self.achievements.get("points_earned", 0) + points_change
+        if final_points > 0:
+            self.achievements["points_earned"] = self.achievements.get("points_earned", 0) + final_points
     
     def check_achievements(self, is_correct: bool, streak_count: int, questions_answered: Optional[int] = None) -> List[str]:
         """
@@ -320,22 +325,30 @@ class AchievementSystem:
         progress: Dict[str, Dict[str, Any]] = {}
         unlocked_badges = set(self.achievements.get("badges", []))
         
+        from utils.game_values import get_game_value_manager
+        game_values = get_game_value_manager()
+        # Reload settings to get latest values
+        game_values._settings = game_values._load_settings()
+        question_threshold = game_values.get_value('scoring', 'achievement_question_threshold', 100)
+        point_threshold = game_values.get_value('scoring', 'achievement_point_threshold', 500)
+        daily_streak_threshold = game_values.get_value('streaks', 'daily_streak_threshold', 3)
+        
         # Questions progress (century club)
         if "century_club" not in unlocked_badges:
             questions = self.achievements.get("questions_answered", 0)
             progress["century_club"] = {
                 "current": questions,
-                "target": 100,
-                "percentage": min((questions / 100) * 100, 100)
+                "target": question_threshold,
+                "percentage": min((questions / question_threshold) * 100, 100) if question_threshold > 0 else 100
             }
         
-        # Points progress (point collector)
+        # Points progress (point collector)  
         if "point_collector" not in unlocked_badges:
             points = self.achievements.get("points_earned", 0)
             progress["point_collector"] = {
                 "current": points,
-                "target": 500,
-                "percentage": min((points / 500) * 100, 100)
+                "target": point_threshold,
+                "percentage": min((points / point_threshold) * 100, 100) if point_threshold > 0 else 100
             }
         
         # Days studied progress (dedicated learner)
@@ -343,8 +356,8 @@ class AchievementSystem:
             days = len(self.achievements.get("days_studied", []))
             progress["dedicated_learner"] = {
                 "current": days,
-                "target": 3,
-                "percentage": min((days / 3) * 100, 100)
+                "target": daily_streak_threshold,
+                "percentage": min((days / daily_streak_threshold) * 100, 100) if daily_streak_threshold > 0 else 100
             }
         
         return progress
@@ -571,5 +584,137 @@ class AchievementSystem:
             "daily_warrior_dates": [],
             "leaderboard": [],
             "survival_high_score": 0,
-            "survival_high_score_xp": 0
+            "survival_high_score_xp": 0,
+            "custom_achievements": []
         }
+    
+    def create_custom_achievement(self, name: str, description: str, condition_type: str, 
+                                condition_value: int, xp_reward: int) -> bool:
+        """
+        Create a custom achievement.
+        
+        Args:
+            name (str): Achievement name
+            description (str): Achievement description
+            condition_type (str): Type of condition ('questions', 'points', 'streaks', 'days')
+            condition_value (int): Value required to unlock
+            xp_reward (int): XP awarded when unlocked
+            
+        Returns:
+            bool: True if achievement was created successfully
+        """
+        # Ensure custom_achievements exists
+        if "custom_achievements" not in self.achievements:
+            self.achievements["custom_achievements"] = []
+        
+        # Check if achievement already exists
+        custom_achievements = cast(List[Dict[str, Any]], self.achievements["custom_achievements"])
+        if any(ach["name"] == name for ach in custom_achievements):
+            return False
+        
+        # Create achievement
+        achievement = {
+            "name": name,
+            "description": description,
+            "condition_type": condition_type,
+            "condition_value": condition_value,
+            "xp_reward": xp_reward,
+            "unlocked": False,
+            "unlock_date": None
+        }
+        
+        custom_achievements.append(achievement)
+        return True
+    
+    def check_custom_achievements(self) -> List[str]:
+        """
+        Check and unlock custom achievements.
+        
+        Returns:
+            list: List of newly unlocked custom achievement names
+        """
+        if "custom_achievements" not in self.achievements:
+            return []
+        
+        newly_unlocked = []
+        custom_achievements = cast(List[Dict[str, Any]], self.achievements["custom_achievements"])
+        
+        for achievement in custom_achievements:
+            if achievement.get("unlocked", False):
+                continue
+            
+            condition_met = False
+            condition_type = achievement["condition_type"]
+            condition_value = achievement["condition_value"]
+            
+            if condition_type == "questions":
+                condition_met = self.achievements.get("questions_answered", 0) >= condition_value
+            elif condition_type == "points":
+                condition_met = self.achievements.get("points_earned", 0) >= condition_value
+            elif condition_type == "streaks":
+                condition_met = self.achievements.get("streaks_achieved", 0) >= condition_value
+            elif condition_type == "days":
+                days_studied = self.achievements.get("days_studied", set())
+                if isinstance(days_studied, set):
+                    condition_met = len(days_studied) >= condition_value
+                else:
+                    condition_met = len(days_studied) >= condition_value
+            
+            if condition_met:
+                achievement["unlocked"] = True
+                achievement["unlock_date"] = datetime.now().isoformat()
+                newly_unlocked.append(achievement["name"])
+                
+                # Award XP (without applying multiplier again since this is a reward, not earned points)
+                self.update_points(achievement["xp_reward"], apply_multiplier=False)
+        
+        return newly_unlocked
+    
+    def get_custom_achievements(self) -> List[Dict[str, Any]]:
+        """
+        Get all custom achievements.
+        
+        Returns:
+            list: List of custom achievements
+        """
+        if "custom_achievements" not in self.achievements:
+            self.achievements["custom_achievements"] = []
+        return cast(List[Dict[str, Any]], self.achievements["custom_achievements"])
+    
+    def delete_custom_achievement(self, name: str) -> bool:
+        """
+        Delete a custom achievement.
+        
+        Args:
+            name (str): Name of achievement to delete
+            
+        Returns:
+            bool: True if achievement was deleted successfully
+        """
+        if "custom_achievements" not in self.achievements:
+            return False
+        
+        custom_achievements = cast(List[Dict[str, Any]], self.achievements["custom_achievements"])
+        for i, achievement in enumerate(custom_achievements):
+            if achievement["name"] == name:
+                custom_achievements.pop(i)
+                return True
+        
+        return False
+    
+    def apply_xp_multiplier(self, base_points: int) -> int:
+        """
+        Apply XP multiplier to base points.
+        
+        Args:
+            base_points (int): Base points before multiplier
+            
+        Returns:
+            int: Points after applying multiplier
+        """
+        from utils.game_values import get_game_value_manager
+        game_values = get_game_value_manager()
+        # Reload settings from file to get latest values
+        game_values._settings = game_values._load_settings()
+        multiplier = game_values.get_value('scoring', 'xp_multiplier', 1.0)
+        return int(base_points * multiplier)

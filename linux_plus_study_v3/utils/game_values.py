@@ -24,6 +24,7 @@ class ScoringSettings:
     default_challenge_score: int = 100
     achievement_point_threshold: int = 500
     achievement_question_threshold: int = 100
+    xp_multiplier: float = 1.0  # Global XP multiplier for all point values
 
 @dataclass
 class StreakSettings:
@@ -85,6 +86,15 @@ class TimeSettings:
     break_reminder_minutes: int = 10
 
 @dataclass
+class SystemSettings:
+    """System-wide feature settings."""
+    focus_mode_enabled: bool = False
+    break_reminder_enabled: bool = True
+    break_reminder_interval: int = 15  # minutes
+    achievement_creation_enabled: bool = True
+    custom_achievement_max: int = 10
+
+@dataclass
 class LeaderboardSettings:
     """Leaderboard and achievement configuration."""
     max_entries: int = 100
@@ -101,6 +111,7 @@ class GameValueSettings:
     levels: LevelSettings = field(default_factory=LevelSettings)
     display: DisplaySettings = field(default_factory=DisplaySettings)
     time: TimeSettings = field(default_factory=TimeSettings)
+    system: SystemSettings = field(default_factory=SystemSettings)
     leaderboard: LeaderboardSettings = field(default_factory=LeaderboardSettings)
 
 class GameValueManager:
@@ -140,6 +151,8 @@ class GameValueManager:
             settings.display = DisplaySettings(**data['display'])
         if 'time' in data:
             settings.time = TimeSettings(**data['time'])
+        if 'system' in data:
+            settings.system = SystemSettings(**data['system'])
         if 'leaderboard' in data:
             settings.leaderboard = LeaderboardSettings(**data['leaderboard'])
             

@@ -851,7 +851,6 @@ function updateAchievementsDisplay(achievementsData) {
     }
     
     const unlockedAchievements = achievementsData.unlocked || [];
-    const availableAchievements = achievementsData.available || [];
     
     if (unlockedAchievements.length === 0) {
         // Show empty state when no achievements are unlocked
@@ -875,36 +874,41 @@ function updateAchievementsDisplay(achievementsData) {
     
     // Add unlocked achievements
     recentAchievements.forEach(achievement => {
-        const badgeName = achievement.badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        // Map achievement icons based on category
+        let iconClass = 'fas fa-star';
+        if (achievement.category === 'streak') iconClass = 'fas fa-fire';
+        else if (achievement.category === 'speed') iconClass = 'fas fa-tachometer-alt';
+        else if (achievement.category === 'legendary') iconClass = 'fas fa-crown';
+        else if (achievement.category === 'special') iconClass = 'fas fa-gem';
+        
         achievementsHTML += `
             <div class="achievement-item">
                 <div class="achievement-icon" style="background: var(--gradient-success);">
-                    <i class="fas fa-star"></i>
+                    <i class="${iconClass}"></i>
                 </div>
                 <div class="achievement-info">
-                    <h4>${badgeName}</h4>
+                    <h4>${achievement.name}</h4>
                     <p>${achievement.description}</p>
+                    <small>+${achievement.points} XP</small>
                 </div>
             </div>
         `;
     });
     
-    // Fill remaining slots with locked achievements
-    const availableToShow = availableAchievements.slice(0, remainingSlots);
-    availableToShow.forEach(achievement => {
-        const badgeName = achievement.badge.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    // Fill remaining slots with upcoming achievement slots
+    for (let i = 0; i < remainingSlots; i++) {
         achievementsHTML += `
             <div class="achievement-item locked">
                 <div class="achievement-icon">
                     <i class="fas fa-lock"></i>
                 </div>
                 <div class="achievement-info">
-                    <h4>${badgeName}</h4>
-                    <p>${achievement.description}</p>
+                    <h4>Keep studying!</h4>
+                    <p>More achievements await</p>
                 </div>
             </div>
         `;
-    });
+    }
     
     container.innerHTML = achievementsHTML;
 }
