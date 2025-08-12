@@ -1,12 +1,12 @@
 {
   "sessions": [],
   "questions": {
-    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
+    "Which command installs the GRUB2 bootloader to a specified device?": {
       "correct": 1,
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-11T17:31:08.207844",
+          "timestamp": "2025-08-11T20:50:31.378130",
           "correct": true
         }
       ]
@@ -16,48 +16,24 @@
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-11T17:31:12.008426",
-          "correct": false
-        }
-      ]
-    },
-    "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-11T19:28:24.026951",
-          "correct": true
-        }
-      ]
-    },
-    "What does ACL stand for in Linux security?": {
-      "correct": 0,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-11T19:28:41.845134",
+          "timestamp": "2025-08-11T20:50:36.096552",
           "correct": false
         }
       ]
     }
   },
   "categories": {
-    "Troubleshooting": {
-      "correct": 1,
-      "attempts": 1
-    },
-    "Concepts & Terms (Security)": {
-      "correct": 0,
-      "attempts": 1
-    },
-    "Commands (System Management)": {
-      "correct": 1,
-      "attempts": 1
-    },
     "Concepts & Terms (Automation)": {
       "correct": 0,
       "attempts": 1
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 0
     },
     "Concepts & Terms (System Management)": {
       "correct": 0,
@@ -66,13 +42,16 @@
     "Concepts & Terms (Containers)": {
       "correct": 0,
       "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 1,
+      "attempts": 1
     }
   },
-  "total_correct": 2,
-  "total_attempts": 4,
+  "total_correct": 1,
+  "total_attempts": 2,
   "incorrect_review": [
-    "What is Ansible primarily used for?",
-    "What does ACL stand for in Linux security?"
+    "What is Ansible primarily used for?"
   ],
   "leaderboard": [],
   "settings": {},
