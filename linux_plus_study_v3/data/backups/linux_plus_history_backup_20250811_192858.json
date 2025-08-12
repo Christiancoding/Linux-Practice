@@ -20,26 +20,6 @@
           "correct": false
         }
       ]
-    },
-    "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-11T19:28:24.026951",
-          "correct": true
-        }
-      ]
-    },
-    "What does ACL stand for in Linux security?": {
-      "correct": 0,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-11T19:28:41.845134",
-          "correct": false
-        }
-      ]
     }
   },
   "categories": {
@@ -49,11 +29,11 @@
     },
     "Concepts & Terms (Security)": {
       "correct": 0,
-      "attempts": 1
+      "attempts": 0
     },
     "Commands (System Management)": {
-      "correct": 1,
-      "attempts": 1
+      "correct": 0,
+      "attempts": 0
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
@@ -68,11 +48,10 @@
       "attempts": 0
     }
   },
-  "total_correct": 2,
-  "total_attempts": 4,
+  "total_correct": 1,
+  "total_attempts": 2,
   "incorrect_review": [
-    "What is Ansible primarily used for?",
-    "What does ACL stand for in Linux security?"
+    "What is Ansible primarily used for?"
   ],
   "leaderboard": [],
   "settings": {},

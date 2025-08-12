@@ -12,6 +12,7 @@ from typing import Optional, Dict, Any, Callable
 import json
 import logging
 import os
+import zoneinfo
 
 from models.analytics import Analytics, AnalyticsService
 from utils.database import get_db_session
@@ -56,7 +57,7 @@ class WebAnalyticsTracker:
             else:
                 g.analytics_db_session = None
             g.analytics_session_id = session['analytics_session_id']
-            g.request_start_time = datetime.now(timezone.utc)
+            g.request_start_time = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
         except Exception as e:
             logger.warning(f"Could not initialize analytics session: {e}")
             # Disable analytics for this session
@@ -72,7 +73,7 @@ class WebAnalyticsTracker:
             if hasattr(g, 'analytics_db_session') and hasattr(g, 'current_analytics') and g.current_analytics:
                 # Calculate page load time
                 if hasattr(g, 'request_start_time'):
-                    load_time = (datetime.now(timezone.utc) - g.request_start_time).total_seconds() * 1000
+                    load_time = (datetime.now(zoneinfo.ZoneInfo("America/Chicago")) - g.request_start_time).total_seconds() * 1000
                     g.current_analytics.page_load_time = load_time
                 
                 # Track response status

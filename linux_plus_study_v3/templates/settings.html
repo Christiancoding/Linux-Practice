@@ -105,6 +105,71 @@
                 </h2>
                 <div class="setting-item">
                     <div class="setting-info">
+                        <h4>Screen Size & Resolution</h4>
+                        <p>Current screen: <span id="screenInfo">Loading...</span></p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="resolution-controls">
+                            <div class="resolution-presets">
+                                <button class="resolution-btn" onclick="setResolution('mobile')">
+                                    <i class="fas fa-mobile-alt"></i> Mobile
+                                </button>
+                                <button class="resolution-btn" onclick="setResolution('tablet')">
+                                    <i class="fas fa-tablet-alt"></i> Tablet
+                                </button>
+                                <button class="resolution-btn active" onclick="setResolution('desktop')">
+                                    <i class="fas fa-desktop"></i> Desktop
+                                </button>
+                                <button class="resolution-btn" onclick="setResolution('large')">
+                                    <i class="fas fa-tv"></i> Large
+                                </button>
+                                <button class="resolution-btn" onclick="setResolution('xl')">
+                                    <i class="fas fa-expand-arrows-alt"></i> XL
+                                </button>
+                            </div>
+                            <button class="btn btn-outline" onclick="autoDetectResolution()">
+                                <i class="fas fa-magic"></i> Auto Detect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>UI Scale</h4>
+                        <p>Manually adjust interface scaling</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-control">
+                            <input type="range" class="slider" id="uiScale" min="0.7" max="1.3" value="1" step="0.05">
+                            <span class="slider-value" id="uiScaleValue">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Navigation Scale</h4>
+                        <p>Adjust navigation bar size independently</p>
+                    </div>
+                    <div class="setting-control">
+                        <div class="slider-control">
+                            <input type="range" class="slider" id="navScale" min="0.7" max="1.3" value="1" step="0.05">
+                            <span class="slider-value" id="navScaleValue">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h4>Reset Screen Settings</h4>
+                        <p>Reset all screen and scaling settings to defaults</p>
+                    </div>
+                    <div class="setting-control">
+                        <button class="btn btn-warning" onclick="resetScreenSettings()">
+                            <i class="fas fa-undo"></i> Reset to Defaults
+                        </button>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <div class="setting-info">
                         <h4>Animations</h4>
                         <p>Enable smooth animations and transitions</p>
                     </div>

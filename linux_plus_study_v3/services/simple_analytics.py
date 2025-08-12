@@ -91,6 +91,7 @@ class SimpleAnalyticsManager:
     
     def _get_default_user_data(self) -> Dict[str, Any]:
         """Get default user data structure"""
+        today_str = datetime.now().strftime("%Y-%m-%d")
         return {
             "total_questions": 0,
             "correct_answers": 0,
@@ -112,8 +113,80 @@ class SimpleAnalyticsManager:
                 "beginner": 0,
                 "intermediate": 0,
                 "advanced": 0
+            },
+            # Daily tracking data
+            "daily_data": {
+                "last_reset_date": today_str,
+                "today": {
+                    "date": today_str,
+                    "correct_answers": 0,
+                    "total_questions": 0,
+                    "quiz_time": 0,
+                    "study_time": 0
+                },
+                "yesterday": {
+                    "date": "",
+                    "correct_answers": 0,
+                    "total_questions": 0,
+                    "quiz_time": 0,
+                    "study_time": 0
+                },
+                "daily_history": {}  # Keep track of past days
             }
         }
+    
+    def _check_and_reset_daily_data(self, user_data: Dict[str, Any]) -> None:
+        """Check if we need to reset daily data (new day) and update accordingly"""
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        
+        # Initialize daily_data if it doesn't exist (for backward compatibility)
+        if "daily_data" not in user_data:
+            user_data["daily_data"] = {
+                "last_reset_date": today_str,
+                "today": {
+                    "date": today_str,
+                    "correct_answers": 0,
+                    "total_questions": 0,
+                    "quiz_time": 0,
+                    "study_time": 0
+                },
+                "yesterday": {
+                    "date": "",
+                    "correct_answers": 0,
+                    "total_questions": 0,
+                    "quiz_time": 0,
+                    "study_time": 0
+                },
+                "daily_history": {}
+            }
+        
+        daily_data = user_data["daily_data"]
+        last_reset = daily_data.get("last_reset_date", "")
+        
+        # If it's a new day, reset daily counters
+        if last_reset != today_str:
+            # Move today's data to yesterday
+            daily_data["yesterday"] = daily_data["today"].copy()
+            
+            # Save today's data to history
+            if daily_data["today"]["date"]:
+                daily_data["daily_history"][daily_data["today"]["date"]] = daily_data["today"].copy()
+            
+            # Reset today's counters
+            daily_data["today"] = {
+                "date": today_str,
+                "correct_answers": 0,
+                "total_questions": 0,
+                "quiz_time": 0,
+                "study_time": 0
+            }
+            daily_data["last_reset_date"] = today_str
+            
+            # Keep only last 30 days of history
+            if len(daily_data["daily_history"]) > 30:
+                sorted_dates = sorted(daily_data["daily_history"].keys())
+                for old_date in sorted_dates[:-30]:
+                    del daily_data["daily_history"][old_date]
     
     def get_user_data(self, user_id: str) -> dict:
         """Get or create user analytics data"""
@@ -150,6 +223,9 @@ class SimpleAnalyticsManager:
             data[user_id] = self._get_default_user_data()
         
         user_data = data[user_id]
+        
+        # Check and reset daily data if needed
+        self._check_and_reset_daily_data(user_data)
         
         # Update question counts and current streak
         user_data["total_questions"] += 1
@@ -275,6 +351,12 @@ class SimpleAnalyticsManager:
         
         # Check and award achievements
         self._check_and_award_achievements(user_data)
+        
+        # Update daily tracking data
+        daily_data = user_data["daily_data"]
+        daily_data["today"]["total_questions"] += 1
+        if correct:
+            daily_data["today"]["correct_answers"] += 1
         
         self._save_data(data)
         return user_data
@@ -537,6 +619,9 @@ class SimpleAnalyticsManager:
         """Get dashboard statistics for a user - SINGLE SOURCE OF TRUTH"""
         user_data = self.get_user_data(user_id)
         
+        # Check and reset daily data if needed
+        self._check_and_reset_daily_data(user_data)
+        
         # Core calculations - ensure consistency
         total_questions = user_data.get("total_questions", 0)
         correct_answers = user_data.get("correct_answers", 0)
@@ -655,7 +740,10 @@ class SimpleAnalyticsManager:
             "performance_overview": self._get_performance_overview(user_data),
             "study_activity": self._get_study_activity(user_data),
             "recent_achievements": self._get_recent_achievements(user_data),
-            "achievements": user_data.get("achievements", [])
+            "achievements": user_data.get("achievements", []),
+            
+            # Daily comparison data
+            "daily_data": self._get_daily_comparison_data(user_data)
         }
 
     def get_analytics_stats(self, user_id: str) -> dict:
@@ -756,6 +844,38 @@ class SimpleAnalyticsManager:
             })
         
         return activity
+    
+    def _get_daily_comparison_data(self, user_data: dict) -> dict:
+        """Get daily comparison data for today vs yesterday"""
+        daily_data = user_data.get("daily_data", {})
+        today_data = daily_data.get("today", {})
+        yesterday_data = daily_data.get("yesterday", {})
+        
+        # Get data from time tracking service for quiz and study times
+        try:
+            from services.time_tracking_service import get_time_tracker
+            time_tracker = get_time_tracker()
+            time_summary = time_tracker.get_daily_summary()
+            today_quiz_time = time_summary.get("quiz_time_today", 0)
+            today_study_time = user_data.get("total_study_time", 0) # This needs to be daily too
+        except ImportError:
+            today_quiz_time = 0
+            today_study_time = 0
+            
+        return {
+            "today": {
+                "correct_answers": today_data.get("correct_answers", 0),
+                "total_questions": today_data.get("total_questions", 0),
+                "quiz_time": today_quiz_time,
+                "study_time": today_data.get("study_time", 0)
+            },
+            "yesterday": {
+                "correct_answers": yesterday_data.get("correct_answers", 0),
+                "total_questions": yesterday_data.get("total_questions", 0),
+                "quiz_time": yesterday_data.get("quiz_time", 0),
+                "study_time": yesterday_data.get("study_time", 0)
+            }
+        }
     
     def _get_recent_achievements(self, user_data: dict) -> list:
         """Get recently earned achievements"""

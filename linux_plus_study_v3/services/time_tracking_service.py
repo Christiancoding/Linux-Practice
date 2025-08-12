@@ -11,6 +11,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional
 from pathlib import Path
+import zoneinfo
 
 
 class TimeTrackingService:
@@ -52,7 +53,7 @@ class TimeTrackingService:
             "daily_quiz_history": {},  # Date -> seconds mapping
             "settings": {
                 "reset_time": "00:59",  # 12:59 AM
-                "timezone": "local"
+                "timezone": "America/Chicago"
             }
         }
     
@@ -69,7 +70,7 @@ class TimeTrackingService:
     
     def _should_reset_quiz_time(self) -> bool:
         """Check if quiz time should be reset (past 12:59 AM)."""
-        now = datetime.now()
+        now = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
         
         # Get last reset date
         last_reset_str = self.data.get("last_quiz_reset")
@@ -80,7 +81,10 @@ class TimeTrackingService:
             last_reset = datetime.fromisoformat(last_reset_str.replace('Z', '+00:00'))
             # Convert to local time if needed
             if last_reset.tzinfo:
-                last_reset = last_reset.astimezone()
+                last_reset = last_reset.astimezone(zoneinfo.ZoneInfo("America/Chicago"))
+            else:
+                # If naive, assume it's in local timezone
+                last_reset = last_reset.replace(tzinfo=zoneinfo.ZoneInfo("America/Chicago"))
         except (ValueError, AttributeError):
             return True
         
@@ -105,7 +109,7 @@ class TimeTrackingService:
     def _reset_daily_quiz_time(self) -> None:
         """Reset quiz time for the day and save history."""
         # Save today's quiz time to history before resetting
-        today_str = datetime.now().strftime('%Y-%m-%d')
+        today_str = datetime.now(zoneinfo.ZoneInfo("America/Chicago")).strftime('%Y-%m-%d')
         current_quiz_time = self.data.get("quiz_time_today", 0)
         
         if current_quiz_time > 0:
@@ -115,7 +119,7 @@ class TimeTrackingService:
         
         # Reset today's quiz time
         self.data["quiz_time_today"] = 0
-        self.data["last_quiz_reset"] = datetime.now().isoformat()
+        self.data["last_quiz_reset"] = datetime.now(zoneinfo.ZoneInfo("America/Chicago")).isoformat()
         
         self._save_data()
     
@@ -163,7 +167,7 @@ class TimeTrackingService:
     def get_quiz_history(self, days: int = 7) -> Dict[str, int]:
         """Get quiz time history for the last N days."""
         history = self.data.get("daily_quiz_history", {})
-        today = datetime.now()
+        today = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
         
         # Include today's current time
         result = {}
@@ -193,7 +197,7 @@ class TimeTrackingService:
     
     def _get_next_reset_time(self) -> str:
         """Get the next reset time as ISO string."""
-        now = datetime.now()
+        now = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
         
         # Next reset is at 12:59 AM tomorrow or today if we haven't passed it
         reset_hour, reset_minute = 0, 59

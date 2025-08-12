@@ -3276,6 +3276,7 @@ class LinuxPlusStudyWeb:
         def api_load_game_values():
             """Load game values configuration"""
             try:
+                from utils.game_values import get_game_value_manager
                 game_values = get_game_value_manager()
                 config = game_values.get_all_config()
                 return jsonify({'success': True, 'values': config})
@@ -3287,6 +3288,7 @@ class LinuxPlusStudyWeb:
         def api_save_game_values():
             """Save game values configuration"""
             try:
+                from utils.game_values import get_game_value_manager
                 data = request.get_json() or {}
                 game_values = get_game_value_manager()
                 
@@ -3303,6 +3305,7 @@ class LinuxPlusStudyWeb:
         def api_reset_game_values():
             """Reset game values to defaults"""
             try:
+                from utils.game_values import get_game_value_manager
                 game_values = get_game_value_manager()
                 success = game_values.reset_to_defaults()
                 if success:
@@ -3389,6 +3392,7 @@ class LinuxPlusStudyWeb:
         def api_get_system_settings():
             """Get system settings including focus mode and break reminders"""
             try:
+                from utils.game_values import get_game_value_manager
                 game_values = get_game_value_manager()
                 system_settings = game_values.get_value('system', None, {})
                 
@@ -3416,6 +3420,7 @@ class LinuxPlusStudyWeb:
         def api_save_system_settings():
             """Save system settings including focus mode and break reminders"""
             try:
+                from utils.game_values import get_game_value_manager
                 data = request.get_json() or {}
                 game_values = get_game_value_manager()
                 

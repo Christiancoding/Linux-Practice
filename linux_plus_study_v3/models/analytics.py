@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 import logging
 import json
+import zoneinfo
 
 class Base(DeclarativeBase):
     pass
@@ -24,8 +25,8 @@ class Analytics(Base):
     
     # Primary key and timestamps
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), onupdate=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), nullable=False)
     
     # User and Session Tracking
     user_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)  # Anonymous tracking support
@@ -249,18 +250,18 @@ class Analytics(Base):
     def end_session(self):
         """Mark session as ended and calculate duration."""
         if self.session_end is None:
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
             self.session_end = end_time
             if self.session_start:
                 # Ensure both timestamps are timezone-aware
                 if self.session_start.tzinfo is None:
-                    # If session_start is naive, assume it's UTC
-                    session_start_utc = self.session_start.replace(tzinfo=timezone.utc)
+                    # If session_start is naive, assume it's Chicago time
+                    session_start_chicago = self.session_start.replace(tzinfo=zoneinfo.ZoneInfo("America/Chicago"))
                 else:
-                    session_start_utc = self.session_start
+                    session_start_chicago = self.session_start
                 
                 # Calculate duration using the local end_time variable
-                self.session_duration = (end_time - session_start_utc).total_seconds()
+                self.session_duration = (end_time - session_start_chicago).total_seconds()
     
     @classmethod
     def create_session(cls, session_id: str, activity_type: str, **kwargs: Any) -> 'Analytics':
@@ -268,7 +269,7 @@ class Analytics(Base):
         return cls(
             session_id=session_id,
             activity_type=activity_type,
-            session_start=datetime.now(timezone.utc),
+            session_start=datetime.now(zoneinfo.ZoneInfo("America/Chicago")),
             **kwargs
         )
     
@@ -397,14 +398,14 @@ class Analytics(Base):
     def set_custom_metrics(self, metrics: Dict[str, Any]) -> None:
         """Set custom metrics dictionary."""
         self.custom_metrics = metrics
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
     
     def update_custom_metric(self, key: str, value: Any) -> None:
         """Update a single custom metric."""
         if self.custom_metrics is None:
             self.custom_metrics = {}
         self.custom_metrics[key] = value
-        self.updated_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
     
     def get_summary_stats(self) -> Dict[str, Any]:
         """Get a summary of key statistics."""
@@ -494,7 +495,7 @@ class AnalyticsService:
             for key, value in updates.items():
                 if hasattr(analytics, key):
                     setattr(analytics, key, value)
-            analytics.updated_at = datetime.now(timezone.utc)
+            analytics.updated_at = datetime.now(zoneinfo.ZoneInfo("America/Chicago"))
             self.db.commit()
         return analytics
     

@@ -28,22 +28,19 @@
     <!-- Main Navigation -->
     <nav class="main-nav">
         <div class="container">
-            <a href="{{ url_for('index') }}" class="nav-logo">
+            <a href="{{ url_for('index') }}" class="nav-logo {% if request.endpoint == 'index' %}active{% endif %}">
                 <i class="fas fa-terminal"></i>
                 <span>Linux+ Study Game</span>
             </a>
             
             <div class="nav-links">
-                <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}" data-page="dashboard">
-                    <i class="fas fa-tachometer-alt"></i> <span>Dashboard</span>
-                </a>
-                <a class="nav-link {% if request.endpoint == 'quiz_page' %}active{% endif %}" href="{{ url_for('quiz_page') }}" data-page="quiz">
-                    <i class="fas fa-question-circle"></i> <span>Quiz</span>
+                <a class="nav-link {% if request.endpoint == 'quiz_page' and request.args.get('mode') == 'practice' %}active{% endif %}" href="{{ url_for('quiz_page', mode='practice') }}" data-page="practice">
+                    <i class="fas fa-dumbbell"></i> <span>Practice</span>
                 </a>
                 <a class="nav-link {% if request.endpoint == 'stats_page' %}active{% endif %}" href="{{ url_for('stats_page') }}" data-page="stats">
                     <i class="fas fa-chart-line"></i> <span>Stats</span>
                 </a>
-                <a class="nav-link {% if request.endpoint == 'analytics_dashboard' %}active{% endif %}" href="/analytics" data-page="analytics">
+                <a class="nav-link {% if request.endpoint == 'analytics_page' %}active{% endif %}" href="{{ url_for('analytics_page') }}" data-page="analytics">
                     <i class="fas fa-chart-bar"></i> <span>Analytics</span>
                 </a>
                 <a class="nav-link {% if request.endpoint == 'achievements_page' %}active{% endif %}" href="{{ url_for('achievements_page') }}" data-page="achievements">
@@ -51,9 +48,6 @@
                 </a>
                 <a class="nav-link {% if request.endpoint == 'review_page' %}active{% endif %}" href="{{ url_for('review_page') }}" data-page="review">
                     <i class="fas fa-book-open"></i> <span>Review</span>
-                </a>
-                <a class="nav-link {% if request.endpoint == 'quiz_page' and 'practice' in request.args %}active{% endif %}" href="{{ url_for('quiz_page', mode='practice') }}" data-page="practice">
-                    <i class="fas fa-dumbbell"></i> <span>Practice</span>
                 </a>
                 <a class="nav-link {% if request.endpoint == 'vm_playground' %}active{% endif %}" href="{{ url_for('vm_playground') }}" data-page="vm">
                     <i class="fas fa-server"></i> <span>VM</span>
@@ -66,7 +60,7 @@
                 </a>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="nav-controls">
                 <!-- Theme Toggle -->
                 <button class="nav-link" onclick="toggleTheme()" title="Toggle Theme">
                     <i class="fas fa-moon" id="themeIcon"></i>
@@ -103,6 +97,11 @@
             {% block content %}{% endblock %}
         </div>
     </main>
+
+    <!-- Resolution Indicator -->
+    <div class="resolution-indicator" id="resolutionIndicator">
+        Resolution
+    </div>
 
     <!-- Footer -->
     <footer class="main-footer">
@@ -336,7 +335,231 @@
                     setTimeout(() => msg.remove(), 300);
                 }, 5000);
             });
+
+            // Initialize screen size management
+            initializeScreenSizeManagement();
         });
+
+        // Screen Size Management Functions
+        function initializeScreenSizeManagement() {
+            // Load saved screen settings
+            loadScreenSettings();
+            
+            // Display current screen info
+            updateScreenInfo();
+            
+            // Set up event listeners for screen controls
+            setupScreenControlListeners();
+        }
+
+        function updateScreenInfo() {
+            const screenInfo = document.getElementById('screenInfo');
+            if (screenInfo) {
+                const screenWidth = window.screen.width;
+                const screenHeight = window.screen.height;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const pixelRatio = window.devicePixelRatio || 1;
+                screenInfo.textContent = `Screen: ${screenWidth}x${screenHeight} | Window: ${windowWidth}x${windowHeight} (${pixelRatio}x DPI)`;
+            }
+        }
+
+        function setResolution(preset) {
+            const resolutionClasses = ['screen-mobile', 'screen-tablet', 'screen-desktop', 'screen-large', 'screen-xl'];
+            const body = document.body;
+            
+            // Remove all existing resolution classes
+            resolutionClasses.forEach(cls => body.classList.remove(cls));
+            
+            // Add the new resolution class
+            if (preset !== 'auto') {
+                body.classList.add(`screen-${preset}`);
+            }
+            
+            // Save preference
+            localStorage.setItem('screenResolution', preset);
+            
+            // Update active button - improved logic
+            document.querySelectorAll('.resolution-btn').forEach(btn => {
+                btn.classList.remove('active');
+                // Check if this button corresponds to the current preset
+                const btnOnclick = btn.getAttribute('onclick');
+                if (btnOnclick && btnOnclick.includes(`'${preset}'`)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Show resolution indicator temporarily
+            showResolutionIndicator(preset);
+            
+            // Also update screen info display
+            updateScreenInfo();
+            
+            playSound('click');
+        }
+
+        function showResolutionIndicator(preset) {
+            const indicator = document.getElementById('resolutionIndicator');
+            if (indicator) {
+                const presetNames = {
+                    'mobile': 'Mobile',
+                    'tablet': 'Tablet', 
+                    'desktop': 'Desktop',
+                    'large': 'Large',
+                    'xl': 'Extra Large'
+                };
+                
+                indicator.textContent = `Resolution: ${presetNames[preset] || preset}`;
+                indicator.classList.add('show');
+                
+                // Hide after 3 seconds
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 3000);
+            }
+        }
+
+        function autoDetectResolution() {
+            // Use screen width (physical monitor size) rather than window width
+            // This gives more consistent results regardless of window state
+            const screenWidth = window.screen.width;
+            const windowWidth = window.innerWidth;
+            const isFullscreen = windowWidth >= screenWidth * 0.95; // Close to full screen
+            
+            let preset = 'desktop'; // default
+            
+            // Base detection on screen size, but consider window context
+            if (screenWidth <= 1366) {
+                // Small/laptop screens - prioritize smaller scales
+                preset = windowWidth <= 768 ? 'mobile' : 
+                        windowWidth <= 1024 ? 'tablet' : 'desktop';
+            } else if (screenWidth <= 1920) {
+                // Standard desktop screens (1080p)
+                if (windowWidth <= 768) {
+                    preset = 'mobile';
+                } else if (windowWidth <= 1024) {
+                    preset = 'tablet';
+                } else if (isFullscreen && windowWidth > 1600) {
+                    preset = 'large'; // Only use large for fullscreen on big monitors
+                } else {
+                    preset = 'desktop'; // Default for most windowed usage
+                }
+            } else {
+                // Large screens (2K/4K)
+                if (windowWidth <= 768) {
+                    preset = 'mobile';
+                } else if (windowWidth <= 1024) {
+                    preset = 'tablet';
+                } else if (windowWidth <= 1600) {
+                    preset = 'desktop';
+                } else if (windowWidth <= 2400) {
+                    preset = 'large';
+                } else {
+                    preset = 'xl';
+                }
+            }
+            
+            // Set the detected resolution
+            setResolution(preset);
+            
+            // Save as auto mode for future window resizes
+            localStorage.setItem('screenResolution', 'auto');
+            
+            // Show feedback to user
+            console.log(`Auto-detected resolution: ${preset} (screen: ${screenWidth}px, window: ${windowWidth}px, fullscreen: ${isFullscreen})`);
+        }
+
+        function updateUIScale(value) {
+            document.documentElement.style.setProperty('--screen-scale', value);
+            document.getElementById('uiScaleValue').textContent = `${Math.round(value * 100)}%`;
+            localStorage.setItem('uiScale', value);
+        }
+
+        function updateNavScale(value) {
+            document.documentElement.style.setProperty('--nav-scale', value);
+            document.getElementById('navScaleValue').textContent = `${Math.round(value * 100)}%`;
+            localStorage.setItem('navScale', value);
+        }
+
+        function loadScreenSettings() {
+            // Load resolution setting
+            const savedResolution = localStorage.getItem('screenResolution') || 'auto';
+            if (savedResolution !== 'auto') {
+                setResolution(savedResolution);
+            } else {
+                autoDetectResolution();
+            }
+            
+            // Load scale settings
+            const savedUIScale = localStorage.getItem('uiScale') || '1';
+            const savedNavScale = localStorage.getItem('navScale') || '1';
+            
+            updateUIScale(parseFloat(savedUIScale));
+            updateNavScale(parseFloat(savedNavScale));
+            
+            // Update slider values
+            const uiSlider = document.getElementById('uiScale');
+            const navSlider = document.getElementById('navScale');
+            
+            if (uiSlider) uiSlider.value = savedUIScale;
+            if (navSlider) navSlider.value = savedNavScale;
+        }
+
+        function setupScreenControlListeners() {
+            // UI Scale slider
+            const uiSlider = document.getElementById('uiScale');
+            if (uiSlider) {
+                uiSlider.addEventListener('input', (e) => updateUIScale(e.target.value));
+            }
+            
+            // Navigation Scale slider
+            const navSlider = document.getElementById('navScale');
+            if (navSlider) {
+                navSlider.addEventListener('input', (e) => updateNavScale(e.target.value));
+            }
+            
+            // Window resize listener for auto-detect with debouncing
+            let resizeTimeout;
+            let lastWidth = window.innerWidth;
+            
+            window.addEventListener('resize', () => {
+                updateScreenInfo();
+                
+                // Clear previous timeout
+                clearTimeout(resizeTimeout);
+                
+                // Only auto-adjust if in auto mode and significant size change
+                resizeTimeout = setTimeout(() => {
+                    const currentResolution = localStorage.getItem('screenResolution');
+                    const currentWidth = window.innerWidth;
+                    const sizeChange = Math.abs(currentWidth - lastWidth);
+                    
+                    if (currentResolution === 'auto' && sizeChange > 200) {
+                        autoDetectResolution();
+                        lastWidth = currentWidth;
+                    }
+                }, 500); // Wait 500ms after resize stops
+            });
+        }
+
+        function resetScreenSettings() {
+            // Reset to auto-detect mode
+            localStorage.setItem('screenResolution', 'auto');
+            autoDetectResolution();
+            
+            // Reset scales
+            updateUIScale(1);
+            updateNavScale(1);
+            
+            // Reset sliders
+            const uiSlider = document.getElementById('uiScale');
+            const navSlider = document.getElementById('navScale');
+            
+            if (uiSlider) uiSlider.value = 1;
+            if (navSlider) navSlider.value = 1;
+            
+            playSound('click');
+        }
     </script>
     
     <!-- Analytics Integration -->

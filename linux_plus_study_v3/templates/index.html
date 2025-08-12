@@ -733,10 +733,23 @@ function updateDashboardStats() {
             }
             
             // Update all stats from backend
-            document.getElementById('correct-answers').textContent = data.total_correct || 0;
+            // Show daily comparison for correct answers
+            const todayCorrect = data.daily_data?.today?.correct_answers || 0;
+            const yesterdayCorrect = data.daily_data?.yesterday?.correct_answers || 0;
+            const correctDisplay = `${todayCorrect}${yesterdayCorrect > 0 ? ` (${yesterdayCorrect} yesterday)` : ''}`;
+            document.getElementById('correct-answers').textContent = correctDisplay;
             document.getElementById('accuracy').textContent = Math.round(data.accuracy || 0) + '%';
-            document.getElementById('quiz-time-today').textContent = data.quiz_time_formatted || '0s';
-            document.getElementById('study-time-total').textContent = data.study_time_formatted || '0s';
+            // Show daily comparison for quiz time
+            const todayQuizTime = data.daily_data?.today?.quiz_time || 0;
+            const yesterdayQuizTime = data.daily_data?.yesterday?.quiz_time || 0;
+            const quizTimeDisplay = `${data.quiz_time_formatted || '0s'}${yesterdayQuizTime > 0 ? ` (${formatStudyTime(yesterdayQuizTime)} yesterday)` : ''}`;
+            document.getElementById('quiz-time-today').textContent = quizTimeDisplay;
+            
+            // Show daily comparison for study time  
+            const todayStudyTime = data.daily_data?.today?.study_time || 0;
+            const yesterdayStudyTime = data.daily_data?.yesterday?.study_time || 0;
+            const studyTimeDisplay = `${data.study_time_formatted || '0s'}${yesterdayStudyTime > 0 ? ` (${formatStudyTime(yesterdayStudyTime)} yesterday)` : ''}`;
+            document.getElementById('study-time-total').textContent = studyTimeDisplay;
             document.getElementById('hero-xp').textContent = data.xp || 0;
             document.getElementById('current-streak').textContent = data.streak || 0;
             document.getElementById('hero-level').textContent = data.level || 1;
@@ -999,7 +1012,9 @@ function generateStudyCalendar() {
 // Generate calendar with real activity data
 function generateStudyCalendarWithData(heatmapData) {
     const calendar = document.getElementById('study-calendar');
+    // Use current date at midnight to avoid timezone issues
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
     // Create activity map for quick lookup
     const activityMap = {};
@@ -1007,15 +1022,19 @@ function generateStudyCalendarWithData(heatmapData) {
         activityMap[day.date] = day;
     });
     
-    // Generate last 35 days
+    // Generate last 35 days (including today)
     for (let i = 34; i >= 0; i--) {
         const cell = document.createElement('div');
         cell.className = 'activity-cell';
         
         // Calculate date for this cell
-        const date = new Date(today);
-        date.setDate(date.getDate() - i);
+        const date = new Date(today.getTime() - (i * 24 * 60 * 60 * 1000));
         const dateStr = date.toISOString().split('T')[0];
+        
+        // Debug: log the first few and last few dates
+        if (i >= 32 || i <= 2) {
+            console.log(`Calendar cell ${i}: ${dateStr} (${date.toLocaleDateString()})`);
+        }
         
         // Get activity data for this date
         const dayData = activityMap[dateStr] || { questions: 0, level: 0 };
@@ -1027,7 +1046,9 @@ function generateStudyCalendarWithData(heatmapData) {
         const questionsText = dayData.questions > 0 ? 
             `${dayData.questions} question${dayData.questions !== 1 ? 's' : ''}` : 
             'No activity';
-        cell.title = `${date.toLocaleDateString()}: ${questionsText}`;
+        // Use the dateStr (YYYY-MM-DD format) to avoid timezone issues in display
+        const displayDate = new Date(dateStr + 'T12:00:00').toLocaleDateString();
+        cell.title = `${displayDate}: ${questionsText}`;
         
         calendar.appendChild(cell);
     }
