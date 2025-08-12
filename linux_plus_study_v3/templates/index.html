@@ -654,12 +654,18 @@ function updateImprovementMetrics(data) {
     
     // Correct answers trend
     if (trends[0]) {
-        if (data.total_correct === 0) {
+        const todayCorrect = data.daily_data?.today?.correct_answers || 0;
+        const yesterdayCorrect = data.daily_data?.yesterday?.correct_answers || 0;
+        
+        if (yesterdayCorrect > 0) {
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = `<i class="fas fa-arrow-up"></i> (${yesterdayCorrect} yesterday)`;
+        } else if (todayCorrect > 0) {
+            trends[0].className = 'stat-trend positive';
+            trends[0].innerHTML = '<i class="fas fa-arrow-up"></i> Great progress!';
+        } else {
             trends[0].className = 'stat-trend neutral';
             trends[0].innerHTML = '<i class="fas fa-chart-line"></i> Start your journey!';
-        } else {
-            trends[0].className = 'stat-trend positive';
-            trends[0].innerHTML = `<i class="fas fa-arrow-up"></i> ${data.total_correct} correct!`;
         }
     }
     
@@ -736,8 +742,7 @@ function updateDashboardStats() {
             // Show daily comparison for correct answers
             const todayCorrect = data.daily_data?.today?.correct_answers || 0;
             const yesterdayCorrect = data.daily_data?.yesterday?.correct_answers || 0;
-            const correctDisplay = `${todayCorrect}${yesterdayCorrect > 0 ? ` (${yesterdayCorrect} yesterday)` : ''}`;
-            document.getElementById('correct-answers').textContent = correctDisplay;
+            document.getElementById('correct-answers').textContent = todayCorrect;
             document.getElementById('accuracy').textContent = Math.round(data.accuracy || 0) + '%';
             // Show daily comparison for quiz time
             const todayQuizTime = data.daily_data?.today?.quiz_time || 0;

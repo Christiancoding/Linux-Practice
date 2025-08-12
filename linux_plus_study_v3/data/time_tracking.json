@@ -1,8 +1,10 @@
 {
-  "quiz_time_today": 13.079980373382568,
-  "last_quiz_reset": "2025-08-11T20:49:29.317886-05:00",
+  "quiz_time_today": 0,
+  "last_quiz_reset": "2025-08-12T01:50:02.745650-05:00",
   "study_time_total": 0,
-  "daily_quiz_history": {},
+  "daily_quiz_history": {
+    "2025-08-12": 13.079980373382568
+  },
   "settings": {
     "reset_time": "00:59",
     "timezone": "America/Chicago"
