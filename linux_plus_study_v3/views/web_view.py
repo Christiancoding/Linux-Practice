@@ -194,14 +194,12 @@ def get_current_user_id():
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
     try:
-        from services.simple_analytics import get_analytics_manager
+        from services.analytics_adapter import get_analytics_manager
         analytics = get_analytics_manager()
         user_id = get_current_user_id()
         
-        # Initialize user if doesn't exist
+        # Initialize user if doesn't exist (database will handle this automatically)
         user_data = analytics.get_user_data(user_id)
-        if not user_data:
-            analytics.create_profile(user_id)
         
         return user_id, analytics
     except Exception as e:
@@ -602,7 +600,7 @@ class LinuxPlusStudyWeb:
                     })
                 
                 # Check if user exists in analytics data
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 user_data = analytics.get_user_data(user_id)
                 
@@ -638,7 +636,7 @@ class LinuxPlusStudyWeb:
             """Admin endpoint to list available demo users"""
             try:
                 from flask import session
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 
                 # Get all users from analytics using the public method
@@ -1688,7 +1686,7 @@ class LinuxPlusStudyWeb:
         def index():
             # Get analytics data for server-side rendering
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
@@ -1732,7 +1730,59 @@ class LinuxPlusStudyWeb:
 
         @self.app.route('/stats')
         def stats_page():
-            return render_template('stats.html')
+            try:
+                from services.analytics_adapter import get_analytics_manager
+                from flask import session
+                
+                user_id = session.get('user_id', 'anonymous')
+                analytics = get_analytics_manager()
+                
+                # Get basic stats from same source as home page
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                
+                # If no data, try demo user
+                if dashboard_stats.get('questions_answered', 0) == 0:
+                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats.get('questions_answered', 0) > 0:
+                        dashboard_stats = demo_stats
+                        user_id = 'demo_user_001'
+                
+                # Try to use database stats if we have actual data, otherwise use analytics manager
+                try:
+                    from controllers.db_stats_controller import DatabaseStatsController
+                    db_stats = DatabaseStatsController(user_id)
+                    
+                    # Check if database has meaningful data
+                    overall_stats = db_stats.get_overall_statistics()
+                    if overall_stats.get('total_questions', 0) > 0:
+                        # Use database stats
+                        stats_data = {
+                            'performance_over_time': db_stats.get_performance_over_time(7),
+                            'recent_sessions': db_stats.get_recent_study_sessions(10),
+                            'category_performance': db_stats.get_category_performance(),
+                            'overall_stats': overall_stats
+                        }
+                    else:
+                        # Fallback to analytics manager data
+                        stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
+                        
+                except Exception as db_error:
+                    print(f"Database stats error, using analytics manager: {db_error}")
+                    # Fallback to analytics manager data
+                    stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
+                
+                return render_template('stats.html', stats=stats_data)
+                
+            except Exception as e:
+                print(f"Error loading stats: {e}")
+                # Fallback to empty stats on error
+                empty_stats = {
+                    'performance_over_time': {'labels': [], 'questions_attempted': [], 'questions_correct': [], 'questions_incorrect': [], 'accuracy_percentage': []},
+                    'recent_sessions': {'sessions': [], 'has_sessions': False},
+                    'category_performance': {'strongest_categories': [], 'areas_to_improve': [], 'has_category_data': False},
+                    'overall_stats': {'total_sessions': 0, 'total_questions': 0, 'overall_accuracy': 0}
+                }
+                return render_template('stats.html', stats=empty_stats)
         # Store reference to make it clear the route is being used
         self.stats_page_handler = stats_page
         
@@ -1757,7 +1807,7 @@ class LinuxPlusStudyWeb:
         @self.app.route('/analytics')
         def analytics_page():
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
@@ -1952,7 +2002,7 @@ class LinuxPlusStudyWeb:
                 status = self.quiz_controller.get_session_status()
                 
                 # Get analytics data for consistent scoring
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 user_data = analytics.get_user_data('anonymous')
                 
@@ -1976,7 +2026,7 @@ class LinuxPlusStudyWeb:
                 })
             except Exception as e:
                 # Get analytics data for consistent scoring even in error case
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 user_data = analytics.get_user_data('anonymous')
                 
@@ -2259,8 +2309,8 @@ class LinuxPlusStudyWeb:
                 try:
                     user_id, analytics = ensure_analytics_user_sync()
                     if analytics and user_id:
-                        # Use update_quiz_results for proper XP and achievement tracking
-                        analytics.update_quiz_results(
+                        # Use update_quiz_results_legacy for individual question tracking
+                        analytics.update_quiz_results_legacy(
                             user_id=user_id,
                             correct=result.get('is_correct', False),
                             topic=getattr(self.quiz_controller, 'category_filter', None) or question_data[3],  # Use question category
@@ -2299,7 +2349,7 @@ class LinuxPlusStudyWeb:
                 # Update analytics with actual session duration if available
                 if 'session_duration' in result and 'session_total' in result:
                     try:
-                        from services.simple_analytics import get_analytics_manager
+                        from services.analytics_adapter import get_analytics_manager
                         from flask import session
                         
                         user_id = session.get('user_id', 'anonymous')
@@ -2613,8 +2663,8 @@ class LinuxPlusStudyWeb:
         def api_dashboard():
             """API endpoint for dashboard data - single source of truth"""
             try:
-                from services.simple_analytics import get_analytics_manager
-                from services.time_tracking_service import get_time_tracker
+                from services.analytics_adapter import get_analytics_manager
+                from services.db_time_tracking_wrapper import get_time_tracker
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -2658,7 +2708,7 @@ class LinuxPlusStudyWeb:
         def api_heatmap():
             """API endpoint for study activity heatmap data"""
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -2683,7 +2733,7 @@ class LinuxPlusStudyWeb:
         def api_time_tracking():
             """API endpoint for time tracking data"""
             try:
-                from services.time_tracking_service import get_time_tracker
+                from services.db_time_tracking_wrapper import get_time_tracker
                 
                 time_tracker = get_time_tracker()
                 stats = time_tracker.get_statistics()
@@ -2705,7 +2755,7 @@ class LinuxPlusStudyWeb:
         def api_analytics():
             """API endpoint for analytics data - must match dashboard"""
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -2730,7 +2780,7 @@ class LinuxPlusStudyWeb:
         def api_statistics():
             """API endpoint for statistics - uses same data as dashboard"""
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -2758,9 +2808,9 @@ class LinuxPlusStudyWeb:
                     'overall': {
                         'total_attempts': stats['total_questions'],
                         'total_correct': stats['total_correct'],
-                        'overall_accuracy': stats['accuracy'],
-                        'level': stats['level'],
-                        'xp': stats['xp']
+                        'overall_accuracy': stats.get('overall_accuracy', stats.get('accuracy', 0)),
+                        'level': stats.get('level', 1),
+                        'xp': stats.get('xp', 0)
                     },
                     'categories': _format_category_stats(user_data.get('topics_studied', {})),
                     'questions': [],  # Would need question-level tracking
@@ -2775,11 +2825,11 @@ class LinuxPlusStudyWeb:
             """API endpoint for achievements data"""
             try:
                 # Load achievements data directly
-                from models.achievements import AchievementSystem
-                achievement_system = AchievementSystem()
+                from models.db_achievement_system import DBAchievementSystem
+                achievement_system = DBAchievementSystem()
                 
                 # Get current statistics
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -2953,7 +3003,7 @@ class LinuxPlusStudyWeb:
         def api_get_profiles():
             """Get all user profiles"""
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 from flask import session
                 
                 analytics = get_analytics_manager()
@@ -3033,7 +3083,7 @@ class LinuxPlusStudyWeb:
                 if not new_name:
                     return jsonify({'success': False, 'error': 'New name is required'})
                 
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 user_data = analytics.get_user_data(profile_id)
                 user_data['display_name'] = new_name
@@ -3048,7 +3098,7 @@ class LinuxPlusStudyWeb:
         def api_reset_profile(profile_id):
             """Reset profile data"""
             try:
-                from services.simple_analytics import get_analytics_manager
+                from services.analytics_adapter import get_analytics_manager
                 analytics = get_analytics_manager()
                 
                 # Reset user data to defaults
@@ -3102,13 +3152,12 @@ class LinuxPlusStudyWeb:
                 
                 # Clear simple analytics data
                 try:
-                    from services.simple_analytics import get_analytics_manager
+                    from services.analytics_adapter import get_analytics_manager
                     analytics = get_analytics_manager()
                     if analytics:
-                        # Reset all user data to defaults
-                        analytics.user_data = {}
-                        analytics._save_data(analytics.user_data)
-                        self.logger.info("Cleared simple analytics user data")
+                        # For database analytics, clearing is handled by the DB reset above
+                        # Just log that the operation was requested
+                        self.logger.info("Database analytics clearing handled by database reset")
                 except Exception as simple_analytics_error:
                     self.logger.error(f"Simple analytics clear error: {simple_analytics_error}")
                 
@@ -3130,7 +3179,7 @@ class LinuxPlusStudyWeb:
                 
                 # Clear time tracking data
                 try:
-                    from services.time_tracking_service import get_time_tracker
+                    from services.db_time_tracking_wrapper import get_time_tracker
                     time_tracker = get_time_tracker()
                     time_tracker.reset_all_data()
                     self.logger.info("Reset time tracking data")
@@ -3272,6 +3321,161 @@ class LinuxPlusStudyWeb:
                 self.logger.error(f"Cleanup review list API error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
 
+        @self.app.route('/api/stats/performance', methods=['GET'])
+        def api_stats_performance():
+            """Get performance data with date range filtering"""
+            try:
+                from flask import session
+                from services.analytics_adapter import get_analytics_manager
+                
+                user_id = session.get('user_id', 'anonymous')
+                date_range = request.args.get('range', '7_days')
+                
+                # Try database first, then fallback to analytics manager
+                try:
+                    from controllers.db_stats_controller import DatabaseStatsController
+                    db_stats = DatabaseStatsController(user_id)
+                    performance_data = db_stats.get_filtered_performance(date_range)
+                    
+                    # Check if we got meaningful data
+                    if performance_data.get('total_questions', 0) > 0:
+                        return jsonify({
+                            'success': True,
+                            'data': performance_data
+                        })
+                except Exception as db_error:
+                    print(f"Database performance error, using analytics: {db_error}")
+                
+                # Fallback to analytics manager
+                analytics = get_analytics_manager()
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                
+                # If no data for anonymous user, try demo user
+                if dashboard_stats.get('questions_answered', 0) == 0:
+                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats.get('questions_answered', 0) > 0:
+                        dashboard_stats = demo_stats
+                        user_id = 'demo_user_001'
+                
+                stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
+                performance_data = stats_data['performance_over_time']
+                
+                return jsonify({
+                    'success': True,
+                    'data': performance_data
+                })
+                
+            except Exception as e:
+                print(f"Error getting performance data: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'data': {'labels': [], 'questions_attempted': [], 'questions_correct': [], 'questions_incorrect': [], 'accuracy_percentage': []}
+                })
+
+        @self.app.route('/api/stats/sessions', methods=['GET'])
+        def api_stats_sessions():
+            """Get recent study sessions data"""
+            try:
+                from flask import session
+                from services.analytics_adapter import get_analytics_manager
+                
+                user_id = session.get('user_id', 'anonymous')
+                limit = int(request.args.get('limit', 10))
+                
+                # Try database first, then fallback to analytics manager
+                try:
+                    from controllers.db_stats_controller import DatabaseStatsController
+                    db_stats = DatabaseStatsController(user_id)
+                    sessions_data = db_stats.get_recent_study_sessions(limit)
+                    
+                    # Check if we got meaningful data
+                    if sessions_data.get('has_sessions', False):
+                        return jsonify({
+                            'success': True,
+                            'data': sessions_data
+                        })
+                except Exception as db_error:
+                    print(f"Database sessions error, using analytics: {db_error}")
+                
+                # Fallback to analytics manager
+                analytics = get_analytics_manager()
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                
+                # If no data for anonymous user, try demo user
+                if dashboard_stats.get('questions_answered', 0) == 0:
+                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats.get('questions_answered', 0) > 0:
+                        dashboard_stats = demo_stats
+                        user_id = 'demo_user_001'
+                
+                stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
+                sessions_data = stats_data['recent_sessions']
+                
+                return jsonify({
+                    'success': True,
+                    'data': sessions_data
+                })
+                
+            except Exception as e:
+                print(f"Error getting sessions data: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'data': {'sessions': [], 'has_sessions': False}
+                })
+
+        @self.app.route('/api/stats/categories', methods=['GET'])
+        def api_stats_categories():
+            """Get category performance data"""
+            try:
+                from flask import session
+                from services.analytics_adapter import get_analytics_manager
+                
+                user_id = session.get('user_id', 'anonymous')
+                
+                # Try database first, then fallback to analytics manager
+                try:
+                    from controllers.db_stats_controller import DatabaseStatsController
+                    db_stats = DatabaseStatsController(user_id)
+                    categories_data = db_stats.get_category_performance()
+                    
+                    # Check if we got meaningful data
+                    if categories_data.get('has_category_data', False):
+                        return jsonify({
+                            'success': True,
+                            'data': categories_data
+                        })
+                except Exception as db_error:
+                    print(f"Database categories error, using analytics: {db_error}")
+                
+                # Fallback to analytics manager
+                analytics = get_analytics_manager()
+                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                
+                # If no data for anonymous user, try demo user
+                if dashboard_stats.get('questions_answered', 0) == 0:
+                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats.get('questions_answered', 0) > 0:
+                        dashboard_stats = demo_stats
+                        user_id = 'demo_user_001'
+                
+                stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
+                categories_data = stats_data['category_performance']
+                
+                return jsonify({
+                    'success': True,
+                    'data': categories_data
+                })
+                
+            except Exception as e:
+                print(f"Error getting categories data: {e}")
+                return jsonify({
+                    'success': False,
+                    'error': str(e),
+                    'data': {'strongest_categories': [], 'areas_to_improve': [], 'has_category_data': False}
+                })
+
         @self.app.route('/api/load_game_values', methods=['GET'])
         def api_load_game_values():
             """Load game values configuration"""
@@ -3333,8 +3537,8 @@ class LinuxPlusStudyWeb:
                 if condition_type not in ['questions', 'points', 'streaks', 'days']:
                     return jsonify({'success': False, 'error': 'Invalid condition type'})
                 
-                from models.achievements import AchievementSystem
-                achievement_system = AchievementSystem()
+                from models.db_achievement_system import DBAchievementSystem
+                achievement_system = DBAchievementSystem()
                 
                 success = achievement_system.create_custom_achievement(
                     name, description, condition_type, condition_value, xp_reward
@@ -3356,8 +3560,8 @@ class LinuxPlusStudyWeb:
         def api_get_custom_achievements():
             """Get all custom achievements"""
             try:
-                from models.achievements import AchievementSystem
-                achievement_system = AchievementSystem()
+                from models.db_achievement_system import DBAchievementSystem
+                achievement_system = DBAchievementSystem()
                 achievements = achievement_system.get_custom_achievements()
                 return jsonify({'success': True, 'achievements': achievements})
             except Exception as e:
@@ -3374,8 +3578,8 @@ class LinuxPlusStudyWeb:
                 if not name:
                     return jsonify({'success': False, 'error': 'Achievement name is required'})
                 
-                from models.achievements import AchievementSystem
-                achievement_system = AchievementSystem()
+                from models.db_achievement_system import DBAchievementSystem
+                achievement_system = DBAchievementSystem()
                 
                 success = achievement_system.delete_custom_achievement(name)
                 if success:
@@ -3455,3 +3659,159 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 self.logger.error(f"Save system settings error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
+    
+    def _convert_analytics_to_stats_format(self, dashboard_stats, analytics, user_id):
+        """Convert analytics manager data to stats page format."""
+        try:
+            from datetime import datetime, timedelta
+            
+            # Create performance over time data (last 7 days)
+            labels = []
+            questions_attempted = []
+            questions_correct = []
+            questions_incorrect = []
+            accuracy_percentage = []
+            
+            # Get heatmap data for daily breakdown
+            heatmap_data = analytics.get_heatmap_data(user_id)
+            # The heatmap data is returned directly as a list, not wrapped in a dict
+            recent_days = heatmap_data[-7:] if isinstance(heatmap_data, list) else []
+            
+            for i in range(7):
+                date = datetime.now() - timedelta(days=6-i)
+                labels.append(date.strftime('%m/%d'))
+                
+                # Find data for this day
+                day_data = next((day for day in recent_days if day.get('date') == date.strftime('%Y-%m-%d')), None)
+                
+                if day_data:
+                    questions = day_data.get('questions', 0)
+                    # Estimate correct/incorrect based on overall accuracy
+                    accuracy = dashboard_stats.get('accuracy', 70) / 100
+                    correct = int(questions * accuracy)
+                    incorrect = questions - correct
+                    
+                    questions_attempted.append(questions)
+                    questions_correct.append(correct)
+                    questions_incorrect.append(incorrect)
+                    accuracy_percentage.append(dashboard_stats.get('accuracy', 0))
+                else:
+                    questions_attempted.append(0)
+                    questions_correct.append(0)
+                    questions_incorrect.append(0)
+                    accuracy_percentage.append(0)
+            
+            # Create recent sessions data from recent_sessions in dashboard_stats
+            sessions_data = []
+            recent_sessions = dashboard_stats.get('recent_sessions', [])
+            
+            if recent_sessions:
+                for session in recent_sessions:
+                    try:
+                        # Parse the session date
+                        session_date = datetime.fromisoformat(session['date'].replace('Z', '+00:00'))
+                        sessions_data.append({
+                            'date': session_date.strftime('%m/%d/%Y'),
+                            'time': session_date.strftime('%H:%M'),
+                            'questions': session.get('questions', 0),
+                            'correct': session.get('correct', 0),
+                            'accuracy': session.get('accuracy', 0),
+                            'duration': 15,  # Estimate 15 minutes (no duration in source data)
+                            'topic': 'Mixed',
+                            'session_id': f"session_{session_date.strftime('%Y%m%d')}"
+                        })
+                    except (ValueError, KeyError) as e:
+                        print(f"Error parsing session data: {e}")
+                        continue
+            
+            # If no recent sessions from dashboard_stats, try heatmap data
+            if not sessions_data and recent_days:
+                for day in recent_days[-5:]:  # Last 5 days with activity
+                    if day.get('questions', 0) > 0:
+                        date_obj = datetime.strptime(day['date'], '%Y-%m-%d')
+                        accuracy = dashboard_stats.get('accuracy', 0)
+                        sessions_data.append({
+                            'date': date_obj.strftime('%m/%d/%Y'),
+                            'time': '--:--',  # Time not available in heatmap data
+                            'questions': day.get('questions', 0),
+                            'correct': int(day.get('questions', 0) * accuracy / 100),
+                            'accuracy': accuracy,
+                            'duration': 15,  # Estimate 15 minutes
+                            'topic': 'Mixed',
+                            'session_id': f"session_{day['date']}"
+                        })
+            
+            # Create category performance data from dashboard_stats topics_studied
+            topics_studied = dashboard_stats.get('topics_studied', {})
+            
+            strongest_categories = []
+            areas_to_improve = []
+            
+            for topic, stats in topics_studied.items():
+                if isinstance(stats, dict) and stats.get('questions', 0) > 0:
+                    total_questions = stats.get('questions', 0)
+                    correct_answers = stats.get('correct', 0)
+                    accuracy = (correct_answers / total_questions * 100) if total_questions > 0 else 0
+                    
+                    category_data = {
+                        'category': topic,
+                        'accuracy': accuracy,
+                        'questions': total_questions,
+                        'correct': correct_answers,
+                        'sessions': 1  # Estimate
+                    }
+                    
+                    if accuracy >= 75:
+                        strongest_categories.append(category_data)
+                    elif accuracy < 60:
+                        areas_to_improve.append(category_data)
+            
+            # Sort by accuracy
+            strongest_categories.sort(key=lambda x: x['accuracy'], reverse=True)
+            areas_to_improve.sort(key=lambda x: x['accuracy'])
+            
+            return {
+                'performance_over_time': {
+                    'labels': labels,
+                    'questions_attempted': questions_attempted,
+                    'questions_correct': questions_correct,
+                    'questions_incorrect': questions_incorrect,
+                    'accuracy_percentage': accuracy_percentage,
+                    'total_sessions': len([s for s in sessions_data]),
+                    'total_questions': sum(questions_attempted),
+                    'avg_accuracy': dashboard_stats.get('accuracy', 0)
+                },
+                'recent_sessions': {
+                    'sessions': sessions_data,
+                    'total_sessions': len(sessions_data),
+                    'has_sessions': len(sessions_data) > 0
+                },
+                'category_performance': {
+                    'strongest_categories': strongest_categories[:5],
+                    'areas_to_improve': areas_to_improve[:5],
+                    'has_category_data': len(strongest_categories) > 0 or len(areas_to_improve) > 0,
+                    'total_categories': len(topics_studied)
+                },
+                'overall_stats': {
+                    'total_sessions': dashboard_stats.get('total_sessions', 0),
+                    'total_questions': dashboard_stats.get('questions_answered', 0),
+                    'total_correct': dashboard_stats.get('total_correct', 0),
+                    'total_incorrect': dashboard_stats.get('questions_answered', 0) - dashboard_stats.get('total_correct', 0),
+                    'overall_accuracy': dashboard_stats.get('accuracy', 0),
+                    'total_study_time_hours': dashboard_stats.get('study_time', 0) / 3600,
+                    'days_studied': len(recent_days) if recent_days else 0,
+                    'current_streak': dashboard_stats.get('streak', 0),
+                    'average_session_duration': 15,  # Estimate
+                    'questions_per_session': dashboard_stats.get('questions_answered', 0) / max(dashboard_stats.get('total_sessions', 1), 1)
+                }
+            }
+            
+        except Exception as e:
+            print(f"Error converting analytics data: {e}")
+            # Return empty structure on error
+            return {
+                'performance_over_time': {'labels': [], 'questions_attempted': [], 'questions_correct': [], 'questions_incorrect': [], 'accuracy_percentage': []},
+                'recent_sessions': {'sessions': [], 'has_sessions': False},
+                'category_performance': {'strongest_categories': [], 'areas_to_improve': [], 'has_category_data': False},
+                'overall_stats': {'total_sessions': 0, 'total_questions': 0, 'overall_accuracy': 0}
+            }

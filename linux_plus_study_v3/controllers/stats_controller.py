@@ -381,14 +381,10 @@ class StatsController:
                 # Reset session points to 0
                 self.game_state.achievement_system.reset_session_points()
                 
-                # Ensure all achievement-related attributes are reset
-                self.game_state.achievement_system.achievements = self.game_state.achievement_system._get_default_achievements()
+                # Database achievement system already cleared via clear_achievements()
+                # No need to manually assign achievements property as it's read-only
                 
-                # Clear leaderboard in achievement system
-                if hasattr(self.game_state.achievement_system, 'achievements') and 'leaderboard' in self.game_state.achievement_system.achievements:
-                    self.game_state.achievement_system.achievements['leaderboard'] = []
-                    
-                # Also clear leaderboard property if it exists
+                # Clear leaderboard property if it exists
                 if hasattr(self.game_state.achievement_system, 'leaderboard'):
                     self.game_state.achievement_system.leaderboard = []
                     

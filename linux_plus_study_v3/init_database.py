@@ -14,7 +14,8 @@ from sqlalchemy.orm import sessionmaker
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.analytics import Base, Analytics
+from models.analytics import Analytics, Base
+import models.user_achievements  # Import for side effects (model registration)
 from utils.config import get_database_config
 
 def initialize_database():

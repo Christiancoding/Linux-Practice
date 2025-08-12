@@ -853,7 +853,7 @@ class SimpleAnalyticsManager:
         
         # Get data from time tracking service for quiz and study times
         try:
-            from services.time_tracking_service import get_time_tracker
+            from services.db_time_tracking_wrapper import get_time_tracker
             time_tracker = get_time_tracker()
             time_summary = time_tracker.get_daily_summary()
             today_quiz_time = time_summary.get("quiz_time_today", 0)

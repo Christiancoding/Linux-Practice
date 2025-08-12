@@ -12,8 +12,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
-from services.simple_analytics import get_analytics_manager
-from services.time_tracking_service import get_time_tracker
+from services.analytics_adapter import get_analytics_manager
+from services.db_time_tracking_wrapper import get_time_tracker
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -542,7 +542,12 @@ class QuizController:
             # Award bonus points for fast answers in timed mode
             if time_taken < self.time_per_question / 2 and is_correct:
                 bonus_points = 5
-                response['points_earned'] += bonus_points
+                # Ensure points_earned is an integer before adding bonus
+                current_points = response['points_earned']
+                if isinstance(current_points, (int, float)):
+                    response['points_earned'] = int(current_points) + bonus_points
+                else:
+                    response['points_earned'] = bonus_points
                 response['speed_bonus'] = bonus_points
                 # Update game state with the bonus points too
                 self.game_state.update_points(bonus_points)
@@ -658,7 +663,7 @@ class QuizController:
         
         # Sync total points to analytics to ensure consistency  
         try:
-            from services.simple_analytics import get_analytics_manager
+            from services.analytics_adapter import get_analytics_manager
             analytics = get_analytics_manager()
             total_earned_points = self.game_state.achievements.get('points_earned', 0)
             if total_earned_points > 0:

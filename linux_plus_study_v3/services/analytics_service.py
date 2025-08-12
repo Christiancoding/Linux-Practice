@@ -3,7 +3,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 import logging
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, text
 from models.analytics import Analytics
 
 logger = logging.getLogger(__name__)
@@ -15,27 +15,50 @@ class AnalyticsService:
         """Initialize analytics service with database session."""
         self.db_session = db_session
     
+    def _get_overall_stats_query(self, query_user_id: Optional[str]) -> tuple[Any, dict[str, Any]]:
+        sql = """
+            SELECT 
+                SUM(questions_attempted) as total_questions,
+                SUM(questions_correct) as total_correct,
+                SUM(session_duration) as total_time,
+                SUM(vm_commands_executed) as total_vm_commands,
+                COUNT(id) as total_sessions
+            FROM analytics 
+            WHERE {user_clause}
+        """
+        if query_user_id:
+            user_clause = "user_id = :user_id"
+            params = {"user_id": query_user_id}
+        else:
+            user_clause = "user_id IS NULL"
+            params = {}
+        return text(sql.format(user_clause=user_clause)), params
+
+    def _get_today_quiz_time_query(self, query_user_id: Optional[str], today: Any) -> tuple[Any, dict[str, Any]]:
+        sql = """
+            SELECT SUM(session_duration) as quiz_time_today
+            FROM analytics 
+            WHERE {user_clause}
+            AND DATE(created_at) = :today 
+            AND activity_type = 'quiz'
+        """
+        if query_user_id:
+            user_clause = "user_id = :user_id"
+            params = {"user_id": query_user_id, "today": today}
+        else:
+            user_clause = "user_id IS NULL"
+            params = {"today": today}
+        return text(sql.format(user_clause=user_clause)), params
+
     def get_user_summary(self, user_id: str) -> Dict[str, Any]:
         """Get analytics summary for a specific user."""
         try:
-            # Query actual analytics data from database
-            # Use anonymous as fallback, but also check for demo data
             query_user_id = user_id if user_id != 'anonymous' else None
-            
-            overall_stats = self.db_session.query(
-                func.sum(Analytics.questions_attempted).label('total_questions'),
-                func.sum(Analytics.questions_correct).label('total_correct'),
-                func.sum(Analytics.session_duration).label('total_time'),
-                func.sum(Analytics.vm_commands_executed).label('total_vm_commands'),
-                func.count(Analytics.id).label('total_sessions')
-            ).filter(
-                Analytics.user_id == query_user_id if query_user_id else Analytics.user_id.is_(None)
-            ).first()
-            
-            total_questions = overall_stats.total_questions if overall_stats else 0
-            total_correct = overall_stats.total_correct if overall_stats else 0
-            overall_accuracy = (total_correct / total_questions * 100) if total_questions > 0 else 0
-            
+            query, params = self._get_overall_stats_query(query_user_id)
+            overall_stats = self.db_session.execute(query, params).first()
+            total_questions = overall_stats.total_questions if overall_stats and overall_stats.total_questions else 0
+            total_correct = overall_stats.total_correct if overall_stats and overall_stats.total_correct else 0
+            overall_accuracy = (total_correct / total_questions * 100) if total_questions and total_questions > 0 else 0
             # If no data for anonymous user, try demo user data
             if not total_questions and user_id == 'anonymous':
                 demo_stats = self.db_session.query(
@@ -46,7 +69,7 @@ class AnalyticsService:
                     func.count(Analytics.id).label('total_sessions')
                 ).filter(Analytics.user_id == 'demo_user_001').first()
                 
-                if demo_stats and demo_stats.total_questions:
+                if demo_stats and demo_stats.total_questions and demo_stats.total_questions > 0:
                     # Use demo data instead
                     return self._get_demo_user_data()
             
@@ -109,8 +132,20 @@ class AnalyticsService:
             # Calculate study streak
             study_streak = self._calculate_study_streak(query_user_id or 'anonymous')
             
+            # Calculate average session time
+            avg_session_time = 0
+            if overall_stats and overall_stats.total_sessions and overall_stats.total_sessions > 0:
+                avg_session_time = overall_stats.total_time / overall_stats.total_sessions
+            
+            # Get today's quiz time using raw SQL to avoid pagination issues
+            today = datetime.now().date()
+            query, params = self._get_today_quiz_time_query(query_user_id, today)
+            today_stats = self.db_session.execute(query, params).first()
+            quiz_time_today = today_stats.quiz_time_today if today_stats and today_stats.quiz_time_today else 0
+            
             return {
                 'total_questions': int(total_questions),
+                'total_correct': int(total_correct),
                 'overall_accuracy': float(overall_accuracy),
                 'total_study_time': float(overall_stats.total_time if overall_stats else 0),
                 'total_vm_commands': int(overall_stats.total_vm_commands if overall_stats else 0),
@@ -118,7 +153,11 @@ class AnalyticsService:
                 'topic_breakdown': topic_breakdown,
                 'activity_breakdown': activity_breakdown,
                 'study_streak': study_streak,
-                'total_sessions': int(overall_stats.total_sessions if overall_stats else 0)
+                'total_sessions': int(overall_stats.total_sessions if overall_stats else 0),
+                'quiz_time_today': float(quiz_time_today),
+                'average_session_time': float(avg_session_time),
+                'points_earned': 0,  # Placeholder for future implementation
+                'last_session_date': None  # Placeholder for future implementation
             }
         except Exception as e:
             logger.error(f"Error getting user summary for {user_id}: {e}")
@@ -273,6 +312,7 @@ class AnalyticsService:
         
         return {
             'total_questions': 156,
+            'total_correct': 122,  # Add this field
             'overall_accuracy': 78.2,
             'total_study_time': 8640,  # 2.4 hours in seconds
             'total_vm_commands': 23,
@@ -293,22 +333,31 @@ class AnalyticsService:
                 'study': 8,
                 'vm_lab': 5
             },
-            'study_streak': 5,
-            'total_sessions': 43
+            'study_streak': {'current_streak': 5, 'max_streak': 12},
+            'total_sessions': 43,
+            'quiz_time_today': 1200,  # 20 minutes today
+            'average_session_time': 300,  # 5 minutes average
+            'points_earned': 1220,  
+            'last_session_date': None
         }
     
     def _get_empty_data(self) -> Dict[str, Any]:
         """Return empty data after a reset."""
         return {
             'total_questions': 0,
+            'total_correct': 0,  # Add this field
             'overall_accuracy': 0,
             'total_study_time': 0,
             'total_vm_commands': 0,
             'recent_performance': [],
             'topic_breakdown': {},
             'activity_breakdown': {},
-            'study_streak': 0,
-            'total_sessions': 0
+            'study_streak': {'current_streak': 0, 'max_streak': 0},
+            'total_sessions': 0,
+            'quiz_time_today': 0,
+            'average_session_time': 0,
+            'points_earned': 0,
+            'last_session_date': None
         }
     
     def _get_demo_user_data(self) -> Dict[str, Any]:
@@ -535,8 +584,8 @@ class AnalyticsService:
                     'sessions': stat.sessions or 0
                 }
             
-            # Generate complete 365-day dataset
-            activity_data = []
+            # Generate complete 365-day dataset with explicit type annotation
+            activity_data: List[Dict[str, Any]] = []
             for i in range(days):
                 date = start_date + timedelta(days=i)
                 date_str = date.strftime('%Y-%m-%d')
@@ -569,8 +618,9 @@ class AnalyticsService:
             
         except Exception as e:
             logger.error(f"Error getting daily activity for user {user_id}: {e}")
-            # Return empty activity data as fallback
-            return []
+            # Return empty activity data as fallback with explicit type
+            empty_list: List[Dict[str, Any]] = []
+            return empty_list
     
     def track_activity(self, user_id: str, activity_type: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
         """Track user activity."""
