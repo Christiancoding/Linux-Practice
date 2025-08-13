@@ -7,7 +7,7 @@ and achievement tracking logic.
 """
 
 from datetime import datetime
-from typing import Dict, List, Union, Any, TypedDict, Optional, Literal, Tuple, cast
+from typing import Dict, List, Union, Any, TypedDict, Optional, Literal, Tuple, cast, Set
 from utils.config import *
 
 
@@ -35,6 +35,17 @@ class FormattedLeaderboardEntry(TypedDict):
 class AchievementDict(TypedDict):
     badge: str
     description: str
+
+# New: typed structure for achievements to satisfy type checker
+class AchievementsData(TypedDict, total=False):
+    badges: List[str]
+    points_earned: int
+    days_studied: Set[str]
+    questions_answered: int
+    streaks_achieved: int
+    perfect_sessions: int
+    daily_warrior_dates: List[str]
+    leaderboard: List["LeaderboardEntry"]
 
 class ProgressItem(TypedDict):
     current: int
@@ -395,8 +406,9 @@ class StatsController:
                 # Since achievements is a property without setter, we need to reset its contents
                 # Reset achievements data if it's a direct dictionary
                 if isinstance(self.game_state.achievements, dict):
-                    self.game_state.achievements.clear()
-                    self.game_state.achievements.update({
+                    achievements_dict = cast(Dict[str, Any], self.game_state.achievements)
+                    achievements_dict.clear()
+                    new_data: AchievementsData = {
                         "badges": [],
                         "points_earned": 0,
                         "days_studied": set(),
@@ -405,7 +417,8 @@ class StatsController:
                         "perfect_sessions": 0,
                         "daily_warrior_dates": [],
                         "leaderboard": []
-                    })
+                    }
+                    achievements_dict.update(new_data)
                     print("Reset game state achievements")
                 else:
                     # If achievements is managed by achievement_system, it's already reset above

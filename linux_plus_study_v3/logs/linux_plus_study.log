@@ -1,0 +1,144 @@
+2025-08-12 19:26:41,332 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-12 19:26:41,332 - __main__ - INFO: Starting web application mode
+2025-08-12 19:26:41,333 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-12 19:26:41,333 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-12 19:26:41,362 - utils.database - INFO: Database connection test successful
+2025-08-12 19:26:41,375 - __main__ - INFO: Web application components loaded successfully
+2025-08-12 19:26:41,377 - utils.persistence_manager - INFO: Created file with defaults: /home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/web_settings.json
+2025-08-12 19:26:41,397 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-12 19:26:41,401 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-12 19:27:02,200 - views.web_view - ERROR: Heatmap API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:02,200 - views.web_view - ERROR: Achievements API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:02,300 - views.web_view - ERROR: Dashboard API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:07,812 - views.web_view - ERROR: Achievements API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:08,813 - views.web_view - ERROR: Achievements API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:14,299 - views.web_view - ERROR: Statistics API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:15,758 - views.web_view - ERROR: Achievements API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:16,757 - views.web_view - ERROR: Achievements API error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:22,074 - views.web_view - ERROR: Get profiles error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:31,708 - views.web_view - ERROR: Get profiles error: No module named 'services.analytics_adapter'
+2025-08-12 19:27:35,801 - views.web_view - ERROR: Get profiles error: No module named 'services.analytics_adapter'
+2025-08-12 19:31:02,504 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-12 19:31:02,505 - utils.database - INFO: All database connections closed
+2025-08-12 19:31:04,843 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-12 19:31:04,843 - __main__ - INFO: Starting web application mode
+2025-08-12 19:31:04,844 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-12 19:31:04,844 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-12 19:31:04,852 - utils.database - INFO: Database connection test successful
+2025-08-12 19:31:04,864 - __main__ - INFO: Web application components loaded successfully
+2025-08-12 19:31:04,889 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-12 19:31:04,892 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-12 19:31:10,865 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:31:11,732 - views.web_view - ERROR: Statistics API error: 'NoneType' object is not subscriptable
+2025-08-12 19:31:15,108 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:31:15,210 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:33:33,017 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:34:11,967 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:34:33,668 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:35:01,046 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:35:09,157 - views.web_view - ERROR: Statistics API error: 'NoneType' object is not subscriptable
+2025-08-12 19:35:54,088 - views.web_view - ERROR: Statistics API error: 'NoneType' object is not subscriptable
+2025-08-12 19:36:02,718 - views.web_view - ERROR: Achievements API error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:36:09,159 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-12 19:36:09,159 - utils.database - INFO: All database connections closed
+2025-08-12 19:36:10,704 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-12 19:36:10,704 - __main__ - INFO: Starting web application mode
+2025-08-12 19:36:10,705 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-12 19:36:10,705 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-12 19:36:10,714 - utils.database - INFO: Database connection test successful
+2025-08-12 19:36:10,732 - __main__ - INFO: Web application components loaded successfully
+2025-08-12 19:36:10,764 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-12 19:36:10,769 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-12 19:36:59,568 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:37:48,109 - views.web_view - ERROR: Exception on /api/status [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 2072, in api_status
+    'total_points': user_data['xp'],  # Use analytics XP for total accumulated points
+                    ~~~~~~~~~^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 2089, in api_status
+    'total_points': user_data.get('xp', 0),  # Use analytics XP for total
+                    ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+2025-08-12 19:37:48,112 - root - ERROR: Request error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:37:53,710 - views.web_view - ERROR: Exception on /api/status [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 2072, in api_status
+    'total_points': user_data['xp'],  # Use analytics XP for total accumulated points
+                    ~~~~~~~~~^^^^^^
+TypeError: 'NoneType' object is not subscriptable
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 2089, in api_status
+    'total_points': user_data.get('xp', 0),  # Use analytics XP for total
+                    ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'
+2025-08-12 19:37:53,711 - root - ERROR: Request error: 'NoneType' object has no attribute 'get'
+2025-08-12 19:38:02,626 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:40:39,452 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-12 19:40:39,453 - utils.database - INFO: All database connections closed
+2025-08-12 19:40:41,371 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-12 19:40:41,371 - __main__ - INFO: Starting web application mode
+2025-08-12 19:40:41,372 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-12 19:40:41,372 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-12 19:40:41,379 - utils.database - INFO: Database connection test successful
+2025-08-12 19:40:41,391 - __main__ - INFO: Web application components loaded successfully
+2025-08-12 19:40:41,411 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-12 19:40:41,414 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-12 19:40:48,622 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:41:01,763 - views.web_view - ERROR: Reset profile error: 'NoneType' object does not support item assignment
+2025-08-12 19:41:06,690 - views.web_view - ERROR: Reset profile error: 'NoneType' object does not support item assignment
+2025-08-12 19:41:11,587 - views.web_view - ERROR: Reset profile error: 'NoneType' object does not support item assignment
+2025-08-12 19:42:57,356 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-12 19:42:57,356 - utils.database - INFO: All database connections closed
+2025-08-12 19:42:59,371 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-12 19:42:59,371 - __main__ - INFO: Starting web application mode
+2025-08-12 19:42:59,371 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-12 19:42:59,371 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-12 19:42:59,377 - utils.database - INFO: Database connection test successful
+2025-08-12 19:42:59,389 - __main__ - INFO: Web application components loaded successfully
+2025-08-12 19:42:59,407 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-12 19:42:59,410 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-12 19:43:09,673 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:43:27,387 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:44:09,233 - views.web_view - INFO: Starting clear statistics operation
+2025-08-12 19:44:09,284 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-12 19:44:09,286 - views.web_view - INFO: Reset game state data
+2025-08-12 19:44:09,286 - views.web_view - INFO: Reset quiz controller session
+2025-08-12 19:44:09,295 - views.web_view - INFO: Reset time tracking data
+2025-08-12 19:44:09,296 - views.web_view - INFO: Reset achievements file
+2025-08-12 19:44:09,297 - views.web_view - INFO: Reset history file
+2025-08-12 19:44:09,297 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-12 19:44:11,548 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:44:19,982 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-12 19:44:36,461 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'

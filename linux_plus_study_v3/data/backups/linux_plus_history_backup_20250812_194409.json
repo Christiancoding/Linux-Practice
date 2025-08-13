@@ -1,0 +1,80 @@
+{
+  "sessions": [],
+  "questions": {
+    "What is Ansible primarily used for?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-12T16:24:04.994981",
+          "correct": true
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-12T16:24:08.593422",
+          "correct": true
+        }
+      ]
+    },
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-12T19:37:49.954941",
+          "correct": false
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-12T19:37:53.604861",
+          "correct": true
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Commands (System Management)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    }
+  },
+  "total_correct": 3,
+  "total_attempts": 4,
+  "incorrect_review": [
+    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?"
+  ],
+  "leaderboard": [],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

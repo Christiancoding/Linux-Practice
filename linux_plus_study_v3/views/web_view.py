@@ -194,12 +194,12 @@ def get_current_user_id():
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
     try:
-        from services.analytics_adapter import get_analytics_manager
-        analytics = get_analytics_manager()
+        # Analytics disabled
+        analytics = None  # Analytics disabled
         user_id = get_current_user_id()
         
-        # Initialize user if doesn't exist (database will handle this automatically)
-        user_data = analytics.get_user_data(user_id)
+        # Analytics disabled - skipping user data initialization
+        # user_data = analytics and analytics and analytics.get_user_data(user_id)
         
         return user_id, analytics
     except Exception as e:
@@ -600,15 +600,18 @@ class LinuxPlusStudyWeb:
                     })
                 
                 # Check if user exists in analytics data
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data(user_id)
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
+                user_data = analytics and analytics and analytics.get_user_data(user_id)
                 
+                # Provide fallback data when analytics is disabled
                 if not user_data:
-                    return jsonify({
-                        'success': False,
-                        'error': f'User {user_id} not found in analytics data'
-                    })
+                    user_data = {
+                        'total_questions': 0,
+                        'accuracy': 0,
+                        'total_sessions': 0,
+                        'xp': 0
+                    }
                 
                 # Switch session to this user
                 session['user_id'] = user_id
@@ -636,12 +639,16 @@ class LinuxPlusStudyWeb:
             """Admin endpoint to list available demo users"""
             try:
                 from flask import session
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
                 
                 # Get all users from analytics using the public method
                 users = []
-                analytics_data = analytics.get_all_profiles()  # Use the correct public method
+                analytics_data = analytics and analytics and analytics.get_all_profiles()  # Use the correct public method
+                
+                # Provide fallback when analytics is disabled
+                if not analytics_data:
+                    analytics_data = {}
                 
                 for user_id, user_data in analytics_data.items():
                     if user_data.get('total_questions', 0) > 0:  # Only users with data
@@ -1686,17 +1693,30 @@ class LinuxPlusStudyWeb:
         def index():
             # Get analytics data for server-side rendering
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = get_analytics_manager()
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                analytics = None  # Analytics disabled
+                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                
+                # Provide fallback stats when analytics is disabled
+                if not dashboard_stats:
+                    dashboard_stats = {
+                        'level': 1, 
+                        'xp': 0, 
+                        'streak': 0, 
+                        'total_correct': 0, 
+                        'accuracy': 0, 
+                        'study_time': 0, 
+                        'study_time_formatted': '0s',
+                        'questions_answered': 0
+                    }
                 
                 # If no data, try demo user
                 if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
-                    if demo_stats.get('questions_answered', 0) > 0:
+                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats and demo_stats.get('questions_answered', 0) > 0:
                         dashboard_stats = demo_stats
                 
                 return render_template('index.html', stats=dashboard_stats)
@@ -1731,19 +1751,32 @@ class LinuxPlusStudyWeb:
         @self.app.route('/stats')
         def stats_page():
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 
                 # Get basic stats from same source as home page
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                
+                # Provide fallback stats when analytics is disabled
+                if not dashboard_stats:
+                    dashboard_stats = {
+                        'level': 1, 
+                        'xp': 0, 
+                        'streak': 0, 
+                        'total_correct': 0, 
+                        'accuracy': 0, 
+                        'study_time': 0, 
+                        'study_time_formatted': '0s',
+                        'questions_answered': 0
+                    }
                 
                 # If no data, try demo user
                 if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
-                    if demo_stats.get('questions_answered', 0) > 0:
+                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
+                    if demo_stats and demo_stats.get('questions_answered', 0) > 0:
                         dashboard_stats = demo_stats
                         user_id = 'demo_user_001'
                 
@@ -1807,12 +1840,28 @@ class LinuxPlusStudyWeb:
         @self.app.route('/analytics')
         def analytics_page():
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data(user_id)
+                analytics = None  # Analytics disabled
+                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                
+                # Provide fallback when analytics is disabled
+                if not user_data:
+                    user_data = {
+                        'achievements': [],
+                        'total_questions': 0,
+                        'correct_answers': 0,
+                        'accuracy': 0.0,
+                        'study_streak': 0,
+                        'total_study_time': 0,
+                        'topics_studied': {},
+                        'level': 1,
+                        'xp': 0,
+                        'display_name': user_id.replace('_', ' ').title(),
+                        'certification_progress': 0
+                    }
                 
                 # Calculate recent achievements properly
                 recent_achievements = []
@@ -1845,7 +1894,7 @@ class LinuxPlusStudyWeb:
                     active = False
                     questions_count = 0
                     
-                    if user_data.get('last_activity'):
+                    if user_data and user_data.get('last_activity'):
                         try:
                             last_activity = datetime.fromisoformat(user_data['last_activity'].replace('Z', '+00:00'))
                             if last_activity.date() == date.date():
@@ -2002,9 +2051,13 @@ class LinuxPlusStudyWeb:
                 status = self.quiz_controller.get_session_status()
                 
                 # Get analytics data for consistent scoring
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data('anonymous')
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
+                user_data = analytics and analytics and analytics.get_user_data('anonymous')
+                
+                # Provide fallback when analytics is disabled
+                if not user_data:
+                    user_data = {'xp': 0}
                 
                 # Determine total questions based on quiz state
                 total_questions = len(self.game_state.questions)  # Default to all available questions
@@ -2020,15 +2073,19 @@ class LinuxPlusStudyWeb:
                     'session_score': status['session_score'],
                     'session_total': status['session_total'],
                     'current_streak': status['current_streak'],
-                    'total_points': user_data['xp'],  # Use analytics XP for total accumulated points
+                    'total_points': user_data.get('xp', 0),  # Use analytics XP for total accumulated points
                     'session_points': self.game_state.session_points,  # Use actual session points
                     'quiz_mode': status['mode']
                 })
             except Exception as e:
                 # Get analytics data for consistent scoring even in error case
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data('anonymous')
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
+                user_data = analytics and analytics and analytics.get_user_data('anonymous')
+                
+                # Provide fallback when analytics is disabled
+                if not user_data:
+                    user_data = {'xp': 0}
                 
                 return jsonify({
                     'quiz_active': False,
@@ -2310,7 +2367,7 @@ class LinuxPlusStudyWeb:
                     user_id, analytics = ensure_analytics_user_sync()
                     if analytics and user_id:
                         # Use update_quiz_results_legacy for individual question tracking
-                        analytics.update_quiz_results_legacy(
+                        analytics and analytics.update_quiz_results_legacy(
                             user_id=user_id,
                             correct=result.get('is_correct', False),
                             topic=getattr(self.quiz_controller, 'category_filter', None) or question_data[3],  # Use question category
@@ -2349,18 +2406,18 @@ class LinuxPlusStudyWeb:
                 # Update analytics with actual session duration if available
                 if 'session_duration' in result and 'session_total' in result:
                     try:
-                        from services.analytics_adapter import get_analytics_manager
+                        # Analytics disabled - # Analytics disabled
                         from flask import session
                         
                         user_id = session.get('user_id', 'anonymous')
-                        analytics = get_analytics_manager()
+                        analytics = None  # Analytics disabled
                         
                         print(f"🐛 DEBUG: About to call update_session_with_actual_time")
                         print(f"   user_id: {user_id}")
                         print(f"   actual_duration: {result['session_duration']}")
                         print(f"   questions_answered: {result['session_total']}")
                         
-                        analytics.update_session_with_actual_time(
+                        analytics and analytics.update_session_with_actual_time(
                             user_id=user_id,
                             actual_duration=result['session_duration'],
                             questions_answered=result['session_total']
@@ -2663,16 +2720,30 @@ class LinuxPlusStudyWeb:
         def api_dashboard():
             """API endpoint for dashboard data - single source of truth"""
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from services.db_time_tracking_wrapper import get_time_tracker
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 time_tracker = get_time_tracker()
                 user_id = session.get('user_id', 'anonymous')
                 
                 # Get stats from simple analytics (single source of truth)
-                stats = analytics.get_dashboard_stats(user_id)
+                stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                
+                # Provide fallback when analytics is disabled
+                if not stats:
+                    stats = {
+                        'questions_answered': 0,
+                        'total_correct': 0,
+                        'accuracy': 0,
+                        'study_time': 0,
+                        'current_streak': 0,
+                        'best_streak': 0,
+                        'points_earned': 0,
+                        'level': 1,
+                        'progress': 0
+                    }
                 
                 # Add time tracking data
                 time_data = time_tracker.get_daily_summary()
@@ -2708,14 +2779,14 @@ class LinuxPlusStudyWeb:
         def api_heatmap():
             """API endpoint for study activity heatmap data"""
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 user_id = session.get('user_id', 'anonymous')
                 
                 # Get heatmap data from analytics
-                heatmap_data = analytics.get_heatmap_data(user_id)
+                heatmap_data = analytics and analytics.get_heatmap_data(user_id)
                 
                 return jsonify({
                     'success': True,
@@ -2755,14 +2826,14 @@ class LinuxPlusStudyWeb:
         def api_analytics():
             """API endpoint for analytics data - must match dashboard"""
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 user_id = session.get('user_id', 'anonymous')
                 
                 # Get stats from same source as dashboard
-                stats = analytics.get_analytics_stats(user_id)
+                stats = analytics and analytics.get_analytics_stats(user_id)
                 
                 return jsonify({
                     'success': True,
@@ -2780,15 +2851,31 @@ class LinuxPlusStudyWeb:
         def api_statistics():
             """API endpoint for statistics - uses same data as dashboard"""
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 user_id = session.get('user_id', 'anonymous')
                 
                 # Use dashboard stats to ensure consistency
-                stats = analytics.get_dashboard_stats(user_id)
-                user_data = analytics.get_user_data(user_id)
+                stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                
+                # Provide fallback data when analytics is disabled
+                if not stats:
+                    stats = {
+                        'total_questions': 0,
+                        'total_correct': 0,
+                        'accuracy': 0,
+                        'overall_accuracy': 0,
+                        'level': 1,
+                        'xp': 0
+                    }
+                
+                if not user_data:
+                    user_data = {
+                        'topics_studied': {}
+                    }
                 
                 # Format topic data for statistics display
                 def _format_category_stats(topics_studied):
@@ -2829,13 +2916,34 @@ class LinuxPlusStudyWeb:
                 achievement_system = DBAchievementSystem()
                 
                 # Get current statistics
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 user_id = session.get('user_id', 'anonymous')
-                stats = analytics.get_dashboard_stats(user_id)
-                user_data = analytics.get_user_data(user_id)
+                stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                
+                # Provide fallback data when analytics is disabled
+                if not stats:
+                    stats = {
+                        'level': 1,
+                        'xp': 0,
+                        'streak': 0,
+                        'total_correct': 0,
+                        'accuracy': 0,
+                        'study_time': 0,
+                        'questions_answered': 0
+                    }
+                
+                if not user_data:
+                    user_data = {
+                        'achievements': [],
+                        'total_questions': 0,
+                        'accuracy': 0,
+                        'study_streak': 0,
+                        'total_study_time': 0
+                    }
                 
                 # Get achievements data
                 achievements_data = achievement_system.achievements
@@ -3003,15 +3111,25 @@ class LinuxPlusStudyWeb:
         def api_get_profiles():
             """Get all user profiles"""
             try:
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 from flask import session
                 
-                analytics = get_analytics_manager()
+                analytics = None  # Analytics disabled
                 user_id = session.get('user_id', 'anonymous')
                 
                 # For now, just return the current user as a single profile
                 # This can be expanded later for multi-profile support
-                user_data = analytics.get_user_data(user_id)
+                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                
+                # Provide fallback when analytics is disabled
+                if not user_data:
+                    user_data = {
+                        'display_name': 'Default Profile',
+                        'sessions': [],
+                        'total_questions': 0,
+                        'accuracy': 0,
+                        'total_study_time': 0
+                    }
                 
                 profiles = {
                     user_id: {
@@ -3083,11 +3201,14 @@ class LinuxPlusStudyWeb:
                 if not new_name:
                     return jsonify({'success': False, 'error': 'New name is required'})
                 
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
-                user_data = analytics.get_user_data(profile_id)
-                user_data['display_name'] = new_name
-                analytics._update_user_data(profile_id, user_data)
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
+                user_data = analytics and analytics and analytics.get_user_data(profile_id)
+                
+                # Only proceed if user_data exists and analytics is available
+                if user_data and analytics:
+                    user_data['display_name'] = new_name
+                    analytics._update_user_data(profile_id, user_data)
                 
                 return jsonify({'success': True, 'message': 'Profile renamed successfully'})
             except Exception as e:
@@ -3098,13 +3219,28 @@ class LinuxPlusStudyWeb:
         def api_reset_profile(profile_id):
             """Reset profile data"""
             try:
-                from services.analytics_adapter import get_analytics_manager
-                analytics = get_analytics_manager()
+                # Analytics disabled - # Analytics disabled
+                analytics = None  # Analytics disabled
                 
-                # Reset user data to defaults
-                default_data = analytics._get_default_user_data()
-                default_data['display_name'] = f'Profile {profile_id}'
-                analytics._update_user_data(profile_id, default_data)
+                # Reset user data to defaults with fallback for disabled analytics
+                default_data = analytics and analytics._get_default_user_data()
+                if not default_data:
+                    # Provide fallback default data when analytics is disabled
+                    default_data = {
+                        'display_name': f'Profile {profile_id}',
+                        'xp': 0,
+                        'level': 1,
+                        'streak': 0,
+                        'sessions_completed': 0,
+                        'total_questions': 0,
+                        'correct_answers': 0
+                    }
+                else:
+                    default_data['display_name'] = f'Profile {profile_id}'
+                
+                # Only update if analytics is available
+                if analytics:
+                    analytics._update_user_data(profile_id, default_data)
                 
                 return jsonify({'success': True, 'message': 'Profile data reset successfully'})
             except Exception as e:
@@ -3152,8 +3288,8 @@ class LinuxPlusStudyWeb:
                 
                 # Clear simple analytics data
                 try:
-                    from services.analytics_adapter import get_analytics_manager
-                    analytics = get_analytics_manager()
+                    # Analytics disabled - # Analytics disabled
+                    analytics = None  # Analytics disabled
                     if analytics:
                         # For database analytics, clearing is handled by the DB reset above
                         # Just log that the operation was requested
@@ -3326,7 +3462,7 @@ class LinuxPlusStudyWeb:
             """Get performance data with date range filtering"""
             try:
                 from flask import session
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 
                 user_id = session.get('user_id', 'anonymous')
                 date_range = request.args.get('range', '7_days')
@@ -3347,12 +3483,12 @@ class LinuxPlusStudyWeb:
                     print(f"Database performance error, using analytics: {db_error}")
                 
                 # Fallback to analytics manager
-                analytics = get_analytics_manager()
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                analytics = None  # Analytics disabled
+                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
                 
                 # If no data for anonymous user, try demo user
                 if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
                     if demo_stats.get('questions_answered', 0) > 0:
                         dashboard_stats = demo_stats
                         user_id = 'demo_user_001'
@@ -3378,7 +3514,7 @@ class LinuxPlusStudyWeb:
             """Get recent study sessions data"""
             try:
                 from flask import session
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 
                 user_id = session.get('user_id', 'anonymous')
                 limit = int(request.args.get('limit', 10))
@@ -3399,12 +3535,12 @@ class LinuxPlusStudyWeb:
                     print(f"Database sessions error, using analytics: {db_error}")
                 
                 # Fallback to analytics manager
-                analytics = get_analytics_manager()
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                analytics = None  # Analytics disabled
+                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
                 
                 # If no data for anonymous user, try demo user
                 if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
                     if demo_stats.get('questions_answered', 0) > 0:
                         dashboard_stats = demo_stats
                         user_id = 'demo_user_001'
@@ -3430,7 +3566,7 @@ class LinuxPlusStudyWeb:
             """Get category performance data"""
             try:
                 from flask import session
-                from services.analytics_adapter import get_analytics_manager
+                # Analytics disabled - # Analytics disabled
                 
                 user_id = session.get('user_id', 'anonymous')
                 
@@ -3450,12 +3586,12 @@ class LinuxPlusStudyWeb:
                     print(f"Database categories error, using analytics: {db_error}")
                 
                 # Fallback to analytics manager
-                analytics = get_analytics_manager()
-                dashboard_stats = analytics.get_dashboard_stats(user_id)
+                analytics = None  # Analytics disabled
+                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
                 
                 # If no data for anonymous user, try demo user
                 if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics.get_dashboard_stats('demo_user_001')
+                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
                     if demo_stats.get('questions_answered', 0) > 0:
                         dashboard_stats = demo_stats
                         user_id = 'demo_user_001'
@@ -3673,7 +3809,7 @@ class LinuxPlusStudyWeb:
             accuracy_percentage = []
             
             # Get heatmap data for daily breakdown
-            heatmap_data = analytics.get_heatmap_data(user_id)
+            heatmap_data = analytics and analytics.get_heatmap_data(user_id)
             # The heatmap data is returned directly as a list, not wrapped in a dict
             recent_days = heatmap_data[-7:] if isinstance(heatmap_data, list) else []
             

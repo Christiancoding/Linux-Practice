@@ -132,7 +132,9 @@ class DBAchievementSystem:
         
         with self._get_user_achievement() as (user_achievement, session):
             # Add today to days studied
-            days_studied = set(user_achievement.days_studied or [])
+            # Explicitly cast to List[str] so the set has a known element type for type checkers
+            existing_days: List[str] = cast(List[str], user_achievement.days_studied or [])
+            days_studied: Set[str] = set(existing_days)
             days_studied.add(today)
             user_achievement.days_studied = list(days_studied)
             
@@ -589,11 +591,11 @@ class DBAchievementSystem:
         Returns:
             int: Points after applying multiplier
         """
-    from utils.game_values import get_game_value_manager
-    game_values = get_game_value_manager()
-    # Use public API only; do not reload or mutate private settings
-    multiplier = game_values.get_value('scoring', 'xp_multiplier', 1.0)
-    return int(base_points * multiplier)
+        from utils.game_values import get_game_value_manager
+        game_values = get_game_value_manager()
+        # Use public API only; do not reload or mutate private settings
+        multiplier = game_values.get_value('scoring', 'xp_multiplier', 1.0)
+        return int(base_points * multiplier)
     
     def _get_default_achievements(self) -> Dict[str, Any]:
         """

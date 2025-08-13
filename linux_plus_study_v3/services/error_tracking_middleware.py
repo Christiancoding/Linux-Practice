@@ -97,19 +97,9 @@ class ErrorTrackingMiddleware:
         db_logger.addHandler(db_handler)
     
     def _setup_analytics_error_logging(self):
-        """Set up logging for analytics errors."""
-        analytics_logger = logging.getLogger('services.analytics_integration')
-        
-        class AnalyticsErrorHandler(logging.Handler):
-            def emit(self, record):
-                if record.levelno >= logging.ERROR:
-                    error_tracker.track_analytics_error(
-                        operation=getattr(record, 'operation', 'unknown'),
-                        error_message=record.getMessage()
-                    )
-        
-        analytics_handler = AnalyticsErrorHandler()
-        analytics_logger.addHandler(analytics_handler)
+        """Set up logging for analytics errors - disabled."""
+        # Analytics integration disabled
+        pass
 
 def track_errors_decorator(error_type: str = 'function_error'):
     """Decorator to automatically track errors in functions."""

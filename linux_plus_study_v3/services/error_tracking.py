@@ -17,7 +17,8 @@ import re
 import os
 
 from models.analytics import Analytics
-from services.analytics_integration import track_activity
+# Analytics integration disabled
+# from services.analytics_integration import track_activity
 from utils.database import get_db_session
 
 logger = logging.getLogger(__name__)

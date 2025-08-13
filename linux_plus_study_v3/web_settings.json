@@ -1,0 +1,23 @@
+{
+  "focusMode": false,
+  "breakReminder": 10,
+  "debugMode": false,
+  "pointsPerQuestion": 10,
+  "streakBonus": 5,
+  "maxStreakBonus": 50,
+  "vmDefaults": {
+    "memory": 2,
+    "memoryUnit": "GB",
+    "cpus": 2,
+    "disk": 20,
+    "diskUnit": "GB",
+    "autoDownloadIso": false,
+    "autoStart": false,
+    "defaultTemplate": "ubuntu-22.04"
+  },
+  "isoDownloads": {
+    "enabled": false,
+    "downloadPath": "/home/retiredfan/Downloads",
+    "urls": {}
+  }
+}
