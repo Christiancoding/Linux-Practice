@@ -111,11 +111,11 @@ The application uses a hybrid storage approach:
 4. Add web routes in `views/web_view.py`
 5. Create templates in `templates/` for UI
 6. Add analytics tracking where appropriate
-7. Add all analytics tracking data not stated to 'data/linux_plus_study.db'
-8. Add questions to 'data/linux_plus_study_questions.db'
-9. Add achievements to 'data/linux_plus_study_achivements.db'
-10. Add question history to 'data/linux_plus_study_history.db'
-11. Add settings to 'data/linux_plus_study_settings.db'
+7. Add all analytics tracking data not stated to `data/linux_plus_study.db`
+8. Add questions to `data/linux_plus_study_questions.db`
+9. Add achievements to `data/linux_plus_study_achivements.db`
+10. Add question history to `data/linux_plus_study_history.db`
+11. Add settings to `data/linux_plus_study_settings.db`
 
 
 ### Database Changes
@@ -123,11 +123,11 @@ The application uses a hybrid storage approach:
 1. Modify models in `models/`
 2. Create migration in `migrations/`
 3. Update related services and controllers
-4. Modify cli sandbox in 'cli_sandbox/'
+4. Modify cli sandbox in `cli_sandbox/`
 
 ### Testing Strategy
 
-- Unit all tests in 'tests/'
+- Unit all tests in `tests/`
 - Integration tests for web endpoints
 - Fully remove tests when complete
 - Analytics verification scripts (`verify_*.py`)
@@ -160,3 +160,23 @@ The application includes comprehensive error handling:
 - Analytics system tracks user interactions across all modes
 - The codebase includes extensive type hints for better IDE support
 - Database connections use pooling in web mode for performance
+
+## Grouped code by responsibilities
+
+- Questions (load/filter)
+- Quiz (generate/grade)
+- Eplain (hint/links)
+- Progress (store/total)
+- Interface (CLI/Web)
+- Storage (repo/db/JSON) 
+- VM Challenges (load/hint)
+- Challenge interface (CLI/VM)
+- Validator (check/grade)
+
+
+
+## No! No! List
+
+- Do not create any duplacates in the code
+- Do not keep any test files when not in use
+- No not use python. Use python3.
