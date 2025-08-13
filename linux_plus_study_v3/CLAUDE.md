@@ -160,6 +160,7 @@ The application includes comprehensive error handling:
 - Analytics system tracks user interactions across all modes
 - The codebase includes extensive type hints for better IDE support
 - Database connections use pooling in web mode for performance
+- If you can not read a .db file, you can use this `data/convert-db-to-csv.sh` script to read .csv
 
 ## Grouped code by responsibilities
 
@@ -179,4 +180,5 @@ The application includes comprehensive error handling:
 
 - Do not create any duplacates in the code
 - Do not keep any test files when not in use
+- Do not keep any csv files when not in use
 - No not use python. Use python3.
