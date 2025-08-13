@@ -59,8 +59,8 @@ python3 init_database.py
 # Run database migrations
 python3 -m alembic upgrade head
 
-# Reset analytics data
-python3 reset_user_analytics.py
+# Run database migration service
+PYTHONPATH=/home/retiredfan/Documents/github/linux_plus_study_v3_main/linux_plus_study_v3 python3 services/db_migration_service.py
 ```
 
 ## Architecture
@@ -93,7 +93,7 @@ The application uses a hybrid storage approach:
 - `utils/config.py` - Application constants and configuration
 - `web_settings.json` - Web interface settings
 - `utils/game_values.py` - Game mechanics configuration
-- `pyproject.toml` / `requirements.txt` - Python dependencies
+- `requirements.txt` - Python dependencies
 
 ### Templates and Static Files
 
@@ -137,12 +137,14 @@ The application includes comprehensive error handling:
 ## Key Dependencies
 
 - **Flask 2.3.3** - Web framework
-- **SQLAlchemy 2.0.20** - Database ORM
+- **SQLAlchemy 2.0.20** - Database ORM with Alembic migrations
 - **pywebview 4.4.1** - Desktop application wrapper
-- **libvirt-python** - VM management (optional)
-- **paramiko** - SSH functionality for VM integration
-- **rich** - Enhanced CLI output
-- **pytest** - Testing framework
+- **libvirt-python 9.7.0** - VM management (optional)
+- **paramiko 3.3.1** - SSH functionality for VM integration
+- **rich 13.5.2** - Enhanced CLI output
+- **pytest 7.4.2** - Testing framework
+- **black 23.7.0** - Code formatting
+- **flake8 6.0.0** - Code linting
 
 ## Development Notes
 
