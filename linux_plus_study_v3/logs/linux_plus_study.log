@@ -142,3 +142,21 @@ AttributeError: 'NoneType' object has no attribute 'get'
 2025-08-12 19:44:11,548 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
 2025-08-12 19:44:19,982 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
 2025-08-12 19:44:36,461 - views.web_view - ERROR: Dashboard API error: 'NoneType' object has no attribute 'update'
+2025-08-13 13:37:32,426 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 13:37:32,426 - __main__ - INFO: Starting web application mode
+2025-08-13 13:37:32,426 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 13:37:32,427 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 13:37:32,435 - utils.database - INFO: Database connection test successful
+2025-08-13 13:37:32,447 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 13:37:32,468 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 13:37:32,471 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 13:45:44,011 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 13:45:44,011 - utils.database - INFO: All database connections closed
+2025-08-13 13:45:45,097 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 13:45:45,097 - __main__ - INFO: Starting web application mode
+2025-08-13 13:45:45,097 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 13:45:45,097 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 13:45:45,104 - utils.database - INFO: Database connection test successful
+2025-08-13 13:45:45,117 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 13:45:45,136 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 13:45:45,139 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

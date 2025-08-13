@@ -6,7 +6,7 @@
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-12T16:24:04.994981",
+          "timestamp": "2025-08-12T19:44:27.793017",
           "correct": true
         }
       ]
@@ -16,18 +16,38 @@
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-12T16:24:08.593422",
+          "timestamp": "2025-08-13T13:38:06.524000",
           "correct": true
+        }
+      ]
+    },
+    "What is AppArmor?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-13T13:38:09.695673",
+          "correct": true
+        }
+      ]
+    },
+    "What is the primary function of the `mkinitrd` command?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-13T13:38:12.102865",
+          "correct": false
         }
       ]
     }
   },
   "categories": {
-    "Troubleshooting": {
-      "correct": 0,
-      "attempts": 0
-    },
     "Concepts & Terms (Security)": {
+      "correct": 1,
+      "attempts": 1
+    },
+    "Concepts & Terms (Containers)": {
       "correct": 0,
       "attempts": 0
     },
@@ -41,16 +61,18 @@
     },
     "Commands (System Management)": {
       "correct": 0,
-      "attempts": 0
+      "attempts": 1
     },
-    "Concepts & Terms (Containers)": {
+    "Troubleshooting": {
       "correct": 0,
       "attempts": 0
     }
   },
-  "total_correct": 2,
-  "total_attempts": 2,
-  "incorrect_review": [],
+  "total_correct": 3,
+  "total_attempts": 4,
+  "incorrect_review": [
+    "What is the primary function of the `mkinitrd` command?"
+  ],
   "leaderboard": [],
   "settings": {},
   "export_metadata": {},
