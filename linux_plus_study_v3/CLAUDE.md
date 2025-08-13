@@ -111,18 +111,25 @@ The application uses a hybrid storage approach:
 4. Add web routes in `views/web_view.py`
 5. Create templates in `templates/` for UI
 6. Add analytics tracking where appropriate
+7. Add all analytics tracking data not stated to 'data/linux_plus_study.db'
+8. Add questions to 'data/linux_plus_study_questions.db'
+9. Add achievements to 'data/linux_plus_study_achivements.db'
+10. Add question history to 'data/linux_plus_study_history.db'
+11. Add settings to 'data/linux_plus_study_settings.db'
+
 
 ### Database Changes
 
 1. Modify models in `models/`
 2. Create migration in `migrations/`
-3. Test with `init_database.py` for fresh installs
-4. Update related services and controllers
+3. Update related services and controllers
+4. Modify cli sandbox in 'cli_sandbox/'
 
 ### Testing Strategy
 
-- Unit tests in root directory (various `test_*.py` files)
+- Unit all tests in 'tests/'
 - Integration tests for web endpoints
+- Fully remove tests when complete
 - Analytics verification scripts (`verify_*.py`)
 - Manual testing scripts for debugging
 
