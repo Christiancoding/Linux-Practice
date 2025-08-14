@@ -246,14 +246,25 @@ def get_session():
     """Alias for get_db_session for compatibility."""
     return get_db_session()
 
-def get_db_connection():
+def get_db_connection(db_name: str = "main"):
     """Get a raw database connection for direct SQL operations."""
     import sqlite3
     
-    # For now, return a direct SQLite connection to the data directory
     current_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.dirname(current_dir)
-    db_path = os.path.join(project_root, 'data', 'linux_plus_study.db')
+    
+    # Map database names to files
+    db_files = {
+        "main": "linux_plus_study.db",
+        "analytics": "linux_plus_study.db", 
+        "achievements": "linux_plus_study_achievements.db",
+        "history": "linux_plus_study_history.db",
+        "questions": "linux_plus_study_questions.db", 
+        "settings": "linux_plus_study_settings.db"
+    }
+    
+    db_file = db_files.get(db_name, "linux_plus_study.db")
+    db_path = os.path.join(project_root, 'data', db_file)
     
     # Ensure data directory exists
     os.makedirs(os.path.dirname(db_path), exist_ok=True)

@@ -715,7 +715,9 @@ function updateStatsFromServerData(data) {
     // Update with animation
     animateValue('total-correct', 0, totalCorrect, 1000);
     animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
-    animateValue('avg-time', 0, Math.round(avgSessionTime), 1000, 'm');
+    // Convert minutes to seconds for display as response time
+    const avgResponseTimeSeconds = Math.round(avgSessionTime * 60);
+    animateValue('avg-time', 0, avgResponseTimeSeconds, 1000, 's');
     animateValue('current-streak', 0, currentStreak, 1000);
     
     // Update trends

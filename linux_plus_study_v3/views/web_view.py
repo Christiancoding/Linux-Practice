@@ -194,6 +194,7 @@ def get_current_user_id():
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
     try:
+
         # Analytics disabled
         analytics = None  # Analytics disabled
         user_id = get_current_user_id()
@@ -1691,40 +1692,44 @@ class LinuxPlusStudyWeb:
         
         @self.app.route('/')
         def index():
-            # Get analytics data for server-side rendering
+            # Get comprehensive dashboard data using new dashboard service
             try:
-                # Analytics disabled - # Analytics disabled
                 from flask import session
+                from services.dashboard_service import get_dashboard_service
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = None  # Analytics disabled
-                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                self.logger.info(f"Loading dashboard for user: {user_id}")
                 
-                # Provide fallback stats when analytics is disabled
-                if not dashboard_stats:
-                    dashboard_stats = {
-                        'level': 1, 
-                        'xp': 0, 
-                        'streak': 0, 
-                        'total_correct': 0, 
-                        'accuracy': 0, 
-                        'study_time': 0, 
-                        'study_time_formatted': '0s',
-                        'questions_answered': 0
-                    }
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
                 
-                # If no data, try demo user
-                if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
-                    if demo_stats and demo_stats.get('questions_answered', 0) > 0:
-                        dashboard_stats = demo_stats
+                # Extract main stats for backward compatibility with existing template
+                main_stats = {
+                    'level': dashboard_data['user_progress']['level'],
+                    'xp': dashboard_data['user_progress']['xp'],
+                    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                    'streak': dashboard_data['user_progress']['streak'],
+                    'total_correct': dashboard_data['total_metrics']['total_correct'],
+                    'accuracy': dashboard_data['total_metrics']['overall_accuracy'],
+                    'study_time': dashboard_data['study_stats']['total_time'],
+                    'study_time_formatted': dashboard_data['study_stats']['total_formatted'],
+                    'questions_answered': dashboard_data['user_progress']['questions_answered']
+                }
                 
-                return render_template('index.html', stats=dashboard_stats)
+                # Pass both legacy stats and comprehensive data to template
+                return render_template('index.html', 
+                                     stats=main_stats, 
+                                     dashboard=dashboard_data)
+                                     
             except Exception as e:
-                print(f"Error loading dashboard stats: {e}")
-                return render_template('index.html', stats={
-                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0, 'study_time': 0, 'study_time_formatted': '0s'
-                })
+                self.logger.error(f"Error loading dashboard stats: {e}", exc_info=True)
+                fallback_stats = {
+                    'level': 1, 'xp': 0, 'xp_percentage': 0, 'streak': 0, 
+                    'total_correct': 0, 'accuracy': 0, 'study_time': 0, 
+                    'study_time_formatted': '0s', 'questions_answered': 0
+                }
+                return render_template('index.html', stats=fallback_stats, dashboard={})
         # Store reference to make it clear the route is being used
         self.index_handler = index
         
@@ -1751,60 +1756,55 @@ class LinuxPlusStudyWeb:
         @self.app.route('/stats')
         def stats_page():
             try:
-                # Analytics disabled - # Analytics disabled
                 from flask import session
+                from services.dashboard_service import get_dashboard_service
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = None  # Analytics disabled
+                self.logger.info(f"Loading stats page for user: {user_id}")
                 
-                # Get basic stats from same source as home page
-                dashboard_stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
                 
-                # Provide fallback stats when analytics is disabled
-                if not dashboard_stats:
-                    dashboard_stats = {
-                        'level': 1, 
-                        'xp': 0, 
-                        'streak': 0, 
-                        'total_correct': 0, 
-                        'accuracy': 0, 
-                        'study_time': 0, 
-                        'study_time_formatted': '0s',
-                        'questions_answered': 0
+                # Extract main stats for backward compatibility
+                main_stats = {
+                    'level': dashboard_data['user_progress']['level'],
+                    'xp': dashboard_data['user_progress']['xp'],
+                    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                    'streak': dashboard_data['user_progress']['streak'],
+                    'total_correct': dashboard_data['total_metrics']['total_correct'],
+                    'accuracy': dashboard_data['total_metrics']['overall_accuracy'],
+                    'study_time': dashboard_data['study_stats']['total_time'],
+                    'study_time_formatted': dashboard_data['study_stats']['total_formatted'],
+                    'questions_answered': dashboard_data['user_progress']['questions_answered']
+                }
+                
+                # Create stats format for stats.html template
+                stats_data = {
+                    'performance_over_time': {
+                        'labels': [day['date'] for day in dashboard_data['recent_sessions'][-7:]],
+                        'questions_attempted': [session['questions_attempted'] for session in dashboard_data['recent_sessions'][-7:]],
+                        'questions_correct': [session['questions_correct'] for session in dashboard_data['recent_sessions'][-7:]],
+                        'questions_incorrect': [session['questions_attempted'] - session['questions_correct'] for session in dashboard_data['recent_sessions'][-7:]],
+                        'accuracy_percentage': [session['accuracy'] for session in dashboard_data['recent_sessions'][-7:]]
+                    },
+                    'recent_sessions': {
+                        'sessions': dashboard_data['recent_sessions'],
+                        'has_sessions': len(dashboard_data['recent_sessions']) > 0
+                    },
+                    'category_performance': {
+                        'strongest_categories': dashboard_data['category_breakdown'][:5],
+                        'areas_to_improve': sorted(dashboard_data['category_breakdown'], key=lambda x: x['accuracy'])[:5],
+                        'has_category_data': len(dashboard_data['category_breakdown']) > 0
+                    },
+                    'overall_stats': {
+                        'total_sessions': dashboard_data['total_metrics']['total_sessions'],
+                        'total_questions': dashboard_data['total_metrics']['total_questions'],
+                        'overall_accuracy': dashboard_data['total_metrics']['overall_accuracy']
                     }
+                }
                 
-                # If no data, try demo user
-                if dashboard_stats.get('questions_answered', 0) == 0:
-                    demo_stats = analytics and analytics and analytics.get_dashboard_stats('demo_user_001')
-                    if demo_stats and demo_stats.get('questions_answered', 0) > 0:
-                        dashboard_stats = demo_stats
-                        user_id = 'demo_user_001'
-                
-                # Try to use database stats if we have actual data, otherwise use analytics manager
-                try:
-                    from controllers.db_stats_controller import DatabaseStatsController
-                    db_stats = DatabaseStatsController(user_id)
-                    
-                    # Check if database has meaningful data
-                    overall_stats = db_stats.get_overall_statistics()
-                    if overall_stats.get('total_questions', 0) > 0:
-                        # Use database stats
-                        stats_data = {
-                            'performance_over_time': db_stats.get_performance_over_time(7),
-                            'recent_sessions': db_stats.get_recent_study_sessions(10),
-                            'category_performance': db_stats.get_category_performance(),
-                            'overall_stats': overall_stats
-                        }
-                    else:
-                        # Fallback to analytics manager data
-                        stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
-                        
-                except Exception as db_error:
-                    print(f"Database stats error, using analytics manager: {db_error}")
-                    # Fallback to analytics manager data
-                    stats_data = self._convert_analytics_to_stats_format(dashboard_stats, analytics, user_id)
-                
-                return render_template('stats.html', stats=stats_data)
+                return render_template('stats.html', stats=stats_data, dashboard=dashboard_data)
                 
             except Exception as e:
                 print(f"Error loading stats: {e}")
@@ -1821,194 +1821,166 @@ class LinuxPlusStudyWeb:
         
         @self.app.route('/achievements')
         def achievements_page():
-            return render_template('achievements.html')
+            try:
+                from flask import session
+                from services.dashboard_service import get_dashboard_service
+                
+                user_id = session.get('user_id', 'anonymous')
+                self.logger.info(f"Loading achievements page for user: {user_id}")
+                
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
+                
+                return render_template('achievements.html', 
+                                     achievements=dashboard_data['achievements_summary'],
+                                     user_progress=dashboard_data['user_progress'],
+                                     dashboard=dashboard_data)
+                                     
+            except Exception as e:
+                self.logger.error(f"Error loading achievements page: {e}", exc_info=True)
+                return render_template('achievements.html', 
+                                     achievements={'total_badges': 0, 'recent_badges': [], 'completion_percentage': 0},
+                                     user_progress={'level': 1, 'xp': 0},
+                                     dashboard={})
         # Store reference to make it clear the route is being used
         self.achievements_page_handler = achievements_page
         
         @self.app.route('/review')
         def review_page():
-            return render_template('review.html')
+            """Review page with comprehensive data loading like Money Manager."""
+            try:
+                from flask import session
+                from services.dashboard_service import get_dashboard_service
+                
+                user_id = session.get('user_id', 'anonymous')
+                self.logger.info(f"Review page request for user: {user_id}")
+                
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
+                
+                # Get review-specific data from stats controller
+                if hasattr(self, 'game_state'):
+                    review_data = self.stats_controller.get_review_questions_data()
+                else:
+                    review_data = {'has_questions': False, 'questions': [], 'missing_questions': []}
+                
+                return render_template('review.html', 
+                                     dashboard_data=dashboard_data,
+                                     review_data=review_data,
+                                     user_id=user_id)
+                
+            except Exception as e:
+                self.logger.error(f"Review page error: {e}", exc_info=True)
+                return render_template('review.html', 
+                                     dashboard_data={},
+                                     review_data={'has_questions': False, 'questions': [], 'missing_questions': []},
+                                     user_id='anonymous')
         # Store reference to make it clear the route is being used
         self.review_page_handler = review_page
         
         @self.app.route('/settings')
         def settings_page():
-            return render_template('settings.html')
+            """Settings page with comprehensive data loading like Money Manager."""
+            try:
+                from flask import session
+                from services.dashboard_service import get_dashboard_service
+                from utils.config import get_config_manager
+                
+                user_id = session.get('user_id', 'anonymous')
+                self.logger.info(f"Settings page request for user: {user_id}")
+                
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
+                
+                # Get current settings
+                config_manager = get_config_manager()
+                system_settings = {
+                    'theme': config_manager.get_value('theme', 'light'),
+                    'sound_enabled': config_manager.get_value('sound_enabled', True),
+                    'notifications': config_manager.get_value('notifications', True),
+                    'auto_save': config_manager.get_value('auto_save', True),
+                    'difficulty_preference': config_manager.get_value('difficulty_preference', 'mixed')
+                }
+                
+                return render_template('settings.html', 
+                                     dashboard_data=dashboard_data,
+                                     system_settings=system_settings,
+                                     user_id=user_id)
+                
+            except Exception as e:
+                self.logger.error(f"Settings page error: {e}", exc_info=True)
+                return render_template('settings.html', 
+                                     dashboard_data={},
+                                     system_settings={},
+                                     user_id='anonymous')
         # Store reference to make it clear the route is being used
         self.settings_page_handler = settings_page
         
         @self.app.route('/analytics')
         def analytics_page():
+            """Analytics page with comprehensive data loading like Money Manager."""
             try:
-                # Analytics disabled - # Analytics disabled
                 from flask import session
+                from services.dashboard_service import get_dashboard_service
                 
                 user_id = session.get('user_id', 'anonymous')
-                analytics = None  # Analytics disabled
-                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                self.logger.info(f"Analytics page request for user: {user_id}")
                 
-                # Provide fallback when analytics is disabled
-                if not user_data:
-                    user_data = {
-                        'achievements': [],
-                        'total_questions': 0,
-                        'correct_answers': 0,
-                        'accuracy': 0.0,
-                        'study_streak': 0,
-                        'total_study_time': 0,
-                        'topics_studied': {},
-                        'level': 1,
-                        'xp': 0,
-                        'display_name': user_id.replace('_', ' ').title(),
-                        'certification_progress': 0
-                    }
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
                 
-                # Calculate recent achievements properly
-                recent_achievements = []
-                all_achievements = user_data.get('achievements', [])
-                
-                # Sort achievements by date and get last 3
-                if all_achievements:
-                    try:
-                        # Ensure all achievements have a comparable earned_date
-                        sorted_achievements = sorted(all_achievements, 
-                                                   key=lambda x: x.get('earned_date', ''), 
-                                                   reverse=True)
-                        recent_achievements = sorted_achievements[:3]
-                    except (TypeError, ValueError) as e:
-                        print(f"Warning: Could not sort achievements: {e}")
-                        # Fallback: just take the first 3 achievements
-                        recent_achievements = all_achievements[:3]
-                
-                # Calculate study activity properly
-                from datetime import datetime, timedelta
-                today = datetime.now()
-                
-                # Generate last 7 days activity
-                activity_data = []
-                for i in range(7):
-                    date = today - timedelta(days=i)
-                    date_str = date.strftime('%Y-%m-%d')
-                    
-                    # Check if user was active on this date
-                    active = False
-                    questions_count = 0
-                    
-                    if user_data and user_data.get('last_activity'):
-                        try:
-                            last_activity = datetime.fromisoformat(user_data['last_activity'].replace('Z', '+00:00'))
-                            if last_activity.date() == date.date():
-                                active = True
-                                # For today's activity, use a portion of total questions as estimate
-                                if i == 0:  # Today
-                                    questions_count = min(user_data.get('total_questions', 0), 10)
-                        except Exception:
-                            pass
-                    
-                    activity_data.insert(0, {
-                        'date': date_str,
-                        'active': active,
-                        'questions': questions_count
-                    })
-                
-                # Calculate performance overview changes
-                total_questions = user_data.get('total_questions', 0)
-                correct_answers = user_data.get('correct_answers', 0)
-                accuracy = user_data.get('accuracy', 0.0)
-                study_streak = user_data.get('study_streak', 0)
-                total_study_time = user_data.get('total_study_time', 0)
-                
-                # Estimate session count more accurately
-                estimated_sessions = max(1, total_questions // 5) if total_questions > 0 else 0
-                
-                # Generate recent performance data
-                recent_performance = []
-                if total_questions > 0:
-                    # Create sample recent sessions based on user's actual performance
-                    sessions_to_show = min(5, estimated_sessions)
-                    questions_per_session = max(1, total_questions // max(1, sessions_to_show))
-                    
-                    for i in range(sessions_to_show):
-                        session_date = today - timedelta(days=i)
-                        session_questions = min(questions_per_session, total_questions - (i * questions_per_session))
-                        session_correct = round((session_questions * accuracy) / 100) if accuracy else 0
-                        session_accuracy = (session_correct / session_questions) * 100 if session_questions > 0 else 0
-                        
-                        recent_performance.append({
-                            'date': session_date.isoformat(),
-                            'accuracy': session_accuracy,
-                            'questions': session_questions,
-                            'activity': 'quiz'
-                        })
-                
-                # Build topic breakdown with numeric accuracies (template expects numbers, not dicts)
-                from typing import Dict as _Dict, List as _List, Tuple as _Tuple
-                topics_studied: _Dict[str, Any] = user_data.get('topics_studied', {}) or {}
-                topic_breakdown: _Dict[str, float] = {}
-                questions_per_topic: _Dict[str, int] = {}
-                for topic, data in topics_studied.items():
-                    if isinstance(topic, str):
-                        if isinstance(data, dict):
-                            total_t = int(data.get('total', data.get('questions', 0)) or 0)
-                            correct_t = int(data.get('correct', 0) or 0)
-                            acc_val: float = round((correct_t / total_t) * 100, 1) if total_t > 0 else 0.0
-                            topic_breakdown[topic] = acc_val
-                            questions_per_topic[topic] = int(data.get('questions', data.get('total', 0)) or 0)
-                        else:
-                            try:
-                                topic_breakdown[topic] = float(data)  # type: ignore[arg-type]
-                            except Exception:
-                                topic_breakdown[topic] = 0.0
-                            questions_per_topic[topic] = 0
-                topic_breakdown_list: _List[_Tuple[str, float]] = sorted(topic_breakdown.items(), key=lambda x: x[1], reverse=True)
-                
-                # Prepare comprehensive stats for dashboard
+                # Format analytics-specific data from dashboard
                 stats = {
-                    'total_questions': total_questions,
-                    'overall_accuracy': round(accuracy, 1),
-                    'accuracy': round(accuracy, 1),  # ensure alias
-                    'total_study_time': total_study_time,
-                    'total_vm_commands': 0,  # VM commands not tracked in simple analytics
-                    'study_streak': study_streak,
-                    'total_sessions': estimated_sessions,
-                    'recent_achievements': recent_achievements,
-                    'recent_performance': recent_performance,
-                    'activity_data': activity_data,
-                    'topic_breakdown': topic_breakdown,
-                    'topic_breakdown_list': topic_breakdown_list,
-                    'questions_per_topic': questions_per_topic,
-                    'activity_breakdown': {'quiz': estimated_sessions, 'practice': 0},
-                    'level': user_data.get('level', 1),
-                    'xp': user_data.get('xp', 0),
-                    'display_name': user_data.get('display_name', user_id.replace('_', ' ').title()),
-                    'certification_progress': user_data.get('certification_progress', 0)
+                    'total_questions': dashboard_data.get('total_metrics', {}).get('total_questions', 0),
+                    'overall_accuracy': dashboard_data.get('total_metrics', {}).get('overall_accuracy', 0),
+                    'accuracy': dashboard_data.get('total_metrics', {}).get('overall_accuracy', 0),
+                    'total_study_time': dashboard_data.get('total_metrics', {}).get('total_time', 0),
+                    'total_vm_commands': 0,  # VM commands not tracked
+                    'study_streak': dashboard_data.get('study_stats', {}).get('current_streak', 0),
+                    'total_sessions': dashboard_data.get('total_metrics', {}).get('total_sessions', 0),
+                    'recent_achievements': dashboard_data.get('achievements_summary', {}).get('recent_badges', []),
+                    'recent_performance': dashboard_data.get('recent_sessions', [])[:5],
+                    'activity_data': self._format_activity_data(dashboard_data),
+                    'topic_breakdown': self._format_topic_breakdown(dashboard_data),
+                    'topic_breakdown_list': [],  # Will be populated from category breakdown
+                    'questions_per_topic': {},
+                    'activity_breakdown': {'quiz': dashboard_data.get('total_metrics', {}).get('total_sessions', 0), 'practice': 0},
+                    'level': dashboard_data.get('user_progress', {}).get('level', 1),
+                    'xp': dashboard_data.get('user_progress', {}).get('xp', 0),
+                    'display_name': user_id.replace('_', ' ').title(),
+                    'certification_progress': dashboard_data.get('user_progress', {}).get('xp_percentage', 0)
                 }
                 
-                return render_template('analytics_dashboard.html', stats=stats)
+                # Format topic breakdown list from category data
+                category_breakdown = dashboard_data.get('category_breakdown', [])
+                stats['topic_breakdown_list'] = [(cat['category'], cat['accuracy']) for cat in category_breakdown]
+                for cat in category_breakdown:
+                    stats['questions_per_topic'][cat['category']] = cat['attempted']
+                
+                return render_template('analytics_dashboard.html', 
+                                     stats=stats,
+                                     dashboard_data=dashboard_data,
+                                     user_id=user_id)
+                
             except Exception as e:
-                print(f"Error in analytics page: {e}")
+                self.logger.error(f"Analytics page error: {e}", exc_info=True)
                 # Return template with empty stats on error
                 empty_stats = {
-                    'total_questions': 0,
-                    'overall_accuracy': 0.0,
-                    'accuracy': 0.0,
-                    'total_study_time': 0,
-                    'total_vm_commands': 0,
-                    'study_streak': 0,
-                    'total_sessions': 0,
-                    'recent_achievements': [],
-                    'recent_performance': [],
-                    'activity_data': [],
-                    'topic_breakdown': {},
-                    'topic_breakdown_list': [],
-                    'questions_per_topic': {},
-                    'activity_breakdown': {},
-                    'level': 1,
-                    'xp': 0,
-                    'display_name': 'User',
-                    'certification_progress': 0
+                    'total_questions': 0, 'overall_accuracy': 0.0, 'accuracy': 0.0,
+                    'total_study_time': 0, 'total_vm_commands': 0, 'study_streak': 0,
+                    'total_sessions': 0, 'recent_achievements': [], 'recent_performance': [],
+                    'activity_data': [], 'topic_breakdown': {}, 'topic_breakdown_list': [],
+                    'questions_per_topic': {}, 'activity_breakdown': {},
+                    'level': 1, 'xp': 0, 'display_name': 'User', 'certification_progress': 0
                 }
-                return render_template('analytics_dashboard.html', stats=empty_stats)
+                return render_template('analytics_dashboard.html', 
+                                     stats=empty_stats,
+                                     dashboard_data={},
+                                     user_id='anonymous')
         # Store reference to make it clear the route is being used
         self.analytics_page_handler = analytics_page
         
@@ -2718,62 +2690,30 @@ class LinuxPlusStudyWeb:
         
         @self.app.route('/api/dashboard')
         def api_dashboard():
-            """API endpoint for dashboard data - single source of truth"""
+            """API endpoint for comprehensive dashboard data - single source of truth"""
             try:
-                # Analytics disabled - # Analytics disabled
-                from services.db_time_tracking_wrapper import get_time_tracker
                 from flask import session
+                from services.dashboard_service import get_dashboard_service
                 
-                analytics = None  # Analytics disabled
-                time_tracker = get_time_tracker()
                 user_id = session.get('user_id', 'anonymous')
+                self.logger.info(f"API dashboard request for user: {user_id}")
                 
-                # Get stats from simple analytics (single source of truth)
-                stats = analytics and analytics and analytics.get_dashboard_stats(user_id)
+                # Get comprehensive dashboard data
+                dashboard_service = get_dashboard_service(user_id)
+                dashboard_data = dashboard_service.get_dashboard_summary()
                 
-                # Provide fallback when analytics is disabled
-                if not stats:
-                    stats = {
-                        'questions_answered': 0,
-                        'total_correct': 0,
-                        'accuracy': 0,
-                        'study_time': 0,
-                        'current_streak': 0,
-                        'best_streak': 0,
-                        'points_earned': 0,
-                        'level': 1,
-                        'progress': 0
-                    }
-                
-                # Add time tracking data
-                time_data = time_tracker.get_daily_summary()
-                stats.update({
-                    'quiz_time_today': time_data['quiz_time_today'],
-                    'quiz_time_formatted': time_data['quiz_time_formatted'],
-                    'study_time_total': time_data['study_time_total'],
-                    'study_time_formatted': time_data['study_time_formatted']
+                return jsonify({
+                    'success': True,
+                    'data': dashboard_data
                 })
                 
-                # Ensure we have all required fields for the frontend
-                stats['success'] = True
-                
-                return jsonify(stats)
             except Exception as e:
-                self.logger.error(f"Dashboard API error: {e}")
+                self.logger.error(f"API dashboard error: {e}", exc_info=True)
                 return jsonify({
                     'success': False,
                     'error': str(e),
-                    'questions_answered': 0,
-                    'total_correct': 0,
-                    'accuracy': 0,
-                    'study_time': 0,
-                    'quiz_time_today': 0,
-                    'quiz_time_formatted': '0s',
-                    'study_time_formatted': '0s',
-                    'streak': 0,
-                    'level': 1,
-                    'xp': 0
-                })
+                    'data': None
+                }), 500
 
         @self.app.route('/api/heatmap')
         def api_heatmap():
@@ -3264,7 +3204,7 @@ class LinuxPlusStudyWeb:
                 # Clear analytics database records
                 try:
                     from utils.database import get_database_manager
-                    from models.analytics import Analytics
+                    from models.db_models import Analytics
                     
                     db_manager = get_database_manager()
                     if db_manager and db_manager.session_factory:
@@ -3937,7 +3877,7 @@ class LinuxPlusStudyWeb:
                     'total_study_time_hours': dashboard_stats.get('study_time', 0) / 3600,
                     'days_studied': len(recent_days) if recent_days else 0,
                     'current_streak': dashboard_stats.get('streak', 0),
-                    'average_session_duration': 15,  # Estimate
+                    'average_session_duration': 0 if dashboard_stats.get('questions_answered', 0) == 0 else 0.5,  # Show 0 when no data, 30s estimate otherwise
                     'questions_per_session': dashboard_stats.get('questions_answered', 0) / max(dashboard_stats.get('total_sessions', 1), 1)
                 }
             }
@@ -3951,3 +3891,51 @@ class LinuxPlusStudyWeb:
                 'category_performance': {'strongest_categories': [], 'areas_to_improve': [], 'has_category_data': False},
                 'overall_stats': {'total_sessions': 0, 'total_questions': 0, 'overall_accuracy': 0}
             }
+    
+    def _format_activity_data(self, dashboard_data):
+        """Format activity data for analytics page."""
+        try:
+            from datetime import datetime, timedelta
+            today = datetime.now()
+            activity_data = []
+            
+            # Get recent sessions for activity calculation
+            recent_sessions = dashboard_data.get('recent_sessions', [])
+            
+            # Generate last 7 days activity
+            for i in range(7):
+                date = today - timedelta(days=i)
+                date_str = date.strftime('%Y-%m-%d')
+                
+                # Check if user was active on this date
+                active = False
+                questions_count = 0
+                
+                # Look for sessions on this date
+                for session in recent_sessions:
+                    if session.get('date') == date_str:
+                        active = True
+                        questions_count += session.get('questions_attempted', 0)
+                
+                activity_data.insert(0, {
+                    'date': date_str,
+                    'active': active,
+                    'questions': questions_count
+                })
+            
+            return activity_data
+        except Exception:
+            return []
+    
+    def _format_topic_breakdown(self, dashboard_data):
+        """Format topic breakdown data for analytics page."""
+        try:
+            topic_breakdown = {}
+            category_breakdown = dashboard_data.get('category_breakdown', [])
+            
+            for category in category_breakdown:
+                topic_breakdown[category['category']] = category['accuracy']
+            
+            return topic_breakdown
+        except Exception:
+            return {}

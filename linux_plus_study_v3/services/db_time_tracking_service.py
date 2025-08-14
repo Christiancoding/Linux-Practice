@@ -10,7 +10,7 @@ from dateutil import parser
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from utils.database import get_db_session
-from models.user_achievements import TimeTracking
+from models.db_models import TimeTracking
 
 
 class DBTimeTrackingService:
@@ -33,16 +33,19 @@ class DBTimeTrackingService:
                 time_tracking = session.query(TimeTracking).filter_by(user_id=self.user_id).first()
                 if not time_tracking:
                     # Create new record with defaults
+                    now = datetime.now()
                     time_tracking = TimeTracking(
                         user_id=self.user_id,
                         quiz_time_today=0.0,
-                        last_quiz_reset=datetime.now(),
+                        last_quiz_reset=now,
                         study_time_total=0.0,
                         daily_quiz_history={},
                         settings={
                             "reset_time": "00:59",
                             "timezone": "America/Chicago"
-                        }
+                        },
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(time_tracking)
                     session.commit()
@@ -67,16 +70,19 @@ class DBTimeTrackingService:
                 time_tracking = session.query(TimeTracking).filter_by(user_id=self.user_id).first()
                 if not time_tracking:
                     # Create new record with defaults
+                    now = datetime.now()
                     time_tracking = TimeTracking(
                         user_id=self.user_id,
                         quiz_time_today=0.0,
-                        last_quiz_reset=datetime.now(),
+                        last_quiz_reset=now,
                         study_time_total=0.0,
                         daily_quiz_history={},
                         settings={
                             "reset_time": "00:59",
                             "timezone": "America/Chicago"
-                        }
+                        },
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(time_tracking)
                     session.commit()
@@ -88,13 +94,16 @@ class DBTimeTrackingService:
         except SQLAlchemyError as e:
             print(f"Database error in _get_time_tracking: {e}")
             # Return a default object
+            now = datetime.now()
             return TimeTracking(
                 user_id=self.user_id,
                 quiz_time_today=0.0,
-                last_quiz_reset=datetime.now(),
+                last_quiz_reset=now,
                 study_time_total=0.0,
                 daily_quiz_history={},
-                settings={"reset_time": "00:59", "timezone": "America/Chicago"}
+                settings={"reset_time": "00:59", "timezone": "America/Chicago"},
+                created_at=now,
+                updated_at=now
             )
     
     def _save_time_tracking(self, time_tracking: TimeTracking) -> None:
@@ -124,13 +133,16 @@ class DBTimeTrackingService:
             with get_db_session() as session:
                 time_tracking = session.query(TimeTracking).filter_by(user_id=self.user_id).first()
                 if not time_tracking:
+                    now = datetime.now()
                     time_tracking = TimeTracking(
                         user_id=self.user_id,
                         quiz_time_today=0.0,
-                        last_quiz_reset=datetime.now(),
+                        last_quiz_reset=now,
                         study_time_total=0.0,
                         daily_quiz_history={},
-                        settings={"reset_time": "00:59", "timezone": "America/Chicago"}
+                        settings={"reset_time": "00:59", "timezone": "America/Chicago"},
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(time_tracking)
                     session.flush()  # Ensure object is persisted before using
@@ -368,13 +380,16 @@ class DBTimeTrackingService:
             with get_db_session() as session:
                 time_tracking = session.query(TimeTracking).filter_by(user_id=self.user_id).first()
                 if not time_tracking:
+                    now = datetime.now()
                     time_tracking = TimeTracking(
                         user_id=self.user_id,
                         quiz_time_today=0.0,
-                        last_quiz_reset=datetime.now(),
+                        last_quiz_reset=now,
                         study_time_total=0.0,
                         daily_quiz_history={},
-                        settings={"reset_time": "00:59", "timezone": "America/Chicago"}
+                        settings={"reset_time": "00:59", "timezone": "America/Chicago"},
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(time_tracking)
                     session.flush()
@@ -408,13 +423,16 @@ class DBTimeTrackingService:
             with get_db_session() as session:
                 time_tracking = session.query(TimeTracking).filter_by(user_id=self.user_id).first()
                 if not time_tracking:
+                    now = datetime.now()
                     time_tracking = TimeTracking(
                         user_id=self.user_id,
                         quiz_time_today=0.0,
-                        last_quiz_reset=datetime.now(),
+                        last_quiz_reset=now,
                         study_time_total=0.0,
                         daily_quiz_history={},
-                        settings={"reset_time": "00:59", "timezone": "America/Chicago"}
+                        settings={"reset_time": "00:59", "timezone": "America/Chicago"},
+                        created_at=now,
+                        updated_at=now
                     )
                     session.add(time_tracking)
                 else:

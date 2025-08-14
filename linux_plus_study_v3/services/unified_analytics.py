@@ -10,7 +10,7 @@ calculations.
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
-from models.analytics import Analytics
+from models.db_models import Analytics
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, func
 

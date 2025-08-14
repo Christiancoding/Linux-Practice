@@ -160,3 +160,638 @@ AttributeError: 'NoneType' object has no attribute 'get'
 2025-08-13 13:45:45,117 - __main__ - INFO: Web application components loaded successfully
 2025-08-13 13:45:45,136 - views.web_view - WARNING: VM management features not available - vm_integration module not found
 2025-08-13 13:45:45,139 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 14:52:01,973 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 14:52:01,974 - __main__ - INFO: Starting web application mode
+2025-08-13 14:52:01,974 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 14:52:01,974 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 14:52:01,984 - utils.database - INFO: Database connection test successful
+2025-08-13 14:52:01,998 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 14:52:02,018 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 14:52:02,022 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 15:11:08,909 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:11:08,909 - __main__ - INFO: Starting web application mode
+2025-08-13 15:11:08,910 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:11:08,911 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:11:08,917 - utils.database - INFO: Database connection test successful
+2025-08-13 15:11:08,928 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 15:11:08,946 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 15:11:08,949 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-13 15:13:00,523 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 15:13:00,523 - utils.database - INFO: All database connections closed
+2025-08-13 15:13:01,549 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:13:01,549 - __main__ - INFO: Starting web application mode
+2025-08-13 15:13:01,550 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:13:01,550 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:13:01,557 - utils.database - INFO: Database connection test successful
+2025-08-13 15:13:01,565 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: user_achievements
+[SQL: SELECT user_achievements.id AS user_achievements_id, user_achievements.user_id AS user_achievements_user_id, user_achievements.badges AS user_achievements_badges, user_achievements.points_earned AS user_achievements_points_earned, user_achievements.days_studied AS user_achievements_days_studied, user_achievements.questions_answered AS user_achievements_questions_answered, user_achievements.streaks_achieved AS user_achievements_streaks_achieved, user_achievements.perfect_sessions AS user_achievements_perfect_sessions, user_achievements.daily_warrior_dates AS user_achievements_daily_warrior_dates, user_achievements.leaderboard AS user_achievements_leaderboard, user_achievements.survival_high_score AS user_achievements_survival_high_score, user_achievements.survival_high_score_xp AS user_achievements_survival_high_score_xp, user_achievements.custom_achievements AS user_achievements_custom_achievements, user_achievements.created_at AS user_achievements_created_at, user_achievements.updated_at AS user_achievements_updated_at 
+FROM user_achievements 
+WHERE user_achievements.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:13:01,566 - __main__ - ERROR: Web application error: (sqlite3.OperationalError) no such table: user_achievements
+[SQL: SELECT user_achievements.id AS user_achievements_id, user_achievements.user_id AS user_achievements_user_id, user_achievements.badges AS user_achievements_badges, user_achievements.points_earned AS user_achievements_points_earned, user_achievements.days_studied AS user_achievements_days_studied, user_achievements.questions_answered AS user_achievements_questions_answered, user_achievements.streaks_achieved AS user_achievements_streaks_achieved, user_achievements.perfect_sessions AS user_achievements_perfect_sessions, user_achievements.daily_warrior_dates AS user_achievements_daily_warrior_dates, user_achievements.leaderboard AS user_achievements_leaderboard, user_achievements.survival_high_score AS user_achievements_survival_high_score, user_achievements.survival_high_score_xp AS user_achievements_survival_high_score_xp, user_achievements.custom_achievements AS user_achievements_custom_achievements, user_achievements.created_at AS user_achievements_created_at, user_achievements.updated_at AS user_achievements_updated_at 
+FROM user_achievements 
+WHERE user_achievements.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such table: user_achievements
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/main.py", line 143, in run_web_application
+    game_state = GameState()
+                 ^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 93, in __init__
+    self._sync_leaderboard_from_history()
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 638, in _sync_leaderboard_from_history
+    self.achievement_system.leaderboard = history_leaderboard
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/db_achievement_system.py", line 82, in leaderboard
+    self._save_user_achievement_data(leaderboard=value)
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/db_achievement_system.py", line 55, in _save_user_achievement_data
+    user_achievement = session.query(UserAchievement).filter_by(user_id=self.user_id).first()
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2759, in first
+    return self.limit(1)._iter().first()  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/orm/query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+                                                  ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2365, in execute
+    return self._execute_internal(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/orm/context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+             ^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1415, in execute
+    return meth(
+           ^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 523, in _execute_on_connection
+    return connection._execute_clauseelement(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1637, in _execute_clauseelement
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1842, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1982, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 2351, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1963, in _exec_single_context
+    self.dialect.do_execute(
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 943, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table: user_achievements
+[SQL: SELECT user_achievements.id AS user_achievements_id, user_achievements.user_id AS user_achievements_user_id, user_achievements.badges AS user_achievements_badges, user_achievements.points_earned AS user_achievements_points_earned, user_achievements.days_studied AS user_achievements_days_studied, user_achievements.questions_answered AS user_achievements_questions_answered, user_achievements.streaks_achieved AS user_achievements_streaks_achieved, user_achievements.perfect_sessions AS user_achievements_perfect_sessions, user_achievements.daily_warrior_dates AS user_achievements_daily_warrior_dates, user_achievements.leaderboard AS user_achievements_leaderboard, user_achievements.survival_high_score AS user_achievements_survival_high_score, user_achievements.survival_high_score_xp AS user_achievements_survival_high_score_xp, user_achievements.custom_achievements AS user_achievements_custom_achievements, user_achievements.created_at AS user_achievements_created_at, user_achievements.updated_at AS user_achievements_updated_at 
+FROM user_achievements 
+WHERE user_achievements.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:13:01,570 - utils.database - INFO: All database connections closed
+2025-08-13 15:16:35,260 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:16:35,260 - __main__ - INFO: Starting web application mode
+2025-08-13 15:16:35,260 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:16:35,274 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:16:35,277 - utils.db_connections - ERROR: Database session error for achievements: 'UserAchievement' object has no attribute 'to_dict'
+2025-08-13 15:16:35,278 - __main__ - ERROR: Web application error: 'UserAchievement' object has no attribute 'to_dict'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/main.py", line 143, in run_web_application
+    game_state = GameState()
+                 ^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 93, in __init__
+    self._sync_leaderboard_from_history()
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 641, in _sync_leaderboard_from_history
+    if "leaderboard" not in self.achievement_system.achievements:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/db_achievement_system.py", line 71, in achievements
+    return user_achievement.to_dict()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'UserAchievement' object has no attribute 'to_dict'
+2025-08-13 15:17:09,156 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:17:09,156 - __main__ - INFO: Starting web application mode
+2025-08-13 15:17:09,157 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:17:09,186 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:17:09,197 - utils.db_connections - ERROR: Database session error for achievements: 'UserAchievement' object has no attribute 'to_dict'
+2025-08-13 15:17:09,197 - __main__ - ERROR: Web application error: 'UserAchievement' object has no attribute 'to_dict'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/main.py", line 143, in run_web_application
+    game_state = GameState()
+                 ^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 93, in __init__
+    self._sync_leaderboard_from_history()
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/game_state.py", line 641, in _sync_leaderboard_from_history
+    if "leaderboard" not in self.achievement_system.achievements:
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/models/db_achievement_system.py", line 71, in achievements
+    return user_achievement.to_dict()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'UserAchievement' object has no attribute 'to_dict'
+2025-08-13 15:17:21,537 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:17:21,538 - __main__ - INFO: Starting web application mode
+2025-08-13 15:17:21,538 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:17:21,559 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:17:21,568 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 15:17:21,570 - utils.persistence_manager - INFO: Created file with defaults: /home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/web_settings.json
+2025-08-13 15:17:21,580 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:17:21,582 - utils.database - INFO: Database connection test successful
+2025-08-13 15:17:21,599 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 15:17:21,605 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 15:17:25,665 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:25,666 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:25,667 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:25,668 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:37,110 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:37,111 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:37,112 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:37,113 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:17:59,153 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:17:59,154 - __main__ - INFO: Starting web application mode
+2025-08-13 15:17:59,154 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:17:59,190 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:17:59,198 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 15:17:59,208 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:17:59,210 - utils.database - INFO: Database connection test successful
+2025-08-13 15:17:59,223 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 15:17:59,226 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5003
+2025-08-13 15:18:48,201 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 15:18:48,202 - utils.database - INFO: All database connections closed
+2025-08-13 15:18:49,291 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:18:49,291 - __main__ - INFO: Starting web application mode
+2025-08-13 15:18:49,292 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:18:49,316 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:18:49,327 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 15:18:49,339 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:18:49,342 - utils.database - INFO: Database connection test successful
+2025-08-13 15:18:49,357 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 15:18:49,361 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 15:18:52,817 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:18:52,817 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:18:52,818 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:18:52,818 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:19:10,001 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:19:10,002 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:19:10,003 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:19:10,004 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:13,667 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 15:20:13,668 - utils.database - INFO: All database connections closed
+2025-08-13 15:20:14,614 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 15:20:14,614 - __main__ - INFO: Starting web application mode
+2025-08-13 15:20:14,615 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 15:20:14,638 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 15:20:14,649 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 15:20:14,658 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 15:20:14,659 - utils.database - INFO: Database connection test successful
+2025-08-13 15:20:14,673 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 15:20:14,677 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 15:20:39,370 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:39,371 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:39,372 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:39,373 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:52,406 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:52,407 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:52,408 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:20:52,408 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:24:24,708 - views.web_view - ERROR: Get system settings error: attribute name must be string, not 'NoneType'
+2025-08-13 15:24:29,695 - views.web_view - INFO: Starting clear statistics operation
+2025-08-13 15:24:30,010 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-13 15:24:30,011 - views.web_view - INFO: Reset game state data
+2025-08-13 15:24:30,012 - views.web_view - INFO: Reset quiz controller session
+2025-08-13 15:24:30,012 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:24:30,013 - views.web_view - INFO: Reset time tracking data
+2025-08-13 15:24:30,015 - views.web_view - INFO: Reset achievements file
+2025-08-13 15:24:30,022 - views.web_view - INFO: Reset history file
+2025-08-13 15:24:30,022 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-13 15:24:35,802 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:24:35,803 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:24:35,804 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:24:35,804 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:11,721 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:11,721 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:11,722 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:11,723 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:30,003 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:30,004 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:30,005 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 15:25:30,006 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:36:26,667 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:36:26,667 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:36:26,668 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:36:26,669 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:43:59,505 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 23:43:59,506 - utils.database - INFO: All database connections closed
+2025-08-13 23:44:02,071 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 23:44:02,071 - __main__ - INFO: Starting web application mode
+2025-08-13 23:44:02,072 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 23:44:02,091 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 23:44:02,100 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 23:44:02,112 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 23:44:02,113 - utils.database - INFO: Database connection test successful
+2025-08-13 23:44:02,126 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 23:44:02,131 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 23:44:10,999 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:11,000 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:11,001 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:11,001 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:21,869 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:21,869 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:21,870 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:21,870 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:44:36,495 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 23:44:36,496 - __main__ - INFO: Starting web application mode
+2025-08-13 23:44:36,496 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 23:44:36,510 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 23:44:36,516 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 23:44:36,524 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 23:44:36,536 - utils.database - INFO: Database connection test successful
+2025-08-13 23:44:36,547 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 23:44:36,551 - __main__ - INFO: Web interface loaded successfully - Starting server on localhost:8081
+2025-08-13 23:46:15,261 - views.web_view - INFO: Starting clear statistics operation
+2025-08-13 23:46:15,294 - views.web_view - INFO: Cleared 0 analytics records
+2025-08-13 23:46:15,295 - views.web_view - INFO: Reset game state data
+2025-08-13 23:46:15,300 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:46:15,300 - views.web_view - INFO: Reset quiz controller session
+2025-08-13 23:46:15,301 - utils.database - ERROR: Database session error: (sqlite3.OperationalError) no such table: time_tracking
+[SQL: SELECT time_tracking.id AS time_tracking_id, time_tracking.user_id AS time_tracking_user_id, time_tracking.quiz_time_today AS time_tracking_quiz_time_today, time_tracking.last_quiz_reset AS time_tracking_last_quiz_reset, time_tracking.study_time_total AS time_tracking_study_time_total, time_tracking.daily_quiz_history AS time_tracking_daily_quiz_history, time_tracking.settings AS time_tracking_settings, time_tracking.created_at AS time_tracking_created_at, time_tracking.updated_at AS time_tracking_updated_at 
+FROM time_tracking 
+WHERE time_tracking.user_id = ?
+ LIMIT ? OFFSET ?]
+[parameters: ('anonymous', 1, 0)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-13 23:46:15,301 - views.web_view - INFO: Reset time tracking data
+2025-08-13 23:46:15,301 - views.web_view - INFO: Reset achievements file
+2025-08-13 23:46:15,302 - views.web_view - INFO: Reset history file
+2025-08-13 23:46:15,302 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-13 23:49:11,214 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-13 23:49:11,215 - utils.database - INFO: All database connections closed
+2025-08-13 23:56:01,533 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 23:56:01,533 - __main__ - INFO: Starting web application mode
+2025-08-13 23:56:01,534 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 23:56:01,546 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 23:56:01,552 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 23:56:01,559 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 23:56:01,560 - utils.database - INFO: Database connection test successful
+2025-08-13 23:56:01,570 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 23:56:01,574 - __main__ - INFO: Web interface loaded successfully - Starting server on localhost:8082
+2025-08-13 23:56:53,597 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-13 23:56:53,597 - __main__ - INFO: Starting web application mode
+2025-08-13 23:56:53,597 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-13 23:56:53,615 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-13 23:56:53,625 - __main__ - INFO: Web application components loaded successfully
+2025-08-13 23:56:53,634 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-13 23:56:53,637 - utils.database - INFO: Database connection test successful
+2025-08-13 23:56:53,652 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-13 23:56:53,656 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-13 23:57:53,462 - utils.database - ERROR: Database session error: (sqlite3.IntegrityError) NOT NULL constraint failed: time_tracking.created_at
+[SQL: INSERT INTO time_tracking (user_id, quiz_time_today, last_quiz_reset, study_time_total, daily_quiz_history, settings, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('anonymous', 0.0, '2025-08-13 23:57:53.461310', 0.0, '{}', '{"reset_time": "00:59", "timezone": "America/Chicago"}', None, None)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-14 00:00:49,728 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:00:49,728 - utils.database - INFO: All database connections closed
+2025-08-14 00:03:29,837 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:03:29,837 - __main__ - INFO: Starting web application mode
+2025-08-14 00:03:29,837 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:03:29,852 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:03:29,862 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:03:29,871 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:03:29,872 - utils.database - INFO: Database connection test successful
+2025-08-14 00:03:29,884 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:03:29,888 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:03:52,869 - utils.database - ERROR: Database session error: (sqlite3.IntegrityError) NOT NULL constraint failed: time_tracking.created_at
+[SQL: INSERT INTO time_tracking (user_id, quiz_time_today, last_quiz_reset, study_time_total, daily_quiz_history, settings, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('anonymous', 0.0, '2025-08-14 00:03:52.867459', 0.0, '{}', '{"reset_time": "00:59", "timezone": "America/Chicago"}', None, None)]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-08-14 00:09:10,648 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:09:10,648 - __main__ - INFO: Starting web application mode
+2025-08-14 00:09:10,649 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:09:10,666 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:09:10,672 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:09:10,681 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:09:10,682 - utils.database - INFO: Database connection test successful
+2025-08-14 00:09:10,694 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:09:10,698 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-14 00:10:45,288 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:10:45,289 - utils.database - INFO: All database connections closed
+2025-08-14 00:10:47,070 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:10:47,070 - __main__ - INFO: Starting web application mode
+2025-08-14 00:10:47,070 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:10:47,087 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:10:47,096 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:10:47,108 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:10:47,109 - utils.database - INFO: Database connection test successful
+2025-08-14 00:10:47,125 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:10:47,129 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

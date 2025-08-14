@@ -11,7 +11,7 @@ from typing import Dict, List, Union, Any, Optional, Tuple
 from sqlalchemy import func, desc, asc
 from sqlalchemy.orm import Session
 from utils.database import get_db_session
-from models.analytics import Analytics
+from models.db_models import Analytics
 import logging
 
 logger = logging.getLogger(__name__)
@@ -319,7 +319,7 @@ class DatabaseStatsController:
                 'total_study_time_hours': total_duration_hours,
                 'days_studied': result.days_studied or 0,
                 'current_streak': study_streak,
-                'average_session_duration': round((result.total_duration or 0) / (result.total_sessions or 1) / 60, 1),
+                'average_session_duration': round((result.total_duration or 0) / max(total_questions, 1) / 60, 1),  # Time per question in minutes
                 'questions_per_session': round(total_questions / (result.total_sessions or 1), 1)
             }
             

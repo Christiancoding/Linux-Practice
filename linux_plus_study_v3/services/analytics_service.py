@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_, text
-from models.analytics import Analytics
+from models.db_models import Analytics
 
 logger = logging.getLogger(__name__)
 

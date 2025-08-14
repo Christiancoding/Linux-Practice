@@ -432,7 +432,7 @@ class StatsController:
             # Clear analytics data from database
             try:
                 from utils.database import get_database_manager
-                from models.analytics import Analytics
+                from models.db_models import Analytics
                 import os
                 
                 db_manager = get_database_manager()

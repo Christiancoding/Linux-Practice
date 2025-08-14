@@ -10,8 +10,8 @@ from typing import Dict, Any, List, Optional, Tuple, Set, TypedDict, cast
 from datetime import datetime, date
 from contextlib import contextmanager
 from utils.game_values import get_game_value_manager
-from utils.database import get_db_session
-from models.user_achievements import UserAchievement, UserHistory, TimeTracking
+from utils.db_connections import get_db_session
+from models.db_models import UserAchievement, UserHistory, TimeTracking
 
 
 class LeaderboardEntry(TypedDict):
@@ -39,7 +39,7 @@ class DBAchievementSystem:
     @contextmanager
     def _get_user_achievement(self):
         """Context manager to get user achievement with proper session handling."""
-        with get_db_session() as session:
+        with get_db_session("achievements") as session:
             user_achievement = session.query(UserAchievement).filter_by(user_id=self.user_id).first()
             if not user_achievement:
                 # Create new record with defaults
@@ -51,7 +51,7 @@ class DBAchievementSystem:
     
     def _save_user_achievement_data(self, **updates) -> None:
         """Save user achievement data with updates."""
-        with get_db_session() as session:
+        with get_db_session("achievements") as session:
             user_achievement = session.query(UserAchievement).filter_by(user_id=self.user_id).first()
             if not user_achievement:
                 user_achievement = UserAchievement(user_id=self.user_id)

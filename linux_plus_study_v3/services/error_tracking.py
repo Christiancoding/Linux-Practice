@@ -16,7 +16,7 @@ from flask import g, request, session
 import re
 import os
 
-from models.analytics import Analytics
+from models.db_models import Analytics
 # Analytics integration disabled
 # from services.analytics_integration import track_activity
 from utils.database import get_db_session

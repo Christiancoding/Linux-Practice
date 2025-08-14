@@ -11,7 +11,7 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from utils.database import get_db_session
-from models.user_achievements import UserAchievement, UserHistory, TimeTracking, AppSettings, Base
+from models.db_models import UserAchievement, UserHistory, TimeTracking, AppSetting, Base
 from utils.config import (
     ACHIEVEMENTS_FILE, HISTORY_FILE, WEB_SETTINGS_FILE,
     DATA_DIR, PROJECT_ROOT

@@ -51,6 +51,11 @@ python3 -m black .
 python3 -m flake8 .
 ```
 
+### To run `data/convert-db-to-csv.sh`:
+```bash
+./data/convert-db-to-csv.sh /path/to/Filename.db
+```
+
 ### Database Operations
 ```bash
 # Initialize database
@@ -131,6 +136,12 @@ The application uses a hybrid storage approach:
 - Integration tests for web endpoints
 - Fully remove tests when complete
 - Analytics verification scripts (`verify_*.py`)
+- Database migration tests
+- Performance tests
+- Load testing scripts
+- Accessibility testing scripts
+- Usability testing scripts
+- Duplication detection scripts
 - Manual testing scripts for debugging
 
 ### Error Handling
@@ -140,6 +151,11 @@ The application includes comprehensive error handling:
 - Error tracking middleware in `services/error_tracking_middleware.py`
 - Analytics error integration
 - Graceful degradation for missing dependencies (VM features, etc.)
+- User-friendly error pages in web mode
+- Custom error messages for different error types
+- Detailed error logs for debugging
+- Validation error handling
+- Python exception handling
 
 ## Key Dependencies
 
@@ -174,11 +190,10 @@ The application includes comprehensive error handling:
 - Challenge interface (CLI/VM)
 - Validator (check/grade)
 
-
-
 ## No! No! List
 
 - Do not create any duplacates in the code
 - Do not keep any test files when not in use
 - Do not keep any csv files when not in use
 - No not use python. Use python3.
+- Do not create any hardcoded numbers in html code

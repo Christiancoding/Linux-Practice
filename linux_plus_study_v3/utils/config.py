@@ -333,6 +333,22 @@ DATABASE_SETTINGS: Dict[str, Any] = {
         "url": "sqlite:///data/linux_plus_study.db",
         "pool_enabled": False,  # SQLite doesn't benefit from pooling
     },
+    "sqlite_achievements": {
+        "url": "sqlite:///data/linux_plus_study_achievements.db",
+        "pool_enabled": False,
+    },
+    "sqlite_history": {
+        "url": "sqlite:///data/linux_plus_study_history.db", 
+        "pool_enabled": False,
+    },
+    "sqlite_questions": {
+        "url": "sqlite:///data/linux_plus_study_questions.db",
+        "pool_enabled": False,
+    },
+    "sqlite_settings": {
+        "url": "sqlite:///data/linux_plus_study_settings.db",
+        "pool_enabled": False,
+    },
     "postgresql": {
         "url": "postgresql://username:password@localhost:5432/linux_plus_study",
         "pool_enabled": True,

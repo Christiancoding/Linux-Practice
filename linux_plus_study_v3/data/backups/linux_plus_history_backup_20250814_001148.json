@@ -1,0 +1,71 @@
+{
+  "sessions": [],
+  "questions": {
+    "What is the purpose of the `grub2-mkconfig` command?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-13T23:57:49.294017",
+          "correct": false
+        }
+      ]
+    },
+    "What does ACL stand for in Linux security?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-14T00:03:44.086055",
+          "correct": false
+        }
+      ]
+    },
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-14T00:03:48.494644",
+          "correct": true
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 1,
+      "attempts": 2
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    }
+  },
+  "total_correct": 1,
+  "total_attempts": 3,
+  "incorrect_review": [
+    "What is the purpose of the `grub2-mkconfig` command?",
+    "What does ACL stand for in Linux security?"
+  ],
+  "leaderboard": [],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}
