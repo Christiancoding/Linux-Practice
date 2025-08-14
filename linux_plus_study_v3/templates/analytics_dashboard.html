@@ -696,6 +696,363 @@
     gap: 1rem;
 }
 
+/* Device Analytics Styles */
+.device-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.device-metric {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.device-metric .metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.device-metric .metric-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Behavior Analytics Styles */
+.behavior-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.behavior-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: var(--transition-base);
+}
+
+.behavior-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.behavior-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.behavior-content h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.behavior-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 0.25rem;
+}
+
+.behavior-content p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Performance Analytics Styles */
+.performance-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.performance-metric {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.performance-metric .metric-icon {
+    font-size: 2rem;
+    opacity: 0.8;
+}
+
+.metric-info .metric-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.metric-info .metric-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Learning Analytics Styles */
+.learning-analytics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1.5rem;
+}
+
+.learning-section h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.mastery-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mastery-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.concept-name {
+    min-width: 140px;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.mastery-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.mastery-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.mastery-score {
+    font-weight: 600;
+    color: var(--text-primary);
+    min-width: 40px;
+    text-align: right;
+}
+
+.methods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.method-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+
+.method-item.effective {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.method-item.moderate {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.method-item.needs-improvement {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.method-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.effectiveness {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.effective .effectiveness {
+    color: #10b981;
+}
+
+.moderate .effectiveness {
+    color: #f59e0b;
+}
+
+.needs-improvement .effectiveness {
+    color: #ef4444;
+}
+
+/* Feature Usage Styles */
+.feature-usage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.feature-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+    transition: var(--transition-base);
+}
+
+.feature-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(124, 58, 237, 0.3);
+}
+
+.feature-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.feature-content h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.feature-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 0.25rem;
+}
+
+.feature-trend {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Advanced Analytics Styles */
+.advanced-analytics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    padding: 1.5rem;
+}
+
+.analytics-section h4 {
+    margin: 0 0 1rem 0;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Analytics Table Styles */
+.analytics-table-container {
+    padding: 1.5rem;
+    overflow-x: auto;
+}
+
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+.analytics-table th,
+.analytics-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-table th {
+    background: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.analytics-table tr:last-child td {
+    border-bottom: none;
+}
+
+.analytics-table tr:hover {
+    background: var(--bg-secondary);
+}
+
+.trend-indicator {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.trend-indicator.positive {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+.trend-indicator.negative {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+}
+
+.trend-indicator.neutral {
+    background: rgba(156, 163, 175, 0.2);
+    color: #9ca3af;
+}
+
+@media (max-width: 768px) {
+    .learning-analytics,
+    .advanced-analytics {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .device-analytics-grid,
+    .behavior-metrics,
+    .performance-grid,
+    .feature-usage-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .behavior-card,
+    .feature-card {
+        padding: 1rem;
+    }
+}
+
 .trend-item {
     display: flex;
     flex-direction: column;
@@ -887,6 +1244,269 @@
     </div>
 
     <!-- Comprehensive Analytics Sections -->
+    
+    <!-- Device & Browser Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-desktop"></i> Device & Browser Analytics</h3>
+        </div>
+        <div class="device-analytics-grid">
+            <div class="device-metric">
+                <div class="metric-label">Device Type</div>
+                <div class="metric-value" id="device-type">Desktop</div>
+            </div>
+            <div class="device-metric">
+                <div class="metric-label">Browser</div>
+                <div class="metric-value" id="browser-info">Chrome</div>
+            </div>
+            <div class="device-metric">
+                <div class="metric-label">Screen Resolution</div>
+                <div class="metric-value" id="screen-resolution">1920x1080</div>
+            </div>
+            <div class="device-metric">
+                <div class="metric-label">Platform</div>
+                <div class="metric-value" id="platform-info">Windows</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Behavior Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-mouse-pointer"></i> User Interaction Analytics</h3>
+        </div>
+        <div class="behavior-metrics">
+            <div class="behavior-card">
+                <div class="behavior-icon">🖱️</div>
+                <div class="behavior-content">
+                    <h4>Click Interactions</h4>
+                    <div class="behavior-value" id="click-count">0</div>
+                    <p>Total clicks recorded</p>
+                </div>
+            </div>
+            <div class="behavior-card">
+                <div class="behavior-icon">📜</div>
+                <div class="behavior-content">
+                    <h4>Scroll Depth</h4>
+                    <div class="behavior-value" id="scroll-depth">0%</div>
+                    <p>Average page scroll</p>
+                </div>
+            </div>
+            <div class="behavior-card">
+                <div class="behavior-icon">⌚</div>
+                <div class="behavior-content">
+                    <h4>Active Time</h4>
+                    <div class="behavior-value" id="active-time">0m</div>
+                    <p>Time actively engaged</p>
+                </div>
+            </div>
+            <div class="behavior-card">
+                <div class="behavior-icon">🔄</div>
+                <div class="behavior-content">
+                    <h4>Return Sessions</h4>
+                    <div class="behavior-value" id="return-sessions">0</div>
+                    <p>Times returned to study</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance & Error Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-tachometer-alt"></i> Performance & Error Analytics</h3>
+        </div>
+        <div class="performance-grid">
+            <div class="performance-metric">
+                <div class="metric-icon">⚡</div>
+                <div class="metric-info">
+                    <div class="metric-label">Page Load Time</div>
+                    <div class="metric-value" id="page-load-time">0ms</div>
+                </div>
+            </div>
+            <div class="performance-metric">
+                <div class="metric-icon">🖼️</div>
+                <div class="metric-info">
+                    <div class="metric-label">First Paint</div>
+                    <div class="metric-value" id="first-paint">0ms</div>
+                </div>
+            </div>
+            <div class="performance-metric">
+                <div class="metric-icon">⚠️</div>
+                <div class="metric-info">
+                    <div class="metric-label">JavaScript Errors</div>
+                    <div class="metric-value" id="js-errors">0</div>
+                </div>
+            </div>
+            <div class="performance-metric">
+                <div class="metric-icon">🔍</div>
+                <div class="metric-info">
+                    <div class="metric-label">Focus Score</div>
+                    <div class="metric-value" id="focus-score">100%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Learning Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-brain"></i> Learning & Retention Analytics</h3>
+        </div>
+        <div class="learning-analytics">
+            <div class="learning-section">
+                <h4>Concept Mastery</h4>
+                <div class="mastery-list" id="concept-mastery">
+                    <div class="mastery-item">
+                        <span class="concept-name">File Management</span>
+                        <div class="mastery-bar">
+                            <div class="mastery-fill" style="width: 85%"></div>
+                        </div>
+                        <span class="mastery-score">85%</span>
+                    </div>
+                    <div class="mastery-item">
+                        <span class="concept-name">System Administration</span>
+                        <div class="mastery-bar">
+                            <div class="mastery-fill" style="width: 72%"></div>
+                        </div>
+                        <span class="mastery-score">72%</span>
+                    </div>
+                    <div class="mastery-item">
+                        <span class="concept-name">Security</span>
+                        <div class="mastery-bar">
+                            <div class="mastery-fill" style="width: 68%"></div>
+                        </div>
+                        <span class="mastery-score">68%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="learning-section">
+                <h4>Study Methods Effectiveness</h4>
+                <div class="methods-list">
+                    <div class="method-item effective">
+                        <span class="method-name">Quiz Practice</span>
+                        <span class="effectiveness">High</span>
+                    </div>
+                    <div class="method-item moderate">
+                        <span class="method-name">VM Labs</span>
+                        <span class="effectiveness">Medium</span>
+                    </div>
+                    <div class="method-item needs-improvement">
+                        <span class="method-name">Theory Review</span>
+                        <span class="effectiveness">Low</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Usage Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-tools"></i> Feature Usage Analytics</h3>
+        </div>
+        <div class="feature-usage-grid">
+            <div class="feature-card">
+                <div class="feature-icon">❓</div>
+                <div class="feature-content">
+                    <h4>Help Requests</h4>
+                    <div class="feature-value" id="help-requests">0</div>
+                    <div class="feature-trend">No help needed yet</div>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💡</div>
+                <div class="feature-content">
+                    <h4>Hints Used</h4>
+                    <div class="feature-value" id="hint-usage">0</div>
+                    <div class="feature-trend">Learning independently</div>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <div class="feature-content">
+                    <h4>Review Sessions</h4>
+                    <div class="feature-value" id="review-sessions">0</div>
+                    <div class="feature-trend">Fresh start</div>
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <div class="feature-content">
+                    <h4>Learning Goals Met</h4>
+                    <div class="feature-value" id="goals-met">0</div>
+                    <div class="feature-trend">Setting targets</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Analytics -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-chart-area"></i> Advanced Learning Analytics</h3>
+        </div>
+        <div class="advanced-analytics">
+            <div class="analytics-section">
+                <h4>Learning Pattern Analysis</h4>
+                <canvas id="learningPatternChart" width="400" height="200"></canvas>
+            </div>
+            <div class="analytics-section">
+                <h4>Time-based Performance</h4>
+                <canvas id="timePerformanceChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Metrics Tables -->
+    <div class="chart-container slide-up">
+        <div class="chart-header">
+            <h3><i class="fas fa-table"></i> Detailed Analytics Table</h3>
+        </div>
+        <div class="analytics-table-container">
+            <table class="analytics-table" id="detailed-analytics-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current Value</th>
+                        <th>Previous Period</th>
+                        <th>Change</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Questions Per Session</td>
+                        <td id="questions-per-session">-</td>
+                        <td id="prev-questions-per-session">-</td>
+                        <td id="questions-change">-</td>
+                        <td><span class="trend-indicator neutral">→</span></td>
+                    </tr>
+                    <tr>
+                        <td>Average Response Time</td>
+                        <td id="avg-response-time">-</td>
+                        <td id="prev-avg-response-time">-</td>
+                        <td id="response-time-change">-</td>
+                        <td><span class="trend-indicator neutral">→</span></td>
+                    </tr>
+                    <tr>
+                        <td>Certification Progress</td>
+                        <td id="cert-progress">{{ "%.1f"|format(stats.certification_progress or 0) }}%</td>
+                        <td id="prev-cert-progress">-</td>
+                        <td id="cert-progress-change">-</td>
+                        <td><span class="trend-indicator positive">↑</span></td>
+                    </tr>
+                    <tr>
+                        <td>Knowledge Retention</td>
+                        <td id="knowledge-retention">-</td>
+                        <td id="prev-knowledge-retention">-</td>
+                        <td id="retention-change">-</td>
+                        <td><span class="trend-indicator neutral">→</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
     
     <!-- Learning Performance Analytics -->
     <div class="row">
@@ -1710,6 +2330,305 @@ function initializeAnalyticsDashboard() {
             showErrorState();
         });
 }
+
+// Load comprehensive analytics data
+function loadComprehensiveAnalytics() {
+    // Load device information from analytics tracker
+    if (window.analyticsTracker) {
+        const deviceInfo = window.analyticsTracker.deviceInfo;
+        updateDeviceAnalytics(deviceInfo);
+    }
+    
+    // Load behavioral analytics
+    loadBehaviorAnalytics();
+    
+    // Load performance metrics
+    loadPerformanceMetrics();
+    
+    // Load feature usage analytics
+    loadFeatureUsageAnalytics();
+    
+    // Initialize advanced charts
+    initializeAdvancedCharts();
+}
+
+function updateDeviceAnalytics(deviceInfo) {
+    if (!deviceInfo) return;
+    
+    document.getElementById('device-type').textContent = 
+        deviceInfo.touchSupport ? 'Mobile/Tablet' : 'Desktop';
+    
+    const browserName = getBrowserName(deviceInfo.userAgent);
+    document.getElementById('browser-info').textContent = browserName;
+    
+    document.getElementById('screen-resolution').textContent = deviceInfo.screenResolution || 'Unknown';
+    
+    const platformName = getPlatformName(deviceInfo.platform);
+    document.getElementById('platform-info').textContent = platformName;
+}
+
+function getBrowserName(userAgent) {
+    if (!userAgent) return 'Unknown';
+    
+    if (userAgent.includes('Chrome')) return 'Chrome';
+    if (userAgent.includes('Firefox')) return 'Firefox';
+    if (userAgent.includes('Safari')) return 'Safari';
+    if (userAgent.includes('Edge')) return 'Edge';
+    return 'Other';
+}
+
+function getPlatformName(platform) {
+    if (!platform) return 'Unknown';
+    
+    if (platform.includes('Win')) return 'Windows';
+    if (platform.includes('Mac')) return 'macOS';
+    if (platform.includes('Linux')) return 'Linux';
+    if (platform.includes('iPhone') || platform.includes('iPad')) return 'iOS';
+    if (platform.includes('Android')) return 'Android';
+    return platform;
+}
+
+function loadBehaviorAnalytics() {
+    // Get stored interaction data
+    const interactions = JSON.parse(sessionStorage.getItem('user_interactions') || '[]');
+    const clickCount = interactions.filter(i => i.type === 'click').length;
+    
+    document.getElementById('click-count').textContent = clickCount;
+    
+    // Get scroll depth from analytics tracker
+    const scrollDepth = localStorage.getItem('max_scroll_depth') || '0';
+    document.getElementById('scroll-depth').textContent = scrollDepth + '%';
+    
+    // Get active time
+    const activeTime = Math.round(
+        (window.analyticsTracker?.performanceMetrics?.activeTime || 0) / 60000
+    );
+    document.getElementById('active-time').textContent = activeTime + 'm';
+    
+    // Get return sessions
+    const returnSessions = localStorage.getItem('session_count') || '0';
+    document.getElementById('return-sessions').textContent = returnSessions;
+}
+
+function loadPerformanceMetrics() {
+    // Get performance metrics from analytics tracker
+    const metrics = window.analyticsTracker?.performanceMetrics || {};
+    
+    const pageLoadTime = Math.round(metrics.pageLoadTime || 0);
+    document.getElementById('page-load-time').textContent = pageLoadTime + 'ms';
+    
+    const firstPaint = Math.round(metrics['first-paint'] || 0);
+    document.getElementById('first-paint').textContent = firstPaint + 'ms';
+    
+    const jsErrors = window.analyticsTracker?.errors?.length || 0;
+    document.getElementById('js-errors').textContent = jsErrors;
+    
+    const focusScore = Math.round(metrics.focus_score || 100);
+    document.getElementById('focus-score').textContent = focusScore + '%';
+}
+
+function loadFeatureUsageAnalytics() {
+    // These would be loaded from the analytics database
+    fetch('/api/analytics/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const userSummary = data.user_summary || {};
+                
+                document.getElementById('help-requests').textContent = 
+                    userSummary.help_requests || 0;
+                document.getElementById('hint-usage').textContent = 
+                    userSummary.hint_usage || 0;
+                document.getElementById('review-sessions').textContent = 
+                    userSummary.review_sessions || 0;
+                document.getElementById('goals-met').textContent = 
+                    userSummary.learning_goals_met || 0;
+                
+                updateDetailedAnalyticsTable(userSummary);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading feature usage analytics:', error);
+        });
+}
+
+function updateDetailedAnalyticsTable(userSummary) {
+    const questionsPerSession = userSummary.total_sessions > 0 ? 
+        Math.round(userSummary.total_questions / userSummary.total_sessions) : 0;
+    
+    document.getElementById('questions-per-session').textContent = questionsPerSession;
+    
+    const avgResponseTime = userSummary.time_per_question || 0;
+    document.getElementById('avg-response-time').textContent = avgResponseTime.toFixed(1) + 's';
+    
+    const certProgress = userSummary.certification_progress || 0;
+    document.getElementById('cert-progress').textContent = certProgress.toFixed(1) + '%';
+    
+    const knowledgeRetention = userSummary.retention_test_scores ? 
+        Object.values(userSummary.retention_test_scores).reduce((a, b) => a + b, 0) / 
+        Object.keys(userSummary.retention_test_scores).length : 0;
+    
+    document.getElementById('knowledge-retention').textContent = knowledgeRetention.toFixed(1) + '%';
+}
+
+function initializeAdvancedCharts() {
+    // Initialize learning pattern chart
+    const learningCtx = document.getElementById('learningPatternChart');
+    if (learningCtx) {
+        new Chart(learningCtx.getContext('2d'), {
+            type: 'radar',
+            data: {
+                labels: ['Retention', 'Speed', 'Accuracy', 'Consistency', 'Progress'],
+                datasets: [{
+                    label: 'Learning Pattern',
+                    data: [85, 72, 90, 78, 82],
+                    backgroundColor: 'rgba(124, 58, 237, 0.2)',
+                    borderColor: 'rgba(124, 58, 237, 1)',
+                    pointBackgroundColor: 'rgba(124, 58, 237, 1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    // Initialize time-based performance chart
+    const timeCtx = document.getElementById('timePerformanceChart');
+    if (timeCtx) {
+        new Chart(timeCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Performance',
+                    data: [65, 72, 78, 85],
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#94a3b8'
+                        },
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Enhanced refresh function
+function refreshAnalytics() {
+    const refreshBtn = document.getElementById('refresh-btn');
+    if (refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Refreshing...';
+    }
+    
+    // Refresh all analytics sections
+    initializeAnalyticsDashboard();
+    loadComprehensiveAnalytics();
+    
+    setTimeout(() => {
+        if (refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh Data';
+        }
+        showToast('Analytics data refreshed successfully!', 'success');
+    }, 2000);
+}
+
+function exportAnalytics() {
+    // Create comprehensive analytics report
+    const reportData = {
+        timestamp: new Date().toISOString(),
+        user_summary: window.statsData || {},
+        device_info: window.analyticsTracker?.deviceInfo || {},
+        performance_metrics: window.analyticsTracker?.performanceMetrics || {},
+        interactions: JSON.parse(sessionStorage.getItem('user_interactions') || '[]'),
+        errors: window.analyticsTracker?.errors || []
+    };
+    
+    // Create and download report
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], 
+        { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics_report_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showToast('Analytics report exported successfully!', 'success');
+}
+
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.remove();
+    }, 3000);
+}
+
+// Initialize everything when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAnalyticsDashboard();
+    loadComprehensiveAnalytics();
+    
+    // Update analytics every 30 seconds
+    setInterval(() => {
+        loadBehaviorAnalytics();
+        loadPerformanceMetrics();
+    }, 30000);
+});
 
 // Manual refresh function - uses same API
 function refreshAnalytics() {

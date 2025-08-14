@@ -56,9 +56,342 @@ function loadGlobalAppearanceSettings() {
         reduceMotion: reduceMotion
     });
 }
+// Global Analytics Tracking
+class AnalyticsTracker {
+    constructor() {
+        this.sessionStart = Date.now();
+        this.pageLoadStart = performance.now();
+        this.userId = this.getUserId();
+        this.sessionId = this.generateSessionId();
+        this.interactions = [];
+        this.errors = [];
+        this.performanceMetrics = {};
+        this.deviceInfo = this.collectDeviceInfo();
+        
+        this.initializeTracking();
+    }
+    
+    getUserId() {
+        let userId = localStorage.getItem('analytics_user_id');
+        if (!userId) {
+            userId = 'user_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('analytics_user_id', userId);
+        }
+        return userId;
+    }
+    
+    generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    collectDeviceInfo() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        return {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            screenResolution: `${screen.width}x${screen.height}`,
+            viewportSize: `${window.innerWidth}x${window.innerHeight}`,
+            pixelRatio: window.devicePixelRatio,
+            platform: navigator.platform,
+            cookiesEnabled: navigator.cookieEnabled,
+            onlineStatus: navigator.onLine,
+            cpuCores: navigator.hardwareConcurrency,
+            touchSupport: 'ontouchstart' in window,
+            webglSupport: !!ctx && !!ctx.getExtension,
+            colorDepth: screen.colorDepth
+        };
+    }
+    
+    initializeTracking() {
+        this.trackPageLoad();
+        this.trackClicks();
+        this.trackScrollDepth();
+        this.trackFormInteractions();
+        this.trackErrors();
+        this.trackPerformance();
+        this.trackTimeOnPage();
+        this.trackNavigationPatterns();
+    }
+    
+    trackPageLoad() {
+        window.addEventListener('load', () => {
+            const loadTime = performance.now() - this.pageLoadStart;
+            this.performanceMetrics.pageLoadTime = loadTime;
+            
+            // Collect Core Web Vitals
+            if ('web-vital' in window) {
+                this.trackWebVitals();
+            }
+            
+            this.sendEvent('page_load', {
+                url: window.location.href,
+                title: document.title,
+                loadTime: loadTime,
+                referrer: document.referrer
+            });
+        });
+    }
+    
+    trackWebVitals() {
+        // Track Core Web Vitals
+        new PerformanceObserver((entryList) => {
+            for (const entry of entryList.getEntries()) {
+                if (entry.entryType === 'paint') {
+                    this.performanceMetrics[entry.name] = entry.startTime;
+                }
+                if (entry.entryType === 'largest-contentful-paint') {
+                    this.performanceMetrics.LCP = entry.startTime;
+                }
+                if (entry.entryType === 'first-input') {
+                    this.performanceMetrics.FID = entry.processingStart - entry.startTime;
+                }
+            }
+        }).observe({entryTypes: ['paint', 'largest-contentful-paint', 'first-input']});
+    }
+    
+    trackClicks() {
+        document.addEventListener('click', (event) => {
+            const target = event.target;
+            const clickData = {
+                element: target.tagName,
+                class: target.className,
+                id: target.id,
+                text: target.textContent?.substr(0, 100),
+                position: { x: event.clientX, y: event.clientY },
+                timestamp: Date.now()
+            };
+            
+            this.interactions.push({ type: 'click', data: clickData });
+            this.sendEvent('user_interaction', { interaction_type: 'click', ...clickData });
+        });
+    }
+    
+    trackScrollDepth() {
+        let maxScroll = 0;
+        const scrollMilestones = [25, 50, 75, 100];
+        const triggered = new Set();
+        
+        window.addEventListener('scroll', () => {
+            const scrollPercent = Math.round(
+                (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+            );
+            
+            maxScroll = Math.max(maxScroll, scrollPercent);
+            
+            scrollMilestones.forEach(milestone => {
+                if (scrollPercent >= milestone && !triggered.has(milestone)) {
+                    triggered.add(milestone);
+                    this.sendEvent('scroll_depth', { percentage: milestone });
+                }
+            });
+        });
+    }
+    
+    trackFormInteractions() {
+        document.addEventListener('focus', (event) => {
+            if (event.target.matches('input, textarea, select')) {
+                this.sendEvent('form_interaction', {
+                    action: 'field_focus',
+                    fieldType: event.target.type,
+                    fieldName: event.target.name || event.target.id
+                });
+            }
+        });
+        
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            if (form.tagName === 'FORM') {
+                this.sendEvent('form_interaction', {
+                    action: 'form_submit',
+                    formId: form.id,
+                    formClass: form.className
+                });
+            }
+        });
+    }
+    
+    trackErrors() {
+        window.addEventListener('error', (event) => {
+            const errorData = {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                stack: event.error?.stack
+            };
+            
+            this.errors.push(errorData);
+            this.sendEvent('javascript_error', errorData);
+        });
+        
+        window.addEventListener('unhandledrejection', (event) => {
+            const errorData = {
+                message: event.reason?.message || 'Unhandled Promise Rejection',
+                stack: event.reason?.stack
+            };
+            
+            this.errors.push(errorData);
+            this.sendEvent('promise_rejection', errorData);
+        });
+    }
+    
+    trackPerformance() {
+        // Track resource loading times
+        window.addEventListener('load', () => {
+            const resources = performance.getEntriesByType('resource');
+            const slowResources = resources.filter(resource => resource.duration > 1000);
+            
+            if (slowResources.length > 0) {
+                this.sendEvent('slow_resources', {
+                    count: slowResources.length,
+                    resources: slowResources.map(r => ({ name: r.name, duration: r.duration }))
+                });
+            }
+        });
+    }
+    
+    trackTimeOnPage() {
+        this.pageVisitStart = Date.now();
+        
+        window.addEventListener('beforeunload', () => {
+            const timeOnPage = Date.now() - this.pageVisitStart;
+            this.sendEvent('page_exit', {
+                timeOnPage: timeOnPage,
+                interactions: this.interactions.length,
+                errors: this.errors.length
+            });
+        });
+        
+        // Track active time (when page is visible and user is active)
+        let activeTime = 0;
+        let lastActivity = Date.now();
+        let isActive = true;
+        
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (isActive) {
+                    activeTime += Date.now() - lastActivity;
+                    isActive = false;
+                }
+            } else {
+                lastActivity = Date.now();
+                isActive = true;
+            }
+        });
+        
+        // Track mouse/keyboard activity
+        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
+            document.addEventListener(event, () => {
+                if (!isActive && !document.hidden) {
+                    lastActivity = Date.now();
+                    isActive = true;
+                }
+            }, { passive: true });
+        });
+        
+        setInterval(() => {
+            if (isActive && !document.hidden) {
+                activeTime += 1000; // 1 second
+                this.performanceMetrics.activeTime = activeTime;
+            }
+        }, 1000);
+    }
+    
+    trackNavigationPatterns() {
+        const navigationPattern = JSON.parse(sessionStorage.getItem('navigation_pattern') || '[]');
+        navigationPattern.push({
+            url: window.location.href,
+            timestamp: Date.now(),
+            referrer: document.referrer
+        });
+        
+        // Keep only last 10 pages
+        if (navigationPattern.length > 10) {
+            navigationPattern.shift();
+        }
+        
+        sessionStorage.setItem('navigation_pattern', JSON.stringify(navigationPattern));
+    }
+    
+    trackQuizSession(data) {
+        this.sendEvent('quiz_session', {
+            questions_attempted: data.questions_attempted || 0,
+            questions_correct: data.questions_correct || 0,
+            session_duration: data.duration || 0,
+            category: data.category || 'mixed',
+            difficulty: data.difficulty || 'medium',
+            completion_percentage: data.completion_percentage || 0
+        });
+    }
+    
+    trackFeatureUsage(feature, action, metadata = {}) {
+        this.sendEvent('feature_usage', {
+            feature: feature,
+            action: action,
+            ...metadata
+        });
+    }
+    
+    sendEvent(eventType, data) {
+        const payload = {
+            user_id: this.userId,
+            session_id: this.sessionId,
+            event_type: eventType,
+            timestamp: Date.now(),
+            url: window.location.href,
+            user_agent: navigator.userAgent,
+            device_info: this.deviceInfo,
+            data: data
+        };
+        
+        // Send to analytics endpoint
+        fetch('/api/analytics/track', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).catch(error => {
+            console.error('Analytics tracking error:', error);
+        });
+    }
+    
+    // Batch send events for better performance
+    batchSendEvents() {
+        if (this.eventQueue.length === 0) return;
+        
+        const events = [...this.eventQueue];
+        this.eventQueue = [];
+        
+        fetch('/api/analytics/batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ events })
+        }).catch(error => {
+            console.error('Batch analytics error:', error);
+            // Re-add events to queue on failure
+            this.eventQueue.unshift(...events);
+        });
+    }
+}
+
+// Initialize global analytics tracker
+window.analyticsTracker = new AnalyticsTracker();
+
 // Global app functionality
 document.addEventListener('DOMContentLoaded', function() {
     console.log('App.js DOMContentLoaded - initializing...');
+    
+    // Track page load completion
+    window.analyticsTracker.sendEvent('page_ready', {
+        page: window.location.pathname,
+        loadTime: performance.now()
+    });
     
     // Load appearance settings on every page load
     loadGlobalAppearanceSettings();
@@ -353,6 +686,10 @@ function showAlert(message, type = 'info') {
  * Saves settings to the backend by calling the /api/save_settings endpoint.
  */
 function saveSettings() {
+    // Track settings interaction
+    if (window.analyticsTracker) {
+        window.analyticsTracker.trackFeatureUsage('settings', 'save');
+    }
     const elements = {
         focusMode: document.getElementById('focusMode'),
         breakReminder: document.getElementById('breakReminder'),
@@ -458,6 +795,10 @@ function loadSettings() {
  * Initiates the export of study history by redirecting to the API endpoint.
  */
 function exportHistory() {
+    // Track export feature usage
+    if (window.analyticsTracker) {
+        window.analyticsTracker.trackFeatureUsage('data_export', 'history_export');
+    }
     // This creates a link and clicks it to trigger the download from the backend endpoint
     const link = document.createElement('a');
     link.href = '/api/export_history';
@@ -472,6 +813,10 @@ function exportHistory() {
  * Handles the import of study history from a JSON file.
  */
 function importHistory() {
+    // Track import feature usage
+    if (window.analyticsTracker) {
+        window.analyticsTracker.trackFeatureUsage('data_import', 'history_import');
+    }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -513,6 +858,10 @@ function importHistory() {
  * Initiates clearing of all statistics after user confirmation.
  */
 function clearHistory() {
+    // Track data clearing
+    if (window.analyticsTracker) {
+        window.analyticsTracker.trackFeatureUsage('data_management', 'clear_history');
+    }
     if (confirm('Are you sure you want to clear ALL study history? This action cannot be undone.')) {
         fetch('/api/clear_statistics', {
                 method: 'POST'
@@ -544,6 +893,11 @@ function clearHistory() {
  * Toggles dark mode for the application and saves the user's preference.
  */
 function toggleDarkMode() {
+    // Track theme change
+    if (window.analyticsTracker) {
+        const newMode = !document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+        window.analyticsTracker.trackFeatureUsage('appearance', 'theme_toggle', { mode: newMode });
+    }
     const body = document.body;
     body.classList.toggle('dark-mode');
     
@@ -707,16 +1061,28 @@ function trackQuizCompletion() {
         const endTime = Date.now();
         const sessionDuration = Math.round((endTime - quizStartTime) / 1000); // Convert to seconds
         
+        // Enhanced quiz completion tracking
+        const quizData = {
+            duration: sessionDuration,
+            questions: questionsAnswered,
+            questions_attempted: questionsAnswered,
+            session_start: new Date(quizStartTime).toISOString(),
+            session_end: new Date(endTime).toISOString(),
+            completion_percentage: 100 // Assuming completed
+        };
+        
+        // Send to analytics tracker
+        if (window.analyticsTracker) {
+            window.analyticsTracker.trackQuizSession(quizData);
+        }
+        
         // Send actual session duration to backend
         fetch('/api/update-session-time', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                duration: sessionDuration,
-                questions: questionsAnswered
-            })
+            body: JSON.stringify(quizData)
         }).catch(error => {
             console.log('Note: Could not update session time:', error);
         });
@@ -725,4 +1091,12 @@ function trackQuizCompletion() {
 
 function incrementQuestionCount() {
     questionsAnswered++;
+    
+    // Track question interaction
+    if (window.analyticsTracker) {
+        window.analyticsTracker.sendEvent('question_interaction', {
+            question_number: questionsAnswered,
+            session_duration: quizStartTime ? Date.now() - quizStartTime : 0
+        });
+    }
 }

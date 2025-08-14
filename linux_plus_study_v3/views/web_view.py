@@ -187,9 +187,46 @@ class StatsControllerProtocol(Protocol):
 # Initialize analytics for current session
 def get_current_user_id():
     from flask import session
-    # Try to get user_id from session, if not present, default to anonymous
-    # This prevents automatic random user creation and maintains consistency
-    return session.get('user_id', 'anonymous')
+    import sqlite3
+    
+    # Try to get user_id from session first
+    session_user_id = session.get('user_id')
+    if session_user_id:
+        # Verify the user still exists in database
+        try:
+            db_path = "data/linux_plus_study.db"
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE id = ?", (session_user_id,))
+            user_exists = cursor.fetchone()
+            conn.close()
+            
+            if user_exists:
+                return session_user_id
+            else:
+                # User was deleted, clear session
+                session.pop('user_id', None)
+        except Exception:
+            pass
+    
+    # If no valid session user_id, try to get the first available profile
+    try:
+        db_path = "data/linux_plus_study.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM users ORDER BY created_at LIMIT 1")
+        first_user = cursor.fetchone()
+        conn.close()
+        
+        if first_user:
+            # Set this as the session user for consistency
+            session['user_id'] = first_user[0]
+            return first_user[0]
+    except Exception:
+        pass
+    
+    # Return None if no profiles exist - this will trigger profile creation popup
+    return None
 
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
@@ -200,13 +237,42 @@ def ensure_analytics_user_sync():
         analytics = SimpleAnalyticsManager()
         user_id = get_current_user_id()
         
-        # Initialize user data if needed
-        user_data = analytics.get_user_data(user_id)
+        # Initialize user data if needed - but only if user_id is not None
+        if user_id is not None:
+            user_data = analytics.get_user_data(user_id)
+        else:
+            user_data = {}
         
         return user_id, analytics
     except Exception as e:
         print(f"Error syncing analytics user: {e}")
-        return 'anonymous', None
+        return None, None
+
+def require_profile(f):
+    """Decorator to ensure user has created a profile before accessing protected routes"""
+    from functools import wraps
+    from flask import redirect, url_for, flash, request, jsonify
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user_id = get_current_user_id()
+        
+        if user_id is None:
+            # No profile exists - handle based on request type
+            if request.is_json or request.path.startswith('/api/'):
+                # API request - return JSON error
+                return jsonify({
+                    'success': False,
+                    'error': 'Profile setup required',
+                    'needs_setup': True
+                }), 403
+            else:
+                # Web request - redirect to index with message
+                flash('Please create a profile to access this feature.', 'error')
+                return redirect(url_for('index'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
 
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
@@ -1739,6 +1805,7 @@ class LinuxPlusStudyWeb:
         self.index_handler = index
         
         @self.app.route('/quiz')
+        @require_profile
         def quiz_page():
             from utils.game_values import get_game_value_manager
             game_values = get_game_value_manager().get_all_config()
@@ -1759,6 +1826,7 @@ class LinuxPlusStudyWeb:
         self.about_page_handler = about_page
 
         @self.app.route('/stats')
+        @require_profile
         def stats_page():
             try:
                 from flask import session
@@ -1825,6 +1893,7 @@ class LinuxPlusStudyWeb:
         self.stats_page_handler = stats_page
         
         @self.app.route('/achievements')
+        @require_profile
         def achievements_page():
             try:
                 from flask import session
@@ -1852,6 +1921,7 @@ class LinuxPlusStudyWeb:
         self.achievements_page_handler = achievements_page
         
         @self.app.route('/review')
+        @require_profile
         def review_page():
             """Review page with comprehensive data loading like Money Manager."""
             try:
@@ -1891,7 +1961,7 @@ class LinuxPlusStudyWeb:
             try:
                 from flask import session
                 from services.dashboard_service import get_dashboard_service
-                from utils.config import get_config_manager
+                from utils.config import get_config_value
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Settings page request for user: {user_id}")
@@ -1901,13 +1971,12 @@ class LinuxPlusStudyWeb:
                 dashboard_data = dashboard_service.get_dashboard_summary()
                 
                 # Get current settings
-                config_manager = get_config_manager()
                 system_settings = {
-                    'theme': config_manager.get_value('theme', 'light'),
-                    'sound_enabled': config_manager.get_value('sound_enabled', True),
-                    'notifications': config_manager.get_value('notifications', True),
-                    'auto_save': config_manager.get_value('auto_save', True),
-                    'difficulty_preference': config_manager.get_value('difficulty_preference', 'mixed')
+                    'theme': get_config_value('web', 'theme', 'light'),
+                    'sound_enabled': get_config_value('web', 'sound_enabled', True),
+                    'notifications': get_config_value('web', 'notifications', True),
+                    'auto_save': get_config_value('web', 'auto_save', True),
+                    'difficulty_preference': get_config_value('quiz', 'difficulty_preference', 'mixed')
                 }
                 
                 return render_template('settings.html', 
@@ -1925,6 +1994,7 @@ class LinuxPlusStudyWeb:
         self.settings_page_handler = settings_page
         
         @self.app.route('/analytics')
+        @require_profile
         def analytics_page():
             """Analytics page with comprehensive data loading like Money Manager."""
             try:
@@ -2098,6 +2168,7 @@ class LinuxPlusStudyWeb:
         self.vm_playground_handler = vm_playground
         
         @self.app.route('/api/start_quiz', methods=['POST'])
+        @require_profile
         def api_start_quiz():
             try:
                 data = cast(QuizStartRequestData, request.get_json() or {})
@@ -3056,42 +3127,55 @@ class LinuxPlusStudyWeb:
         def api_get_profiles():
             """Get all user profiles"""
             try:
-                # Analytics disabled - # Analytics disabled
-                from flask import session
+                import sqlite3
                 
-                analytics = None  # Analytics disabled
-                user_id = session.get('user_id', 'anonymous')
+                # Get current user_id using our updated function
+                user_id = get_current_user_id()
                 
-                # For now, just return the current user as a single profile
-                # This can be expanded later for multi-profile support
-                user_data = analytics and analytics and analytics.get_user_data(user_id)
+                # Get all profiles from the database
+                db_path = "data/linux_plus_study.db"
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
                 
-                # Provide fallback when analytics is disabled
-                if not user_data:
-                    user_data = {
-                        'display_name': 'Default Profile',
-                        'sessions': [],
-                        'total_questions': 0,
-                        'accuracy': 0,
-                        'total_study_time': 0
-                    }
+                # Get all users from the users table
+                cursor.execute("SELECT id, display_name, created_at, last_active FROM users ORDER BY created_at")
+                users = cursor.fetchall()
                 
-                profiles = {
-                    user_id: {
-                        'name': user_data.get('display_name', 'Default Profile'),
+                profiles = {}
+                for user in users:
+                    profile_id, display_name, created_at, last_active = user
+                    
+                    # Get basic analytics for this user
+                    cursor.execute("SELECT COUNT(*) FROM analytics WHERE user_id = ?", (profile_id,))
+                    session_count = cursor.fetchone()[0] or 0
+                    
+                    cursor.execute("SELECT SUM(questions_attempted), AVG(accuracy_percentage) FROM analytics WHERE user_id = ?", (profile_id,))
+                    analytics_data = cursor.fetchone()
+                    total_questions = analytics_data[0] or 0
+                    avg_accuracy = analytics_data[1] or 0
+                    
+                    profiles[profile_id] = {
+                        'name': display_name,
+                        'created_at': created_at,
+                        'last_active': last_active,
                         'analytics': {
-                            'sessions': user_data.get('sessions', []),
-                            'total_questions': user_data.get('total_questions', 0),
-                            'accuracy': user_data.get('accuracy', 0),
-                            'study_time': user_data.get('total_study_time', 0)
+                            'sessions': session_count,
+                            'total_questions': total_questions,
+                            'accuracy': round(avg_accuracy, 1) if avg_accuracy else 0,
+                            'study_time': 0  # Could be calculated from session durations
                         }
                     }
-                }
+                
+                conn.close()
+                
+                # If no profiles exist, we need setup
+                needs_setup = len(profiles) == 0
                 
                 return jsonify({
                     'success': True,
                     'profiles': profiles,
-                    'current_profile': user_id
+                    'current_profile': user_id,  # This will be None if no profiles exist
+                    'needs_setup': needs_setup
                 })
             except Exception as e:
                 self.logger.error(f"Get profiles error: {e}")
@@ -3107,11 +3191,34 @@ class LinuxPlusStudyWeb:
                 if not profile_name:
                     return jsonify({'success': False, 'error': 'Profile name is required'})
                 
-                # For now, just return success - multi-profile support can be added later
+                # Generate a unique profile ID
+                import uuid
+                import sqlite3
+                profile_id = f"user_{uuid.uuid4().hex[:8]}"
+                
+                # Insert the new user profile into the database
+                db_path = "data/linux_plus_study.db"
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                # Check if profile name already exists
+                cursor.execute("SELECT id FROM users WHERE display_name = ?", (profile_name,))
+                if cursor.fetchone():
+                    conn.close()
+                    return jsonify({'success': False, 'error': 'Profile name already exists'})
+                
+                # Create the new profile
+                cursor.execute(
+                    "INSERT INTO users (id, display_name, created_at, last_active) VALUES (?, ?, datetime('now'), datetime('now'))",
+                    (profile_id, profile_name)
+                )
+                conn.commit()
+                conn.close()
+                
                 return jsonify({
                     'success': True, 
-                    'message': 'Profile creation will be available in a future update',
-                    'profile_id': 'new_profile_id'
+                    'message': f'Profile "{profile_name}" created successfully',
+                    'profile_id': profile_id
                 })
             except Exception as e:
                 self.logger.error(f"Create profile error: {e}")
@@ -3127,11 +3234,28 @@ class LinuxPlusStudyWeb:
                 if not profile_id:
                     return jsonify({'success': False, 'error': 'Profile ID is required'})
                 
-                # For now, just return success - actual switching can be implemented later
+                # Verify profile exists in database
+                import sqlite3
+                db_path = "data/linux_plus_study.db"
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                cursor.execute("SELECT display_name FROM users WHERE id = ?", (profile_id,))
+                user = cursor.fetchone()
+                conn.close()
+                
+                if not user:
+                    return jsonify({'success': False, 'error': 'Profile not found'})
+                
+                # Switch to the profile
                 from flask import session
                 session['user_id'] = profile_id
                 
-                return jsonify({'success': True, 'message': 'Profile switched successfully'})
+                return jsonify({
+                    'success': True, 
+                    'message': f'Switched to profile: {user[0]}',
+                    'profile_name': user[0]
+                })
             except Exception as e:
                 self.logger.error(f"Switch profile error: {e}")
                 return jsonify({'success': False, 'error': str(e)})
@@ -3305,17 +3429,56 @@ class LinuxPlusStudyWeb:
         def api_delete_profile(profile_id):
             """Delete a user profile"""
             try:
-                # For now, prevent deletion of the current user
                 from flask import session
+                import sqlite3
+                
                 current_user_id = session.get('user_id', 'anonymous')
                 
+                # Prevent deletion of the current active profile
                 if profile_id == current_user_id:
-                    return jsonify({'success': False, 'error': 'Cannot delete the active profile'})
+                    return jsonify({'success': False, 'error': 'Cannot delete the active profile. Please switch to another profile first.'})
                 
-                # Profile deletion can be implemented later
+                # Connect to database
+                db_path = "data/linux_plus_study.db"
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                
+                # Check if profile exists
+                cursor.execute("SELECT display_name FROM users WHERE id = ?", (profile_id,))
+                user = cursor.fetchone()
+                
+                if not user:
+                    conn.close()
+                    return jsonify({'success': False, 'error': 'Profile not found'})
+                
+                profile_name = user[0]
+                
+                # Delete the user and related data
+                # Delete from users table
+                cursor.execute("DELETE FROM users WHERE id = ?", (profile_id,))
+                
+                # Delete related analytics data
+                cursor.execute("DELETE FROM analytics WHERE user_id = ?", (profile_id,))
+                
+                # Delete related user achievements (if exists)
+                try:
+                    cursor.execute("DELETE FROM user_achievements WHERE user_id = ?", (profile_id,))
+                except sqlite3.OperationalError:
+                    pass  # Table might not exist
+                
+                # Delete related user history (if exists)
+                try:
+                    cursor.execute("DELETE FROM user_history WHERE user_id = ?", (profile_id,))
+                except sqlite3.OperationalError:
+                    pass  # Table might not exist
+                
+                conn.commit()
+                conn.close()
+                
                 return jsonify({
                     'success': True, 
-                    'message': 'Profile deletion will be available in a future update'
+                    'message': f'Profile "{profile_name}" has been permanently deleted',
+                    'deleted_profile_id': profile_id
                 })
             except Exception as e:
                 self.logger.error(f"Delete profile error: {e}")
@@ -3944,3 +4107,216 @@ class LinuxPlusStudyWeb:
             return topic_breakdown
         except Exception:
             return {}
+
+        # Analytics Tracking API Endpoints
+        @self.app.route('/api/analytics/track', methods=['POST'])
+        def api_analytics_track():
+            """Track user analytics events"""
+            try:
+                data = request.get_json() or {}
+                
+                # Extract analytics data
+                user_id = data.get('user_id', 'anonymous')
+                session_id = data.get('session_id', 'unknown')
+                event_type = data.get('event_type', 'unknown')
+                event_data = data.get('data', {})
+                device_info = data.get('device_info', {})
+                
+                # Store in analytics database
+                from models.db_models import Analytics
+                from utils.database import get_database_manager
+                
+                db_manager = get_database_manager()
+                if db_manager:
+                    with db_manager.get_session() as db_session:
+                        analytics_entry = Analytics(
+                            user_id=user_id if user_id != 'anonymous' else None,
+                            session_id=session_id,
+                            session_start=datetime.now(),
+                            activity_type=event_type,
+                            activity_subtype=event_data.get('action'),
+                            topic_area=event_data.get('category'),
+                            difficulty_level=event_data.get('difficulty'),
+                            questions_attempted=event_data.get('questions_attempted', 0),
+                            questions_correct=event_data.get('questions_correct', 0),
+                            questions_incorrect=event_data.get('questions_incorrect', 0),
+                            accuracy_percentage=event_data.get('accuracy_percentage'),
+                            completion_percentage=event_data.get('completion_percentage'),
+                            time_per_question=event_data.get('time_per_question'),
+                            content_pages_viewed=1 if event_type == 'page_load' else 0,
+                            time_on_content=event_data.get('timeOnPage', 0) / 1000 if event_data.get('timeOnPage') else 0,
+                            practice_commands_executed=1 if event_type == 'cli_command' else 0,
+                            vm_sessions_started=1 if event_type == 'vm_session' else 0,
+                            cli_playground_usage=1 if event_type == 'cli_playground' else 0,
+                            help_requests=1 if event_type == 'help_request' else 0,
+                            hint_usage=1 if event_type == 'hint_usage' else 0,
+                            page_load_time=event_data.get('loadTime'),
+                            error_count=1 if 'error' in event_type else 0,
+                            browser_info=device_info.get('userAgent'),
+                            device_type=self._detect_device_type(device_info.get('userAgent', '')),
+                            vm_commands_executed=event_data.get('vm_commands', 0),
+                            active_learning_time=event_data.get('activeTime', 0) / 1000 if event_data.get('activeTime') else 0,
+                            interaction_frequency=len(event_data.get('interactions', [])),
+                            user_feedback_rating=event_data.get('rating'),
+                            difficulty_rating=event_data.get('difficulty_rating'),
+                            session_duration=event_data.get('duration', 0)
+                        )
+                        
+                        db_session.add(analytics_entry)
+                        db_session.commit()
+                
+                return jsonify({'success': True, 'message': 'Event tracked successfully'})
+                
+            except Exception as e:
+                self.logger.error(f"Analytics tracking error: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/analytics/batch', methods=['POST'])
+        def api_analytics_batch():
+            """Batch track multiple analytics events"""
+            try:
+                data = request.get_json() or {}
+                events = data.get('events', [])
+                
+                if not events:
+                    return jsonify({'success': False, 'error': 'No events provided'})
+                
+                from models.db_models import Analytics
+                from utils.database import get_database_manager
+                
+                db_manager = get_database_manager()
+                if db_manager:
+                    with db_manager.get_session() as db_session:
+                        for event in events:
+                            user_id = event.get('user_id', 'anonymous')
+                            session_id = event.get('session_id', 'unknown')
+                            event_type = event.get('event_type', 'unknown')
+                            event_data = event.get('data', {})
+                            device_info = event.get('device_info', {})
+                            
+                            analytics_entry = Analytics(
+                                user_id=user_id if user_id != 'anonymous' else None,
+                                session_id=session_id,
+                                session_start=datetime.now(),
+                                activity_type=event_type,
+                                activity_subtype=event_data.get('action'),
+                                topic_area=event_data.get('category'),
+                                difficulty_level=event_data.get('difficulty'),
+                                questions_attempted=event_data.get('questions_attempted', 0),
+                                questions_correct=event_data.get('questions_correct', 0),
+                                questions_incorrect=event_data.get('questions_incorrect', 0),
+                                accuracy_percentage=event_data.get('accuracy_percentage'),
+                                completion_percentage=event_data.get('completion_percentage'),
+                                time_per_question=event_data.get('time_per_question'),
+                                content_pages_viewed=1 if event_type == 'page_load' else 0,
+                                time_on_content=event_data.get('timeOnPage', 0) / 1000 if event_data.get('timeOnPage') else 0,
+                                practice_commands_executed=1 if event_type == 'cli_command' else 0,
+                                vm_sessions_started=1 if event_type == 'vm_session' else 0,
+                                cli_playground_usage=1 if event_type == 'cli_playground' else 0,
+                                help_requests=1 if event_type == 'help_request' else 0,
+                                hint_usage=1 if event_type == 'hint_usage' else 0,
+                                page_load_time=event_data.get('loadTime'),
+                                error_count=1 if 'error' in event_type else 0,
+                                browser_info=device_info.get('userAgent'),
+                                device_type=self._detect_device_type(device_info.get('userAgent', '')),
+                                vm_commands_executed=event_data.get('vm_commands', 0),
+                                active_learning_time=event_data.get('activeTime', 0) / 1000 if event_data.get('activeTime') else 0,
+                                interaction_frequency=len(event_data.get('interactions', [])),
+                                user_feedback_rating=event_data.get('rating'),
+                                difficulty_rating=event_data.get('difficulty_rating'),
+                                session_duration=event_data.get('duration', 0)
+                            )
+                            
+                            db_session.add(analytics_entry)
+                        
+                        db_session.commit()
+                
+                return jsonify({'success': True, 'message': f'{len(events)} events tracked successfully'})
+                
+            except Exception as e:
+                self.logger.error(f"Batch analytics tracking error: {e}", exc_info=True)
+                return jsonify({'success': False, 'error': str(e)})
+
+        @self.app.route('/api/analytics/heatmap')
+        def api_analytics_heatmap():
+            """Get activity heatmap data for the current user"""
+            try:
+                from flask import session
+                user_id = session.get('user_id', 'anonymous')
+                
+                # Get daily activity data from analytics service
+                from services.analytics_service import AnalyticsService
+                from utils.database import get_database_manager
+                
+                db_manager = get_database_manager()
+                if db_manager:
+                    with db_manager.get_session() as db_session:
+                        analytics_service = AnalyticsService(db_session)
+                        heatmap_data = analytics_service.get_daily_activity_for_user(user_id, days=365)
+                        
+                        return jsonify({
+                            'success': True,
+                            'heatmap_data': heatmap_data
+                        })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Database not available'
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Heatmap API error: {e}", exc_info=True)
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                })
+
+        @self.app.route('/api/analytics/dashboard')
+        def api_analytics_dashboard():
+            """Get comprehensive analytics dashboard data"""
+            try:
+                from flask import session
+                user_id = session.get('user_id', 'anonymous')
+                
+                from services.analytics_service import AnalyticsService
+                from utils.database import get_database_manager
+                
+                db_manager = get_database_manager()
+                if db_manager:
+                    with db_manager.get_session() as db_session:
+                        analytics_service = AnalyticsService(db_session)
+                        
+                        # Get comprehensive analytics data
+                        user_summary = analytics_service.get_user_summary(user_id)
+                        activity_overview = analytics_service.get_user_activity_overview()
+                        global_stats = analytics_service.get_global_statistics()
+                        
+                        return jsonify({
+                            'success': True,
+                            'user_summary': user_summary,
+                            'activity_overview': activity_overview,
+                            'global_statistics': global_stats
+                        })
+                else:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Database not available'
+                    })
+                
+            except Exception as e:
+                self.logger.error(f"Analytics dashboard API error: {e}", exc_info=True)
+                return jsonify({
+                    'success': False,
+                    'error': str(e)
+                })
+
+    def _detect_device_type(self, user_agent: str) -> str:
+        """Detect device type from user agent string"""
+        user_agent = user_agent.lower()
+        
+        if 'mobile' in user_agent or 'android' in user_agent or 'iphone' in user_agent:
+            return 'mobile'
+        elif 'tablet' in user_agent or 'ipad' in user_agent:
+            return 'tablet'
+        else:
+            return 'desktop'

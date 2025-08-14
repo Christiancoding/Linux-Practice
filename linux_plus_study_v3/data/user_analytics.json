@@ -76,5 +76,177 @@
       "questions": 4,
       "last_activity": "2025-08-14T01:00:48.059569"
     }
+  },
+  "user_76fde7fc": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "daily_data": {
+      "last_reset_date": "2025-08-14",
+      "today": {
+        "date": "2025-08-14",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "yesterday": {
+        "date": "",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "daily_history": {}
+    },
+    "display_name": "User 76Fde7Fc",
+    "created_date": "2025-08-14T10:05:21.457384"
+  },
+  "user_04af4509": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "daily_data": {
+      "last_reset_date": "2025-08-14",
+      "today": {
+        "date": "2025-08-14",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "yesterday": {
+        "date": "",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "daily_history": {}
+    },
+    "display_name": "User 04Af4509",
+    "created_date": "2025-08-14T10:12:08.003742"
+  },
+  "user_6325e8de": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "daily_data": {
+      "last_reset_date": "2025-08-14",
+      "today": {
+        "date": "2025-08-14",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "yesterday": {
+        "date": "",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "daily_history": {}
+    },
+    "display_name": "User 6325E8De",
+    "created_date": "2025-08-14T10:29:45.306459"
+  },
+  "user_781b197c": {
+    "total_questions": 0,
+    "correct_answers": 0,
+    "incorrect_answers": 0,
+    "accuracy": 0.0,
+    "total_study_time": 0,
+    "total_sessions": 0,
+    "study_streak": 0,
+    "current_streak": 0,
+    "longest_streak": 0,
+    "questions_to_review": 0,
+    "level": 1,
+    "xp": 0,
+    "achievements": [],
+    "session_history": [],
+    "last_activity": null,
+    "topics_studied": {},
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 0,
+      "advanced": 0
+    },
+    "daily_data": {
+      "last_reset_date": "2025-08-14",
+      "today": {
+        "date": "2025-08-14",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "yesterday": {
+        "date": "",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "daily_history": {}
+    },
+    "display_name": "User 781B197C",
+    "created_date": "2025-08-14T11:20:15.075278"
   }
 }

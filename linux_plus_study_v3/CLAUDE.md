@@ -108,8 +108,38 @@ The application uses a hybrid storage approach:
 - `templates/` - Jinja2 templates for web interface
 - `static/` - CSS, JavaScript, and other web assets
 - `static/js/app.js` - Main frontend JavaScript with analytics tracking
+- `static/css/style.css` - Main CSS styles for web interface
+- `static/img/` - Image assets for web interface
+- `static/fonts/` - Font assets for web interface
+- `static/videos/` - Video assets for web interface
+- `static/docs/` - Documentation files for web interface
+- `static/favicon.ico` - Favicon for web interface
 
 ## Working with the Codebase
+### Analytics Tracking Features
+- User interaction tracking (clicks, navigation)
+- Error tracking (JavaScript errors, API errors)
+- Performance monitoring (load times, resource usage)
+- Event logging (signups, completions)
+- Usage statistics (time spent, feature usage)
+
+#### Detailed Analytics Data Collection
+- **User Identification**: IDs → cookies, localStorage, or a login-based user ID to recognize you later
+- **Browser & OS**: Chrome/Firefox, Windows/macOS/Linux/Android/iOS
+- **Device Information**: Device type (phone/tablet/desktop), screen size, pixel ratio
+- **Localization**: Language & timezone (e.g., en-US, America/Chicago)
+- **Hardware Hints**: CPU threads, memory estimate, touch support—useful for performance tuning
+- **Page Analytics**: Page views (which pages, in what order)
+- **Session Metrics**: Time on page / session length (using timers)
+- **User Behavior**: Scroll depth (did you reach 25%/50%/100%?)
+- **Interaction Tracking**: Clicks (buttons, menus, outbound links)
+- **Form Analytics**: Form activity (started/abandoned/submitted; not the exact text unless the site deliberately logs it)
+- **Media Interactions**: Video interactions (play/pause, watch time)
+- **Performance Metrics**: Load time (TTFB, First Contentful Paint, etc.)
+- **Error Monitoring**: Errors (JavaScript errors, failed network requests)
+- **Browser Capabilities**: Feature support (does your browser support WebGL, etc.)
+- **A/B Testing**: A/B tests (which variant you saw and how you behaved)
+- **User Journey**: Heatmaps / session replays (mouse movement/scroll paths, page snapshots)
 
 ### Adding New Features
 
@@ -197,6 +227,12 @@ The application includes comprehensive error handling:
 - Error Handling (log/notify)
 - User Management (create/switch)
 
+## Coding Standards
+## Yes! Yes! List
+- Use descriptive commit messages
+- Write unit tests for new features
+- Follow the DRY principle
+
 ## No! No! List
 
 - Do not create any duplacates in the code
@@ -204,4 +240,6 @@ The application includes comprehensive error handling:
 - Do not keep any csv files when not in use
 - No not use python. Use python3.
 - Do not create any hardcoded numbers in html code
+- Do not hardcode values in JavaScript
 - Do not only test the code with `python3 main.py --web --host 0.0.0.0 --port 8080` or similar
+- Do not use print statements for debugging

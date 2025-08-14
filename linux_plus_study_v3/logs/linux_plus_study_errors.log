@@ -1302,3 +1302,228 @@ Traceback (most recent call last):
 ImportError: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
 2025-08-14 09:51:19,897 - views.web_view - INFO: Analytics page request for user: anonymous
 2025-08-14 09:51:19,910 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:56:54,710 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 09:56:54,710 - __main__ - INFO: Starting web application mode
+2025-08-14 09:56:54,710 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 09:56:54,726 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 09:56:54,733 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 09:56:54,742 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 09:56:54,743 - utils.database - INFO: Database connection test successful
+2025-08-14 09:56:54,754 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 09:56:54,758 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
+2025-08-14 09:57:04,280 - __main__ - INFO: Received signal 15, initiating graceful shutdown
+2025-08-14 09:57:04,281 - utils.database - INFO: All database connections closed
+2025-08-14 09:57:17,051 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 09:57:17,051 - __main__ - INFO: Starting web application mode
+2025-08-14 09:57:17,051 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 09:57:17,068 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 09:57:17,074 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 09:57:17,082 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 09:57:17,083 - utils.database - INFO: Database connection test successful
+2025-08-14 09:57:17,095 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 09:57:17,098 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5002
+2025-08-14 09:57:28,404 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 09:57:28,428 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:31,150 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 09:57:31,151 - utils.database - INFO: All database connections closed
+2025-08-14 09:57:33,255 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 09:57:33,255 - __main__ - INFO: Starting web application mode
+2025-08-14 09:57:33,255 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 09:57:33,272 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 09:57:33,279 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 09:57:33,288 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 09:57:33,289 - utils.database - INFO: Database connection test successful
+2025-08-14 09:57:33,301 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 09:57:33,304 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 09:57:42,421 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 09:57:42,449 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:45,738 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 09:57:45,749 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:45,909 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 09:57:45,920 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:49,290 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 09:57:49,301 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:51,504 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 09:57:51,517 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:57:53,320 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 09:57:53,330 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:58:04,360 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 09:58:04,369 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:58:10,618 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 09:58:10,627 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:58:23,501 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 09:58:23,513 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:04:27,200 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:04:27,200 - __main__ - INFO: Starting web application mode
+2025-08-14 10:04:27,200 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:04:27,213 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:04:27,218 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:04:27,225 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:04:27,226 - utils.database - INFO: Database connection test successful
+2025-08-14 10:04:27,236 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:04:27,239 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5003
+2025-08-14 10:04:33,181 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 10:04:33,181 - utils.database - INFO: All database connections closed
+2025-08-14 10:04:34,994 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:04:34,994 - __main__ - INFO: Starting web application mode
+2025-08-14 10:04:34,994 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:04:35,009 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:04:35,015 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:04:35,023 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:04:35,024 - utils.database - INFO: Database connection test successful
+2025-08-14 10:04:35,036 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:04:35,051 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 10:04:41,072 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:04:41,098 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:04:51,611 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 10:04:51,623 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:04:51,787 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 10:04:51,795 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:04:55,658 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 10:04:55,670 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:04:57,968 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:04:57,976 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:05:21,457 - views.web_view - INFO: Settings page request for user: user_76fde7fc
+2025-08-14 10:05:21,465 - services.dashboard_service - INFO: Dashboard summary loaded for user user_76fde7fc
+2025-08-14 10:10:14,181 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:10:14,181 - __main__ - INFO: Starting web application mode
+2025-08-14 10:10:14,181 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:10:14,198 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:10:14,205 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:10:14,215 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:10:14,216 - utils.database - INFO: Database connection test successful
+2025-08-14 10:10:14,227 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:10:14,231 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5004
+2025-08-14 10:11:13,157 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 10:11:13,157 - utils.database - INFO: All database connections closed
+2025-08-14 10:11:18,833 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:11:18,833 - __main__ - INFO: Starting web application mode
+2025-08-14 10:11:18,833 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:11:18,849 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:11:18,856 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:11:18,866 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:11:18,867 - utils.database - INFO: Database connection test successful
+2025-08-14 10:11:18,879 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:11:18,883 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 10:11:23,125 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:11:23,148 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:11:26,092 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 10:11:26,104 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:11:26,262 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 10:11:26,270 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:11:29,537 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:11:29,546 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:11:50,313 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 10:11:50,322 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:12:02,683 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:12:02,692 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:12:08,003 - views.web_view - INFO: Settings page request for user: user_04af4509
+2025-08-14 10:12:08,012 - services.dashboard_service - INFO: Dashboard summary loaded for user user_04af4509
+2025-08-14 10:12:15,559 - views.web_view - INFO: Analytics page request for user: user_04af4509
+2025-08-14 10:12:15,567 - services.dashboard_service - INFO: Dashboard summary loaded for user user_04af4509
+2025-08-14 10:14:25,070 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 10:14:25,071 - utils.database - INFO: All database connections closed
+2025-08-14 10:14:28,116 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:14:28,116 - __main__ - INFO: Starting web application mode
+2025-08-14 10:14:28,117 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:14:28,136 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:14:28,146 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:14:28,160 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:14:28,162 - utils.database - INFO: Database connection test successful
+2025-08-14 10:14:28,181 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:14:28,187 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 10:14:31,481 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 10:14:31,513 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:14:36,089 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:14:36,100 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:14:43,181 - views.web_view - INFO: Settings page request for user: user_04af4509
+2025-08-14 10:14:43,189 - services.dashboard_service - INFO: Dashboard summary loaded for user user_04af4509
+2025-08-14 10:16:02,990 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 10:16:02,991 - utils.database - INFO: All database connections closed
+2025-08-14 10:16:04,182 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:16:04,182 - __main__ - INFO: Starting web application mode
+2025-08-14 10:16:04,183 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:16:04,198 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:16:04,205 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:16:04,214 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:16:04,215 - utils.database - INFO: Database connection test successful
+2025-08-14 10:16:04,228 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:16:04,231 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 10:16:08,160 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 10:16:08,190 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:27:54,198 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 10:27:54,198 - __main__ - INFO: Starting web application mode
+2025-08-14 10:27:54,198 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 10:27:54,213 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 10:27:54,218 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 10:27:54,225 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 10:27:54,226 - utils.database - INFO: Database connection test successful
+2025-08-14 10:27:54,237 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 10:27:54,240 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:8084
+2025-08-14 10:28:59,025 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 10:28:59,047 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:29:05,063 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 10:29:05,072 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 10:29:45,305 - views.web_view - INFO: Loading stats page for user: user_6325e8de
+2025-08-14 10:29:45,314 - services.dashboard_service - INFO: Dashboard summary loaded for user user_6325e8de
+2025-08-14 10:30:09,914 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 10:30:09,922 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 11:19:20,381 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 11:19:20,381 - utils.database - INFO: All database connections closed
+2025-08-14 11:19:21,598 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 11:19:21,598 - __main__ - INFO: Starting web application mode
+2025-08-14 11:19:21,599 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 11:19:21,612 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 11:19:21,618 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 11:19:21,627 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 11:19:21,629 - utils.database - INFO: Database connection test successful
+2025-08-14 11:19:21,642 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 11:19:21,646 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 11:19:24,488 - views.web_view - INFO: Settings page request for user: anonymous
+2025-08-14 11:19:24,513 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 11:19:52,549 - views.web_view - INFO: Loading dashboard for user: user_6325e8de
+2025-08-14 11:19:52,559 - services.dashboard_service - INFO: Dashboard summary loaded for user user_6325e8de
+2025-08-14 11:19:52,719 - views.web_view - INFO: API dashboard request for user: user_6325e8de
+2025-08-14 11:19:52,727 - services.dashboard_service - INFO: Dashboard summary loaded for user user_6325e8de
+2025-08-14 11:19:57,956 - views.web_view - INFO: Settings page request for user: user_6325e8de
+2025-08-14 11:19:57,966 - services.dashboard_service - INFO: Dashboard summary loaded for user user_6325e8de
+2025-08-14 11:20:15,074 - views.web_view - INFO: Settings page request for user: user_781b197c
+2025-08-14 11:20:15,084 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
+2025-08-14 11:20:25,896 - views.web_view - INFO: Loading dashboard for user: user_781b197c
+2025-08-14 11:20:25,905 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
+2025-08-14 11:20:26,055 - views.web_view - INFO: API dashboard request for user: user_781b197c
+2025-08-14 11:20:26,064 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
+2025-08-14 11:27:08,141 - views.web_view - INFO: Loading dashboard for user: user_781b197c
+2025-08-14 11:27:08,150 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
+2025-08-14 11:27:08,310 - views.web_view - INFO: API dashboard request for user: user_781b197c
+2025-08-14 11:27:08,319 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
+2025-08-14 11:27:11,913 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 11:27:11,914 - utils.database - INFO: All database connections closed
+2025-08-14 11:27:13,312 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 11:27:13,312 - __main__ - INFO: Starting web application mode
+2025-08-14 11:27:13,313 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 11:27:13,333 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 11:27:13,340 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 11:27:13,350 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 11:27:13,351 - utils.database - INFO: Database connection test successful
+2025-08-14 11:27:13,365 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 11:27:13,369 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 11:38:23,586 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 11:38:23,612 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 11:38:23,893 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 11:38:23,904 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 12:26:42,460 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 12:26:42,461 - __main__ - INFO: Starting web application mode
+2025-08-14 12:26:42,461 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 12:26:42,483 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 12:26:42,492 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 12:26:42,502 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 12:26:42,503 - utils.database - INFO: Database connection test successful
+2025-08-14 12:26:42,520 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 12:26:42,526 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 12:26:46,838 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 12:26:46,867 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 12:26:47,143 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 12:26:47,153 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 12:26:52,637 - views.web_view - INFO: Analytics page request for user: user_781b197c
+2025-08-14 12:26:52,647 - services.dashboard_service - INFO: Dashboard summary loaded for user user_781b197c
