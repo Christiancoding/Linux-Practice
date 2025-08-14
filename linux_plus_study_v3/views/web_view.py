@@ -194,13 +194,14 @@ def get_current_user_id():
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
     try:
-
-        # Analytics disabled
-        analytics = None  # Analytics disabled
+        from services.simple_analytics import SimpleAnalyticsManager
+        
+        # Initialize analytics service
+        analytics = SimpleAnalyticsManager()
         user_id = get_current_user_id()
         
-        # Analytics disabled - skipping user data initialization
-        # user_data = analytics and analytics and analytics.get_user_data(user_id)
+        # Initialize user data if needed
+        user_data = analytics.get_user_data(user_id)
         
         return user_id, analytics
     except Exception as e:
@@ -1705,16 +1706,20 @@ class LinuxPlusStudyWeb:
                 dashboard_data = dashboard_service.get_dashboard_summary()
                 
                 # Extract main stats for backward compatibility with existing template
+                user_progress = dashboard_data.get('user_progress', {})
+                total_metrics = dashboard_data.get('total_metrics', {})
+                study_stats = dashboard_data.get('study_stats', {})
+                
                 main_stats = {
-                    'level': dashboard_data['user_progress']['level'],
-                    'xp': dashboard_data['user_progress']['xp'],
-                    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
-                    'streak': dashboard_data['user_progress']['streak'],
-                    'total_correct': dashboard_data['total_metrics']['total_correct'],
-                    'accuracy': dashboard_data['total_metrics']['overall_accuracy'],
-                    'study_time': dashboard_data['study_stats']['total_time'],
-                    'study_time_formatted': dashboard_data['study_stats']['total_formatted'],
-                    'questions_answered': dashboard_data['user_progress']['questions_answered']
+                    'level': user_progress.get('level', 1),
+                    'xp': user_progress.get('xp', 0),
+                    'xp_percentage': user_progress.get('xp_percentage', 0),
+                    'streak': user_progress.get('streak', 0),
+                    'total_correct': total_metrics.get('total_correct', 0),
+                    'accuracy': total_metrics.get('overall_accuracy', 0),
+                    'study_time': study_stats.get('total_time', 0),
+                    'study_time_formatted': study_stats.get('total_formatted', '0s'),
+                    'questions_answered': user_progress.get('questions_answered', 0)
                 }
                 
                 # Pass both legacy stats and comprehensive data to template
@@ -2338,8 +2343,8 @@ class LinuxPlusStudyWeb:
                 try:
                     user_id, analytics = ensure_analytics_user_sync()
                     if analytics and user_id:
-                        # Use update_quiz_results_legacy for individual question tracking
-                        analytics and analytics.update_quiz_results_legacy(
+                        # Use update_quiz_results for individual question tracking
+                        analytics.update_quiz_results(
                             user_id=user_id,
                             correct=result.get('is_correct', False),
                             topic=getattr(self.quiz_controller, 'category_filter', None) or question_data[3],  # Use question category
@@ -2378,18 +2383,18 @@ class LinuxPlusStudyWeb:
                 # Update analytics with actual session duration if available
                 if 'session_duration' in result and 'session_total' in result:
                     try:
-                        # Analytics disabled - # Analytics disabled
                         from flask import session
+                        from services.simple_analytics import SimpleAnalyticsManager
                         
                         user_id = session.get('user_id', 'anonymous')
-                        analytics = None  # Analytics disabled
+                        analytics = SimpleAnalyticsManager()
                         
                         print(f"🐛 DEBUG: About to call update_session_with_actual_time")
                         print(f"   user_id: {user_id}")
                         print(f"   actual_duration: {result['session_duration']}")
                         print(f"   questions_answered: {result['session_total']}")
                         
-                        analytics and analytics.update_session_with_actual_time(
+                        analytics.update_session_with_actual_time(
                             user_id=user_id,
                             actual_duration=result['session_duration'],
                             questions_answered=result['session_total']

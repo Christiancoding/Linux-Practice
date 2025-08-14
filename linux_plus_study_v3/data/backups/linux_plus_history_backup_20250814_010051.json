@@ -2,8 +2,8 @@
   "sessions": [],
   "questions": {
     "What is the purpose of the `grub2-mkconfig` command?": {
-      "correct": 2,
-      "attempts": 3,
+      "correct": 1,
+      "attempts": 2,
       "history": [
         {
           "timestamp": "2025-08-13T23:57:49.294017",
@@ -11,10 +11,6 @@
         },
         {
           "timestamp": "2025-08-14T00:11:48.418333",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:43.958459",
           "correct": true
         }
       ]
@@ -38,33 +34,21 @@
       ]
     },
     "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 2,
-      "attempts": 3,
+      "correct": 1,
+      "attempts": 1,
       "history": [
         {
           "timestamp": "2025-08-14T00:03:48.494644",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:36.237032",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-14T01:00:40.951440",
           "correct": true
         }
       ]
     },
     "What is AppArmor?": {
-      "correct": 2,
-      "attempts": 2,
+      "correct": 1,
+      "attempts": 1,
       "history": [
         {
           "timestamp": "2025-08-14T00:11:15.205521",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:48.051423",
           "correct": true
         }
       ]
@@ -142,8 +126,8 @@
   },
   "categories": {
     "Concepts & Terms (Security)": {
-      "correct": 4,
-      "attempts": 5
+      "correct": 3,
+      "attempts": 4
     },
     "Concepts & Terms (System Management)": {
       "correct": 1,
@@ -154,8 +138,8 @@
       "attempts": 1
     },
     "Commands (System Management)": {
-      "correct": 6,
-      "attempts": 8
+      "correct": 4,
+      "attempts": 5
     },
     "Concepts & Terms (Containers)": {
       "correct": 1,
@@ -166,8 +150,8 @@
       "attempts": 2
     }
   },
-  "total_correct": 15,
-  "total_attempts": 18,
+  "total_correct": 12,
+  "total_attempts": 14,
   "incorrect_review": [],
   "leaderboard": [],
   "settings": {},

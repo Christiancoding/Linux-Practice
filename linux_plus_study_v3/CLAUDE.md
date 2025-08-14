@@ -78,6 +78,9 @@ PYTHONPATH=/home/retiredfan/Documents/github/linux_plus_study_v3_main/linux_plus
 - **views/** - Web interface layer (web_view.py contains Flask routes)
 - **services/** - Service layer (analytics, quiz logic, error tracking)
 - **utils/** - Utilities (database, config, persistence, validators)
+- **cli_sandbox/** - CLI-specific logic and sandbox environment
+- **tests/** - Unit and integration tests
+- **data/** - Database files
 
 ### Data Layer
 
@@ -133,6 +136,7 @@ The application uses a hybrid storage approach:
 ### Testing Strategy
 
 - Unit all tests in `tests/`
+- If possible, always open the website in a browser
 - Integration tests for web endpoints
 - Fully remove tests when complete
 - Analytics verification scripts (`verify_*.py`)
@@ -189,6 +193,9 @@ The application includes comprehensive error handling:
 - VM Challenges (load/hint)
 - Challenge interface (CLI/VM)
 - Validator (check/grade)
+- Analytics (track/aggregate)
+- Error Handling (log/notify)
+- User Management (create/switch)
 
 ## No! No! List
 
@@ -197,3 +204,4 @@ The application includes comprehensive error handling:
 - Do not keep any csv files when not in use
 - No not use python. Use python3.
 - Do not create any hardcoded numbers in html code
+- Do not only test the code with `python3 main.py --web --host 0.0.0.0 --port 8080` or similar

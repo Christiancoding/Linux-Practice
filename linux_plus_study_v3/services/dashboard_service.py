@@ -31,30 +31,33 @@ class DashboardService:
         Provides all data needed for the main dashboard with proper error handling.
         """
         try:
-            # Get time-based summaries (today, week, month)
-            today_summary = self._get_period_summary(1)
-            week_summary = self._get_period_summary(7)
-            month_summary = self._get_period_summary(30)
+            # Get analytics data from the JSON-based analytics service
+            analytics_data = self._get_analytics_data()
             
-            # Get recent activity
-            recent_sessions = self._get_recent_sessions(limit=10)
-            recent_questions = self._get_recent_questions(limit=5)
+            # Get time-based summaries (today, week, month) - try DB first, fallback to analytics
+            today_summary = self._get_period_summary(1, analytics_data)
+            week_summary = self._get_period_summary(7, analytics_data)
+            month_summary = self._get_period_summary(30, analytics_data)
             
-            # Get user progress and achievements
-            user_progress = self._get_user_progress()
-            achievements_summary = self._get_achievements_summary()
+            # Get recent activity - try DB first, fallback to analytics
+            recent_sessions = self._get_recent_sessions(limit=10, analytics_data=analytics_data)
+            recent_questions = self._get_recent_questions(limit=5, analytics_data=analytics_data)
+            
+            # Get user progress and achievements - use analytics data
+            user_progress = self._get_user_progress_from_analytics(analytics_data)
+            achievements_summary = self._get_achievements_summary_from_analytics(analytics_data)
             
             # Get study statistics
             study_stats = self._get_study_statistics()
             
-            # Get quiz performance metrics
-            performance_metrics = self._get_performance_metrics()
+            # Get quiz performance metrics - use analytics data
+            performance_metrics = self._get_performance_metrics_from_analytics(analytics_data)
             
-            # Get category breakdown
-            category_breakdown = self._get_category_breakdown()
+            # Get category breakdown - use analytics data
+            category_breakdown = self._get_category_breakdown_from_analytics(analytics_data)
             
-            # Calculate total study metrics
-            total_study_metrics = self._calculate_total_metrics()
+            # Calculate total study metrics - use analytics data
+            total_study_metrics = self._calculate_total_metrics_from_analytics(analytics_data)
             
             logger.info(f"Dashboard summary loaded for user {self.user_id}")
             
@@ -108,7 +111,7 @@ class DashboardService:
             logger.error(f"Error loading dashboard summary for {self.user_id}: {e}", exc_info=True)
             return self._get_fallback_dashboard()
     
-    def _get_period_summary(self, days: int) -> Dict[str, Any]:
+    def _get_period_summary(self, days: int, analytics_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Get summary statistics for a specific time period."""
         try:
             with get_db_session() as session:
@@ -151,7 +154,7 @@ class DashboardService:
                 'time_formatted': '0s', 'period_days': days
             }
     
-    def _get_recent_sessions(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def _get_recent_sessions(self, limit: int = 10, analytics_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Get recent study sessions with details."""
         try:
             with get_db_session() as session:
@@ -184,10 +187,10 @@ class DashboardService:
             logger.warning(f"Error getting recent sessions: {e}")
             return []
     
-    def _get_recent_questions(self, limit: int = 5) -> List[Dict[str, Any]]:
+    def _get_recent_questions(self, limit: int = 5, analytics_data: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Get recently answered questions with performance."""
         try:
-            with get_db_session("history") as session:
+            with get_db_session() as session:
                 recent_history = session.query(UserHistory).filter(
                     UserHistory.user_id == self.user_id,
                     UserHistory.activity_type == 'quiz'
@@ -216,7 +219,7 @@ class DashboardService:
     def _get_user_progress(self) -> Dict[str, Any]:
         """Get user progress and level information."""
         try:
-            with get_db_session("achievements") as session:
+            with get_db_session() as session:
                 achievement_data = session.query(UserAchievement).filter_by(
                     user_id=self.user_id
                 ).first()
@@ -261,7 +264,7 @@ class DashboardService:
     def _get_achievements_summary(self) -> Dict[str, Any]:
         """Get achievements summary for dashboard."""
         try:
-            with get_db_session("achievements") as session:
+            with get_db_session() as session:
                 achievement_data = session.query(UserAchievement).filter_by(
                     user_id=self.user_id
                 ).first()
@@ -386,7 +389,7 @@ class DashboardService:
     def _get_category_breakdown(self) -> List[Dict[str, Any]]:
         """Get category performance breakdown."""
         try:
-            with get_db_session("history") as session:
+            with get_db_session() as session:
                 # Get category performance data
                 categories = {}
                 history_records = session.query(UserHistory).filter(
@@ -471,7 +474,7 @@ class DashboardService:
     def _calculate_study_streak(self) -> Dict[str, int]:
         """Calculate current and longest study streaks."""
         try:
-            with get_db_session("achievements") as session:
+            with get_db_session() as session:
                 achievement_data = session.query(UserAchievement).filter_by(
                     user_id=self.user_id
                 ).first()
@@ -612,6 +615,302 @@ class DashboardService:
             'last_updated': datetime.now().isoformat(),
             'user_id': self.user_id
         }
+    
+    def _get_analytics_data(self) -> Dict[str, Any]:
+        """Get analytics data from SimpleAnalyticsManager."""
+        try:
+            from services.simple_analytics import SimpleAnalyticsManager
+            analytics = SimpleAnalyticsManager()
+            return analytics.get_user_data(self.user_id)
+        except Exception as e:
+            logger.warning(f"Error getting analytics data: {e}")
+            return {}
+    
+    def _get_user_progress_from_analytics(self, analytics_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get user progress from analytics data."""
+        try:
+            # Try database first
+            db_progress = self._get_user_progress()
+            if db_progress.get('total_points', 0) > 0:
+                return db_progress
+            
+            # Fallback to analytics data - handle both old and new formats
+            total_questions = analytics_data.get('total_questions', 0)
+            # Handle both 'total_correct' and 'correct_answers' for backward compatibility
+            total_correct = analytics_data.get('total_correct', analytics_data.get('correct_answers', 0))
+            total_points = total_correct * 10  # 10 points per correct answer
+            
+            level = max(1, total_points // 100)  # 100 points per level
+            xp = total_points % 100
+            xp_to_next = 100 - xp
+            xp_percentage = (xp / 100) * 100 if xp > 0 else 0
+            
+            # Handle study_streak - can be int or dict
+            study_streak = analytics_data.get('study_streak', 0)
+            if isinstance(study_streak, dict):
+                current_streak = study_streak.get('current_streak', 0)
+            else:
+                current_streak = study_streak if isinstance(study_streak, int) else 0
+            
+            # Handle activity_breakdown safely
+            activity_breakdown = analytics_data.get('activity_breakdown', {})
+            if isinstance(activity_breakdown, dict):
+                perfect_sessions = activity_breakdown.get('perfect_sessions', 0)
+            else:
+                perfect_sessions = 0
+            
+            # Handle recent_performance safely
+            recent_performance = analytics_data.get('recent_performance', [])
+            if isinstance(recent_performance, list):
+                days_studied = len(recent_performance)
+            else:
+                days_studied = 0
+            
+            return {
+                'level': level,
+                'xp': xp,
+                'xp_to_next': xp_to_next,
+                'xp_percentage': xp_percentage,
+                'streak': current_streak,
+                'total_points': total_points,
+                'questions_answered': total_questions,
+                'days_studied': days_studied,
+                'perfect_sessions': perfect_sessions
+            }
+        except Exception as e:
+            logger.warning(f"Error getting user progress from analytics: {e}")
+            # Return safe defaults to prevent KeyError
+            return {
+                'level': 1,
+                'xp': 0,
+                'xp_to_next': 100,
+                'xp_percentage': 0,
+                'streak': 0,
+                'total_points': 0,
+                'questions_answered': 0,
+                'days_studied': 0,
+                'perfect_sessions': 0
+            }
+    
+    def _get_achievements_summary_from_analytics(self, analytics_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get achievements summary from analytics data."""
+        try:
+            # Try database first
+            db_achievements = self._get_achievements_summary()
+            if db_achievements['total_badges'] > 0:
+                return db_achievements
+            
+            # Generate achievements based on analytics data
+            total_questions = analytics_data.get('total_questions', 0)
+            accuracy = analytics_data.get('overall_accuracy', 0)
+            
+            badges = []
+            if total_questions >= 10:
+                badges.append('First Steps')
+            if total_questions >= 50:
+                badges.append('Getting Started')
+            if total_questions >= 100:
+                badges.append('Dedicated Learner')
+            if accuracy >= 80:
+                badges.append('High Achiever')
+            if accuracy >= 90:
+                badges.append('Expert')
+            
+            return {
+                'total_badges': len(badges),
+                'recent_badges': badges[-3:] if len(badges) > 3 else badges,
+                'completion_percentage': min(100, (len(badges) / 10) * 100),
+                'next_milestone': self._get_next_milestone_from_analytics(analytics_data),
+                'all_badges': badges
+            }
+        except Exception as e:
+            logger.warning(f"Error getting achievements from analytics: {e}")
+            return self._get_achievements_summary()
+    
+    def _get_performance_metrics_from_analytics(self, analytics_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Get performance metrics from analytics data."""
+        try:
+            # Try database first
+            db_metrics = self._get_performance_metrics()
+            if db_metrics.get('total_attempted', 0) > 0:
+                return db_metrics
+            
+            # Use analytics data - handle both old and new formats
+            recent_performance = analytics_data.get('recent_performance', [])
+            overall_accuracy = analytics_data.get('overall_accuracy', analytics_data.get('accuracy', 0))
+            total_attempted = analytics_data.get('total_questions', 0)
+            # Handle both 'total_correct' and 'correct_answers' for backward compatibility
+            total_correct = analytics_data.get('total_correct', analytics_data.get('correct_answers', 0))
+            
+            # Calculate trend from recent performance - handle list safely
+            if isinstance(recent_performance, list) and len(recent_performance) >= 4:
+                first_half = recent_performance[len(recent_performance)//2:]
+                second_half = recent_performance[:len(recent_performance)//2]
+                
+                # Calculate averages safely
+                first_accuracy = 0
+                if first_half:
+                    first_sum = sum(p.get('accuracy', 0) if isinstance(p, dict) else 0 for p in first_half)
+                    first_accuracy = first_sum / len(first_half)
+                
+                second_accuracy = 0
+                if second_half:
+                    second_sum = sum(p.get('accuracy', 0) if isinstance(p, dict) else 0 for p in second_half)
+                    second_accuracy = second_sum / len(second_half)
+                
+                trend = 'improving' if second_accuracy > first_accuracy + 5 else \
+                       'declining' if second_accuracy < first_accuracy - 5 else 'stable'
+                trend_change = second_accuracy - first_accuracy
+            else:
+                trend = 'stable'
+                trend_change = 0
+            
+            performance_level = 'expert' if overall_accuracy >= 90 else \
+                              'advanced' if overall_accuracy >= 80 else \
+                              'intermediate' if overall_accuracy >= 70 else \
+                              'beginner'
+            
+            # Calculate recent sessions count safely
+            recent_sessions_count = len(recent_performance) if isinstance(recent_performance, list) else 0
+            
+            return {
+                'overall_accuracy': round(overall_accuracy, 1),
+                'accuracy_trend': trend,
+                'performance_level': performance_level,
+                'recent_sessions': recent_sessions_count,
+                'total_attempted': total_attempted,
+                'total_correct': total_correct,
+                'trend_change': round(trend_change, 1)
+            }
+        except Exception as e:
+            logger.warning(f"Error getting performance metrics from analytics: {e}")
+            # Return safe defaults to prevent KeyError
+            return {
+                'overall_accuracy': 0.0,
+                'accuracy_trend': 'stable',
+                'performance_level': 'beginner',
+                'recent_sessions': 0,
+                'total_attempted': 0,
+                'total_correct': 0,
+                'trend_change': 0.0
+            }
+    
+    def _get_category_breakdown_from_analytics(self, analytics_data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Get category breakdown from analytics data."""
+        try:
+            # Try database first
+            db_breakdown = self._get_category_breakdown()
+            if db_breakdown:
+                return db_breakdown
+            
+            # Use analytics topic breakdown
+            topic_breakdown = analytics_data.get('topic_breakdown', {})
+            
+            breakdown = []
+            for category, accuracy in topic_breakdown.items():
+                # Estimate questions based on accuracy (this is approximate)
+                estimated_questions = max(5, int(accuracy / 10))  # Rough estimate
+                estimated_correct = int(estimated_questions * accuracy / 100)
+                
+                breakdown.append({
+                    'category': category,
+                    'attempted': estimated_questions,
+                    'correct': estimated_correct,
+                    'accuracy': round(accuracy, 1),
+                    'accuracy_level': 'good' if accuracy >= 80 else 'average' if accuracy >= 60 else 'poor'
+                })
+            
+            breakdown.sort(key=lambda x: x['accuracy'], reverse=True)
+            return breakdown
+        except Exception as e:
+            logger.warning(f"Error getting category breakdown from analytics: {e}")
+            return self._get_category_breakdown()
+    
+    def _calculate_total_metrics_from_analytics(self, analytics_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Calculate total metrics from analytics data."""
+        try:
+            # Try database first
+            db_metrics = self._calculate_total_metrics()
+            if db_metrics.get('total_sessions', 0) > 0:
+                return db_metrics
+            
+            # Use analytics data - handle both old and new formats
+            total_sessions = analytics_data.get('total_sessions', 0)
+            total_questions = analytics_data.get('total_questions', 0)
+            # Handle both 'total_correct' and 'correct_answers' for backward compatibility
+            total_correct = analytics_data.get('total_correct', analytics_data.get('correct_answers', 0))
+            total_time = analytics_data.get('total_study_time', 0)
+            overall_accuracy = analytics_data.get('overall_accuracy', analytics_data.get('accuracy', 0))
+            
+            # Estimate days active from recent performance - handle list safely
+            recent_performance = analytics_data.get('recent_performance', [])
+            days_active = 0
+            first_session = None
+            
+            if isinstance(recent_performance, list) and recent_performance:
+                try:
+                    # Extract unique dates safely
+                    dates = set()
+                    for p in recent_performance:
+                        if isinstance(p, dict) and p.get('date'):
+                            date_str = str(p.get('date'))[:10]  # Get first 10 chars (YYYY-MM-DD)
+                            if date_str:
+                                dates.add(date_str)
+                    days_active = len(dates)
+                    
+                    # Get first session date safely
+                    all_dates = [str(p.get('date', '')) for p in recent_performance 
+                                if isinstance(p, dict) and p.get('date')]
+                    if all_dates:
+                        first_session = min(all_dates)[:10]
+                except Exception as date_error:
+                    logger.warning(f"Error processing recent performance dates: {date_error}")
+                    days_active = 0
+                    first_session = None
+            
+            return {
+                'total_sessions': total_sessions,
+                'total_questions': total_questions,
+                'total_correct': total_correct,
+                'overall_accuracy': round(overall_accuracy, 1),
+                'total_time': total_time,
+                'total_time_formatted': self._format_time(total_time),
+                'days_active': days_active,
+                'first_session': first_session,
+                'avg_questions_per_session': round(total_questions / total_sessions, 1) if total_sessions > 0 else 0
+            }
+        except Exception as e:
+            logger.warning(f"Error calculating total metrics from analytics: {e}")
+            # Return safe defaults to prevent KeyError
+            return {
+                'total_sessions': 0,
+                'total_questions': 0,
+                'total_correct': 0,
+                'overall_accuracy': 0.0,
+                'total_time': 0,
+                'total_time_formatted': '0s',
+                'days_active': 0,
+                'first_session': None,
+                'avg_questions_per_session': 0.0
+            }
+    
+    def _get_next_milestone_from_analytics(self, analytics_data: Dict[str, Any]) -> str:
+        """Get next milestone from analytics data."""
+        try:
+            total_questions = analytics_data.get('total_questions', 0)
+            
+            if total_questions < 10:
+                return "Answer 10 Questions"
+            elif total_questions < 50:
+                return "Answer 50 Questions"
+            elif total_questions < 100:
+                return "Answer 100 Questions"
+            elif total_questions < 500:
+                return "Answer 500 Questions"
+            else:
+                return "Master Level Achieved"
+        except Exception:
+            return "First Quiz"
 
 # Global instance for easy access
 _dashboard_service = None

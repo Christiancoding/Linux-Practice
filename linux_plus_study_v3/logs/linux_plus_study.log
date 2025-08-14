@@ -795,3 +795,510 @@ WHERE time_tracking.user_id = ?
 2025-08-14 00:10:47,109 - utils.database - INFO: Database connection test successful
 2025-08-14 00:10:47,125 - views.web_view - WARNING: VM management features not available - vm_integration module not found
 2025-08-14 00:10:47,129 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:30:13,932 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:30:13,933 - utils.database - INFO: All database connections closed
+2025-08-14 00:30:15,689 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:30:15,689 - __main__ - INFO: Starting web application mode
+2025-08-14 00:30:15,689 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:30:15,714 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:30:15,730 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:30:15,740 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:30:15,742 - utils.database - INFO: Database connection test successful
+2025-08-14 00:30:15,759 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:30:15,764 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:30:19,343 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:30:19,359 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,359 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,359 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,367 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,373 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,376 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:19,604 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:30:19,607 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,607 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,607 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,610 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,612 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:19,612 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:24,205 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:30:24,207 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:24,207 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:24,207 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:24,209 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:24,211 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:24,212 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:26,219 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:30:26,222 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:26,222 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:26,222 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:26,224 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:26,226 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:26,227 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:30,197 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:30:30,203 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:30,203 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:30,203 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:30,207 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:30,208 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:30,209 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:31,920 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:30:31,923 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:31,923 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:31,923 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:31,927 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:31,929 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:31,929 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:34,607 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:30:34,610 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,610 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,610 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,615 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,618 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,619 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:34,775 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:30:34,796 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,796 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,796 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,799 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,801 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:34,801 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:49,470 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:30:49,473 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,473 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,473 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,475 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,477 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,478 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:49,644 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:30:49,646 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,646 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,647 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,650 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,651 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:49,652 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:54,753 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:30:54,755 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:54,755 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:54,755 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:54,759 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:54,761 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:54,762 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:30:56,205 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:30:56,207 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:56,208 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:56,208 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:56,211 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:56,213 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:30:56,214 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:31:06,249 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:31:06,254 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:06,254 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:06,254 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:06,259 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:06,261 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:06,262 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:31:15,309 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:31:15,312 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,312 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,312 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,317 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,319 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,319 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:31:15,469 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:31:15,472 - services.dashboard_service - WARNING: Error getting recent questions: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,472 - services.dashboard_service - WARNING: Error getting user progress: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,472 - services.dashboard_service - WARNING: Error getting achievements summary: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,475 - services.dashboard_service - WARNING: Error calculating study streak: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,477 - services.dashboard_service - WARNING: Error getting category breakdown: get_db_session() takes 0 positional arguments but 1 was given
+2025-08-14 00:31:15,478 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:37:52,025 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:37:52,026 - utils.database - INFO: All database connections closed
+2025-08-14 00:37:58,689 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:37:58,689 - __main__ - INFO: Starting web application mode
+2025-08-14 00:37:58,689 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:37:58,712 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:37:58,720 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:37:58,734 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:37:58,736 - utils.database - INFO: Database connection test successful
+2025-08-14 00:37:58,751 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:37:58,757 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:38:02,192 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:38:02,223 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:02,223 - views.web_view - ERROR: Error loading dashboard stats: 'xp_percentage'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1712, in index
+    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'xp_percentage'
+2025-08-14 00:38:02,461 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:38:02,472 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:07,705 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:38:07,721 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:09,784 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:38:09,794 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:15,293 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:38:15,303 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:16,475 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:38:16,484 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:18,005 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:38:18,020 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:38:18,020 - views.web_view - ERROR: Error loading dashboard stats: 'xp_percentage'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1712, in index
+    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'xp_percentage'
+2025-08-14 00:38:18,175 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:38:18,184 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:39:00,006 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:39:00,007 - utils.database - INFO: All database connections closed
+2025-08-14 00:39:05,936 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:39:05,936 - __main__ - INFO: Starting web application mode
+2025-08-14 00:39:05,937 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:39:05,960 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:39:05,968 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:39:05,978 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:39:05,981 - utils.database - INFO: Database connection test successful
+2025-08-14 00:39:05,994 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:39:05,999 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:39:08,280 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:39:08,281 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:08,461 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:39:08,461 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:11,266 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:39:11,266 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:12,468 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:39:12,468 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:13,870 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:39:13,870 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:14,827 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:39:14,827 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:17,333 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:39:17,333 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:39:17,497 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:39:17,498 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:42:56,676 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:42:56,676 - __main__ - INFO: Starting web application mode
+2025-08-14 00:42:56,677 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:42:56,698 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:42:56,710 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:42:56,718 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:42:56,719 - utils.database - INFO: Database connection test successful
+2025-08-14 00:42:56,734 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:42:56,738 - __main__ - INFO: Web interface loaded successfully - Starting server on 0.0.0.0:8083
+2025-08-14 00:44:46,761 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:44:46,762 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:00,722 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:45:00,722 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:11,339 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:45:11,341 - utils.database - INFO: All database connections closed
+2025-08-14 00:45:15,430 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:45:15,430 - __main__ - INFO: Starting web application mode
+2025-08-14 00:45:15,431 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:45:15,451 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:45:15,460 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:45:15,471 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:45:15,473 - utils.database - INFO: Database connection test successful
+2025-08-14 00:45:15,489 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:45:15,493 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:45:21,567 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:45:21,568 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:21,796 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:45:21,796 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:27,307 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:45:27,307 - __main__ - INFO: Starting web application mode
+2025-08-14 00:45:27,307 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:45:27,324 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:45:27,330 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:45:27,338 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:45:27,339 - utils.database - INFO: Database connection test successful
+2025-08-14 00:45:27,351 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:45:27,354 - __main__ - INFO: Web interface loaded successfully - Starting server on 0.0.0.0:8083
+2025-08-14 00:45:29,259 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:45:29,259 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:30,726 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:45:30,726 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:32,851 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:45:32,851 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:35,340 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:45:35,340 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:36,652 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:45:36,652 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:45:44,096 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:45:44,096 - services.dashboard_service - ERROR: Error loading dashboard summary for anonymous: 'DashboardService' object has no attribute '_get_analytics_data'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/services/dashboard_service.py", line 35, in get_dashboard_summary
+    analytics_data = self._get_analytics_data()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardService' object has no attribute '_get_analytics_data'
+2025-08-14 00:51:42,323 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:51:42,323 - __main__ - INFO: Starting web application mode
+2025-08-14 00:51:42,324 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:51:42,347 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:51:42,356 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:51:42,366 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:51:42,367 - utils.database - INFO: Database connection test successful
+2025-08-14 00:51:42,383 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:51:42,388 - __main__ - INFO: Web interface loaded successfully - Starting server on 0.0.0.0:8083
+2025-08-14 00:52:04,950 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:52:04,973 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:52:04,981 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:52:04,985 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:52:45,739 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:52:45,743 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:52:45,750 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:52:45,752 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:52:45,753 - views.web_view - ERROR: Error loading dashboard stats: 'xp_percentage'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1712, in index
+    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'xp_percentage'
+2025-08-14 00:53:50,158 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:53:50,158 - utils.database - INFO: All database connections closed
+2025-08-14 00:53:51,954 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:53:51,954 - __main__ - INFO: Starting web application mode
+2025-08-14 00:53:51,954 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:53:51,968 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:53:51,973 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:53:51,982 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:53:51,983 - utils.database - INFO: Database connection test successful
+2025-08-14 00:53:51,994 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:53:51,997 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:53:58,725 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:53:58,741 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:53:58,752 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:53:58,755 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:11,289 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:54:11,292 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:11,300 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:11,302 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:11,302 - views.web_view - ERROR: Error loading dashboard stats: 'xp_percentage'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1712, in index
+    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'xp_percentage'
+2025-08-14 00:54:11,470 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:54:11,473 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:11,477 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:11,479 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:19,062 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:54:19,065 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:19,071 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:19,072 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:20,941 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:54:20,943 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:20,949 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:20,951 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:22,440 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:54:22,443 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:22,449 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:22,451 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:25,111 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:54:25,114 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:25,119 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:25,120 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:27,825 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:54:27,829 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:27,836 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:27,837 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:54:27,837 - views.web_view - ERROR: Error loading dashboard stats: 'xp_percentage'
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1712, in index
+    'xp_percentage': dashboard_data['user_progress']['xp_percentage'],
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+KeyError: 'xp_percentage'
+2025-08-14 00:54:28,002 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:54:28,006 - services.dashboard_service - WARNING: Error getting user progress from analytics: 'int' object has no attribute 'get'
+2025-08-14 00:54:28,011 - services.dashboard_service - WARNING: Error getting performance metrics from analytics: 'total_attempted'
+2025-08-14 00:54:28,012 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:38,487 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 00:58:38,488 - utils.database - INFO: All database connections closed
+2025-08-14 00:58:39,628 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 00:58:39,628 - __main__ - INFO: Starting web application mode
+2025-08-14 00:58:39,628 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 00:58:39,643 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 00:58:39,650 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 00:58:39,658 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 00:58:39,659 - utils.database - INFO: Database connection test successful
+2025-08-14 00:58:39,671 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 00:58:39,675 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 00:58:44,923 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:58:44,954 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:45,158 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:58:45,169 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:50,702 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 00:58:50,710 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:52,353 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 00:58:52,361 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:53,919 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 00:58:53,929 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:57,295 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 00:58:57,307 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:58,674 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 00:58:58,682 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 00:58:58,848 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 00:58:58,858 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:00:57,446 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 01:00:57,456 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:00:57,598 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 01:00:57,610 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:02,066 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 01:01:02,077 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:17,261 - views.web_view - INFO: Review page request for user: anonymous
+2025-08-14 01:01:17,270 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:18,359 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 01:01:18,370 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:20,811 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 01:01:20,820 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:26,231 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 01:01:26,243 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:36,950 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 01:01:36,961 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:01:37,135 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 01:01:37,145 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:08:18,792 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 01:08:18,793 - utils.database - INFO: All database connections closed
+2025-08-14 01:08:34,636 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 01:08:34,637 - __main__ - INFO: Starting web application mode
+2025-08-14 01:08:34,637 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 01:08:34,659 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 01:08:34,670 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 01:08:34,682 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 01:08:34,685 - utils.database - INFO: Database connection test successful
+2025-08-14 01:08:34,705 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 01:08:34,710 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 01:08:44,532 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 01:08:44,555 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:08:44,863 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 01:08:44,874 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:08:51,680 - views.web_view - INFO: Loading stats page for user: anonymous
+2025-08-14 01:08:51,694 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:08:57,154 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 01:08:57,166 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:09:06,493 - views.web_view - INFO: Loading achievements page for user: anonymous
+2025-08-14 01:09:06,504 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:09:09,489 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 01:09:09,500 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 01:09:09,651 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 01:09:09,664 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:50:24,791 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-14 09:50:24,792 - utils.database - INFO: All database connections closed
+2025-08-14 09:50:32,356 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-14 09:50:32,356 - __main__ - INFO: Starting web application mode
+2025-08-14 09:50:32,356 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-14 09:50:32,371 - models.question_db - INFO: Loaded 12 questions from database
+2025-08-14 09:50:32,377 - __main__ - INFO: Web application components loaded successfully
+2025-08-14 09:50:32,385 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-14 09:50:32,386 - utils.database - INFO: Database connection test successful
+2025-08-14 09:50:32,397 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-14 09:50:32,401 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-14 09:50:40,416 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 09:50:40,438 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:50:41,892 - views.web_view - INFO: Loading dashboard for user: anonymous
+2025-08-14 09:50:41,900 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:50:42,080 - views.web_view - INFO: API dashboard request for user: anonymous
+2025-08-14 09:50:42,089 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous
+2025-08-14 09:50:58,105 - views.web_view - ERROR: Settings page error: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1894, in settings_page
+    from utils.config import get_config_manager
+ImportError: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+2025-08-14 09:51:10,222 - views.web_view - ERROR: Settings page error: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1894, in settings_page
+    from utils.config import get_config_manager
+ImportError: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+2025-08-14 09:51:16,896 - views.web_view - ERROR: Settings page error: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+Traceback (most recent call last):
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1894, in settings_page
+    from utils.config import get_config_manager
+ImportError: cannot import name 'get_config_manager' from 'utils.config' (/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/utils/config.py)
+2025-08-14 09:51:19,897 - views.web_view - INFO: Analytics page request for user: anonymous
+2025-08-14 09:51:19,910 - services.dashboard_service - INFO: Dashboard summary loaded for user anonymous

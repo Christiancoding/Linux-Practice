@@ -1,0 +1,80 @@
+{
+  "anonymous": {
+    "total_questions": 4,
+    "correct_answers": 3,
+    "incorrect_answers": 1,
+    "accuracy": 75.0,
+    "total_study_time": 16.92614221572876,
+    "total_sessions": 1,
+    "study_streak": 1,
+    "questions_to_review": 1,
+    "level": 1,
+    "xp": 31,
+    "achievements": [
+      {
+        "id": "first_question",
+        "name": "First Steps",
+        "description": "Answered your first question",
+        "earned_date": "2025-08-14T01:00:36.239126",
+        "icon": "\ud83c\udfc6"
+      },
+      {
+        "id": "first_correct",
+        "name": "First Correct",
+        "description": "Got your first answer right",
+        "earned_date": "2025-08-14T01:00:40.965135",
+        "icon": "\ud83c\udfc6"
+      }
+    ],
+    "session_history": [
+      {
+        "start_time": "2025-08-14T01:00:36.239116",
+        "questions_answered": 4,
+        "questions_correct": 3
+      }
+    ],
+    "last_activity": "2025-08-14T01:00:48.059569",
+    "topics_studied": {
+      "Commands (System Management)": {
+        "correct": 2,
+        "total": 3,
+        "questions": 3
+      },
+      "Concepts & Terms (Security)": {
+        "correct": 1,
+        "total": 1,
+        "questions": 1
+      }
+    },
+    "difficulty_progress": {
+      "beginner": 0,
+      "intermediate": 4,
+      "advanced": 0
+    },
+    "daily_data": {
+      "last_reset_date": "2025-08-14",
+      "today": {
+        "date": "2025-08-14",
+        "correct_answers": 3,
+        "total_questions": 4,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "yesterday": {
+        "date": "",
+        "correct_answers": 0,
+        "total_questions": 0,
+        "quiz_time": 0,
+        "study_time": 0
+      },
+      "daily_history": {}
+    },
+    "current_streak": 3,
+    "longest_streak": 1,
+    "current_session": {
+      "start": "2025-08-14T01:00:36.239105",
+      "questions": 4,
+      "last_activity": "2025-08-14T01:00:48.059569"
+    }
+  }
+}
