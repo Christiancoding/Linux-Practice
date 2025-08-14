@@ -140,6 +140,10 @@ The application uses a hybrid storage approach:
 - **Browser Capabilities**: Feature support (does your browser support WebGL, etc.)
 - **A/B Testing**: A/B tests (which variant you saw and how you behaved)
 - **User Journey**: Heatmaps / session replays (mouse movement/scroll paths, page snapshots)
+- **Custom Events**: Any custom events specific to the application (e.g., quiz started, VM launched)
+- **Error Events**: Any error events specific to the application (e.g., API errors, validation errors)
+- **Performance Events**: Any performance-related events (e.g., long tasks, resource loading issues)
+- **Local IP Address**: The local IP address of the user (useful for network-related analytics)
 
 ### Adding New Features
 
