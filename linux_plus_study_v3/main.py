@@ -22,7 +22,8 @@ from flask import Flask  # <-- Add this import at the top with other imports
 from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
 from controllers.quiz_controller import QuizController
-# StatsController removed for privacy protection
+from controllers.stats_controller import StatsController
+from services.analytics_integration import WebAnalyticsTracker
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
     print("Linux Plus Study System requires Python 3.8+. Please upgrade your Python installation.")
@@ -137,19 +138,20 @@ class LinuxPlusStudySystem:
 
             # Import web application components
             from controllers.quiz_controller import QuizController
-            # StatsController removed for privacy protection
+            from controllers.stats_controller import StatsController
             
             # Initialize game state first
             game_state = GameState()
             
             # Initialize controllers with game_state
             quiz_controller = QuizController(game_state)
-            # stats_controller removed for privacy protection
+            stats_controller = StatsController(game_state)
             self.logger.info("Web application components loaded successfully")
             
             # Create Flask application
             app = self.setup_routes(
                 quiz_controller=quiz_controller,
+                stats_controller=stats_controller,
                 game_state=game_state
             )
             
@@ -322,6 +324,7 @@ class LinuxPlusStudySystem:
     def setup_routes(
         self,
         quiz_controller: QuizController,
+        stats_controller: StatsController,
         game_state: GameState
     ) -> Flask:
         """
@@ -344,35 +347,80 @@ class LinuxPlusStudySystem:
             
             # Update the controllers in the web view
             web_view.quiz_controller = quiz_controller
-            # web_view.stats_controller removed for privacy protection
+            web_view.stats_controller = stats_controller
             
-            # Initialize analytics tracking - disabled
-            # analytics_tracker = WebAnalyticsTracker(app)
+            # Initialize analytics tracking
+            analytics_tracker = WebAnalyticsTracker(app)
             
             # Add analytics routes
             self._setup_analytics_routes(app)
             
-            # Add analytics context processor - disabled
+            # Add analytics context processor
             @app.context_processor
             def inject_analytics():
-                # Analytics integration removed
+                from services.analytics_integration import get_analytics_js_config
                 return {
-                    'analytics_config': '{}',
+                    'analytics_config': get_analytics_js_config(),
                     'analytics_js_snippet': '''
                     <script>
-                    // Analytics disabled
+                    const analyticsConfig = ''' + get_analytics_js_config() + ''';
+                    
+                    // Track page views automatically
                     function trackPageView(pageName) {
-                        // Analytics disabled
+                        fetch('/api/analytics/track', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event_type: 'page_view',
+                                page_name: pageName
+                            })
+                        });
                     }
+                    
+                    // Track quiz answers
                     function trackQuizAnswer(correct, timeTaken) {
-                        // Analytics disabled
+                        fetch('/api/analytics/track', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event_type: 'quiz_answer',
+                                correct: correct,
+                                time_taken: timeTaken
+                            })
+                        });
                     }
+                    
+                    // Track VM commands
                     function trackVMCommand(command, executionTime) {
-                        // Analytics disabled
+                        fetch('/api/analytics/track', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event_type: 'vm_command',
+                                command: command,
+                                execution_time: executionTime
+                            })
+                        });
                     }
+                    
+                    // Track feature usage
                     function trackFeatureUsage(featureName, usageCount = 1) {
-                        // Analytics disabled
+                        fetch('/api/analytics/track', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                event_type: 'feature_usage',
+                                feature_name: featureName,
+                                usage_count: usageCount
+                            })
+                        });
                     }
+                    
+                    // Auto-track page views on load
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const pageName = window.location.pathname.split('/').filter(p => p).join('_') || 'home';
+                        trackPageView(pageName);
+                    });
                     </script>
                     '''
                 }
@@ -384,39 +432,105 @@ class LinuxPlusStudySystem:
             raise
     
     def _setup_analytics_routes(self, app: Flask) -> None:
-        """Setup analytics-specific routes - disabled."""
-        from flask import jsonify, render_template
+        """Setup analytics-specific routes."""
+        from flask import request, jsonify, session, redirect, render_template
+        from services.analytics_integration import (
+            handle_analytics_api_request, get_user_analytics_summary,
+            get_global_analytics, track_quiz_start, track_study_session,
+            track_vm_session, track_cli_playground
+        )
         
-        # Analytics tracking is now handled in web_view.py
-        # @app.route('/api/analytics/track', methods=['POST'])
-        # def analytics_track():
-        #     """General analytics tracking endpoint - disabled."""
-        #     return jsonify({"status": "disabled", "message": "Analytics tracking disabled"})
+        @app.route('/api/analytics/track', methods=['POST'])
+        def analytics_track():
+            """General analytics tracking endpoint."""
+            return jsonify(handle_analytics_api_request())
         
         @app.route('/api/user/analytics-summary')
         def user_analytics_summary():
-            """Get user analytics summary - disabled."""
-            return jsonify({"status": "disabled", "message": "Analytics summary disabled"})
+            """Get user analytics summary."""
+            user_id = session.get('user_id', 'anonymous')
+            
+            # For now, always return demo data since we know it works
+            if user_id == 'anonymous':
+                summary = get_user_analytics_summary('demo_user_001')
+            else:
+                summary = get_user_analytics_summary(user_id)
+                # Fallback to demo data if user has no data
+                if summary and summary.get('total_questions', 0) == 0:
+                    summary = get_user_analytics_summary('demo_user_001')
+                    
+            return jsonify(summary)
         
         @app.route('/api/analytics/users')
         def analytics_users():
-            """Get list of all users in analytics system - disabled."""
-            return jsonify({'success': False, 'error': 'Analytics disabled'})
+            """Get list of all users in analytics system."""
+            try:
+                from utils.database import get_database_manager
+                from services.analytics_service import AnalyticsService
+                
+                db_manager = get_database_manager()
+                if db_manager and db_manager.session_factory:
+                    session = db_manager.session_factory()
+                    try:
+                        analytics_service = AnalyticsService(session)
+                        users = analytics_service.get_all_users()
+                        return jsonify({'success': True, 'users': users})
+                    except Exception as e:
+                        return jsonify({'success': False, 'error': str(e)})
+                    finally:
+                        session.close()
+                else:
+                    return jsonify({'success': False, 'error': 'Database not available'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
         
         @app.route('/api/analytics/overview')
         def analytics_overview():
-            """Get system-wide analytics overview - disabled."""
-            return jsonify({'success': False, 'error': 'Analytics disabled'})
+            """Get system-wide analytics overview."""
+            try:
+                from utils.database import get_database_manager
+                from services.analytics_service import AnalyticsService
+                
+                db_manager = get_database_manager()
+                if db_manager and db_manager.session_factory:
+                    session = db_manager.session_factory()
+                    try:
+                        analytics_service = AnalyticsService(session)
+                        overview = analytics_service.get_user_activity_overview()
+                        return jsonify({'success': True, 'overview': overview})
+                    except Exception as e:
+                        return jsonify({'success': False, 'error': str(e)})
+                    finally:
+                        session.close()
+                else:
+                    return jsonify({'success': False, 'error': 'Database not available'})
+            except Exception as e:
+                return jsonify({'success': False, 'error': str(e)})
         
         @app.route('/analytics')
         def main_analytics_dashboard():
-            """Analytics dashboard page - disabled."""
-            return render_template('error.html', error="Analytics dashboard disabled")
+            """Analytics dashboard page."""
+            user_id = session.get('user_id', 'anonymous')
+            stats = get_user_analytics_summary(user_id)
+            
+            # If anonymous user has no data, try to get demo user data
+            if (stats and 
+                (stats.get('total_questions', 0) == 0 or 'error' in stats) and 
+                user_id == 'anonymous'):
+                
+                # Try getting demo user data instead
+                demo_stats = get_user_analytics_summary('demo_user_001')
+                if demo_stats and demo_stats.get('total_questions', 0) > 0:
+                    stats = demo_stats
+                    
+            return render_template('analytics_dashboard.html', stats=stats)
         
         @app.route('/admin/analytics')
         def admin_analytics():
-            """Admin analytics dashboard - disabled."""
-            return render_template('error.html', error="Admin analytics disabled")
+            """Admin analytics dashboard."""
+            # Add admin check here if needed
+            global_stats = get_global_analytics()
+            return render_template('admin_analytics.html', stats=global_stats)
 
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create comprehensive command line argument parser."""

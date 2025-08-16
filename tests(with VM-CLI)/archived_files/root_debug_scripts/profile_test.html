@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile Management Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px; }
+        input { margin: 5px; padding: 5px; width: 200px; }
+        #profiles-list { margin: 10px 0; }
+        .profile-item { 
+            border: 1px solid #ddd; 
+            padding: 10px; 
+            margin: 5px 0; 
+            background: #f9f9f9;
+        }
+        #output { 
+            white-space: pre-wrap; 
+            background: #f0f0f0; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            max-height: 300px; 
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Profile Management Test Page</h1>
+    
+    <div class="test-section">
+        <h2>Current Status</h2>
+        <p><strong>Current Profile:</strong> <span id="current-profile">Loading...</span></p>
+        <button onclick="loadProfiles()">Refresh Profiles</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Create New Profile</h2>
+        <input type="text" id="new-profile-name" placeholder="Profile name" maxlength="30">
+        <button onclick="createNewProfile()">Create Profile</button>
+    </div>
+    
+    <div class="test-section">
+        <h2>Profiles List</h2>
+        <div id="profiles-list">Loading...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Output</h2>
+        <div id="output"></div>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <script>
+        let currentProfileId = null;
+        
+        function log(message) {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            output.textContent += `[${timestamp}] ${message}\n`;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+        
+        function showMessage(type, text) {
+            log(`${type.toUpperCase()}: ${text}`);
+        }
+
+        function loadProfiles() {
+            log('Loading profiles...');
+            fetch('/api/profiles')
+                .then(response => {
+                    log(`Response status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    log(`Response data: ${JSON.stringify(data, null, 2)}`);
+                    if (data.success) {
+                        displayProfiles(data.profiles, data.current_profile);
+                    } else {
+                        showMessage('error', 'Failed to load profiles: ' + (data.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    log(`Error loading profiles: ${error}`);
+                    showMessage('error', 'An error occurred while loading profiles');
+                });
+        }
+
+        function displayProfiles(profiles, currentProfile) {
+            currentProfileId = currentProfile;
+            
+            // Update current profile display
+            const currentProfileElement = document.getElementById('current-profile');
+            if (profiles[currentProfile]) {
+                currentProfileElement.textContent = profiles[currentProfile].name || profiles[currentProfile].display_name;
+            } else {
+                currentProfileElement.textContent = currentProfile;
+            }
+            
+            // Update profiles list
+            const profilesList = document.getElementById('profiles-list');
+            profilesList.innerHTML = '';
+            
+            if (Object.keys(profiles).length === 0) {
+                profilesList.innerHTML = '<div class="profile-empty">No profiles found</div>';
+                return;
+            }
+            
+            Object.entries(profiles).forEach(([id, profile]) => {
+                const profileItem = document.createElement('div');
+                profileItem.className = `profile-item ${id === currentProfile ? 'active' : ''}`;
+                
+                const sessionCount = profile.analytics?.sessions?.length || profile.total_sessions || 0;
+                const lastStudy = profile.analytics?.sessions?.length > 0 
+                    ? new Date(profile.analytics.sessions[profile.analytics.sessions.length - 1].timestamp).toLocaleDateString()
+                    : profile.last_activity ? new Date(profile.last_activity).toLocaleDateString() : 'Never';
+                
+                profileItem.innerHTML = `
+                    <div class="profile-info">
+                        <h5>${profile.name || profile.display_name}</h5>
+                        <p>${sessionCount} sessions • Last study: ${lastStudy}</p>
+                    </div>
+                    <div class="profile-actions">
+                        ${id !== currentProfile ? `<button onclick="switchProfile('${id}')">Switch</button>` : '<span>Active</span>'}
+                        <button onclick="renameProfile('${id}', '${profile.name || profile.display_name}')">Rename</button>
+                        <button onclick="resetProfile('${id}')">Reset</button>
+                        ${Object.keys(profiles).length > 1 ? `<button onclick="deleteProfile('${id}', '${profile.name || profile.display_name}')">Delete</button>` : ''}
+                    </div>
+                `;
+                
+                profilesList.appendChild(profileItem);
+            });
+            
+            log(`Displayed ${Object.keys(profiles).length} profiles. Current: ${currentProfile}`);
+        }
+
+        function createNewProfile() {
+            const nameInput = document.getElementById('new-profile-name');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showMessage('error', 'Please enter a profile name');
+                return;
+            }
+            
+            if (name.length > 30) {
+                showMessage('error', 'Profile name must be 30 characters or less');
+                return;
+            }
+            
+            log(`Creating profile: ${name}`);
+            
+            fetch('/api/profiles', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: name })
+            })
+            .then(response => {
+                log(`Create response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Create response data: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    showMessage('success', `Profile "${name}" created successfully!`);
+                    nameInput.value = '';
+                    loadProfiles();
+                } else {
+                    showMessage('error', 'Failed to create profile: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                log(`Error creating profile: ${error}`);
+                showMessage('error', 'An error occurred while creating the profile');
+            });
+        }
+
+        function switchProfile(profileId) {
+            if (profileId === currentProfileId) {
+                showMessage('info', 'This profile is already active');
+                return;
+            }
+            
+            log(`Switching to profile: ${profileId}`);
+            
+            fetch('/api/profiles/switch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ profile_id: profileId })
+            })
+            .then(response => {
+                log(`Switch response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Switch response data: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    showMessage('success', 'Profile switched successfully!');
+                    loadProfiles();
+                } else {
+                    showMessage('error', 'Failed to switch profile: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                log(`Error switching profile: ${error}`);
+                showMessage('error', 'An error occurred while switching profiles');
+            });
+        }
+
+        function renameProfile(profileId, currentName) {
+            const newName = prompt(`Enter new name for profile "${currentName}":`, currentName);
+            
+            if (newName === null) return; // User cancelled
+            
+            const trimmedName = newName.trim();
+            if (!trimmedName) {
+                showMessage('error', 'Profile name cannot be empty');
+                return;
+            }
+            
+            if (trimmedName.length > 30) {
+                showMessage('error', 'Profile name must be 30 characters or less');
+                return;
+            }
+            
+            if (trimmedName === currentName) {
+                showMessage('info', 'No changes made');
+                return;
+            }
+            
+            log(`Renaming profile ${profileId} from "${currentName}" to "${trimmedName}"`);
+            
+            fetch(`/api/profiles/${profileId}/rename`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ name: trimmedName })
+            })
+            .then(response => {
+                log(`Rename response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Rename response data: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    showMessage('success', `Profile renamed to "${trimmedName}" successfully!`);
+                    loadProfiles();
+                } else {
+                    showMessage('error', 'Failed to rename profile: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                log(`Error renaming profile: ${error}`);
+                showMessage('error', 'An error occurred while renaming the profile');
+            });
+        }
+
+        function resetProfile(profileId) {
+            const confirmReset = confirm('Are you sure you want to reset this profile? This will clear all progress and statistics. This action cannot be undone.');
+            
+            if (!confirmReset) return;
+            
+            log(`Resetting profile: ${profileId}`);
+            
+            fetch(`/api/profiles/${profileId}/reset`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                log(`Reset response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Reset response data: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    showMessage('success', 'Profile reset successfully!');
+                    loadProfiles();
+                } else {
+                    showMessage('error', 'Failed to reset profile: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                log(`Error resetting profile: ${error}`);
+                showMessage('error', 'An error occurred while resetting the profile');
+            });
+        }
+
+        function deleteProfile(profileId, profileName) {
+            const confirmDelete = confirm(`Are you sure you want to delete the profile "${profileName}"? This action cannot be undone.`);
+            
+            if (!confirmDelete) return;
+            
+            if (profileId === currentProfileId) {
+                showMessage('error', 'Cannot delete the currently active profile. Switch to another profile first.');
+                return;
+            }
+            
+            log(`Deleting profile: ${profileId}`);
+            
+            fetch(`/api/profiles/${profileId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                log(`Delete response status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                log(`Delete response data: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    showMessage('success', `Profile "${profileName}" deleted successfully!`);
+                    loadProfiles();
+                } else {
+                    showMessage('error', 'Failed to delete profile: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                log(`Error deleting profile: ${error}`);
+                showMessage('error', 'An error occurred while deleting the profile');
+            });
+        }
+
+        // Load profiles when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Page loaded, initializing...');
+            loadProfiles();
+            
+            // Add enter key support for profile creation
+            const newProfileInput = document.getElementById('new-profile-name');
+            if (newProfileInput) {
+                newProfileInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        createNewProfile();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

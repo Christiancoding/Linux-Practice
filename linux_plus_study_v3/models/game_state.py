@@ -13,7 +13,7 @@ from typing import Optional, Dict, List, Tuple, Any, TypedDict, Union, cast
 
 from utils.config import *
 from models.question import QuestionManager, GameHistory as QuestionGameHistory
-from models.db_achievement_system import DBAchievementSystem
+from models.achievements import AchievementSystem
 from utils.persistence_manager import get_persistence_manager
 
 
@@ -58,7 +58,7 @@ class GameState:
         
         # Initialize subsystems
         self.question_manager = QuestionManager()
-        self.achievement_system = DBAchievementSystem()
+        self.achievement_system = AchievementSystem()
         
         # Load game history using persistence manager
         self.study_history: GameStateHistory = self.load_history()

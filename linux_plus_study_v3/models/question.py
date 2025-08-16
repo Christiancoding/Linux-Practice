@@ -195,44 +195,25 @@ class QuestionManager:
         self.load_questions()
     
     def load_questions(self):
-        """Load questions from database and fallback sources with enhanced error reporting."""
+        """Load questions from various sources with enhanced error reporting."""
         self.questions = []
         total_loaded = 0
         
-        # Try to load from database first
-        try:
-            from models.question_db import question_db
-            db_questions = question_db.load_questions()
-            if db_questions:
-                for q_data in db_questions:
-                    try:
-                        question = Question.from_dict(q_data)
-                        self.questions.append(question)
-                        total_loaded += 1
-                    except Exception as e:
-                        print(f"Warning: Invalid database question skipped: {e}")
-                
-                if total_loaded > 0:
-                    print(f"✓ Loaded {total_loaded} questions from database")
-        except Exception as e:
-            print(f"Warning: Could not load questions from database: {e}")
+        # Start with sample questions from config
+        sample_count = 0
+        for question_tuple in SAMPLE_QUESTIONS:
+            try:
+                question = Question.from_tuple(question_tuple)
+                self.questions.append(question)
+                sample_count += 1
+            except ValueError as e:
+                print(f"Warning: Invalid sample question skipped: {e}")
         
-        # If no questions loaded from database, try sample questions from config
-        if total_loaded == 0:
-            sample_count = 0
-            for question_tuple in SAMPLE_QUESTIONS:
-                try:
-                    question = Question.from_tuple(question_tuple)
-                    self.questions.append(question)
-                    sample_count += 1
-                except ValueError as e:
-                    print(f"Warning: Invalid sample question skipped: {e}")
-            
-            if sample_count > 0:
-                print(f"✓ Loaded {sample_count} sample questions from config")
-                total_loaded += sample_count
+        if sample_count > 0:
+            print(f"✓ Loaded {sample_count} sample questions from config")
+            total_loaded += sample_count
         
-        # Try to load additional questions from JSON file in root directory (legacy fallback)
+        # Try to load additional questions from JSON file in root directory
         json_files_to_try = [
             "linux_plus_questions.json",
             "data/questions.json",
@@ -253,10 +234,9 @@ class QuestionManager:
                     else:
                         print(f"⚠️  File {json_file} exists but contains no valid questions")
                 else:
-                    # Silently skip missing fallback files since database loading is primary
-                    pass
+                    print(f"📂 File not found: {json_file}")
             except FileNotFoundError:
-                # Silently skip missing fallback files since database loading is primary
+                print(f"📂 File not found: {json_file}")
                 continue
             except json.JSONDecodeError as e:
                 print(f"❌ JSON parsing error in {json_file}: {e}")

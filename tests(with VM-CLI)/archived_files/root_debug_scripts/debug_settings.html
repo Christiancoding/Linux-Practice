@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Page Debug</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .debug-panel { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .error { color: red; font-weight: bold; }
+        .success { color: green; font-weight: bold; }
+        .info { color: blue; }
+        button { margin: 5px; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        input { padding: 8px; margin: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        #console { background: #2d3748; color: #e2e8f0; padding: 15px; margin: 10px 0; border-radius: 8px; max-height: 400px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>Settings Page Debug Tool</h1>
+    <p>This tool will help debug the profile management issues.</p>
+
+    <div class="debug-panel">
+        <h3>📋 System Check</h3>
+        <button class="btn-primary" onclick="runSystemCheck()">Run System Check</button>
+        <div id="system-status"></div>
+    </div>
+
+    <div class="debug-panel">
+        <h3>👤 Profile Operations</h3>
+        <input type="text" id="test-profile-name" placeholder="Test profile name" value="Debug Test User">
+        <button class="btn-success" onclick="testCreateProfile()">Test Create Profile</button>
+        <button class="btn-primary" onclick="testLoadProfiles()">Test Load Profiles</button>
+        <button class="btn-danger" onclick="testDeleteLastCreated()">Delete Last Created</button>
+    </div>
+
+    <div class="debug-panel">
+        <h3>🐛 Console Output</h3>
+        <button class="btn-primary" onclick="clearConsole()">Clear Console</button>
+        <div id="console"></div>
+    </div>
+
+    <script>
+        let lastCreatedProfileId = null;
+        
+        function log(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : 'ℹ️';
+            console.textContent += `${prefix} [${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+            
+            // Also log to browser console
+            if (type === 'error') {
+                console.error(message);
+            } else {
+                console.log(message);
+            }
+        }
+        
+        function clearConsole() {
+            document.getElementById('console').textContent = '';
+        }
+        
+        function updateSystemStatus(html) {
+            document.getElementById('system-status').innerHTML = html;
+        }
+        
+        async function runSystemCheck() {
+            log('🔍 Starting system check...', 'info');
+            updateSystemStatus('<p class="info">Checking system status...</p>');
+            
+            let statusHtml = '<h4>System Status:</h4><ul>';
+            
+            try {
+                // Test 1: Check if API endpoint exists
+                log('Testing API endpoint availability...', 'info');
+                const response = await fetch('/api/profiles');
+                if (response.ok) {
+                    statusHtml += '<li class="success">✅ API endpoint accessible</li>';
+                    log('API endpoint is accessible', 'success');
+                    
+                    const data = await response.json();
+                    log(`API Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                    
+                    if (data.success) {
+                        statusHtml += '<li class="success">✅ API returns success</li>';
+                        statusHtml += `<li class="info">📊 Found ${Object.keys(data.profiles || {}).length} profiles</li>`;
+                        statusHtml += `<li class="info">👤 Current profile: ${data.current_profile}</li>`;
+                        log('API is working correctly', 'success');
+                    } else {
+                        statusHtml += '<li class="error">❌ API returns error: ' + (data.error || 'Unknown') + '</li>';
+                        log('API returned error: ' + (data.error || 'Unknown'), 'error');
+                    }
+                } else {
+                    statusHtml += '<li class="error">❌ API endpoint not accessible (Status: ' + response.status + ')</li>';
+                    log(`API endpoint failed with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                statusHtml += '<li class="error">❌ Network error: ' + error.message + '</li>';
+                log('Network error: ' + error.message, 'error');
+            }
+            
+            // Test 2: Check if required DOM elements exist in main settings page
+            try {
+                log('Checking if we can access main settings page elements...', 'info');
+                // This will only work if we're on the actual settings page
+                const profilesTab = document.querySelector('button[onclick="switchSettingsTab(\'profiles\')"]');
+                const profilesList = document.getElementById('profiles-list');
+                const newProfileInput = document.getElementById('new-profile-name');
+                
+                if (window.location.pathname === '/settings') {
+                    if (profilesTab) {
+                        statusHtml += '<li class="success">✅ Profiles tab button found</li>';
+                        log('Profiles tab button found', 'success');
+                    } else {
+                        statusHtml += '<li class="error">❌ Profiles tab button not found</li>';
+                        log('Profiles tab button not found', 'error');
+                    }
+                    
+                    if (profilesList) {
+                        statusHtml += '<li class="success">✅ Profiles list container found</li>';
+                        log('Profiles list container found', 'success');
+                    } else {
+                        statusHtml += '<li class="error">❌ Profiles list container not found</li>';
+                        log('Profiles list container not found', 'error');
+                    }
+                    
+                    if (newProfileInput) {
+                        statusHtml += '<li class="success">✅ New profile input found</li>';
+                        log('New profile input found', 'success');
+                    } else {
+                        statusHtml += '<li class="error">❌ New profile input not found</li>';
+                        log('New profile input not found', 'error');
+                    }
+                } else {
+                    statusHtml += '<li class="info">ℹ️ Not on settings page - DOM check skipped</li>';
+                    log('Not on settings page, skipping DOM element check', 'info');
+                }
+            } catch (error) {
+                statusHtml += '<li class="error">❌ DOM check error: ' + error.message + '</li>';
+                log('DOM check error: ' + error.message, 'error');
+            }
+            
+            statusHtml += '</ul>';
+            updateSystemStatus(statusHtml);
+            log('System check completed', 'success');
+        }
+        
+        async function testLoadProfiles() {
+            log('🔄 Testing profile loading...', 'info');
+            
+            try {
+                const response = await fetch('/api/profiles');
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`✅ Loaded ${Object.keys(data.profiles).length} profiles successfully`, 'success');
+                    log(`Current profile: ${data.current_profile}`, 'info');
+                    
+                    for (const [id, profile] of Object.entries(data.profiles)) {
+                        log(`  - ${id}: ${profile.name || profile.display_name}`, 'info');
+                    }
+                } else {
+                    log(`❌ Failed to load profiles: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error loading profiles: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testCreateProfile() {
+            const profileName = document.getElementById('test-profile-name').value.trim();
+            if (!profileName) {
+                log('❌ Please enter a profile name', 'error');
+                return;
+            }
+            
+            log(`📝 Testing profile creation: "${profileName}"...`, 'info');
+            
+            try {
+                const response = await fetch('/api/profiles', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name: profileName })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    lastCreatedProfileId = data.user_id;
+                    log(`✅ Profile created successfully! ID: ${lastCreatedProfileId}`, 'success');
+                    
+                    // Test loading profiles again to see the new one
+                    setTimeout(() => {
+                        testLoadProfiles();
+                    }, 500);
+                } else {
+                    log(`❌ Failed to create profile: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error creating profile: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDeleteLastCreated() {
+            if (!lastCreatedProfileId) {
+                log('❌ No profile to delete (create one first)', 'error');
+                return;
+            }
+            
+            log(`🗑️ Testing profile deletion: ${lastCreatedProfileId}...`, 'info');
+            
+            try {
+                const response = await fetch(`/api/profiles/${lastCreatedProfileId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log(`✅ Profile deleted successfully!`, 'success');
+                    lastCreatedProfileId = null;
+                    
+                    // Test loading profiles again to see it's gone
+                    setTimeout(() => {
+                        testLoadProfiles();
+                    }, 500);
+                } else {
+                    log(`❌ Failed to delete profile: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ Error deleting profile: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run system check when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Debug tool loaded', 'info');
+            runSystemCheck();
+        });
+        
+        // Add keyboard shortcut for profile creation
+        document.getElementById('test-profile-name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testCreateProfile();
+            }
+        });
+    </script>
+</body>
+</html>

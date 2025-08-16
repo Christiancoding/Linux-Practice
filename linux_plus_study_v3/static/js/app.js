@@ -56,88 +56,9 @@ function loadGlobalAppearanceSettings() {
         reduceMotion: reduceMotion
     });
 }
-// Learning Analytics Only - Privacy Focused
-class LearningTracker {
-    constructor() {
-        this.sessionStart = Date.now();
-        this.learningEvents = [];
-        this.initializeLearningTracking();
-    }
-    
-    initializeLearningTracking() {
-        this.trackLearningEvents();
-    }
-    
-    trackLearningEvents() {
-        // Track educational quiz events only
-        document.addEventListener('quiz-started', (event) => {
-            this.trackLearningEvent('quiz_started', {
-                quiz_type: event.detail?.type,
-                category: event.detail?.category
-            });
-        });
-        
-        document.addEventListener('achievement-unlocked', (event) => {
-            this.trackLearningEvent('achievement_unlocked', {
-                achievement_name: event.detail?.name,
-                points_earned: event.detail?.points
-            });
-        });
-    }
-    
-    trackQuizSession(data) {
-        this.trackLearningEvent('quiz_session', {
-            questions_attempted: data.questions_attempted || 0,
-            questions_correct: data.questions_correct || 0,
-            session_duration: data.duration || 0,
-            category: data.category || 'mixed',
-            difficulty: data.difficulty || 'medium',
-            completion_percentage: data.completion_percentage || 0
-        });
-    }
-    
-    trackLearningProgress(data) {
-        this.trackLearningEvent('learning_progress', {
-            topic: data.topic,
-            mastery_level: data.mastery_level,
-            study_time: data.study_time
-        });
-    }
-    
-    trackLearningEvent(eventType, data) {
-        const learningEvent = {
-            event_type: eventType,
-            timestamp: Date.now(),
-            data: data
-        };
-        
-        this.learningEvents.push(learningEvent);
-        
-        // Send only learning-related data to analytics endpoint
-        fetch('/api/analytics/learning', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(learningEvent)
-        }).catch(error => {
-            console.warn('Learning analytics unavailable:', error);
-        });
-    }
-}
-
-// Initialize learning-only tracker
-window.learningTracker = new LearningTracker();
-
 // Global app functionality
 document.addEventListener('DOMContentLoaded', function() {
     console.log('App.js DOMContentLoaded - initializing...');
-    
-    // Track page load completion
-    window.analyticsTracker.sendEvent('page_ready', {
-        page: window.location.pathname,
-        loadTime: performance.now()
-    });
     
     // Load appearance settings on every page load
     loadGlobalAppearanceSettings();
@@ -432,10 +353,6 @@ function showAlert(message, type = 'info') {
  * Saves settings to the backend by calling the /api/save_settings endpoint.
  */
 function saveSettings() {
-    // Track settings interaction
-    if (window.analyticsTracker) {
-        window.analyticsTracker.trackFeatureUsage('settings', 'save');
-    }
     const elements = {
         focusMode: document.getElementById('focusMode'),
         breakReminder: document.getElementById('breakReminder'),
@@ -541,10 +458,6 @@ function loadSettings() {
  * Initiates the export of study history by redirecting to the API endpoint.
  */
 function exportHistory() {
-    // Track export feature usage
-    if (window.analyticsTracker) {
-        window.analyticsTracker.trackFeatureUsage('data_export', 'history_export');
-    }
     // This creates a link and clicks it to trigger the download from the backend endpoint
     const link = document.createElement('a');
     link.href = '/api/export_history';
@@ -559,10 +472,6 @@ function exportHistory() {
  * Handles the import of study history from a JSON file.
  */
 function importHistory() {
-    // Track import feature usage
-    if (window.analyticsTracker) {
-        window.analyticsTracker.trackFeatureUsage('data_import', 'history_import');
-    }
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
@@ -604,10 +513,6 @@ function importHistory() {
  * Initiates clearing of all statistics after user confirmation.
  */
 function clearHistory() {
-    // Track data clearing
-    if (window.analyticsTracker) {
-        window.analyticsTracker.trackFeatureUsage('data_management', 'clear_history');
-    }
     if (confirm('Are you sure you want to clear ALL study history? This action cannot be undone.')) {
         fetch('/api/clear_statistics', {
                 method: 'POST'
@@ -639,11 +544,6 @@ function clearHistory() {
  * Toggles dark mode for the application and saves the user's preference.
  */
 function toggleDarkMode() {
-    // Track theme change
-    if (window.analyticsTracker) {
-        const newMode = !document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-        window.analyticsTracker.trackFeatureUsage('appearance', 'theme_toggle', { mode: newMode });
-    }
     const body = document.body;
     body.classList.toggle('dark-mode');
     
@@ -807,28 +707,16 @@ function trackQuizCompletion() {
         const endTime = Date.now();
         const sessionDuration = Math.round((endTime - quizStartTime) / 1000); // Convert to seconds
         
-        // Enhanced quiz completion tracking
-        const quizData = {
-            duration: sessionDuration,
-            questions: questionsAnswered,
-            questions_attempted: questionsAnswered,
-            session_start: new Date(quizStartTime).toISOString(),
-            session_end: new Date(endTime).toISOString(),
-            completion_percentage: 100 // Assuming completed
-        };
-        
-        // Send to analytics tracker
-        if (window.analyticsTracker) {
-            window.analyticsTracker.trackQuizSession(quizData);
-        }
-        
         // Send actual session duration to backend
         fetch('/api/update-session-time', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(quizData)
+            body: JSON.stringify({
+                duration: sessionDuration,
+                questions: questionsAnswered
+            })
         }).catch(error => {
             console.log('Note: Could not update session time:', error);
         });
@@ -837,12 +725,4 @@ function trackQuizCompletion() {
 
 function incrementQuestionCount() {
     questionsAnswered++;
-    
-    // Track question interaction
-    if (window.analyticsTracker) {
-        window.analyticsTracker.sendEvent('question_interaction', {
-            question_number: questionsAnswered,
-            session_duration: quizStartTime ? Date.now() - quizStartTime : 0
-        });
-    }
 }

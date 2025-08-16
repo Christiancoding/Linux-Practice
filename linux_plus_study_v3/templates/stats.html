@@ -488,8 +488,6 @@
     background: var(--bg-secondary);
     border-radius: var(--radius-full);
     overflow: hidden;
-    position: relative;
-    margin-top: 4px;
 }
 
 .bar-fill {
@@ -650,14 +648,7 @@
 {% endblock %}
 
 {% block scripts %}
-<!-- Added JSON data container to avoid JS parse errors -->
-<script id="stats-data-json" type="application/json">{{ stats|tojson|default('null', true) }}</script>
-
 <script>
-// Server-side data initialization (fixed: removed raw Jinja expression from JS)
-const statsDataEl = document.getElementById('stats-data-json');
-const statsData = statsDataEl ? JSON.parse(statsDataEl.textContent || 'null') : null;
-
 // Initialize stats page
 document.addEventListener('DOMContentLoaded', function() {
     loadStatsData();
@@ -667,74 +658,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load stats data
 function loadStatsData() {
-    // Use server-side rendered data first, then load dynamic data via API
-    if (typeof statsData !== 'undefined' && statsData) {
-        updateStatsFromServerData(statsData);
-    }
-    
-    // Load additional dynamic data
-    Promise.all([
-        fetch('/api/stats/performance?range=7_days'),
-        fetch('/api/stats/sessions?limit=10'),
-        fetch('/api/stats/categories')
-    ])
-    .then(responses => Promise.all(responses.map(r => r.json())))
-    .then(([performanceData, sessionsData, categoriesData]) => {
-        
-        // Update performance chart
-        if (performanceData.success) {
-            updatePerformanceChart(performanceData.data);
-        }
-        
-        // Update sessions list
-        if (sessionsData.success) {
-            updateSessionList(sessionsData.data);
-        }
-        
-        // Update category stats
-        if (categoriesData.success) {
-            updateCategoryStats(categoriesData.data);
-        }
-    })
-    .catch(error => {
-        console.error('Error loading stats:', error);
-        loadDemoStatsData();
-    });
-}
-
-// Update stats from server-rendered data
-function updateStatsFromServerData(data) {
-    const overallStats = data.overall_stats || {};
-    
-    // Update overview stat values
-    const totalCorrect = overallStats.total_correct || 0;
-    const accuracyRate = overallStats.overall_accuracy || 0;
-    const currentStreak = overallStats.current_streak || 0;
-    const avgSessionTime = overallStats.average_session_duration || 0;
-    
-    // Update with animation
-    animateValue('total-correct', 0, totalCorrect, 1000);
-    animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
-    // Convert minutes to seconds for display as response time
-    const avgResponseTimeSeconds = Math.round(avgSessionTime * 60);
-    animateValue('avg-time', 0, avgResponseTimeSeconds, 1000, 's');
-    animateValue('current-streak', 0, currentStreak, 1000);
-    
-    // Update trends
-    updateStatsTrends(totalCorrect === 0, overallStats);
-    
-    // Update charts with initial data
-    if (data.performance_over_time) {
-        updatePerformanceChart(data.performance_over_time);
-    }
-    
-    if (data.recent_sessions) {
-        updateSessionList(data.recent_sessions);
-    }
-    
-    if (data.category_performance) {
-        updateCategoryStats(data.category_performance);
-    }
+    // Use the SAME dashboard API for consistency
+    fetch('/api/dashboard')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Error loading stats:', data.error);
+                return;
+            }
+            
+            // Update stat values with data from single source
+            const totalCorrect = data.total_correct || 0;
+            const accuracyRate = data.accuracy || 0;
+            const currentStreak = data.streak || 0;
+            
+            // Calculate average time per question if we have data
+            let avgTime = 0;
+            if (data.total_questions > 0 && data.total_study_time > 0) {
+                avgTime = Math.round(data.total_study_time / data.total_questions);
+            }
+            
+            // Update with animation
+            animateValue('total-correct', 0, totalCorrect, 1000);
+            animateValue('accuracy-rate', 0, Math.round(accuracyRate), 1000, '%');
+            animateValue('avg-time', 0, avgTime, 1000, 's');
+            animateValue('current-streak', 0, currentStreak, 1000);
+            
+            // Update charts with real data
+            updateChartsWithData(data);
+            
+            // Update session list
+            updateSessionList(data);
+        })
+        .catch(error => {
+            console.error('Error loading stats:', error);
+        });
 }
 
 // Update stats trend indicators
@@ -806,203 +764,50 @@ function calculateAverageTime(statsData) {
     return 0;
 }
 
-// Update performance chart with database data
-function updatePerformanceChart(performanceData) {
-    if (window.performanceChart && performanceData) {
-        const labels = performanceData.labels || [];
-        const correctData = performanceData.questions_correct || [];
-        const incorrectData = performanceData.questions_incorrect || [];
+// Update charts with real data
+function updateChartsWithData(statsData) {
+    // Update performance chart with real data if available
+    if (window.performanceChart && statsData.categories) {
+        const categories = statsData.categories.slice(0, 7); // Get first 7 days worth
+        const correctData = categories.map(cat => cat.correct || 0);
+        const incorrectData = categories.map(cat => (cat.attempts || 0) - (cat.correct || 0));
         
-        window.performanceChart.data.labels = labels;
         window.performanceChart.data.datasets[0].data = correctData;
         window.performanceChart.data.datasets[1].data = incorrectData;
         window.performanceChart.update();
     }
-}
-
-// Update charts with real data
-function updateChartsWithData(statsData, heatmapData) {
-    // Legacy function - redirects to new updatePerformanceChart
-    if (statsData && statsData.performance_over_time) {
-        updatePerformanceChart(statsData.performance_over_time);
-    }
     
     // Update category chart with real data
-    if (window.categoryChart && statsData.categories && statsData.categories.length > 0) {
-        // Filter out categories with no attempts and take top 5
-        const activeCategories = statsData.categories
-            .filter(cat => cat.attempts > 0)
-            .slice(0, 5);
-            
-        const categoryNames = activeCategories.map(cat => cat.category);
-        const categoryData = activeCategories.map(cat => cat.correct || 0);
+    if (window.categoryChart && statsData.categories) {
+        const categoryNames = statsData.categories.map(cat => cat.category);
+        const categoryData = statsData.categories.map(cat => cat.correct || 0);
         
-        window.categoryChart.data.labels = categoryNames;
-        window.categoryChart.data.datasets[0].data = categoryData;
+        window.categoryChart.data.labels = categoryNames.slice(0, 5);
+        window.categoryChart.data.datasets[0].data = categoryData.slice(0, 5);
         window.categoryChart.update();
     }
 }
 
-// Update category stats for strongest/weakest areas
-function updateCategoryStats(categoryData) {
-    // Handle both old and new data structures
-    let strongest = [];
-    let weakest = [];
-    
-    if (categoryData.strongest_categories) {
-        strongest = categoryData.strongest_categories;
-        weakest = categoryData.areas_to_improve;
-    } else if (categoryData.categories) {
-        // Legacy format - convert to new format
-        const categories = categoryData.categories
-            .filter(cat => cat.attempts > 0)
-            .sort((a, b) => b.accuracy - a.accuracy);
-        
-        strongest = categories.slice(0, 3);
-        weakest = categories.slice(-2).reverse();
-    }
-    
-    if (strongest.length === 0 && weakest.length === 0) {
-        hideAllCategoryStats();
-        return;
-    }
-    
-    // Update strongest categories section
-    updateStrongestCategories(strongest);
-    
-    // Update areas to improve section  
-    updateWeakestCategories(weakest);
-}
-
-function updateStrongestCategories(topCategories) {
-    const strongestSection = document.querySelector('.detail-section:has(.fas.fa-award)');
-    if (!strongestSection) return;
-    
-    const categoryList = strongestSection.querySelector('.category-list');
-    if (!categoryList) return;
-    
-    // Clear existing content
-    categoryList.innerHTML = '';
-    
-    topCategories.forEach(cat => {
-        const categoryItem = document.createElement('div');
-        categoryItem.className = 'category-item';
-        categoryItem.innerHTML = `
-            <div class="category-info">
-                <span class="category-name">${cat.category}</span>
-                <span class="category-score">${Math.round(cat.accuracy)}%</span>
-            </div>
-            <div class="category-bar">
-                <div class="bar-fill" style="width: ${Math.min(cat.accuracy, 100)}%; background: var(--gradient-success);"></div>
-            </div>
-        `;
-        categoryList.appendChild(categoryItem);
-    });
-}
-
-function updateWeakestCategories(worstCategories) {
-    const weakestSection = document.querySelector('.detail-section:has(.fas.fa-exclamation-triangle)');
-    if (!weakestSection) return;
-    
-    const categoryList = weakestSection.querySelector('.category-list');
-    if (!categoryList) return;
-    
-    // Clear existing content
-    categoryList.innerHTML = '';
-    
-    worstCategories.forEach(cat => {
-        const categoryItem = document.createElement('div');
-        categoryItem.className = 'category-item weak';
-        categoryItem.innerHTML = `
-            <div class="category-info">
-                <span class="category-name">${cat.category}</span>
-                <span class="category-score">${Math.round(cat.accuracy)}%</span>
-            </div>
-            <div class="category-bar">
-                <div class="bar-fill" style="width: ${Math.min(cat.accuracy, 100)}%; background: var(--gradient-danger);"></div>
-            </div>
-            <button class="btn btn-sm btn-primary mt-2" onclick="practiceCategory('${cat.category}')">
-                Practice Now
-            </button>
-        `;
-        categoryList.appendChild(categoryItem);
-    });
-}
-
-function hideAllCategoryStats() {
-    // Hide or show placeholder for strongest categories
-    const strongestSection = document.querySelector('.detail-section:has(.fas.fa-award)');
-    if (strongestSection) {
-        const categoryList = strongestSection.querySelector('.category-list');
-        if (categoryList) {
-            categoryList.innerHTML = '<p class="text-muted">No category data available yet. Complete some quizzes to see your strongest areas!</p>';
-        }
-    }
-    
-    // Hide or show placeholder for weakest categories  
-    const weakestSection = document.querySelector('.detail-section:has(.fas.fa-exclamation-triangle)');
-    if (weakestSection) {
-        const categoryList = weakestSection.querySelector('.category-list');
-        if (categoryList) {
-            categoryList.innerHTML = '<p class="text-muted">No category data available yet. Complete some quizzes to identify areas for improvement!</p>';
-        }
-    }
-}
-
 // Update recent sessions list
-function updateSessionList(sessionsData) {
-    // Update with database-driven session data
-    if (sessionsData && sessionsData.sessions && sessionsData.sessions.length > 0) {
-        const sessions = sessionsData.sessions;
+function updateSessionList(statsData) {
+    // This would update the session list with real data
+    // Implementation depends on session data structure
+    
+    // For now, update with placeholders if no data
+    if (!statsData || !statsData.sessions) {
+        document.getElementById('session-today-questions').textContent = '-- questions';
+        document.getElementById('session-today-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-today-duration').textContent = '-- min';
+        document.getElementById('session-yesterday-questions').textContent = '-- questions';
+        document.getElementById('session-yesterday-accuracy').textContent = '--% accuracy';
+        document.getElementById('session-yesterday-duration').textContent = '-- min';
         
-        // Update today's session (most recent)
-        if (sessions.length > 0) {
-            const todaySession = sessions[0];
-            document.getElementById('session-today-questions').textContent = `${todaySession.questions} questions`;
-            document.getElementById('session-today-accuracy').textContent = `${todaySession.accuracy}% accuracy`;
-            document.getElementById('session-today-duration').textContent = `${todaySession.duration} min`;
-            
-            const todayBar = document.getElementById('session-today-bar');
-            if (todayBar) {
-                todayBar.style.width = `${Math.min(todaySession.accuracy, 100)}%`;
-            }
-        }
-        
-        // Update yesterday's session (second most recent)
-        if (sessions.length > 1) {
-            const yesterdaySession = sessions[1];
-            document.getElementById('session-yesterday-questions').textContent = `${yesterdaySession.questions} questions`;
-            document.getElementById('session-yesterday-accuracy').textContent = `${yesterdaySession.accuracy}% accuracy`;
-            document.getElementById('session-yesterday-duration').textContent = `${yesterdaySession.duration} min`;
-            
-            const yesterdayBar = document.getElementById('session-yesterday-bar');
-            if (yesterdayBar) {
-                yesterdayBar.style.width = `${Math.min(yesterdaySession.accuracy, 100)}%`;
-            }
-        } else {
-            // No yesterday data
-            document.getElementById('session-yesterday-questions').textContent = '0 questions';
-            document.getElementById('session-yesterday-accuracy').textContent = '0% accuracy';
-            document.getElementById('session-yesterday-duration').textContent = '0 min';
-            
-            const yesterdayBar = document.getElementById('session-yesterday-bar');
-            if (yesterdayBar) {
-                yesterdayBar.style.width = '0%';
-            }
-        }
-    } else {
-        // No heatmap data available, use placeholder
-        document.getElementById('session-today-questions').textContent = '0 questions';
-        document.getElementById('session-today-accuracy').textContent = '0% accuracy';
-        document.getElementById('session-today-duration').textContent = '0 min';
-        document.getElementById('session-yesterday-questions').textContent = '0 questions';
-        document.getElementById('session-yesterday-accuracy').textContent = '0% accuracy';
-        document.getElementById('session-yesterday-duration').textContent = '0 min';
-        
-        const todayBar = document.getElementById('session-today-bar');
-        const yesterdayBar = document.getElementById('session-yesterday-bar');
-        if (todayBar) todayBar.style.width = '0%';
-        if (yesterdayBar) yesterdayBar.style.width = '0%';
+        // Update category scores
+        document.getElementById('file-mgmt-score').textContent = '--%';
+        document.getElementById('system-admin-score').textContent = '--%';
+        document.getElementById('shell-scripting-score').textContent = '--%';
+        document.getElementById('networking-score').textContent = '--%';
+        document.getElementById('security-score').textContent = '--%';
     }
 }
 
@@ -1141,21 +946,6 @@ function generateHeatmap() {
         });
 }
 
-// Generate heatmap from API data
-function generateHeatmapFromData(activityData) {
-    const heatmap = document.getElementById('activity-heatmap');
-    if (!heatmap) return;
-    
-    // Clear existing content
-    heatmap.innerHTML = '';
-    
-    if (activityData && activityData.length > 0) {
-        generateHeatmapGrid(heatmap, activityData);
-    } else {
-        generateStaticHeatmap();
-    }
-}
-
 function generateHeatmapGrid(container, activityData) {
     // Create a map for quick lookup of activity by date
     const activityMap = {};
@@ -1236,34 +1026,19 @@ function changeTimePeriod(period) {
     // Show loading state
     showMessage('info', `Loading ${getPeriodName(period)} data...`);
     
-    // Convert period to API format
-    let apiRange = '7_days';
-    switch(period) {
-        case 'week': apiRange = '7_days'; break;
-        case 'month': apiRange = '30_days'; break;
-        case 'all': apiRange = '90_days'; break; // Use 90 days for "all"
-        case 'custom': 
-            // For custom, would need date picker implementation
-            apiRange = '7_days'; 
-            break;
-    }
+    // Reload data for selected period
+    console.log('Loading data for:', period);
     
-    // Load data for selected period
-    fetch(`/api/stats/performance?range=${apiRange}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                updatePerformanceChart(data.data);
-                showMessage('success', `Loaded ${getPeriodName(period)} statistics`);
-            } else {
-                console.error('Error loading period data:', data.error);
-                showMessage('error', 'Failed to load data for selected period');
-            }
-        })
-        .catch(error => {
-            console.error('Error loading period data:', error);
-            showMessage('error', 'Failed to load data for selected period');
-        });
+    // For now, just reload the same data but could filter by date range
+    loadStatsData();
+    
+    // In a real implementation, you would:
+    // - Pass the period parameter to the API
+    // - Filter data on the backend based on the time range
+    // - Update charts and stats accordingly
+    setTimeout(() => {
+        showMessage('success', `Loaded ${getPeriodName(period)} statistics`);
+    }, 500);
 }
 
 // Get friendly name for time period
@@ -1290,22 +1065,8 @@ function exportData(format) {
 
 // Practice specific category
 function practiceCategory(category) {
-    console.log('Starting category practice for:', category);
-    showMessage('info', `Starting ${category} practice session...`);
-    
-    // Store the category preference and navigate to quiz
-    try {
-        localStorage.setItem('preferred_category', category);
-        showMessage('success', `Focusing on ${category} questions!`);
-        
-        setTimeout(() => {
-            window.location.href = '/quiz';
-        }, 1000);
-    } catch (error) {
-        console.error('Error setting category preference:', error);
-        // Fallback: just navigate to quiz
-        window.location.href = '/quiz';
-    }
+    localStorage.setItem('practiceCategory', category);
+    window.location.href = '/quiz';
 }
 
 // Show all sessions
@@ -1317,41 +1078,16 @@ function showAllSessions() {
 function showMessage(type, text) {
     const messageDiv = document.createElement('div');
     messageDiv.className = `message ${type} animate-fade-in`;
-    
-    let iconClass = 'info-circle';
-    if (type === 'success') iconClass = 'check-circle';
-    else if (type === 'error') iconClass = 'exclamation-triangle';
-    else if (type === 'warning') iconClass = 'exclamation-circle';
-    
     messageDiv.innerHTML = `
-        <i class="fas fa-${iconClass}"></i>
+        <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'}"></i>
         ${text}
     `;
     
-    // Add some basic styling for the message
-    messageDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        padding: 12px 20px;
-        border-radius: 8px;
-        color: white;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        max-width: 400px;
-        ${type === 'success' ? 'background: #10b981;' : ''}
-        ${type === 'error' ? 'background: #ef4444;' : ''}
-        ${type === 'warning' ? 'background: #f59e0b;' : ''}
-        ${type === 'info' ? 'background: #3b82f6;' : ''}
-    `;
-    
-    document.body.appendChild(messageDiv);
+    const container = document.querySelector('.container');
+    container.insertBefore(messageDiv, container.firstChild);
     
     setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.remove();
-        }
+        messageDiv.remove();
     }, 3000);
 }
 </script>

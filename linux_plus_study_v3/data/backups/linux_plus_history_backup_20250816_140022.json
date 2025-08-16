@@ -1,0 +1,60 @@
+{
+  "sessions": [],
+  "questions": {
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-11T20:50:31.378130",
+          "correct": true
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-11T20:50:36.096552",
+          "correct": false
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Concepts & Terms (Automation)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    }
+  },
+  "total_correct": 1,
+  "total_attempts": 2,
+  "incorrect_review": [
+    "What is Ansible primarily used for?"
+  ],
+  "leaderboard": [],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

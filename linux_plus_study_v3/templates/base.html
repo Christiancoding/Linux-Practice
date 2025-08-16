@@ -40,6 +40,9 @@
                 <a class="nav-link {% if request.endpoint == 'stats_page' %}active{% endif %}" href="{{ url_for('stats_page') }}" data-page="stats">
                     <i class="fas fa-chart-line"></i> <span>Stats</span>
                 </a>
+                <a class="nav-link {% if request.endpoint == 'analytics_page' %}active{% endif %}" href="{{ url_for('analytics_page') }}" data-page="analytics">
+                    <i class="fas fa-chart-bar"></i> <span>Analytics</span>
+                </a>
                 <a class="nav-link {% if request.endpoint == 'achievements_page' %}active{% endif %}" href="{{ url_for('achievements_page') }}" data-page="achievements">
                     <i class="fas fa-trophy"></i> <span>Achievements</span>
                 </a>
@@ -132,45 +135,6 @@
     </footer>
 
     <!-- Modals -->
-    <!-- Profile Creation Modal (mandatory) -->
-    <div class="modal profile-modal-overlay" id="profileSetupModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title">
-                    <i class="fas fa-user-plus"></i>
-                    Welcome to Linux+ Study Game
-                </h2>
-            </div>
-            <div class="modal-body text-center">
-                <div class="profile-setup-icon">
-                    <i class="fas fa-user-circle"></i>
-                </div>
-                <h3>Create Your Profile</h3>
-                <p class="profile-setup-desc">
-                    To get started, please create a profile to track your progress and achievements.
-                </p>
-                <form id="profileSetupForm" class="profile-setup-form">
-                    <div class="form-group">
-                        <input type="text" id="profileNameInput" name="name" 
-                               placeholder="Enter your profile name" 
-                               class="form-control" 
-                               maxlength="50" required>
-                    </div>
-                    <div class="form-actions">
-                        <button type="submit" class="btn btn-primary btn-create-profile">
-                            <i class="fas fa-plus"></i>
-                            Create Profile
-                        </button>
-                    </div>
-                </form>
-                <div class="profile-setup-error" id="profileSetupError" style="display: none;">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <span id="profileSetupErrorText">Error creating profile</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Achievement Unlock Modal -->
     <div class="modal" id="achievementModal">
         <div class="modal-content">
@@ -338,104 +302,6 @@
             alert('Help & Support coming soon!');
         }
 
-        // Profile Setup Functions
-        function checkProfileSetup() {
-            // Check if user needs to create a profile
-            fetch('/api/profiles')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.needs_setup) {
-                        showProfileSetupModal();
-                    }
-                })
-                .catch(error => {
-                    console.error('Error checking profile setup:', error);
-                });
-        }
-
-        function showProfileSetupModal() {
-            const modal = document.getElementById('profileSetupModal');
-            if (modal) {
-                modal.classList.add('active');
-                // Prevent closing by clicking outside or escape key
-                modal.style.pointerEvents = 'auto';
-            }
-        }
-
-        function hideProfileSetupModal() {
-            const modal = document.getElementById('profileSetupModal');
-            if (modal) {
-                modal.classList.remove('active');
-            }
-        }
-
-        function handleProfileSetup(event) {
-            event.preventDefault();
-            
-            const form = document.getElementById('profileSetupForm');
-            const nameInput = document.getElementById('profileNameInput');
-            const errorDiv = document.getElementById('profileSetupError');
-            const errorText = document.getElementById('profileSetupErrorText');
-            const submitBtn = form.querySelector('button[type="submit"]');
-            
-            const profileName = nameInput.value.trim();
-            
-            if (!profileName) {
-                showProfileSetupError('Please enter a profile name');
-                return;
-            }
-            
-            // Disable form during submission
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-            
-            // Create profile via API
-            fetch('/api/profiles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: profileName
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Profile created successfully
-                    hideProfileSetupModal();
-                    // Refresh the page to load with the new profile
-                    window.location.reload();
-                } else {
-                    showProfileSetupError(data.error || 'Failed to create profile');
-                }
-            })
-            .catch(error => {
-                console.error('Error creating profile:', error);
-                showProfileSetupError('Network error. Please try again.');
-            })
-            .finally(() => {
-                // Re-enable form
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-plus"></i> Create Profile';
-            });
-        }
-
-        function showProfileSetupError(message) {
-            const errorDiv = document.getElementById('profileSetupError');
-            const errorText = document.getElementById('profileSetupErrorText');
-            
-            if (errorDiv && errorText) {
-                errorText.textContent = message;
-                errorDiv.style.display = 'block';
-                
-                // Hide error after 5 seconds
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 5000);
-            }
-        }
-
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             // Load saved theme (basic fallback - app.js will handle full settings)
@@ -453,10 +319,10 @@
                 }
             }
             
-            // Add click event to close modals when clicking outside (except profile setup)
+            // Add click event to close modals when clicking outside
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
-                    if (e.target === this && !this.classList.contains('profile-modal-overlay')) {
+                    if (e.target === this) {
                         this.classList.remove('active');
                     }
                 });
@@ -469,15 +335,6 @@
                     setTimeout(() => msg.remove(), 300);
                 }, 5000);
             });
-
-            // Set up profile creation form
-            const profileSetupForm = document.getElementById('profileSetupForm');
-            if (profileSetupForm) {
-                profileSetupForm.addEventListener('submit', handleProfileSetup);
-            }
-
-            // Check if profile setup is needed (after a short delay to let page load)
-            setTimeout(checkProfileSetup, 500);
 
             // Initialize screen size management
             initializeScreenSizeManagement();
@@ -705,7 +562,10 @@
         }
     </script>
     
-    <!-- Learning Analytics Only - Privacy Focused -->
+    <!-- Analytics Integration -->
+    {% if analytics_js_snippet %}
+        {{ analytics_js_snippet | safe }}
+    {% endif %}
     
     {% block scripts %}{% endblock %}
 </body>
@@ -820,121 +680,5 @@
     animation: fadeInUp 0.6s ease;
     min-height: calc(100vh - 200px);
     padding: 2rem 0;
-}
-
-/* Profile Setup Modal Styles */
-.profile-modal-overlay {
-    z-index: 10000;
-    backdrop-filter: blur(10px);
-    background: rgba(0, 0, 0, 0.8);
-}
-
-.profile-modal-overlay .modal-content {
-    max-width: 500px;
-    border: 2px solid var(--primary-color);
-    box-shadow: var(--shadow-glow);
-    background: var(--bg-primary);
-}
-
-.profile-setup-icon {
-    width: 100px;
-    height: 100px;
-    background: var(--gradient-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 1.5rem;
-    font-size: 3rem;
-    color: white;
-    box-shadow: var(--shadow-glow);
-}
-
-.profile-setup-desc {
-    color: var(--text-secondary);
-    margin-bottom: 2rem;
-    line-height: 1.6;
-}
-
-.profile-setup-form {
-    max-width: 350px;
-    margin: 0 auto;
-}
-
-.profile-setup-form .form-group {
-    margin-bottom: 1.5rem;
-}
-
-.profile-setup-form .form-control {
-    width: 100%;
-    padding: 1rem;
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-md);
-    background: var(--bg-secondary);
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: var(--transition-base);
-}
-
-.profile-setup-form .form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px var(--primary-color-alpha);
-}
-
-.btn-create-profile {
-    width: 100%;
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-    font-weight: 600;
-    background: var(--gradient-primary);
-    border: none;
-    border-radius: var(--radius-md);
-    color: white;
-    cursor: pointer;
-    transition: var(--transition-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-}
-
-.btn-create-profile:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-glow);
-}
-
-.btn-create-profile:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.profile-setup-error {
-    margin-top: 1rem;
-    padding: 1rem;
-    background: var(--danger-color-alpha);
-    border: 1px solid var(--danger-color);
-    border-radius: var(--radius-md);
-    color: var(--danger-color);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.profile-setup-error i {
-    font-size: 1.125rem;
-}
-
-/* Prevent interaction with page content when profile modal is active */
-.modal.profile-modal-overlay.active {
-    pointer-events: all;
-}
-
-.modal.profile-modal-overlay.active ~ .main-nav,
-.modal.profile-modal-overlay.active ~ .page-content,
-.modal.profile-modal-overlay.active ~ .main-footer {
-    pointer-events: none;
-    filter: blur(2px);
 }
 </style>

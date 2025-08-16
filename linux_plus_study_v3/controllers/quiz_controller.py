@@ -12,7 +12,8 @@ from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
-# Time tracking removed for privacy protection
+from services.simple_analytics import get_analytics_manager
+from services.time_tracking_service import get_time_tracker
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -363,7 +364,12 @@ class QuizController:
         if self.session_start_time:
             session_duration = time.time() - self.session_start_time
         
-        # Time tracking removed for privacy protection
+        # Track quiz time in the time tracking service
+        try:
+            time_tracker = get_time_tracker()
+            time_tracker.add_quiz_time(session_duration)
+        except Exception as e:
+            print(f"Warning: Failed to track quiz time in force end: {e}")
         
         # Store results before clearing
         results: Dict[str, Any] = {
@@ -536,12 +542,7 @@ class QuizController:
             # Award bonus points for fast answers in timed mode
             if time_taken < self.time_per_question / 2 and is_correct:
                 bonus_points = 5
-                # Ensure points_earned is an integer before adding bonus
-                current_points = response['points_earned']
-                if isinstance(current_points, (int, float)):
-                    response['points_earned'] = int(current_points) + bonus_points
-                else:
-                    response['points_earned'] = bonus_points
+                response['points_earned'] += bonus_points
                 response['speed_bonus'] = bonus_points
                 # Update game state with the bonus points too
                 self.game_state.update_points(bonus_points)
@@ -648,12 +649,23 @@ class QuizController:
         if self.quick_fire_active:
             self.quick_fire_active = False
         
-        # Time tracking removed for privacy protection
+        # Track quiz time in the time tracking service
+        try:
+            time_tracker = get_time_tracker()
+            time_tracker.add_quiz_time(session_duration)
+        except Exception as e:
+            print(f"Warning: Failed to track quiz time: {e}")
         
         # Sync total points to analytics to ensure consistency  
         try:
-            # Analytics adapter removed - skipping analytics sync
-            pass
+            from services.simple_analytics import get_analytics_manager
+            analytics = get_analytics_manager()
+            total_earned_points = self.game_state.achievements.get('points_earned', 0)
+            if total_earned_points > 0:
+                # Update analytics with actual earned points to maintain consistency
+                user_data = analytics.get_user_data('anonymous')
+                user_data['xp'] = total_earned_points
+                analytics._update_user_data('anonymous', user_data)
         except Exception as e:
             print(f"Warning: Failed to sync points to analytics: {e}")
         
@@ -1035,8 +1047,13 @@ class QuizController:
     def sync_analytics_after_answer(self, is_correct: bool, user_id: str = "anonymous"):
         """Sync analytics after answering a question"""
         try:
-            # Analytics adapter removed - skipping analytics sync
-            pass
+            analytics = get_analytics_manager()
+            category_filter = getattr(self, 'category_filter', None)
+            analytics.track_question_answer(
+                user_id=user_id,
+                correct=is_correct,
+                category=category_filter or "All Categories"
+            )
         except Exception as e:
             print(f"Error syncing analytics: {e}")
 
