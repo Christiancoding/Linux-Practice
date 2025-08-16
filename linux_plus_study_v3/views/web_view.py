@@ -28,6 +28,83 @@ from urllib.parse import urlparse
 #    VMManager = None
 
 #from vm_integration.utils.ssh_manager import SSHManager
+
+# Privacy-focused dashboard service stub (replaces removed analytics dashboard)
+class SimpleDashboardService:
+    def __init__(self, user_id='anonymous'):
+        self.user_id = user_id
+    
+    def get_dashboard_summary(self):
+        return {
+            'user_summary': {
+                'total_sessions': 0,
+                'accuracy_rate': 0.0,
+                'study_time_hours': 0.0,
+                'achievements_unlocked': 0
+            },
+            'recent_activity': [],
+            'learning_progress': {
+                'topics_studied': 0,
+                'questions_answered': 0,
+                'correct_answers': 0
+            },
+            'achievements_summary': {
+                'total_unlocked': 0,
+                'recent_achievements': [],
+                'progress_to_next': 0
+            },
+            'user_progress': {
+                'overall_accuracy': 0.0,
+                'questions_answered': 0,
+                'study_sessions': 0,
+                'time_studied': 0.0,
+                'current_streak': 0
+            },
+            'stats_summary': {
+                'total_questions': 0,
+                'correct_answers': 0,
+                'accuracy_percentage': 0.0,
+                'study_time_minutes': 0.0
+            }
+        }
+
+def get_dashboard_service(user_id='anonymous'):
+    """Privacy-focused dashboard service - no tracking."""
+    return SimpleDashboardService(user_id)
+
+# Privacy-focused analytics manager stub (replaces removed analytics)
+class SimpleAnalyticsManager:
+    def __init__(self):
+        pass
+    
+    def ensure_user_exists(self, user_id):
+        return True
+    
+    def sync_user_data(self, user_id, data):
+        return True
+    
+    def get_user_data(self, user_id):
+        return {}
+    
+    def track_event(self, event_type, data):
+        pass  # No tracking for privacy
+
+# Privacy-focused stats controller stub
+class StatsControllerStub:
+    def __init__(self):
+        pass
+    
+    def get_review_questions_data(self):
+        return {'incorrect_questions': [], 'total_count': 0}
+    
+    def clear_statistics(self):
+        return True
+    
+    def cleanup_missing_review_questions(self, available_questions):
+        return 0
+    
+    def remove_from_review_list(self, question_text):
+        return True
 try:
     import libvirt  # type: ignore
 except ImportError:
@@ -231,7 +308,7 @@ def get_current_user_id():
 def ensure_analytics_user_sync():
     """Ensure analytics service is tracking the current session user"""
     try:
-        from services.simple_analytics import SimpleAnalyticsManager
+        # Using privacy-focused analytics manager stub
         
         # Initialize analytics service
         analytics = SimpleAnalyticsManager()
@@ -315,7 +392,7 @@ class LinuxPlusStudyWeb:
         # Initialize controllers with proper error handling
         try:
             from controllers.quiz_controller import QuizController
-            from controllers.stats_controller import StatsController
+            # StatsController removed for privacy protection
             
             self.quiz_controller = QuizController(game_state)
             
@@ -324,7 +401,8 @@ class LinuxPlusStudyWeb:
             if hasattr(self.quiz_controller, 'update_settings'):
                 self.quiz_controller.update_settings(settings)
             
-            self.stats_controller: StatsControllerProtocol = StatsController(game_state)
+            # Initialize privacy-focused stats controller stub
+            self.stats_controller = StatsControllerStub()
         except ImportError as e:
             self.logger.error(f"Failed to import controllers: {e}")
             raise ImportError(f"Controller import failed: {e}")
@@ -1762,7 +1840,7 @@ class LinuxPlusStudyWeb:
             # Get comprehensive dashboard data using new dashboard service
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Loading dashboard for user: {user_id}")
@@ -1830,7 +1908,7 @@ class LinuxPlusStudyWeb:
         def stats_page():
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Loading stats page for user: {user_id}")
@@ -1897,7 +1975,7 @@ class LinuxPlusStudyWeb:
         def achievements_page():
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Loading achievements page for user: {user_id}")
@@ -1926,7 +2004,7 @@ class LinuxPlusStudyWeb:
             """Review page with comprehensive data loading like Money Manager."""
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Review page request for user: {user_id}")
@@ -1960,7 +2038,7 @@ class LinuxPlusStudyWeb:
             """Settings page with comprehensive data loading like Money Manager."""
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 from utils.config import get_config_value
                 
                 user_id = session.get('user_id', 'anonymous')
@@ -1999,7 +2077,7 @@ class LinuxPlusStudyWeb:
             """Analytics page with comprehensive data loading like Money Manager."""
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"Analytics page request for user: {user_id}")
@@ -2455,7 +2533,7 @@ class LinuxPlusStudyWeb:
                 if 'session_duration' in result and 'session_total' in result:
                     try:
                         from flask import session
-                        from services.simple_analytics import SimpleAnalyticsManager
+                        # Using privacy-focused analytics manager stub
                         
                         user_id = session.get('user_id', 'anonymous')
                         analytics = SimpleAnalyticsManager()
@@ -2727,6 +2805,16 @@ class LinuxPlusStudyWeb:
         # Store reference to make it clear the route is being used
         self.api_get_difficulties_handler = api_get_difficulties
         
+        # Analytics Tracking API Endpoints
+        @self.app.route('/api/analytics/track', methods=['POST'])
+        def api_analytics_track():
+            """Analytics tracking disabled for privacy protection"""
+            return jsonify({
+                'status': 'disabled',
+                'message': 'Analytics tracking disabled for privacy protection'
+            })
+
+        @self.app.route('/api/get_hint', methods=['POST'])
         @self.app.route('/api/get_hint', methods=['POST'])
         def api_get_hint():
             """Get hint for current question by eliminating wrong answers."""
@@ -2765,11 +2853,12 @@ class LinuxPlusStudyWeb:
         self.api_get_hint_handler = api_get_hint
         
         @self.app.route('/api/dashboard')
+        @self.app.route('/api/analytics/dashboard')
         def api_dashboard():
             """API endpoint for comprehensive dashboard data - single source of truth"""
             try:
                 from flask import session
-                from services.dashboard_service import get_dashboard_service
+                # Using privacy-focused dashboard service stub
                 
                 user_id = session.get('user_id', 'anonymous')
                 self.logger.info(f"API dashboard request for user: {user_id}")
@@ -2778,9 +2867,11 @@ class LinuxPlusStudyWeb:
                 dashboard_service = get_dashboard_service(user_id)
                 dashboard_data = dashboard_service.get_dashboard_summary()
                 
+                # Also include user_summary for the analytics dashboard
                 return jsonify({
                     'success': True,
-                    'data': dashboard_data
+                    'data': dashboard_data,
+                    'user_summary': dashboard_data.get('user_summary', {})
                 })
                 
             except Exception as e:
@@ -2820,11 +2911,8 @@ class LinuxPlusStudyWeb:
         def api_time_tracking():
             """API endpoint for time tracking data"""
             try:
-                from services.db_time_tracking_wrapper import get_time_tracker
-                
-                time_tracker = get_time_tracker()
-                stats = time_tracker.get_statistics()
-                stats['success'] = True
+                # Time tracking removed for privacy protection
+                stats = {'success': True, 'message': 'Time tracking disabled for privacy'}
                 
                 return jsonify(stats)
             except Exception as e:
@@ -3332,25 +3420,8 @@ class LinuxPlusStudyWeb:
                 
                 # Clear analytics database records
                 try:
-                    from utils.database import get_database_manager
-                    from models.db_models import Analytics
-                    
-                    db_manager = get_database_manager()
-                    if db_manager and db_manager.session_factory:
-                        session = db_manager.session_factory()
-                        try:
-                            # Clear all analytics records
-                            deleted_count = session.query(Analytics).delete()
-                            session.commit()
-                            self.logger.info(f"Cleared {deleted_count} analytics records")
-                        except Exception as db_error:
-                            session.rollback()
-                            self.logger.error(f"Database clear error: {db_error}")
-                            return jsonify({'success': False, 'error': f'Database clear failed: {str(db_error)}'})
-                        finally:
-                            session.close()
-                    else:
-                        self.logger.warning("Database manager not available for analytics clear")
+                    # Analytics model removed for privacy protection
+                    self.logger.info("Analytics database clearing disabled for privacy")
                 except Exception as analytics_error:
                     self.logger.error(f"Analytics clear error: {analytics_error}")
                     # Don't fail completely if analytics clear fails
@@ -3384,10 +3455,8 @@ class LinuxPlusStudyWeb:
                 
                 # Clear time tracking data
                 try:
-                    from services.db_time_tracking_wrapper import get_time_tracker
-                    time_tracker = get_time_tracker()
-                    time_tracker.reset_all_data()
-                    self.logger.info("Reset time tracking data")
+                    # Time tracking removed for privacy protection
+                    self.logger.info("Time tracking reset disabled for privacy")
                 except Exception as time_tracking_error:
                     self.logger.error(f"Time tracking reset error: {time_tracking_error}")
                 
@@ -4107,209 +4176,7 @@ class LinuxPlusStudyWeb:
             return topic_breakdown
         except Exception:
             return {}
-
-        # Analytics Tracking API Endpoints
-        @self.app.route('/api/analytics/track', methods=['POST'])
-        def api_analytics_track():
-            """Track user analytics events"""
-            try:
-                data = request.get_json() or {}
-                
-                # Extract analytics data
-                user_id = data.get('user_id', 'anonymous')
-                session_id = data.get('session_id', 'unknown')
-                event_type = data.get('event_type', 'unknown')
-                event_data = data.get('data', {})
-                device_info = data.get('device_info', {})
-                
-                # Store in analytics database
-                from models.db_models import Analytics
-                from utils.database import get_database_manager
-                
-                db_manager = get_database_manager()
-                if db_manager:
-                    with db_manager.get_session() as db_session:
-                        analytics_entry = Analytics(
-                            user_id=user_id if user_id != 'anonymous' else None,
-                            session_id=session_id,
-                            session_start=datetime.now(),
-                            activity_type=event_type,
-                            activity_subtype=event_data.get('action'),
-                            topic_area=event_data.get('category'),
-                            difficulty_level=event_data.get('difficulty'),
-                            questions_attempted=event_data.get('questions_attempted', 0),
-                            questions_correct=event_data.get('questions_correct', 0),
-                            questions_incorrect=event_data.get('questions_incorrect', 0),
-                            accuracy_percentage=event_data.get('accuracy_percentage'),
-                            completion_percentage=event_data.get('completion_percentage'),
-                            time_per_question=event_data.get('time_per_question'),
-                            content_pages_viewed=1 if event_type == 'page_load' else 0,
-                            time_on_content=event_data.get('timeOnPage', 0) / 1000 if event_data.get('timeOnPage') else 0,
-                            practice_commands_executed=1 if event_type == 'cli_command' else 0,
-                            vm_sessions_started=1 if event_type == 'vm_session' else 0,
-                            cli_playground_usage=1 if event_type == 'cli_playground' else 0,
-                            help_requests=1 if event_type == 'help_request' else 0,
-                            hint_usage=1 if event_type == 'hint_usage' else 0,
-                            page_load_time=event_data.get('loadTime'),
-                            error_count=1 if 'error' in event_type else 0,
-                            browser_info=device_info.get('userAgent'),
-                            device_type=self._detect_device_type(device_info.get('userAgent', '')),
-                            vm_commands_executed=event_data.get('vm_commands', 0),
-                            active_learning_time=event_data.get('activeTime', 0) / 1000 if event_data.get('activeTime') else 0,
-                            interaction_frequency=len(event_data.get('interactions', [])),
-                            user_feedback_rating=event_data.get('rating'),
-                            difficulty_rating=event_data.get('difficulty_rating'),
-                            session_duration=event_data.get('duration', 0)
-                        )
-                        
-                        db_session.add(analytics_entry)
-                        db_session.commit()
-                
-                return jsonify({'success': True, 'message': 'Event tracked successfully'})
-                
-            except Exception as e:
-                self.logger.error(f"Analytics tracking error: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-
-        @self.app.route('/api/analytics/batch', methods=['POST'])
-        def api_analytics_batch():
-            """Batch track multiple analytics events"""
-            try:
-                data = request.get_json() or {}
-                events = data.get('events', [])
-                
-                if not events:
-                    return jsonify({'success': False, 'error': 'No events provided'})
-                
-                from models.db_models import Analytics
-                from utils.database import get_database_manager
-                
-                db_manager = get_database_manager()
-                if db_manager:
-                    with db_manager.get_session() as db_session:
-                        for event in events:
-                            user_id = event.get('user_id', 'anonymous')
-                            session_id = event.get('session_id', 'unknown')
-                            event_type = event.get('event_type', 'unknown')
-                            event_data = event.get('data', {})
-                            device_info = event.get('device_info', {})
-                            
-                            analytics_entry = Analytics(
-                                user_id=user_id if user_id != 'anonymous' else None,
-                                session_id=session_id,
-                                session_start=datetime.now(),
-                                activity_type=event_type,
-                                activity_subtype=event_data.get('action'),
-                                topic_area=event_data.get('category'),
-                                difficulty_level=event_data.get('difficulty'),
-                                questions_attempted=event_data.get('questions_attempted', 0),
-                                questions_correct=event_data.get('questions_correct', 0),
-                                questions_incorrect=event_data.get('questions_incorrect', 0),
-                                accuracy_percentage=event_data.get('accuracy_percentage'),
-                                completion_percentage=event_data.get('completion_percentage'),
-                                time_per_question=event_data.get('time_per_question'),
-                                content_pages_viewed=1 if event_type == 'page_load' else 0,
-                                time_on_content=event_data.get('timeOnPage', 0) / 1000 if event_data.get('timeOnPage') else 0,
-                                practice_commands_executed=1 if event_type == 'cli_command' else 0,
-                                vm_sessions_started=1 if event_type == 'vm_session' else 0,
-                                cli_playground_usage=1 if event_type == 'cli_playground' else 0,
-                                help_requests=1 if event_type == 'help_request' else 0,
-                                hint_usage=1 if event_type == 'hint_usage' else 0,
-                                page_load_time=event_data.get('loadTime'),
-                                error_count=1 if 'error' in event_type else 0,
-                                browser_info=device_info.get('userAgent'),
-                                device_type=self._detect_device_type(device_info.get('userAgent', '')),
-                                vm_commands_executed=event_data.get('vm_commands', 0),
-                                active_learning_time=event_data.get('activeTime', 0) / 1000 if event_data.get('activeTime') else 0,
-                                interaction_frequency=len(event_data.get('interactions', [])),
-                                user_feedback_rating=event_data.get('rating'),
-                                difficulty_rating=event_data.get('difficulty_rating'),
-                                session_duration=event_data.get('duration', 0)
-                            )
-                            
-                            db_session.add(analytics_entry)
-                        
-                        db_session.commit()
-                
-                return jsonify({'success': True, 'message': f'{len(events)} events tracked successfully'})
-                
-            except Exception as e:
-                self.logger.error(f"Batch analytics tracking error: {e}", exc_info=True)
-                return jsonify({'success': False, 'error': str(e)})
-
-        @self.app.route('/api/analytics/heatmap')
-        def api_analytics_heatmap():
-            """Get activity heatmap data for the current user"""
-            try:
-                from flask import session
-                user_id = session.get('user_id', 'anonymous')
-                
-                # Get daily activity data from analytics service
-                from services.analytics_service import AnalyticsService
-                from utils.database import get_database_manager
-                
-                db_manager = get_database_manager()
-                if db_manager:
-                    with db_manager.get_session() as db_session:
-                        analytics_service = AnalyticsService(db_session)
-                        heatmap_data = analytics_service.get_daily_activity_for_user(user_id, days=365)
-                        
-                        return jsonify({
-                            'success': True,
-                            'heatmap_data': heatmap_data
-                        })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Database not available'
-                    })
-                
-            except Exception as e:
-                self.logger.error(f"Heatmap API error: {e}", exc_info=True)
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                })
-
-        @self.app.route('/api/analytics/dashboard')
-        def api_analytics_dashboard():
-            """Get comprehensive analytics dashboard data"""
-            try:
-                from flask import session
-                user_id = session.get('user_id', 'anonymous')
-                
-                from services.analytics_service import AnalyticsService
-                from utils.database import get_database_manager
-                
-                db_manager = get_database_manager()
-                if db_manager:
-                    with db_manager.get_session() as db_session:
-                        analytics_service = AnalyticsService(db_session)
-                        
-                        # Get comprehensive analytics data
-                        user_summary = analytics_service.get_user_summary(user_id)
-                        activity_overview = analytics_service.get_user_activity_overview()
-                        global_stats = analytics_service.get_global_statistics()
-                        
-                        return jsonify({
-                            'success': True,
-                            'user_summary': user_summary,
-                            'activity_overview': activity_overview,
-                            'global_statistics': global_stats
-                        })
-                else:
-                    return jsonify({
-                        'success': False,
-                        'error': 'Database not available'
-                    })
-                
-            except Exception as e:
-                self.logger.error(f"Analytics dashboard API error: {e}", exc_info=True)
-                return jsonify({
-                    'success': False,
-                    'error': str(e)
-                })
-
+    
     def _detect_device_type(self, user_agent: str) -> str:
         """Detect device type from user agent string"""
         user_agent = user_agent.lower()

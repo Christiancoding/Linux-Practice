@@ -56,268 +56,37 @@ function loadGlobalAppearanceSettings() {
         reduceMotion: reduceMotion
     });
 }
-// Global Analytics Tracking
-class AnalyticsTracker {
+// Learning Analytics Only - Privacy Focused
+class LearningTracker {
     constructor() {
         this.sessionStart = Date.now();
-        this.pageLoadStart = performance.now();
-        this.userId = this.getUserId();
-        this.sessionId = this.generateSessionId();
-        this.interactions = [];
-        this.errors = [];
-        this.performanceMetrics = {};
-        this.deviceInfo = this.collectDeviceInfo();
-        
-        this.initializeTracking();
+        this.learningEvents = [];
+        this.initializeLearningTracking();
     }
     
-    getUserId() {
-        let userId = localStorage.getItem('analytics_user_id');
-        if (!userId) {
-            userId = 'user_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('analytics_user_id', userId);
-        }
-        return userId;
+    initializeLearningTracking() {
+        this.trackLearningEvents();
     }
     
-    generateSessionId() {
-        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
-    
-    collectDeviceInfo() {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        
-        return {
-            userAgent: navigator.userAgent,
-            language: navigator.language,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            screenResolution: `${screen.width}x${screen.height}`,
-            viewportSize: `${window.innerWidth}x${window.innerHeight}`,
-            pixelRatio: window.devicePixelRatio,
-            platform: navigator.platform,
-            cookiesEnabled: navigator.cookieEnabled,
-            onlineStatus: navigator.onLine,
-            cpuCores: navigator.hardwareConcurrency,
-            touchSupport: 'ontouchstart' in window,
-            webglSupport: !!ctx && !!ctx.getExtension,
-            colorDepth: screen.colorDepth
-        };
-    }
-    
-    initializeTracking() {
-        this.trackPageLoad();
-        this.trackClicks();
-        this.trackScrollDepth();
-        this.trackFormInteractions();
-        this.trackErrors();
-        this.trackPerformance();
-        this.trackTimeOnPage();
-        this.trackNavigationPatterns();
-    }
-    
-    trackPageLoad() {
-        window.addEventListener('load', () => {
-            const loadTime = performance.now() - this.pageLoadStart;
-            this.performanceMetrics.pageLoadTime = loadTime;
-            
-            // Collect Core Web Vitals
-            if ('web-vital' in window) {
-                this.trackWebVitals();
-            }
-            
-            this.sendEvent('page_load', {
-                url: window.location.href,
-                title: document.title,
-                loadTime: loadTime,
-                referrer: document.referrer
-            });
-        });
-    }
-    
-    trackWebVitals() {
-        // Track Core Web Vitals
-        new PerformanceObserver((entryList) => {
-            for (const entry of entryList.getEntries()) {
-                if (entry.entryType === 'paint') {
-                    this.performanceMetrics[entry.name] = entry.startTime;
-                }
-                if (entry.entryType === 'largest-contentful-paint') {
-                    this.performanceMetrics.LCP = entry.startTime;
-                }
-                if (entry.entryType === 'first-input') {
-                    this.performanceMetrics.FID = entry.processingStart - entry.startTime;
-                }
-            }
-        }).observe({entryTypes: ['paint', 'largest-contentful-paint', 'first-input']});
-    }
-    
-    trackClicks() {
-        document.addEventListener('click', (event) => {
-            const target = event.target;
-            const clickData = {
-                element: target.tagName,
-                class: target.className,
-                id: target.id,
-                text: target.textContent?.substr(0, 100),
-                position: { x: event.clientX, y: event.clientY },
-                timestamp: Date.now()
-            };
-            
-            this.interactions.push({ type: 'click', data: clickData });
-            this.sendEvent('user_interaction', { interaction_type: 'click', ...clickData });
-        });
-    }
-    
-    trackScrollDepth() {
-        let maxScroll = 0;
-        const scrollMilestones = [25, 50, 75, 100];
-        const triggered = new Set();
-        
-        window.addEventListener('scroll', () => {
-            const scrollPercent = Math.round(
-                (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
-            );
-            
-            maxScroll = Math.max(maxScroll, scrollPercent);
-            
-            scrollMilestones.forEach(milestone => {
-                if (scrollPercent >= milestone && !triggered.has(milestone)) {
-                    triggered.add(milestone);
-                    this.sendEvent('scroll_depth', { percentage: milestone });
-                }
-            });
-        });
-    }
-    
-    trackFormInteractions() {
-        document.addEventListener('focus', (event) => {
-            if (event.target.matches('input, textarea, select')) {
-                this.sendEvent('form_interaction', {
-                    action: 'field_focus',
-                    fieldType: event.target.type,
-                    fieldName: event.target.name || event.target.id
-                });
-            }
-        });
-        
-        document.addEventListener('submit', (event) => {
-            const form = event.target;
-            if (form.tagName === 'FORM') {
-                this.sendEvent('form_interaction', {
-                    action: 'form_submit',
-                    formId: form.id,
-                    formClass: form.className
-                });
-            }
-        });
-    }
-    
-    trackErrors() {
-        window.addEventListener('error', (event) => {
-            const errorData = {
-                message: event.message,
-                filename: event.filename,
-                lineno: event.lineno,
-                colno: event.colno,
-                stack: event.error?.stack
-            };
-            
-            this.errors.push(errorData);
-            this.sendEvent('javascript_error', errorData);
-        });
-        
-        window.addEventListener('unhandledrejection', (event) => {
-            const errorData = {
-                message: event.reason?.message || 'Unhandled Promise Rejection',
-                stack: event.reason?.stack
-            };
-            
-            this.errors.push(errorData);
-            this.sendEvent('promise_rejection', errorData);
-        });
-    }
-    
-    trackPerformance() {
-        // Track resource loading times
-        window.addEventListener('load', () => {
-            const resources = performance.getEntriesByType('resource');
-            const slowResources = resources.filter(resource => resource.duration > 1000);
-            
-            if (slowResources.length > 0) {
-                this.sendEvent('slow_resources', {
-                    count: slowResources.length,
-                    resources: slowResources.map(r => ({ name: r.name, duration: r.duration }))
-                });
-            }
-        });
-    }
-    
-    trackTimeOnPage() {
-        this.pageVisitStart = Date.now();
-        
-        window.addEventListener('beforeunload', () => {
-            const timeOnPage = Date.now() - this.pageVisitStart;
-            this.sendEvent('page_exit', {
-                timeOnPage: timeOnPage,
-                interactions: this.interactions.length,
-                errors: this.errors.length
+    trackLearningEvents() {
+        // Track educational quiz events only
+        document.addEventListener('quiz-started', (event) => {
+            this.trackLearningEvent('quiz_started', {
+                quiz_type: event.detail?.type,
+                category: event.detail?.category
             });
         });
         
-        // Track active time (when page is visible and user is active)
-        let activeTime = 0;
-        let lastActivity = Date.now();
-        let isActive = true;
-        
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                if (isActive) {
-                    activeTime += Date.now() - lastActivity;
-                    isActive = false;
-                }
-            } else {
-                lastActivity = Date.now();
-                isActive = true;
-            }
+        document.addEventListener('achievement-unlocked', (event) => {
+            this.trackLearningEvent('achievement_unlocked', {
+                achievement_name: event.detail?.name,
+                points_earned: event.detail?.points
+            });
         });
-        
-        // Track mouse/keyboard activity
-        ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(event => {
-            document.addEventListener(event, () => {
-                if (!isActive && !document.hidden) {
-                    lastActivity = Date.now();
-                    isActive = true;
-                }
-            }, { passive: true });
-        });
-        
-        setInterval(() => {
-            if (isActive && !document.hidden) {
-                activeTime += 1000; // 1 second
-                this.performanceMetrics.activeTime = activeTime;
-            }
-        }, 1000);
-    }
-    
-    trackNavigationPatterns() {
-        const navigationPattern = JSON.parse(sessionStorage.getItem('navigation_pattern') || '[]');
-        navigationPattern.push({
-            url: window.location.href,
-            timestamp: Date.now(),
-            referrer: document.referrer
-        });
-        
-        // Keep only last 10 pages
-        if (navigationPattern.length > 10) {
-            navigationPattern.shift();
-        }
-        
-        sessionStorage.setItem('navigation_pattern', JSON.stringify(navigationPattern));
     }
     
     trackQuizSession(data) {
-        this.sendEvent('quiz_session', {
+        this.trackLearningEvent('quiz_session', {
             questions_attempted: data.questions_attempted || 0,
             questions_correct: data.questions_correct || 0,
             session_duration: data.duration || 0,
@@ -327,61 +96,38 @@ class AnalyticsTracker {
         });
     }
     
-    trackFeatureUsage(feature, action, metadata = {}) {
-        this.sendEvent('feature_usage', {
-            feature: feature,
-            action: action,
-            ...metadata
+    trackLearningProgress(data) {
+        this.trackLearningEvent('learning_progress', {
+            topic: data.topic,
+            mastery_level: data.mastery_level,
+            study_time: data.study_time
         });
     }
     
-    sendEvent(eventType, data) {
-        const payload = {
-            user_id: this.userId,
-            session_id: this.sessionId,
+    trackLearningEvent(eventType, data) {
+        const learningEvent = {
             event_type: eventType,
             timestamp: Date.now(),
-            url: window.location.href,
-            user_agent: navigator.userAgent,
-            device_info: this.deviceInfo,
             data: data
         };
         
-        // Send to analytics endpoint
-        fetch('/api/analytics/track', {
+        this.learningEvents.push(learningEvent);
+        
+        // Send only learning-related data to analytics endpoint
+        fetch('/api/analytics/learning', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(learningEvent)
         }).catch(error => {
-            console.error('Analytics tracking error:', error);
-        });
-    }
-    
-    // Batch send events for better performance
-    batchSendEvents() {
-        if (this.eventQueue.length === 0) return;
-        
-        const events = [...this.eventQueue];
-        this.eventQueue = [];
-        
-        fetch('/api/analytics/batch', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ events })
-        }).catch(error => {
-            console.error('Batch analytics error:', error);
-            // Re-add events to queue on failure
-            this.eventQueue.unshift(...events);
+            console.warn('Learning analytics unavailable:', error);
         });
     }
 }
 
-// Initialize global analytics tracker
-window.analyticsTracker = new AnalyticsTracker();
+// Initialize learning-only tracker
+window.learningTracker = new LearningTracker();
 
 // Global app functionality
 document.addEventListener('DOMContentLoaded', function() {

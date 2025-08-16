@@ -22,7 +22,7 @@ from flask import Flask  # <-- Add this import at the top with other imports
 from views.web_view import LinuxPlusStudyWeb
 from models.game_state import GameState
 from controllers.quiz_controller import QuizController
-from controllers.stats_controller import StatsController
+# StatsController removed for privacy protection
 # Ensure Python 3.8+ compatibility
 if sys.version_info < (3, 8):
     print("Linux Plus Study System requires Python 3.8+. Please upgrade your Python installation.")
@@ -137,20 +137,19 @@ class LinuxPlusStudySystem:
 
             # Import web application components
             from controllers.quiz_controller import QuizController
-            from controllers.stats_controller import StatsController
+            # StatsController removed for privacy protection
             
             # Initialize game state first
             game_state = GameState()
             
             # Initialize controllers with game_state
             quiz_controller = QuizController(game_state)
-            stats_controller = StatsController(game_state)
+            # stats_controller removed for privacy protection
             self.logger.info("Web application components loaded successfully")
             
             # Create Flask application
             app = self.setup_routes(
                 quiz_controller=quiz_controller,
-                stats_controller=stats_controller,
                 game_state=game_state
             )
             
@@ -323,7 +322,6 @@ class LinuxPlusStudySystem:
     def setup_routes(
         self,
         quiz_controller: QuizController,
-        stats_controller: StatsController,
         game_state: GameState
     ) -> Flask:
         """
@@ -346,7 +344,7 @@ class LinuxPlusStudySystem:
             
             # Update the controllers in the web view
             web_view.quiz_controller = quiz_controller
-            web_view.stats_controller = stats_controller
+            # web_view.stats_controller removed for privacy protection
             
             # Initialize analytics tracking - disabled
             # analytics_tracker = WebAnalyticsTracker(app)
@@ -389,10 +387,11 @@ class LinuxPlusStudySystem:
         """Setup analytics-specific routes - disabled."""
         from flask import jsonify, render_template
         
-        @app.route('/api/analytics/track', methods=['POST'])
-        def analytics_track():
-            """General analytics tracking endpoint - disabled."""
-            return jsonify({"status": "disabled", "message": "Analytics tracking disabled"})
+        # Analytics tracking is now handled in web_view.py
+        # @app.route('/api/analytics/track', methods=['POST'])
+        # def analytics_track():
+        #     """General analytics tracking endpoint - disabled."""
+        #     return jsonify({"status": "disabled", "message": "Analytics tracking disabled"})
         
         @app.route('/api/user/analytics-summary')
         def user_analytics_summary():

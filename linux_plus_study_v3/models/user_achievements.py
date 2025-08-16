@@ -8,8 +8,8 @@ from sqlalchemy.sql import func
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 
-# Import the shared Base class from analytics model
-from .analytics import Base
+# Import the shared Base class from db_models
+from .db_models import Base
 
 
 class UserAchievement(Base):
@@ -100,54 +100,7 @@ class UserHistory(Base):
     created_at = Column(DateTime, nullable=False, default=func.now())
 
 
-class TimeTracking(Base):
-    """Database model for time tracking data."""
-    
-    __tablename__ = 'time_tracking'
-    
-    id = Column(Integer, primary_key=True)
-    user_id = Column(String(255), nullable=False, default='anonymous')
-    quiz_time_today = Column(Float, nullable=False, default=0)
-    last_quiz_reset = Column(DateTime, nullable=False, default=func.now())
-    study_time_total = Column(Float, nullable=False, default=0)
-    daily_quiz_history = Column(JSON, nullable=False, default=dict)
-    settings = Column(JSON, nullable=False, default=dict)
-    created_at = Column(DateTime, nullable=False, default=func.now())
-    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
-    
-    def to_dict(self) -> Dict[str, Any]:
-        """Convert to dictionary format."""
-        return {
-            'quiz_time_today': self.quiz_time_today,
-            'last_quiz_reset': self.last_quiz_reset.isoformat() if self.last_quiz_reset else None,
-            'study_time_total': self.study_time_total,
-            'daily_quiz_history': self.daily_quiz_history or {},
-            'settings': self.settings or {}
-        }
-    
-    @classmethod
-    def from_dict(cls, data: Dict[str, Any], user_id: str = 'anonymous') -> 'TimeTracking':
-        """Create instance from dictionary data."""
-        last_quiz_reset = data.get('last_quiz_reset')
-        if isinstance(last_quiz_reset, str):
-            try:
-                from dateutil import parser
-                last_quiz_reset = parser.parse(last_quiz_reset)
-            except (ValueError, TypeError, OverflowError) as ex:
-                import logging
-                logging.getLogger(__name__).warning(f"Failed to parse last_quiz_reset: {last_quiz_reset!r} ({ex})")
-                last_quiz_reset = datetime.now()
-        elif last_quiz_reset is None:
-            last_quiz_reset = datetime.now()
-        
-        return cls(
-            user_id=user_id,
-            quiz_time_today=data.get('quiz_time_today', 0),
-            last_quiz_reset=last_quiz_reset,
-            study_time_total=data.get('study_time_total', 0),
-            daily_quiz_history=data.get('daily_quiz_history', {}),
-            settings=data.get('settings', {})
-        )
+# TimeTracking class removed for privacy protection
 
 
 class AppSettings(Base):

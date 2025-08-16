@@ -1,111 +1,13 @@
 {
   "sessions": [],
   "questions": {
-    "What is the purpose of the `grub2-mkconfig` command?": {
-      "correct": 2,
-      "attempts": 3,
-      "history": [
-        {
-          "timestamp": "2025-08-13T23:57:49.294017",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-14T00:11:48.418333",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:43.958459",
-          "correct": true
-        }
-      ]
-    },
-    "What does ACL stand for in Linux security?": {
-      "correct": 2,
-      "attempts": 3,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:03:44.086055",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-14T00:11:38.200830",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T00:30:41.803909",
-          "correct": true
-        }
-      ]
-    },
-    "Which command installs the GRUB2 bootloader to a specified device?": {
-      "correct": 2,
-      "attempts": 3,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:03:48.494644",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:36.237032",
-          "correct": false
-        },
-        {
-          "timestamp": "2025-08-14T01:00:40.951440",
-          "correct": true
-        }
-      ]
-    },
-    "What is AppArmor?": {
-      "correct": 2,
-      "attempts": 2,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:11:15.205521",
-          "correct": true
-        },
-        {
-          "timestamp": "2025-08-14T01:00:48.051423",
-          "correct": true
-        }
-      ]
-    },
-    "What is an AppImage?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:11:18.605291",
-          "correct": true
-        }
-      ]
-    },
-    "What is Ansible primarily used for?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:11:21.670801",
-          "correct": true
-        }
-      ]
-    },
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?": {
-      "correct": 1,
+      "correct": 0,
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-14T00:11:25.652374",
-          "correct": true
-        }
-      ]
-    },
-    "Which command is typically used on Debian-based systems to update the GRUB2 configuration file?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:11:31.629030",
-          "correct": true
+          "timestamp": "2025-08-16T13:21:47.970710",
+          "correct": false
         }
       ]
     },
@@ -114,61 +16,54 @@
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-14T00:11:35.497044",
+          "timestamp": "2025-08-16T13:21:53.891357",
           "correct": true
         }
       ]
     },
-    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
-      "correct": 1,
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 0,
       "attempts": 1,
       "history": [
         {
-          "timestamp": "2025-08-14T00:11:40.724925",
-          "correct": true
-        }
-      ]
-    },
-    "In Kubernetes, what is an Ambassador container?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-14T00:11:44.692868",
-          "correct": true
+          "timestamp": "2025-08-16T13:21:56.494590",
+          "correct": false
         }
       ]
     }
   },
   "categories": {
     "Concepts & Terms (Security)": {
-      "correct": 4,
-      "attempts": 5
-    },
-    "Concepts & Terms (System Management)": {
-      "correct": 1,
-      "attempts": 1
-    },
-    "Concepts & Terms (Automation)": {
-      "correct": 1,
-      "attempts": 1
+      "correct": 0,
+      "attempts": 0
     },
     "Commands (System Management)": {
-      "correct": 6,
-      "attempts": 8
+      "correct": 1,
+      "attempts": 2
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Automation)": {
+      "correct": 0,
+      "attempts": 0
     },
     "Concepts & Terms (Containers)": {
-      "correct": 1,
-      "attempts": 1
+      "correct": 0,
+      "attempts": 0
     },
     "Troubleshooting": {
-      "correct": 2,
-      "attempts": 2
+      "correct": 0,
+      "attempts": 1
     }
   },
-  "total_correct": 15,
-  "total_attempts": 18,
-  "incorrect_review": [],
+  "total_correct": 1,
+  "total_attempts": 3,
+  "incorrect_review": [
+    "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?",
+    "Which command installs the GRUB2 bootloader to a specified device?"
+  ],
   "leaderboard": [],
   "settings": {},
   "export_metadata": {},

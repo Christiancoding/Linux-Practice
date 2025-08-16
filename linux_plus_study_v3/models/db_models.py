@@ -18,91 +18,8 @@ logger = logging.getLogger(__name__)
 class Base(DeclarativeBase):
     pass
 
-# Analytics Database (main database)
-class Analytics(Base):
-    """Analytics model for main database."""
-    
-    __tablename__ = 'analytics'
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), onupdate=lambda: datetime.now(zoneinfo.ZoneInfo("America/Chicago")), nullable=False)
-    
-    # Session tracking
-    user_id: Mapped[Optional[str]] = mapped_column(String(255))
-    session_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
-    session_start: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    session_end: Mapped[Optional[datetime]] = mapped_column(DateTime)
-    session_duration: Mapped[Optional[float]] = mapped_column(Float)
-    
-    # Activity tracking
-    activity_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
-    activity_subtype: Mapped[Optional[str]] = mapped_column(String(100))
-    topic_area: Mapped[Optional[str]] = mapped_column(String(255), index=True)
-    difficulty_level: Mapped[Optional[str]] = mapped_column(String(50))
-    
-    # Quiz performance metrics
-    questions_attempted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    questions_correct: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    questions_incorrect: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    accuracy_percentage: Mapped[Optional[float]] = mapped_column(Float)
-    completion_percentage: Mapped[Optional[float]] = mapped_column(Float)
-    time_per_question: Mapped[Optional[float]] = mapped_column(Float)
-    
-    # Engagement metrics
-    content_pages_viewed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    time_on_content: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    practice_commands_executed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    vm_sessions_started: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    cli_playground_usage: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    
-    # Progress tracking
-    study_streak_days: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    return_sessions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    help_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    hint_usage: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    review_sessions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    
-    # JSON fields for complex data
-    achievements_unlocked: Mapped[Optional[str]] = mapped_column(Text)
-    skill_assessments: Mapped[Optional[str]] = mapped_column(JSON)
-    
-    # Additional metrics
-    learning_goals_met: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    certification_progress: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    page_load_time: Mapped[Optional[float]] = mapped_column(Float)
-    error_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    feature_usage: Mapped[Optional[str]] = mapped_column(JSON)
-    browser_info: Mapped[Optional[str]] = mapped_column(String(255))
-    device_type: Mapped[Optional[str]] = mapped_column(String(50))
-    
-    # VM specific metrics
-    vm_uptime: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    vm_commands_executed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    lab_exercises_completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    lab_exercises_attempted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    vm_errors_encountered: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    
-    # Learning analytics
-    concept_mastery_scores: Mapped[Optional[str]] = mapped_column(JSON)
-    retention_test_scores: Mapped[Optional[str]] = mapped_column(JSON)
-    practical_application_success: Mapped[Optional[float]] = mapped_column(Float)
-    active_learning_time: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    interaction_frequency: Mapped[Optional[float]] = mapped_column(Float)
-    focus_score: Mapped[Optional[float]] = mapped_column(Float)
-    
-    # Feedback and improvement
-    user_feedback_rating: Mapped[Optional[float]] = mapped_column(Float)
-    improvement_suggestions: Mapped[Optional[str]] = mapped_column(Text)
-    difficulty_rating: Mapped[Optional[float]] = mapped_column(Float)
-    preferred_learning_style: Mapped[Optional[str]] = mapped_column(String(100))
-    most_effective_study_method: Mapped[Optional[str]] = mapped_column(String(100))
-    least_effective_study_method: Mapped[Optional[str]] = mapped_column(String(100))
-    
-    # Additional fields
-    notes: Mapped[Optional[str]] = mapped_column(Text)
-    tags: Mapped[Optional[str]] = mapped_column(JSON)
-    custom_metrics: Mapped[Optional[str]] = mapped_column(JSON)
+# Learning Analytics Database (main database) - Privacy Focused
+# Note: Use learning_analytics.py for new learning-only tracking
 
 # Achievements Database
 class UserAchievement(Base):
@@ -198,17 +115,4 @@ class AppSetting(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
-class TimeTracking(Base):
-    """Time tracking model for settings database."""
-    
-    __tablename__ = 'time_tracking'
-    
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[str] = mapped_column(String(255), nullable=False)
-    quiz_time_today: Mapped[float] = mapped_column(Float, nullable=False)
-    last_quiz_reset: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    study_time_total: Mapped[float] = mapped_column(Float, nullable=False)
-    daily_quiz_history: Mapped[str] = mapped_column(JSON, nullable=False)
-    settings: Mapped[str] = mapped_column(JSON, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+# TimeTracking removed - contained user identification and behavioral tracking

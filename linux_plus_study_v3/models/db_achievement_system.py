@@ -11,7 +11,7 @@ from datetime import datetime, date
 from contextlib import contextmanager
 from utils.game_values import get_game_value_manager
 from utils.db_connections import get_db_session
-from models.db_models import UserAchievement, UserHistory, TimeTracking
+from models.db_models import UserAchievement, UserHistory
 
 
 class LeaderboardEntry(TypedDict):

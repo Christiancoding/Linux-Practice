@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
-from services.db_time_tracking_wrapper import get_time_tracker
+# Time tracking removed for privacy protection
 
 class QuizController:
     """Handles quiz logic and session management."""
@@ -363,12 +363,7 @@ class QuizController:
         if self.session_start_time:
             session_duration = time.time() - self.session_start_time
         
-        # Track quiz time in the time tracking service
-        try:
-            time_tracker = get_time_tracker()
-            time_tracker.add_quiz_time(session_duration)
-        except Exception as e:
-            print(f"Warning: Failed to track quiz time in force end: {e}")
+        # Time tracking removed for privacy protection
         
         # Store results before clearing
         results: Dict[str, Any] = {
@@ -653,12 +648,7 @@ class QuizController:
         if self.quick_fire_active:
             self.quick_fire_active = False
         
-        # Track quiz time in the time tracking service
-        try:
-            time_tracker = get_time_tracker()
-            time_tracker.add_quiz_time(session_duration)
-        except Exception as e:
-            print(f"Warning: Failed to track quiz time: {e}")
+        # Time tracking removed for privacy protection
         
         # Sync total points to analytics to ensure consistency  
         try:

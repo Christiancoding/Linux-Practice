@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.db_models import Analytics, UserAchievement, UserHistory, Question, AppSetting, TimeTracking, Base
+from models.db_models import UserAchievement, UserHistory, Question, AppSetting, Base
 from utils.config import get_database_config
 
 def initialize_database():
@@ -40,9 +40,8 @@ def initialize_database():
         Session = sessionmaker(bind=engine)
         session = Session()
         
-        # Test analytics table
-        count = session.query(Analytics).count()
-        logger.info(f"✓ Analytics table accessible - current record count: {count}")
+        # Test database connection
+        logger.info("✓ Database connection successful")
         
         session.close()
         logger.info("✓ Database initialization completed successfully!")

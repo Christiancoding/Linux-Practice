@@ -40,9 +40,6 @@
                 <a class="nav-link {% if request.endpoint == 'stats_page' %}active{% endif %}" href="{{ url_for('stats_page') }}" data-page="stats">
                     <i class="fas fa-chart-line"></i> <span>Stats</span>
                 </a>
-                <a class="nav-link {% if request.endpoint == 'analytics_page' %}active{% endif %}" href="{{ url_for('analytics_page') }}" data-page="analytics">
-                    <i class="fas fa-chart-bar"></i> <span>Analytics</span>
-                </a>
                 <a class="nav-link {% if request.endpoint == 'achievements_page' %}active{% endif %}" href="{{ url_for('achievements_page') }}" data-page="achievements">
                     <i class="fas fa-trophy"></i> <span>Achievements</span>
                 </a>
@@ -708,10 +705,7 @@
         }
     </script>
     
-    <!-- Analytics Integration -->
-    {% if analytics_js_snippet %}
-        {{ analytics_js_snippet | safe }}
-    {% endif %}
+    <!-- Learning Analytics Only - Privacy Focused -->
     
     {% block scripts %}{% endblock %}
 </body>

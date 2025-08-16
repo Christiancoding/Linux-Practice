@@ -11,7 +11,7 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from utils.database import get_db_session
-from models.db_models import UserAchievement, UserHistory, TimeTracking, AppSetting, Base
+from models.db_models import UserAchievement, UserHistory, AppSetting, Base
 from utils.config import (
     ACHIEVEMENTS_FILE, HISTORY_FILE, WEB_SETTINGS_FILE,
     DATA_DIR, PROJECT_ROOT
@@ -75,35 +75,9 @@ class DBMigrationService:
             return False
     
     def migrate_time_tracking(self, user_id: str = 'anonymous') -> bool:
-        """Migrate time tracking from JSON to database."""
-        try:
-            # Check if already migrated
-            with get_db_session() as session:
-                existing = session.query(TimeTracking).filter_by(user_id=user_id).first()
-                if existing:
-                    print("Time tracking already migrated")
-                    return True
-            
-            # Load JSON data
-            time_tracking_file = self.data_dir / "time_tracking.json"
-            tracking_data = {}
-            if time_tracking_file.exists():
-                with open(time_tracking_file, 'r', encoding='utf-8') as f:
-                    content = f.read().strip()
-                    if content:
-                        tracking_data = json.loads(content)
-            
-            # Create database record
-            with get_db_session() as session:
-                tracking_record = TimeTracking.from_dict(tracking_data, user_id)
-                session.add(tracking_record)
-                session.commit()
-                print("Time tracking migrated successfully")
-                return True
-                
-        except Exception as e:
-            print(f"Error migrating time tracking: {e}")
-            return False
+        """Time tracking migration disabled for privacy protection."""
+        print("Time tracking migration disabled - privacy protection enabled")
+        return True
     
     def migrate_user_analytics(self, user_id: str = 'anonymous') -> bool:
         """Migrate user analytics from JSON to database analytics table."""
