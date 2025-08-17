@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Terminal - Linux+ Study Game</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- XTerm.js for Terminal -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    
+    <style>
+        /* Base Styles */
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #1a1a25;
+            --bg-tertiary: #25253a;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --primary-color: #7c3aed;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --gradient-primary: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            --radius-md: 16px;
+            --radius-lg: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Terminal Header */
+        .terminal-header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .terminal-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .terminal-title i {
+            font-size: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .terminal-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            border-radius: 9999px;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        .connection-status.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: var(--danger-color);
+        }
+
+        .connection-status.disconnected .status-dot {
+            background: var(--danger-color);
+            animation: none;
+        }
+
+        /* Terminal Controls */
+        .terminal-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.primary {
+            background: var(--gradient-primary);
+            border: none;
+            color: white;
+        }
+
+        .control-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        /* Terminal Container */
+        .terminal-container {
+            flex: 1;
+            background: #000000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #terminal {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Terminal Info Bar */
+        .terminal-info {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .info-item i {
+            color: var(--primary-color);
+        }
+
+        .info-item strong {
+            color: var(--text-primary);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .loading-subtext {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        /* Error State */
+        .error-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            max-width: 500px;
+        }
+
+        .error-icon {
+            font-size: 3rem;
+            color: var(--danger-color);
+            margin-bottom: 1rem;
+        }
+
+        .error-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        /* Resize Handle */
+        .resize-indicator {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .resize-indicator.show {
+            opacity: 1;
+        }
+
+        /* Custom XTerm Theme */
+        .xterm .xterm-viewport {
+            background-color: #000000 !important;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .terminal-header {
+                padding: 0.75rem 1rem;
+            }
+
+            .terminal-title h1 {
+                display: none;
+            }
+
+            .control-btn span {
+                display: none;
+            }
+
+            .terminal-info {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Terminal Header -->
+    <div class="terminal-header">
+        <div class="header-left">
+            <div class="terminal-title">
+                <i class="fas fa-terminal"></i>
+                <h1>Full Terminal Access</h1>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span>Connected</span>
+            </div>
+        </div>
+        <div class="terminal-controls">
+            <button class="control-btn" onclick="copySelection()">
+                <i class="fas fa-copy"></i>
+                <span>Copy</span>
+            </button>
+            <button class="control-btn" onclick="pasteToTerminal()">
+                <i class="fas fa-paste"></i>
+                <span>Paste</span>
+            </button>
+            <button class="control-btn" onclick="clearTerminal()">
+                <i class="fas fa-eraser"></i>
+                <span>Clear</span>
+            </button>
+            <button class="control-btn primary" onclick="downloadSession()">
+                <i class="fas fa-download"></i>
+                <span>Download Log</span>
+            </button>
+            <button class="control-btn danger" onclick="disconnectTerminal()">
+                <i class="fas fa-power-off"></i>
+                <span>Disconnect</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Terminal Container -->
+    <div class="terminal-container">
+        <div id="terminal"></div>
+        
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Establishing Connection...</div>
+            <div class="loading-subtext">Setting up secure terminal session</div>
+        </div>
+
+        <!-- Error Container (hidden by default) -->
+        <div class="error-container" id="errorContainer" style="display: none;">
+            <i class="fas fa-exclamation-triangle error-icon"></i>
+            <h2 class="error-title">Connection Failed</h2>
+            <p class="error-message" id="errorMessage">Unable to establish terminal connection. Please check your network and try again.</p>
+            <button class="control-btn primary" onclick="reconnect()">
+                <i class="fas fa-redo"></i> Try Again
+            </button>
+        </div>
+
+        <!-- Resize Indicator -->
+        <div class="resize-indicator" id="resizeIndicator">
+            <span id="terminalSize">80x24</span>
+        </div>
+    </div>
+
+    <!-- Terminal Info Bar -->
+    <div class="terminal-info">
+        <div class="info-item">
+            <i class="fas fa-user"></i>
+            <span>User: <strong id="currentUser">student</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-server"></i>
+            <span>Host: <strong id="currentHost">linux-study</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-folder"></i>
+            <span>Path: <strong id="currentPath">~/</strong></span>
+        </div>
+        <div class="info-item">
+            <i class="fas fa-clock"></i>
+            <span>Session: <strong id="sessionTime">00:00</strong></span>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
+    <script>
+        // Terminal instance
+        let term;
+        let fitAddon;
+        let socket;
+        let sessionStartTime;
+        let sessionLog = '';
+
+        // Initialize terminal
+        function initTerminal() {
+            term = new Terminal({
+                cursorBlink: true,
+                fontSize: 14,
+                fontFamily: 'JetBrains Mono, Consolas, monospace',
+                theme: {
+                    background: '#000000',
+                    foreground: '#ffffff',
+                    cursor: '#00ff00',
+                    cursorAccent: '#000000',
+                    selection: 'rgba(255, 255, 255, 0.3)',
+                    black: '#000000',
+                    red: '#ff5555',
+                    green: '#50fa7b',
+                    yellow: '#f1fa8c',
+                    blue: '#bd93f9',
+                    magenta: '#ff79c6',
+                    cyan: '#8be9fd',
+                    white: '#bfbfbf',
+                    brightBlack: '#4d4d4d',
+                    brightRed: '#ff6e67',
+                    brightGreen: '#5af78e',
+                    brightYellow: '#f4f99d',
+                    brightBlue: '#caa9fa',
+                    brightMagenta: '#ff92d0',
+                    brightCyan: '#9aedfe',
+                    brightWhite: '#e6e6e6'
+                }
+            });
+
+            // Initialize addons
+            fitAddon = new FitAddon.FitAddon();
+            const webLinksAddon = new WebLinksAddon.WebLinksAddon();
+            
+            term.loadAddon(fitAddon);
+            term.loadAddon(webLinksAddon);
+            
+            // Open terminal in the container
+            term.open(document.getElementById('terminal'));
+            fitAddon.fit();
+
+            // Handle window resize
+            window.addEventListener('resize', () => {
+                fitAddon.fit();
+                showResizeIndicator();
+            });
+
+            // Connect to terminal server
+            connectToServer();
+
+            // Start session timer
+            sessionStartTime = Date.now();
+            updateSessionTime();
+        }
+
+        // Connect to terminal server
+        function connectToServer() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const terminalUrl = urlParams.get('url') || 'ws://localhost:7681';
+
+            try {
+                // For ttyd WebSocket connection
+                socket = new WebSocket(terminalUrl);
+
+                socket.onopen = () => {
+                    console.log('Terminal connected');
+                    hideLoading();
+                    updateConnectionStatus(true);
+                    
+                    // Send initial size
+                    const dims = fitAddon.proposeDimensions();
+                    if (dims) {
+                        socket.send(JSON.stringify({
+                            type: 'resize',
+                            cols: dims.cols,
+                            rows: dims.rows
+                        }));
+                    }
+                };
+
+                socket.onmessage = (event) => {
+                    // Write data to terminal
+                    term.write(event.data);
+                    // Log session data
+                    sessionLog += event.data;
+                };
+
+                socket.onclose = () => {
+                    console.log('Terminal disconnected');
+                    updateConnectionStatus(false);
+                    showError('Connection closed. The terminal session has ended.');
+                };
+
+                socket.onerror = (error) => {
+                    console.error('Terminal error:', error);
+                    hideLoading();
+                    showError('Failed to connect to terminal server. Please ensure the server is running.');
+                };
+
+                // Handle terminal input
+                term.onData((data) => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(data);
+                    }
+                });
+
+                // Handle terminal resize
+                term.onResize((size) => {
+                    if (socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({
+                            type: 'resize',
+                            cols: size.cols,
+                            rows: size.rows
+                        }));
+                    }
+                });
+
+            } catch (error) {
+                console.error('Failed to create WebSocket:', error);
+                hideLoading();
+                showError('Failed to establish terminal connection.');
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(connected) {
+            const statusEl = document.getElementById('connectionStatus');
+            if (connected) {
+                statusEl.classList.remove('disconnected');
+                statusEl.innerHTML = '<span class="status-dot"></span><span>Connected</span>';
+            } else {
+                statusEl.classList.add('disconnected');
+                statusEl.innerHTML = '<span class="status-dot"></span><span>Disconnected</span>';
+            }
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Show error
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorContainer').style.display = 'block';
+        }
+
+        // Reconnect
+        function reconnect() {
+            document.getElementById('errorContainer').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            connectToServer();
+        }
+
+        // Clear terminal
+        function clearTerminal() {
+            term.clear();
+        }
+
+        // Copy selection
+        function copySelection() {
+            const selection = term.getSelection();
+            if (selection) {
+                navigator.clipboard.writeText(selection);
+                // Show brief notification
+                showNotification('Copied to clipboard');
+            }
+        }
+
+        // Paste to terminal
+        async function pasteToTerminal() {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.send(text);
+                }
+            } catch (err) {
+                console.error('Failed to read clipboard:', err);
+            }
+        }
+
+        // Download session log
+        function downloadSession() {
+            const blob = new Blob([sessionLog], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `terminal-session-${new Date().toISOString()}.log`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('Session log downloaded');
+        }
+
+        // Disconnect terminal
+        function disconnectTerminal() {
+            if (confirm('Are you sure you want to disconnect?')) {
+                if (socket) {
+                    socket.close();
+                }
+                window.close();
+            }
+        }
+
+        // Show resize indicator
+        function showResizeIndicator() {
+            const dims = fitAddon.proposeDimensions();
+            if (dims) {
+                document.getElementById('terminalSize').textContent = `${dims.cols}x${dims.rows}`;
+                const indicator = document.getElementById('resizeIndicator');
+                indicator.classList.add('show');
+                setTimeout(() => {
+                    indicator.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        // Update session time
+        function updateSessionTime() {
+            const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('sessionTime').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            requestAnimationFrame(updateSessionTime);
+        }
+
+        // Show notification
+        function showNotification(message) {
+            // Simple notification implementation
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 2rem;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--gradient-primary);
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border-radius: 9999px;
+                font-size: 0.875rem;
+                font-weight: 500;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                animation: slideUp 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideDown 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 2000);
+        }
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideUp {
+                from { transform: translate(-50%, 100%); opacity: 0; }
+                to { transform: translate(-50%, 0); opacity: 1; }
+            }
+            @keyframes slideDown {
+                from { transform: translate(-50%, 0); opacity: 1; }
+                to { transform: translate(-50%, 100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize on load
+        window.addEventListener('load', initTerminal);
+    </script>
+</body>
+</html>
