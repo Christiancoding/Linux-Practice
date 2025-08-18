@@ -14,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.analytics import Base, Analytics
+# Analytics removed - no analytics tables to create
 from utils.config import get_database_config
 
 def initialize_database():
@@ -33,7 +33,7 @@ def initialize_database():
         
         # Create all tables
         logger.info("Creating database tables...")
-        Base.metadata.create_all(engine)
+        # Analytics removed - no tables to create
         logger.info("✓ Database tables created successfully!")
         
         # Test the connection
@@ -41,8 +41,7 @@ def initialize_database():
         session = Session()
         
         # Test analytics table
-        count = session.query(Analytics).count()
-        logger.info(f"✓ Analytics table accessible - current record count: {count}")
+        # Analytics removed - no table to test
         
         session.close()
         logger.info("✓ Database initialization completed successfully!")

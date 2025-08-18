@@ -712,6 +712,7 @@ function updateImprovementMetrics(data) {
 
 // Update dashboard statistics from API
 function updateDashboardStats() {
+    // Analytics removed - no tracking
     console.log('Fetching dashboard stats...');
     
     fetch('/api/dashboard')
@@ -1111,10 +1112,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load achievements
     loadAchievementsData();
     
-    // Then update stats with a small delay
-    setTimeout(function() {
-        updateDashboardStats();
-    }, 100);
+    // Analytics removed - static dashboard
 });
 </script>
 {% endblock %}

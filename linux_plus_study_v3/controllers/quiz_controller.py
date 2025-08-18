@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Optional, Dict, Any, Union, List, Tuple
 from utils.config import *
 from utils.game_values import get_game_value_manager
-from services.simple_analytics import get_analytics_manager
+# Analytics removed
 from services.time_tracking_service import get_time_tracker
 
 class QuizController:
@@ -658,14 +658,14 @@ class QuizController:
         
         # Sync total points to analytics to ensure consistency  
         try:
-            from services.simple_analytics import get_analytics_manager
-            analytics = get_analytics_manager()
+            # Analytics removed
+            # Analytics removed
             total_earned_points = self.game_state.achievements.get('points_earned', 0)
             if total_earned_points > 0:
                 # Update analytics with actual earned points to maintain consistency
-                user_data = analytics.get_user_data('anonymous')
+                # Analytics removed
                 user_data['xp'] = total_earned_points
-                analytics._update_user_data('anonymous', user_data)
+                # Analytics removed
         except Exception as e:
             print(f"Warning: Failed to sync points to analytics: {e}")
         
@@ -1047,13 +1047,9 @@ class QuizController:
     def sync_analytics_after_answer(self, is_correct: bool, user_id: str = "anonymous"):
         """Sync analytics after answering a question"""
         try:
-            analytics = get_analytics_manager()
+            # Analytics removed
             category_filter = getattr(self, 'category_filter', None)
-            analytics.track_question_answer(
-                user_id=user_id,
-                correct=is_correct,
-                category=category_filter or "All Categories"
-            )
+            # Analytics removed
         except Exception as e:
             print(f"Error syncing analytics: {e}")
 

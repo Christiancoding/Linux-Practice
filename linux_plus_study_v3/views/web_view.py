@@ -192,21 +192,8 @@ def get_current_user_id():
     return session.get('user_id', 'anonymous')
 
 def ensure_analytics_user_sync():
-    """Ensure analytics service is tracking the current session user"""
-    try:
-        from services.simple_analytics import get_analytics_manager
-        analytics = get_analytics_manager()
-        user_id = get_current_user_id()
-        
-        # Initialize user if doesn't exist
-        user_data = analytics.get_user_data(user_id)
-        if not user_data:
-            analytics.create_profile(user_id)
-        
-        return user_id, analytics
-    except Exception as e:
-        print(f"Error syncing analytics user: {e}")
-        return 'anonymous', None
+    """Analytics removed - placeholder function."""
+    return 'anonymous', None
 
 class LinuxPlusStudyWeb:
     """Web interface using Flask + pywebview for desktop app experience."""
@@ -278,7 +265,7 @@ class LinuxPlusStudyWeb:
         # Setup export/import routes
         self.setup_export_import_routes()
         
-        # Analytics and error tracking are handled by simple_analytics service
+        # Analytics removed
     def set_debug_mode(self, enabled: bool = True):
         """Toggle debug mode for the application."""
         self.debug = enabled

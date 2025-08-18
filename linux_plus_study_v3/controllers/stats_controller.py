@@ -420,41 +420,9 @@ class StatsController:
                 self.game_state.study_history['leaderboard'] = []
                 print("Cleared leaderboard in study history")
             
-            # Clear analytics data from database
-            try:
-                from utils.database import get_database_manager
-                from models.analytics import Analytics
-                import os
-                
-                db_manager = get_database_manager()
-                if db_manager and db_manager.session_factory:
-                    analytics_session = db_manager.session_factory()
-                    try:
-                        # Delete all analytics records (or optionally just current user's records)
-                        deleted_count = analytics_session.query(Analytics).delete()
-                        analytics_session.commit()
-                        print(f"Cleared {deleted_count} analytics records from database")
-                        
-                        # Create reset marker file to signal analytics service
-                        os.makedirs('data', exist_ok=True)
-                        from datetime import datetime
-                        with open('data/.analytics_reset_marker', 'w') as f:
-                            f.write(f"Reset at {datetime.now().isoformat()}")
-                        print("Created analytics reset marker")
-                        
-                    except Exception as analytics_error:
-                        print(f"Error clearing analytics data: {analytics_error}")
-                        analytics_session.rollback()
-                    finally:
-                        analytics_session.close()
-                else:
-                    print("Analytics database not available - skipping database cleanup")
-            except ImportError:
-                print("Analytics database dependencies not available - skipping database cleanup")
-            except Exception as analytics_error:
-                print(f"Warning: Could not clear analytics data: {analytics_error}")
+            # Analytics removed - no database data to clear
             
-            # Clear any analytics service cached data by clearing the cache directory
+            # Analytics cache clearing removed
             try:
                 import shutil
                 import os

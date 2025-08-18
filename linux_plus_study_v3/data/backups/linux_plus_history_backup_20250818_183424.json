@@ -1,0 +1,74 @@
+{
+  "sessions": [],
+  "questions": {
+    "Which command installs the GRUB2 bootloader to a specified device?": {
+      "correct": 1,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-11T20:50:31.378130",
+          "correct": true
+        }
+      ]
+    },
+    "What is Ansible primarily used for?": {
+      "correct": 1,
+      "attempts": 2,
+      "history": [
+        {
+          "timestamp": "2025-08-11T20:50:36.096552",
+          "correct": false
+        },
+        {
+          "timestamp": "2025-08-16T14:00:16.579298",
+          "correct": true
+        }
+      ]
+    },
+    "What is an AppImage?": {
+      "correct": 0,
+      "attempts": 1,
+      "history": [
+        {
+          "timestamp": "2025-08-16T14:00:19.182520",
+          "correct": false
+        }
+      ]
+    }
+  },
+  "categories": {
+    "Concepts & Terms (Automation)": {
+      "correct": 1,
+      "attempts": 2
+    },
+    "Troubleshooting": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (Security)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Concepts & Terms (System Management)": {
+      "correct": 0,
+      "attempts": 1
+    },
+    "Concepts & Terms (Containers)": {
+      "correct": 0,
+      "attempts": 0
+    },
+    "Commands (System Management)": {
+      "correct": 1,
+      "attempts": 1
+    }
+  },
+  "total_correct": 2,
+  "total_attempts": 4,
+  "incorrect_review": [
+    "What is an AppImage?"
+  ],
+  "leaderboard": [],
+  "settings": {},
+  "export_metadata": {},
+  "achievements": {}
+}

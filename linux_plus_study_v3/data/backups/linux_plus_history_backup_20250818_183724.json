@@ -30,16 +30,6 @@
           "correct": true
         }
       ]
-    },
-    "What is the primary function of the `mkinitrd` command?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-18T18:37:14.812604",
-          "correct": true
-        }
-      ]
     }
   },
   "categories": {
@@ -48,8 +38,8 @@
       "attempts": 1
     },
     "Commands (System Management)": {
-      "correct": 2,
-      "attempts": 2
+      "correct": 1,
+      "attempts": 1
     },
     "Concepts & Terms (Automation)": {
       "correct": 0,
@@ -68,8 +58,8 @@
       "attempts": 0
     }
   },
-  "total_correct": 3,
-  "total_attempts": 4,
+  "total_correct": 2,
+  "total_attempts": 3,
   "incorrect_review": [
     "A system administrator notices that a production server is experiencing significant slowdowns. Upon further investigation using the top command, it's observed that the I/O wait percentage is consistently above 30%. Considering that the server's disk activity is not excessively high, what could be a probable cause for the high I/O wait?"
   ],
