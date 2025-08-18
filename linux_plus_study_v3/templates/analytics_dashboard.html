@@ -841,16 +841,6 @@
             </div>
         </div>
         
-        <div class="metric-card">
-            <div class="metric-icon">⏱️</div>
-            <div class="metric-content">
-                <h3 id="study-time">{{ "%.1f"|format((stats.total_study_time or 0) / 3600) }}h</h3>
-                <p>Total Study Time</p>
-                <div class="metric-trend neutral" id="time-trend">
-                    <i class="fas fa-chart-line"></i> Consistent learning
-                </div>
-            </div>
-        </div>
         
         <div class="metric-card">
             <div class="metric-icon">💻</div>
@@ -1203,10 +1193,6 @@
             <div class="chart-container fade-in">
                 <div class="chart-header">
                     <h3>⚡ Engagement Metrics</h3>
-                </div>
-                <div class="metric-item" style="margin-bottom: 15px;">
-                    <span class="metric-label">Active Learning Time</span>
-                    <span class="metric-value" id="active-learning-time">{{ "%.1f"|format((stats.total_study_time or 0) / 3600) }}h</span>
                 </div>
                 <div class="metric-item" style="margin-bottom: 15px;">
                     <span class="metric-label">Return Sessions</span>
@@ -1642,7 +1628,7 @@ try {
 
 // Add loading indicators and error handling
 function showLoadingState() {
-    const metrics = ['total-questions', 'accuracy', 'study-time', 'vm-commands'];
+    const metrics = ['total-questions', 'accuracy', 'vm-commands'];
     metrics.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -1652,7 +1638,7 @@ function showLoadingState() {
 }
 
 function showErrorState() {
-    const metrics = ['total-questions', 'accuracy', 'study-time', 'vm-commands'];
+    const metrics = ['total-questions', 'accuracy', 'vm-commands'];
     metrics.forEach(id => {
         const element = document.getElementById(id);
         if (element) {
@@ -1679,7 +1665,6 @@ function initializeAnalyticsDashboard() {
             document.getElementById('total-questions').textContent = stats.total_questions || 0;
             document.getElementById('correct-answers').textContent = stats.total_correct || 0;
             document.getElementById('accuracy').textContent = (stats.accuracy || 0).toFixed(1) + '%';
-            document.getElementById('study-time').textContent = ((stats.total_study_time || 0) / 3600).toFixed(1) + 'h';
             document.getElementById('vm-commands').textContent = stats.total_vm_commands || 0;
             document.getElementById('study-streak').textContent = stats.study_streak || 0;
             document.getElementById('total-sessions').textContent = stats.total_sessions || 0;
@@ -2297,7 +2282,6 @@ function exportAnalytics() {
             ['Metric', 'Value'],
             ['Total Questions', statsData.total_questions || 0],
             ['Overall Accuracy', (statsData.overall_accuracy || 0).toFixed(1) + '%'],
-            ['Total Study Time', ((statsData.total_study_time || 0) / 3600).toFixed(1) + ' hours'],
             ['Study Streak', statsData.study_streak || 0],
             ['Total Sessions', statsData.total_sessions || 0]
         ];
@@ -2552,7 +2536,6 @@ function exportAnalytics() {
         summary: {
             totalQuestions: statsData.total_questions || 0,
             overallAccuracy: (statsData.overall_accuracy || 0).toFixed(1) + '%',
-            studyTime: ((statsData.total_study_time || 0) / 3600).toFixed(1) + 'h',
             vmCommands: statsData.total_vm_commands || 0,
             studyStreak: statsData.study_streak || 0,
             totalSessions: statsData.total_sessions || 0

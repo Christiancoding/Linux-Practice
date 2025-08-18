@@ -112,7 +112,6 @@ class AnalyticsService:
             return {
                 'total_questions': int(total_questions),
                 'overall_accuracy': float(overall_accuracy),
-                'total_study_time': float(overall_stats.total_time if overall_stats else 0),
                 'total_vm_commands': int(overall_stats.total_vm_commands if overall_stats else 0),
                 'recent_performance': recent_performance,
                 'topic_breakdown': topic_breakdown,
@@ -194,7 +193,7 @@ class AnalyticsService:
                 func.count(func.distinct(Analytics.user_id)).label('unique_users'),
                 func.sum(Analytics.questions_attempted).label('total_questions'),
                 func.sum(Analytics.questions_correct).label('total_correct'),
-                func.sum(Analytics.session_duration).label('total_study_time')
+                func.sum(Analytics.session_duration).label('total_time')
             ).first()
             
             # Get activity by type
@@ -218,7 +217,6 @@ class AnalyticsService:
                 'total_questions': total_stats.total_questions or 0,
                 'total_correct': total_stats.total_correct or 0,
                 'overall_accuracy': (total_stats.total_correct / total_stats.total_questions * 100) if total_stats.total_questions else 0,
-                'total_study_time': total_stats.total_study_time or 0,
                 'activity_breakdown': {activity.activity_type: activity.count for activity in activity_breakdown},
                 'recent_activity': [{'date': str(activity.date), 'sessions': activity.sessions} for activity in recent_activity]
             }
@@ -231,7 +229,6 @@ class AnalyticsService:
                 'total_questions': 0,
                 'total_correct': 0,
                 'overall_accuracy': 0,
-                'total_study_time': 0,
                 'activity_breakdown': {},
                 'recent_activity': []
             }
@@ -274,7 +271,6 @@ class AnalyticsService:
         return {
             'total_questions': 156,
             'overall_accuracy': 78.2,
-            'total_study_time': 8640,  # 2.4 hours in seconds
             'total_vm_commands': 23,
             'recent_performance': demo_sessions,
             'topic_breakdown': {
@@ -302,7 +298,6 @@ class AnalyticsService:
         return {
             'total_questions': 0,
             'overall_accuracy': 0,
-            'total_study_time': 0,
             'total_vm_commands': 0,
             'recent_performance': [],
             'topic_breakdown': {},
@@ -398,7 +393,6 @@ class AnalyticsService:
             return {
                 'total_questions': int(total_questions),
                 'overall_accuracy': float(overall_accuracy),
-                'total_study_time': float(demo_stats.total_time if demo_stats else 0),
                 'total_vm_commands': int(demo_stats.total_vm_commands if demo_stats else 0),
                 'recent_performance': recent_performance,
                 'topic_breakdown': topic_breakdown,

@@ -674,8 +674,8 @@ function loadStatsData() {
             
             // Calculate average time per question if we have data
             let avgTime = 0;
-            if (data.total_questions > 0 && data.total_study_time > 0) {
-                avgTime = Math.round(data.total_study_time / data.total_questions);
+            if (data.total_questions > 0) {
+                avgTime = 30; // Default average time estimate
             }
             
             // Update with animation

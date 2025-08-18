@@ -707,13 +707,6 @@ function updateImprovementMetrics(data) {
     
     // Study time trend (index 4)
     if (trends[4]) {
-        if (data.study_time_total === 0) {
-            trends[4].className = 'stat-trend neutral';
-            trends[4].innerHTML = '<i class="fas fa-clock"></i> Begin learning!';
-        } else {
-            trends[4].className = 'stat-trend positive';
-            trends[4].innerHTML = `<i class="fas fa-arrow-up"></i> Lifetime total`;
-        }
     }
 }
 
@@ -750,11 +743,6 @@ function updateDashboardStats() {
             const quizTimeDisplay = `${data.quiz_time_formatted || '0s'}${yesterdayQuizTime > 0 ? ` (${formatStudyTime(yesterdayQuizTime)} yesterday)` : ''}`;
             document.getElementById('quiz-time-today').textContent = quizTimeDisplay;
             
-            // Show daily comparison for study time  
-            const todayStudyTime = data.daily_data?.today?.study_time || 0;
-            const yesterdayStudyTime = data.daily_data?.yesterday?.study_time || 0;
-            const studyTimeDisplay = `${data.study_time_formatted || '0s'}${yesterdayStudyTime > 0 ? ` (${formatStudyTime(yesterdayStudyTime)} yesterday)` : ''}`;
-            document.getElementById('study-time-total').textContent = studyTimeDisplay;
             document.getElementById('hero-xp').textContent = data.xp || 0;
             document.getElementById('current-streak').textContent = data.streak || 0;
             document.getElementById('hero-level').textContent = data.level || 1;
@@ -773,7 +761,6 @@ function updateDashboardStats() {
                 streak: data.streak,
                 correctAnswers: data.total_correct,
                 accuracy: data.accuracy,
-                studyTime: data.study_time
             }));
         })
         .catch(error => {

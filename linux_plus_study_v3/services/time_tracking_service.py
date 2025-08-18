@@ -49,7 +49,6 @@ class TimeTrackingService:
         return {
             "quiz_time_today": 0,  # Seconds spent on quizzes today
             "last_quiz_reset": None,  # ISO timestamp of last reset
-            "study_time_total": 0,  # Total study time (non-quiz) in seconds
             "daily_quiz_history": {},  # Date -> seconds mapping
             "settings": {
                 "reset_time": "00:59",  # 12:59 AM
@@ -135,13 +134,6 @@ class TimeTrackingService:
         self.data["quiz_time_today"] = self.data.get("quiz_time_today", 0) + seconds
         self._save_data()
     
-    def add_study_time(self, seconds: int) -> None:
-        """Add time spent on general study (non-quiz)."""
-        if seconds <= 0:
-            return
-        
-        self.data["study_time_total"] = self.data.get("study_time_total", 0) + seconds
-        self._save_data()
     
     def get_quiz_time_today(self) -> int:
         """Get quiz time for today in seconds."""
@@ -155,14 +147,7 @@ class TimeTrackingService:
         seconds = self.get_quiz_time_today()
         return self._format_time(seconds)
     
-    def get_study_time_total(self) -> int:
-        """Get total study time in seconds."""
-        return self.data.get("study_time_total", 0)
     
-    def get_study_time_formatted(self) -> str:
-        """Get formatted total study time."""
-        seconds = self.get_study_time_total()
-        return self._format_time(seconds)
     
     def get_quiz_history(self, days: int = 7) -> Dict[str, int]:
         """Get quiz time history for the last N days."""
@@ -189,8 +174,6 @@ class TimeTrackingService:
         return {
             "quiz_time_today": self.get_quiz_time_today(),
             "quiz_time_formatted": self.get_quiz_time_formatted(),
-            "study_time_total": self.get_study_time_total(),
-            "study_time_formatted": self.get_study_time_formatted(),
             "last_reset": self.data.get("last_quiz_reset"),
             "next_reset": self._get_next_reset_time()
         }
@@ -251,8 +234,6 @@ class TimeTrackingService:
         return {
             "quiz_time_today": self.get_quiz_time_today(),
             "quiz_time_formatted": self.get_quiz_time_formatted(),
-            "study_time_total": self.get_study_time_total(), 
-            "study_time_formatted": self.get_study_time_formatted(),
             "quiz_history_30_days": quiz_history,
             "total_quiz_days": total_quiz_days,
             "avg_daily_quiz_time": int(avg_quiz_time),

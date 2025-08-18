@@ -51,7 +51,6 @@ class Analytics(Base):
     
     # Study Progress and Engagement
     content_pages_viewed: Mapped[int] = mapped_column(Integer, default=0)
-    time_on_content: Mapped[float] = mapped_column(Float, default=0.0)  # seconds spent reading/studying
     practice_commands_executed: Mapped[int] = mapped_column(Integer, default=0)
     vm_sessions_started: Mapped[int] = mapped_column(Integer, default=0)
     cli_playground_usage: Mapped[int] = mapped_column(Integer, default=0)
@@ -89,7 +88,6 @@ class Analytics(Base):
     practical_application_success: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Success rate in practical exercises
     
     # Engagement Quality Metrics
-    active_learning_time: Mapped[float] = mapped_column(Float, default=0.0)  # Time actually engaged vs idle
     interaction_frequency: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Interactions per minute
     focus_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)  # Measure of sustained attention
     
@@ -146,7 +144,6 @@ class Analytics(Base):
             'completion_percentage': self.completion_percentage,
             'time_per_question': self.time_per_question,
             'content_pages_viewed': self.content_pages_viewed,
-            'time_on_content': self.time_on_content,
             'practice_commands_executed': self.practice_commands_executed,
             'vm_sessions_started': self.vm_sessions_started,
             'cli_playground_usage': self.cli_playground_usage,
@@ -172,7 +169,6 @@ class Analytics(Base):
             'concept_mastery_scores': self.concept_mastery_scores,
             'retention_test_scores': self.retention_test_scores,
             'practical_application_success': self.practical_application_success,
-            'active_learning_time': self.active_learning_time,
             'interaction_frequency': self.interaction_frequency,
             'focus_score': self.focus_score,
             'user_feedback_rating': self.user_feedback_rating,
@@ -201,9 +197,6 @@ class Analytics(Base):
             metrics['questions_per_minute'] = (self.questions_attempted or 0) / (self.session_duration / 60)
             metrics['pages_per_minute'] = (self.content_pages_viewed or 0) / (self.session_duration / 60)
         
-        # Engagement metrics
-        if self.session_duration and self.active_learning_time:
-            metrics['engagement_ratio'] = self.active_learning_time / self.session_duration
         
         # VM productivity
         if self.vm_uptime and self.vm_uptime > 0:
@@ -327,10 +320,6 @@ class Analytics(Base):
         if page_name:
             self.update_feature_usage(f"page_view_{page_name}")
     
-    def add_study_time(self, seconds: float):
-        """Add to total study time."""
-        self.time_on_content = (self.time_on_content or 0) + seconds
-        self.active_learning_time = (self.active_learning_time or 0) + seconds
     
     def record_help_request(self, help_type: Optional[str] = None):
         """Track help requests."""
@@ -412,7 +401,6 @@ class Analytics(Base):
         return {
             'total_questions': self.questions_attempted or 0,
             'accuracy': round((self.accuracy_percentage or 0) * 100, 1),
-            'study_time_minutes': round((self.time_on_content or 0) / 60, 1),
             'vm_commands': self.vm_commands_executed or 0,
             'pages_viewed': self.content_pages_viewed or 0,
             'achievements': len(json.loads(self.achievements_unlocked or "[]")),
@@ -521,7 +509,6 @@ class AnalyticsService:
             'total_questions': sum(s.questions_attempted or 0 for s in user_sessions),
             'total_correct': sum(s.questions_correct or 0 for s in user_sessions),
             'overall_accuracy': 0,
-            'total_study_time': sum(s.time_on_content or 0 for s in user_sessions),
             'total_vm_commands': sum(s.vm_commands_executed or 0 for s in user_sessions),
             'total_achievements': len(all_achievements),
             'activity_breakdown': {},
@@ -550,7 +537,6 @@ class AnalyticsService:
             'concept_mastery_scores': {k: v for s in user_sessions for k, v in (s.concept_mastery_scores or {}).items()},
             'retention_test_scores': {k: v for s in user_sessions for k, v in (s.retention_test_scores or {}).items()},
             'practical_application_success': sum(s.practical_application_success or 0 for s in user_sessions) / len(user_sessions) if user_sessions else 0,
-            'active_learning_time': sum(s.active_learning_time or 0 for s in user_sessions),
             'interaction_frequency': sum(s.interaction_frequency or 0 for s in user_sessions),
             'focus_score': sum(s.focus_score or 0 for s in user_sessions) / len(user_sessions) if user_sessions else 0,
             'user_feedback_rating': sum(s.user_feedback_rating or 0 for s in user_sessions) / len(user_sessions) if user_sessions else 0,
@@ -605,7 +591,6 @@ class AnalyticsService:
             'total_users': len(set(s.user_id for s in all_analytics if s.user_id)),
             'total_questions_answered': sum(s.questions_attempted or 0 for s in all_analytics),
             'average_accuracy': 0,
-            'total_study_hours': sum(s.time_on_content or 0 for s in all_analytics) / 3600,
             'most_popular_activities': {},
             'most_studied_topics': {},
             'average_session_duration': 0

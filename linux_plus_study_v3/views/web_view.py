@@ -1705,7 +1705,7 @@ class LinuxPlusStudyWeb:
             except Exception as e:
                 print(f"Error loading dashboard stats: {e}")
                 return render_template('index.html', stats={
-                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0, 'study_time': 0, 'study_time_formatted': '0s'
+                    'level': 1, 'xp': 0, 'streak': 0, 'total_correct': 0, 'accuracy': 0
                 })
         # Store reference to make it clear the route is being used
         self.index_handler = index
@@ -1817,7 +1817,6 @@ class LinuxPlusStudyWeb:
                 correct_answers = user_data.get('correct_answers', 0)
                 accuracy = user_data.get('accuracy', 0.0)
                 study_streak = user_data.get('study_streak', 0)
-                total_study_time = user_data.get('total_study_time', 0)
                 
                 # Estimate session count more accurately
                 estimated_sessions = max(1, total_questions // 5) if total_questions > 0 else 0
@@ -1868,7 +1867,6 @@ class LinuxPlusStudyWeb:
                     'total_questions': total_questions,
                     'overall_accuracy': round(accuracy, 1),
                     'accuracy': round(accuracy, 1),  # ensure alias
-                    'total_study_time': total_study_time,
                     'total_vm_commands': 0,  # VM commands not tracked in simple analytics
                     'study_streak': study_streak,
                     'total_sessions': estimated_sessions,
@@ -1893,7 +1891,6 @@ class LinuxPlusStudyWeb:
                     'total_questions': 0,
                     'overall_accuracy': 0.0,
                     'accuracy': 0.0,
-                    'total_study_time': 0,
                     'total_vm_commands': 0,
                     'study_streak': 0,
                     'total_sessions': 0,
@@ -2629,8 +2626,6 @@ class LinuxPlusStudyWeb:
                 stats.update({
                     'quiz_time_today': time_data['quiz_time_today'],
                     'quiz_time_formatted': time_data['quiz_time_formatted'],
-                    'study_time_total': time_data['study_time_total'],
-                    'study_time_formatted': time_data['study_time_formatted']
                 })
                 
                 # Ensure we have all required fields for the frontend
@@ -2645,10 +2640,8 @@ class LinuxPlusStudyWeb:
                     'questions_answered': 0,
                     'total_correct': 0,
                     'accuracy': 0,
-                    'study_time': 0,
                     'quiz_time_today': 0,
                     'quiz_time_formatted': '0s',
-                    'study_time_formatted': '0s',
                     'streak': 0,
                     'level': 1,
                     'xp': 0
@@ -2697,8 +2690,6 @@ class LinuxPlusStudyWeb:
                     'error': str(e),
                     'quiz_time_today': 0,
                     'quiz_time_formatted': '0s',
-                    'study_time_total': 0,
-                    'study_time_formatted': '0s'
                 })
 
         @self.app.route('/api/analytics')
@@ -2970,7 +2961,6 @@ class LinuxPlusStudyWeb:
                             'sessions': user_data.get('sessions', []),
                             'total_questions': user_data.get('total_questions', 0),
                             'accuracy': user_data.get('accuracy', 0),
-                            'study_time': user_data.get('total_study_time', 0)
                         }
                     }
                 }
