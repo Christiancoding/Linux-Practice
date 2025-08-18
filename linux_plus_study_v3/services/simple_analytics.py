@@ -53,8 +53,7 @@ class SimpleAnalyticsManager:
                     "correct_answers": 0,
                     "incorrect_answers": 0,
                     "accuracy": 0.0,
-                    "total_study_time": 0,
-                    "total_sessions": 0,
+                            "total_sessions": 0,
                     "study_streak": 0,
                     "questions_to_review": 0,
                     "level": 1,
@@ -97,7 +96,6 @@ class SimpleAnalyticsManager:
             "correct_answers": 0,
             "incorrect_answers": 0,
             "accuracy": 0.0,
-            "total_study_time": 0,
             "total_sessions": 0,
             "study_streak": 0,
             "current_streak": 0,  # Current streak of correct answers
@@ -211,8 +209,7 @@ class SimpleAnalyticsManager:
         # Calculate total study time from sessions if needed
         if "sessions" in user_data and user_data["sessions"]:
             total_time = sum(session.get("duration", 0) for session in user_data["sessions"])
-            user_data["total_study_time"] = max(user_data.get("total_study_time", 0), total_time)
-        
+            
         return user_data
 
     def update_quiz_results(self, user_id: str, correct: bool, topic: str = None, difficulty: str = "beginner"):
@@ -264,7 +261,6 @@ class SimpleAnalyticsManager:
         else:  # advanced
             time_per_question = 15  # 15 seconds for advanced questions
             
-        user_data["total_study_time"] += time_per_question
         
         # Track topics with consistent structure
         if topic:
@@ -422,8 +418,6 @@ class SimpleAnalyticsManager:
             estimated_time_added = questions_answered * 12
             
             # Subtract the estimated time and add the actual time
-            user_data["total_study_time"] = max(0, user_data["total_study_time"] - estimated_time_added)
-            user_data["total_study_time"] += actual_duration
         
         data[user_id] = user_data
         self._save_data(data)
@@ -443,7 +437,6 @@ class SimpleAnalyticsManager:
                 "accuracy": user_data.get("accuracy", 0.0),
                 "level": user_data.get("level", 1),
                 "study_streak": user_data.get("study_streak", 0),
-                "total_study_time": user_data.get("total_study_time", 0),
                 "last_activity": user_data.get("last_activity"),
                 "created_date": user_data.get("created_date", datetime.now().isoformat())
             }
@@ -588,15 +581,6 @@ class SimpleAnalyticsManager:
         self._save_data(data)
         return session_info
     
-    def add_study_time(self, user_id: str, seconds: int):
-        """Add study time for a user"""
-        data = self._load_data()
-        
-        if user_id not in data:
-            data[user_id] = self._get_default_user_data()
-        
-        data[user_id]["total_study_time"] += seconds
-        self._save_data(data)
     
     def _get_questions_per_topic(self, user_data: dict) -> dict:
         """Get question count per topic"""
@@ -689,10 +673,6 @@ class SimpleAnalyticsManager:
             "overall_accuracy": round(accuracy, 1),  # Alias for compatibility
             
             # Time and sessions
-            "total_study_time": user_data.get("total_study_time", 0),
-            "study_time": user_data.get("total_study_time", 0),  # Alias
-            "study_time_formatted": self._format_time(user_data.get("total_study_time", 0)),
-            "study_time_minutes": round(user_data.get("total_study_time", 0) / 60, 1),
             "total_sessions": user_data.get("total_sessions", 0),
             
             # Streaks
@@ -824,7 +804,7 @@ class SimpleAnalyticsManager:
             "total_questions": user_data.get("total_questions", 0),
             "correct_answers": user_data.get("correct_answers", 0),
             "accuracy": user_data.get("accuracy", 0),
-            "avg_time_per_question": round(user_data.get("total_study_time", 0) / max(1, user_data.get("total_questions", 1)), 1),
+            "avg_time_per_question": 30,  # Default average
             "topics_mastered": len([t for t, d in user_data.get("topics_studied", {}).items() if self._calculate_topic_accuracy(d) >= 80]),
             "improvement_rate": 0  # Would need historical tracking
         }
@@ -857,10 +837,8 @@ class SimpleAnalyticsManager:
             time_tracker = get_time_tracker()
             time_summary = time_tracker.get_daily_summary()
             today_quiz_time = time_summary.get("quiz_time_today", 0)
-            today_study_time = user_data.get("total_study_time", 0) # This needs to be daily too
         except ImportError:
             today_quiz_time = 0
-            today_study_time = 0
             
         return {
             "today": {

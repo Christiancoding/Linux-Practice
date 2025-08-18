@@ -436,7 +436,7 @@ class LinuxPlusStudySystem:
         from flask import request, jsonify, session, redirect, render_template
         from services.analytics_integration import (
             handle_analytics_api_request, get_user_analytics_summary,
-            get_global_analytics, track_quiz_start, track_study_session,
+            get_global_analytics, track_quiz_start,
             track_vm_session, track_cli_playground
         )
         

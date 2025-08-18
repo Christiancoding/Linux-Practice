@@ -183,12 +183,6 @@ def track_quiz_question(correct: bool, time_taken: Optional[float] = None) -> No
     except Exception as e:
         logger.error(f"Error tracking quiz question: {e}")
 
-def track_study_session(topic_area: Optional[str] = None) -> Optional[Analytics]:
-    """Track a study session."""
-    return track_activity(
-        activity_type='study',
-        topic_area=topic_area
-    )
 
 def track_vm_session(topic_area: Optional[str] = None) -> Optional[Analytics]:
     """Track a VM lab session."""
