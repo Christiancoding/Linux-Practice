@@ -351,8 +351,6 @@ class LinuxPlusStudySystem:
             
             # Analytics tracking removed
             
-            # Setup minimal analytics routes (coming soon pages)
-            self._setup_analytics_routes(app)
             
             # Analytics context processor removed
             
@@ -362,14 +360,6 @@ class LinuxPlusStudySystem:
             self.logger.error(f"Failed to setup Flask routes: {e}", exc_info=True)
             raise
     
-    def _setup_analytics_routes(self, app: Flask) -> None:
-        """Analytics routes removed - show coming soon pages."""
-        from flask import render_template
-        
-        @app.route('/analytics')
-        def analytics_dashboard():
-            """Analytics dashboard - coming soon."""
-            return render_template('analytics_dashboard.html')
 
 def create_argument_parser() -> argparse.ArgumentParser:
     """Create comprehensive command line argument parser."""

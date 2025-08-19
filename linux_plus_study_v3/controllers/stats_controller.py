@@ -420,9 +420,7 @@ class StatsController:
                 self.game_state.study_history['leaderboard'] = []
                 print("Cleared leaderboard in study history")
             
-            # Analytics removed - no database data to clear
             
-            # Analytics cache clearing removed
             try:
                 import shutil
                 import os

@@ -30,36 +30,16 @@
           "correct": false
         }
       ]
-    },
-    "What is an AppImage?": {
-      "correct": 1,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-18T19:01:37.498713",
-          "correct": true
-        }
-      ]
-    },
-    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?": {
-      "correct": 0,
-      "attempts": 1,
-      "history": [
-        {
-          "timestamp": "2025-08-18T19:01:40.851111",
-          "correct": false
-        }
-      ]
     }
   },
   "categories": {
     "Concepts & Terms (System Management)": {
-      "correct": 1,
-      "attempts": 1
+      "correct": 0,
+      "attempts": 0
     },
     "Troubleshooting": {
       "correct": 0,
-      "attempts": 1
+      "attempts": 0
     },
     "Concepts & Terms (Security)": {
       "correct": 0,
@@ -78,12 +58,11 @@
       "attempts": 2
     }
   },
-  "total_correct": 2,
-  "total_attempts": 5,
+  "total_correct": 1,
+  "total_attempts": 3,
   "incorrect_review": [
     "Which command installs the GRUB2 bootloader to a specified device?",
-    "What is the primary function of the `mkinitrd` command?",
-    "A system administrator needs to obtain information about which server versions are running on open ports of a remote host. However, the administrator must avoid performing an intrusive scan that could disrupt network services. Which of the following commands should the administrator run to best meet these requirements?"
+    "What is the primary function of the `mkinitrd` command?"
   ],
   "leaderboard": [],
   "settings": {},

@@ -1593,7 +1593,7 @@ function startQuizWithValidatedData(requestData, apiEndpoint) {
         console.log('Start quiz response:', data);
         
         if (data.success) {
-            // Track quiz start analytics
+            // Analytics removed
             if (typeof trackFeatureUsage === 'function') {
                 trackFeatureUsage('quiz_started');
                 trackFeatureUsage(`quiz_mode_${quizState.mode}`);
@@ -2032,7 +2032,7 @@ function submitAnswer(isTimeout = false) {
             return;
         }
         
-        // Track analytics for quiz answer
+        // Analytics removed
         if (typeof trackQuizAnswer === 'function') {
             trackQuizAnswer(data.is_correct, timeTaken);
         }

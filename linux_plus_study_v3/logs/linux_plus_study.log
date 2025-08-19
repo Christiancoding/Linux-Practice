@@ -1,81 +1,116 @@
-2025-08-18 18:19:40,016 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:19:40,017 - __main__ - INFO: Starting web application mode
-2025-08-18 18:19:40,018 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:19:40,019 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:19:40,027 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:19:40,037 - utils.database - INFO: Database connection test successful
-2025-08-18 18:19:40,051 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:19:40,055 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
-2025-08-18 18:19:51,347 - services.analytics_integration - ERROR: Error tracking activity: (sqlite3.IntegrityError) NOT NULL constraint failed: analytics.time_on_content
-[SQL: INSERT INTO analytics (created_at, updated_at, user_id, session_id, session_start, session_end, session_duration, activity_type, activity_subtype, topic_area, difficulty_level, questions_attempted, questions_correct, questions_incorrect, accuracy_percentage, completion_percentage, time_per_question, content_pages_viewed, practice_commands_executed, vm_sessions_started, cli_playground_usage, study_streak_days, return_sessions, help_requests, hint_usage, review_sessions, achievements_unlocked, learning_goals_met, certification_progress, page_load_time, error_count, browser_info, device_type, vm_uptime, vm_commands_executed, lab_exercises_completed, lab_exercises_attempted, vm_errors_encountered, practical_application_success, interaction_frequency, focus_score, user_feedback_rating, improvement_suggestions, difficulty_rating, preferred_learning_style, most_effective_study_method, least_effective_study_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
-[parameters: ('2025-08-18 18:19:51.347122', '2025-08-18 18:19:51.347125', None, '7689314f-58ef-46a7-a2c6-af5de1bf2a20', '2025-08-18 18:19:51.342491', None, None, 'study', 'page_view', None, None, 0, 0, 0, None, None, None, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, 0, 0.0, None, 0, 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'desktop', 0.0, 0, 0, 0, 0, None, None, None, None, None, None, None, None, None, None)]
-(Background on this error at: https://sqlalche.me/e/20/gkpj)
-2025-08-18 18:19:51,348 - services.analytics_integration - WARNING: Error during analytics session cleanup: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (sqlite3.IntegrityError) NOT NULL constraint failed: analytics.time_on_content
-[SQL: INSERT INTO analytics (created_at, updated_at, user_id, session_id, session_start, session_end, session_duration, activity_type, activity_subtype, topic_area, difficulty_level, questions_attempted, questions_correct, questions_incorrect, accuracy_percentage, completion_percentage, time_per_question, content_pages_viewed, practice_commands_executed, vm_sessions_started, cli_playground_usage, study_streak_days, return_sessions, help_requests, hint_usage, review_sessions, achievements_unlocked, learning_goals_met, certification_progress, page_load_time, error_count, browser_info, device_type, vm_uptime, vm_commands_executed, lab_exercises_completed, lab_exercises_attempted, vm_errors_encountered, practical_application_success, interaction_frequency, focus_score, user_feedback_rating, improvement_suggestions, difficulty_rating, preferred_learning_style, most_effective_study_method, least_effective_study_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
-[parameters: ('2025-08-18 18:19:51.347122', '2025-08-18 18:19:51.347125', None, '7689314f-58ef-46a7-a2c6-af5de1bf2a20', '2025-08-18 18:19:51.342491', None, None, 'study', 'page_view', None, None, 0, 0, 0, None, None, None, 0, 0, 0, 0, 0, 0, 0, 0, 0, None, 0, 0.0, None, 0, 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36', 'desktop', 0.0, 0, 0, 0, 0, None, None, None, None, None, None, None, None, None, None)]
-(Background on this error at: https://sqlalche.me/e/20/gkpj) (Background on this error at: https://sqlalche.me/e/20/7s2a)
-2025-08-18 18:30:30,325 - __main__ - INFO: Received signal 2, initiating graceful shutdown
-2025-08-18 18:30:30,325 - utils.database - INFO: All database connections closed
-2025-08-18 18:32:39,742 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:32:39,742 - __main__ - INFO: Starting web application mode
-2025-08-18 18:32:39,742 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:32:39,743 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:32:39,749 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:32:39,759 - utils.database - INFO: Database connection test successful
-2025-08-18 18:32:39,772 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:32:39,774 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
-2025-08-18 18:32:44,920 - views.web_view - ERROR: Heatmap API error: No module named 'services.simple_analytics'
-2025-08-18 18:32:44,921 - views.web_view - ERROR: Achievements API error: No module named 'services.simple_analytics'
-2025-08-18 18:32:50,399 - views.web_view - ERROR: Dashboard API error: No module named 'services.simple_analytics'
-2025-08-18 18:32:50,442 - views.web_view - ERROR: Heatmap API error: No module named 'services.simple_analytics'
-2025-08-18 18:33:07,863 - views.web_view - ERROR: Heatmap API error: No module named 'services.simple_analytics'
-2025-08-18 18:33:07,865 - views.web_view - ERROR: Achievements API error: No module named 'services.simple_analytics'
-2025-08-18 18:33:22,382 - __main__ - INFO: Received signal 2, initiating graceful shutdown
-2025-08-18 18:33:22,383 - utils.database - INFO: All database connections closed
-2025-08-18 18:33:57,514 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:33:57,515 - __main__ - INFO: Starting web application mode
-2025-08-18 18:33:57,515 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:33:57,515 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:33:57,522 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:33:57,533 - utils.database - INFO: Database connection test successful
-2025-08-18 18:33:57,546 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:33:57,549 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
-2025-08-18 18:34:24,633 - views.web_view - INFO: Starting clear statistics operation
-2025-08-18 18:34:24,657 - views.web_view - ERROR: Analytics clear error: No module named 'models.analytics'
-2025-08-18 18:34:24,657 - views.web_view - INFO: Cleared simple analytics user data
-2025-08-18 18:34:24,657 - views.web_view - INFO: Reset game state data
-2025-08-18 18:34:24,658 - views.web_view - INFO: Reset quiz controller session
-2025-08-18 18:34:24,658 - views.web_view - INFO: Reset time tracking data
-2025-08-18 18:34:24,664 - views.web_view - INFO: Reset achievements file
-2025-08-18 18:34:24,664 - views.web_view - INFO: Reset history file
-2025-08-18 18:34:24,665 - views.web_view - INFO: Clear statistics operation completed successfully
-2025-08-18 18:34:33,653 - __main__ - INFO: Received signal 2, initiating graceful shutdown
-2025-08-18 18:34:33,654 - utils.database - INFO: All database connections closed
-2025-08-18 18:34:36,637 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:34:36,638 - __main__ - INFO: Starting web application mode
-2025-08-18 18:34:36,638 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:34:36,639 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:34:36,647 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:34:36,664 - utils.database - INFO: Database connection test successful
-2025-08-18 18:34:36,680 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:34:36,683 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
-2025-08-18 18:35:52,573 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:35:52,574 - __main__ - INFO: Starting web application mode
-2025-08-18 18:35:52,574 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:35:52,574 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:35:52,581 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:35:52,589 - utils.database - INFO: Database connection test successful
-2025-08-18 18:35:52,599 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:35:52,601 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5001
-2025-08-18 18:36:57,220 - __main__ - INFO: Received signal 2, initiating graceful shutdown
-2025-08-18 18:36:57,221 - utils.database - INFO: All database connections closed
-2025-08-18 18:36:58,910 - __main__ - INFO: Linux Plus Study System logging initialized
-2025-08-18 18:36:58,911 - __main__ - INFO: Starting web application mode
-2025-08-18 18:36:58,911 - utils.persistence_manager - INFO: Persistence Manager initialized
-2025-08-18 18:36:58,911 - __main__ - INFO: Web application components loaded successfully
-2025-08-18 18:36:58,918 - utils.database - INFO: Initializing sqlite without connection pooling
-2025-08-18 18:36:58,927 - utils.database - INFO: Database connection test successful
-2025-08-18 18:36:58,940 - views.web_view - WARNING: VM management features not available - vm_integration module not found
-2025-08-18 18:36:58,942 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
-2025-08-18 18:37:59,199 - __main__ - INFO: Received signal 2, initiating graceful shutdown
-2025-08-18 18:37:59,200 - utils.database - INFO: All database connections closed
+2025-08-18 18:54:16,408 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-18 18:54:16,408 - __main__ - INFO: Starting web application mode
+2025-08-18 18:54:16,409 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-18 18:54:16,409 - __main__ - INFO: Web application components loaded successfully
+2025-08-18 18:54:16,416 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-18 18:54:16,425 - utils.database - INFO: Database connection test successful
+2025-08-18 18:54:16,436 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-18 18:54:16,438 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000
+2025-08-18 18:54:22,422 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:54:27,627 - views.web_view - ERROR: Dashboard API error: No module named 'services.time_tracking_service'
+2025-08-18 18:54:27,662 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:54:32,480 - views.web_view - ERROR: Exception on /analytics [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1736, in analytics_page
+    return render_template('analytics_dashboard.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 65, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 99, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: analytics_dashboard.html
+2025-08-18 18:54:32,565 - root - ERROR: Request error: analytics_dashboard.html
+2025-08-18 18:54:43,008 - views.web_view - INFO: Starting clear statistics operation
+2025-08-18 18:54:43,010 - views.web_view - ERROR: Analytics clear error: No module named 'models.analytics'
+2025-08-18 18:54:43,010 - views.web_view - INFO: Reset game state data
+2025-08-18 18:54:43,010 - views.web_view - INFO: Reset quiz controller session
+2025-08-18 18:54:43,010 - views.web_view - ERROR: Time tracking reset error: No module named 'services.time_tracking_service'
+2025-08-18 18:54:43,010 - views.web_view - INFO: Reset achievements file
+2025-08-18 18:54:43,010 - views.web_view - INFO: Reset history file
+2025-08-18 18:54:43,011 - views.web_view - INFO: Clear statistics operation completed successfully
+2025-08-18 18:54:49,701 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:54:52,696 - views.web_view - ERROR: Dashboard API error: No module named 'services.time_tracking_service'
+2025-08-18 18:54:52,718 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:54:54,336 - views.web_view - ERROR: Exception on /analytics [GET]
+Traceback (most recent call last):
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/Documents/github/Linux-test/Linux-Practice/linux_plus_study_v3/views/web_view.py", line 1736, in analytics_page
+    return render_template('analytics_dashboard.html')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/jinja2/loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 65, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/retiredfan/.local/lib/python3.12/site-packages/flask/templating.py", line 99, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: analytics_dashboard.html
+2025-08-18 18:54:54,337 - root - ERROR: Request error: analytics_dashboard.html
+2025-08-18 18:55:02,631 - views.web_view - ERROR: Statistics API error: 'total_correct'
+2025-08-18 18:55:06,018 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:55:32,935 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:55:40,205 - views.web_view - ERROR: Statistics API error: 'total_correct'
+2025-08-18 18:55:42,816 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 18:56:06,491 - views.web_view - ERROR: Heatmap API error: name 'analytics' is not defined
+2025-08-18 19:01:09,860 - __main__ - INFO: Received signal 2, initiating graceful shutdown
+2025-08-18 19:01:09,860 - utils.database - INFO: All database connections closed
+2025-08-18 19:01:11,008 - __main__ - INFO: Linux Plus Study System logging initialized
+2025-08-18 19:01:11,008 - __main__ - INFO: Starting web application mode
+2025-08-18 19:01:11,008 - utils.persistence_manager - INFO: Persistence Manager initialized
+2025-08-18 19:01:11,009 - __main__ - INFO: Web application components loaded successfully
+2025-08-18 19:01:11,017 - utils.database - INFO: Initializing sqlite without connection pooling
+2025-08-18 19:01:11,027 - utils.database - INFO: Database connection test successful
+2025-08-18 19:01:11,039 - views.web_view - WARNING: VM management features not available - vm_integration module not found
+2025-08-18 19:01:11,042 - __main__ - INFO: Web interface loaded successfully - Starting server on 127.0.0.1:5000

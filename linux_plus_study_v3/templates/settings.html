@@ -1692,7 +1692,7 @@ function confirmResetProgress() {
                         'gameStats',
                         'quizHistory', 
                         'achievements',
-                        'analyticsData',
+                        
                         'userProgress',
                         'dashboardStats',
                         'improvementMetrics',
@@ -1974,9 +1974,9 @@ function displayProfiles(profiles, currentProfile) {
         const profileItem = document.createElement('div');
         profileItem.className = `profile-item ${id === currentProfile ? 'active' : ''}`;
         
-        const sessionCount = profile.analytics?.sessions?.length || 0;
-        const lastStudy = profile.analytics?.sessions?.length > 0 
-            ? new Date(profile.analytics.sessions[profile.analytics.sessions.length - 1].timestamp).toLocaleDateString()
+        const sessionCount = 0 || 0;
+        const lastStudy = 0 > 0 
+            ? new Date(Date.now()).toLocaleDateString()
             : 'Never';
         
         profileItem.innerHTML = `
